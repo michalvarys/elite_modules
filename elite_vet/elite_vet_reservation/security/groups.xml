@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="module_category_elite_vet_reservation" model="ir.module.category">
+            <field name="name">Rezervace</field>
+            <field name="description">Rezervační kalendář kliniky.</field>
+            <field name="sequence">52</field>
+        </record>
+        <record id="group_reservation_reception" model="res.groups">
+            <field name="name">Recepce</field>
+            <field name="category_id" ref="module_category_elite_vet_reservation"/>
+            <field name="comment">Vidí tabuli, potvrzuje a zakládá rezervace, spravuje klienty.</field>
+        </record>
+        <record id="group_reservation_manager" model="res.groups">
+            <field name="name">Správce rezervací</field>
+            <field name="category_id" ref="module_category_elite_vet_reservation"/>
+            <field name="implied_ids" eval="[(4, ref('group_reservation_reception'))]"/>
+            <field name="comment">Navíc spravuje ordinace, úkony, ordinační dobu, rozpis a nastavení.</field>
+        </record>
+    </data>
+    <!-- Mimo noupdate: spravce systemu ma skupinu dostat i pri upgradu. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_reservation_manager'))]"/>
+    </record>
+</odoo>

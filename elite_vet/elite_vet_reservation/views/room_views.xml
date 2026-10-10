@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_room_list" model="ir.ui.view">
+        <field name="name">elite.vet.room.list</field>
+        <field name="model">elite.vet.room</field>
+        <field name="arch" type="xml">
+            <list string="Ordinace">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="color"/>
+                <field name="online"/>
+                <field name="note" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_room_form" model="ir.ui.view">
+        <field name="name">elite.vet.room.form</field>
+        <field name="model">elite.vet.room</field>
+        <field name="arch" type="xml">
+            <form string="Ordinace">
+                <sheet>
+                    <widget name="web_ribbon" title="Archivováno" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="color"/>
+                            <field name="online"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="note"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Ordinační doba">
+                            <p class="text-muted">Týdenní šablona. Přestávku zadejte jako dva řádky
+                               (8:00–12:00 a 13:00–18:00). Den bez řádku je zavřený.</p>
+                            <field name="hours_ids">
+                                <list editable="bottom">
+                                    <field name="weekday"/>
+                                    <field name="hour_from" widget="float_time"/>
+                                    <field name="hour_to" widget="float_time"/>
+                                    <field name="date_from" optional="hide"/>
+                                    <field name="date_to" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Výjimky">
+                            <p class="text-muted">Jeden den jinak: zavřeno (svátek, inventura), nebo jiné
+                               hodiny. Výjimka má přednost před šablonou a umí den i otevřít navíc.</p>
+                            <field name="exception_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="closed"/>
+                                    <field name="hour_from" widget="float_time" readonly="closed"/>
+                                    <field name="hour_to" widget="float_time" readonly="closed"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_room" model="ir.actions.act_window">
+        <field name="name">Ordinace</field>
+        <field name="res_model">elite.vet.room</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Založte první ordinaci</p>
+            <p>Každá ordinace je sloupec na tabuli. Sál založte taky, jen odškrtněte
+               „Rezervovatelná online“.</p>
+        </field>
+    </record>
+
+    <record id="view_room_exception_list" model="ir.ui.view">
+        <field name="name">elite.vet.room.exception.list</field>
+        <field name="model">elite.vet.room.exception</field>
+        <field name="arch" type="xml">
+            <list string="Výjimky ordinační doby" editable="bottom">
+                <field name="date"/>
+                <field name="room_id"/>
+                <field name="closed"/>
+                <field name="hour_from" widget="float_time" readonly="closed"/>
+                <field name="hour_to" widget="float_time" readonly="closed"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_room_exception" model="ir.actions.act_window">
+        <field name="name">Výjimky ordinační doby</field>
+        <field name="res_model">elite.vet.room.exception</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_od_dneska': 1}</field>
+    </record>
+</odoo>
