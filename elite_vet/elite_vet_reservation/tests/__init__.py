@@ -6,3 +6,4 @@ from . import test_reservation
 from . import test_setting
 from . import test_availability
 from . import test_board
+from . import test_controllers
