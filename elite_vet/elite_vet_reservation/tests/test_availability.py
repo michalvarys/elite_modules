@@ -121,3 +121,34 @@ class TestAvailability(ReservationCase):
         slots = self.A.slots(self.vacc, dst, now=self.NOW)
         self.assertEqual(self.times(slots)[0], "09:00")
         self.assertEqual(self.A.local_to_utc(dst, 540), datetime(2026, 10, 25, 8, 0))   # po prechodu: UTC+1
+        self._assert_dst_reservation(dst)
+
+    def _assert_dst_reservation(self, dst, now=None):
+        """Rezervace v 10:00 v den prechodu musi zablokovat spravne minuty (round-trip UTC <-> mistni cas)."""
+        self.reservation(start=self.dt(dst, 10, 0), procedure_id=self.derm.id)
+        times = self.times(self.A.slots(self.derm, dst, now=now or self.NOW))
+        self.assertNotIn("10:00", times)
+        self.assertIn("09:30", times)
+        self.assertIn("10:30", times)
+        self.assertEqual(self.A.utc_to_local_minutes(self.A.local_to_utc(dst, 600), dst), 600)
+
+    def test_dst_spring_day_slots(self):
+        # 29.3.2026 je nedele s prechodem na letni cas
+        dst = date(2026, 3, 29)
+        self.env["elite.vet.room.exception"].create({"room_id": self.room1.id, "date": dst, "hour_from": 9.0, "hour_to": 12.0})
+        self._assert_dst_reservation(dst, now=datetime(2026, 3, 1, 8, 0))   # NOW musi byt pred testovanym dnem
+
+    def test_two_doctors_same_room_no_duplicate_room_ids(self):
+        self.env["elite.vet.setting"].nastaveni().booking_require_doctor = True
+        self.assign(self.dr_a, self.room1, WED, 8.0, 12.0)
+        self.assign(self.dr_b, self.room1, WED, 10.0, 14.0)
+        slot = next(s for s in self.A.slots(self.vacc, WED, now=self.NOW) if s["time"] == "10:00")
+        self.assertEqual(slot["room_ids"], [self.room1.id])
+        self.assertEqual(sorted(slot["doctor_ids"]), sorted([self.dr_a.id, self.dr_b.id]))
+
+    def test_doctor_ids_informational_without_filter(self):
+        self.assign(self.dr_a, self.room1, WED, 8.0, 12.0)
+        by_time = {s["time"]: s for s in self.A.slots(self.vacc, WED, now=self.NOW)}
+        self.assertEqual(by_time["09:00"]["doctor_ids"], [self.dr_a.id])
+        self.assertEqual(sorted(by_time["09:00"]["room_ids"]), sorted([self.room1.id, self.room2.id]))
+        self.assertEqual(by_time["13:00"]["doctor_ids"], [])

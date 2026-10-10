@@ -122,10 +122,12 @@ class VetAvailability(models.AbstractModel):
             return []
         step, dur = s.booking_slot_step, procedure.duration
         need_doctor = bool(doctor or specialization or s.booking_require_doctor)
-        assignments = self.assignment_minutes(day, procedure, doctor, specialization) if need_doctor else {}
+        # Sluzby se nacitaji vzdy: doctor_ids ve slotu jsou informativni (kdo zrovna slouzi),
+        # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
+        assignments = self.assignment_minutes(day, procedure, doctor, specialization)
         busy = self.busy_minutes(rooms.ids, day)
-        # utc_to_local_minutes orizne na 0 / 1440, takze den pred earliest dava 0
-        # a den po nem 1440 (zadny slot) - netreba rozlisovat data zvlast.
+        # utc_to_local_minutes orizne na 0 / 1440, takze den pred earliest dava 1440
+        # (zadny slot) a den po nem 0 - netreba rozlisovat data zvlast.
         earliest_min = self.utc_to_local_minutes(earliest, day)
 
         by_minute = {}
@@ -139,7 +141,9 @@ class VetAvailability(models.AbstractModel):
                 while m + dur <= t:
                     if m >= earliest_min:
                         entry = by_minute.setdefault(m, {"minute": m, "room_ids": [], "doctor_ids": []})
-                        entry["room_ids"].append(room.id)
+                        # prekryvajici se sluzby dvou lekaru v jedne ordinaci nesmi ordinaci zdvojit
+                        if room.id not in entry["room_ids"]:
+                            entry["room_ids"].append(room.id)
                         for af, at, did in assignments.get(room.id, []):
                             if af <= m and m + dur <= at and did not in entry["doctor_ids"]:
                                 entry["doctor_ids"].append(did)
@@ -153,7 +157,7 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def days(self, procedure, year, month, doctor=None, specialization=None, now=None):
-        s, earliest, latest_day = self._window(now)
+        _s, earliest, latest_day = self._window(now)
         first_allowed = pytz.utc.localize(earliest).astimezone(TZ).date()
         out = []
         for d in range(1, calendar.monthrange(year, month)[1] + 1):
