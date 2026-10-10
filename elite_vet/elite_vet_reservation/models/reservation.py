@@ -13,6 +13,9 @@ STATES = [
     ("cancelled", "Zrušená"), ("no_show", "Nedorazil"),
 ]
 BUSY_STATES = ("confirmed", "done")
+INACTIVE_STATES = ("cancelled", "no_show")
+# Ordinacni cas kliniky; nesmi zalezet na casove zone prave jednajiciho uzivatele (cron, sudo, web).
+TZ = pytz.timezone("Europe/Prague")
 
 
 class VetReservation(models.Model):
@@ -92,7 +95,9 @@ class VetReservation(models.Model):
         """Zaznamy, ktere v danem case opravdu blokuji ordinace (potvrzene + blokace)."""
         domain = [
             ("start", "<", stop), ("stop", ">", start),
-            "|", ("kind", "=", "block"), ("state", "in", BUSY_STATES),
+            # Blokace blokuje, dokud neni zrusena; rezervace jen potvrzena / proběhla.
+            "|", "&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES),
+            ("state", "in", BUSY_STATES),
             "|", ("room_id", "=", False), ("room_id", "in", list(room_ids)),
         ]
         if exclude_ids:
@@ -101,22 +106,30 @@ class VetReservation(models.Model):
 
     @api.model
     def _lock_rooms(self, room_ids):
-        """Radkovy zamek ordinaci: dva soubezne zapisy na stejny slot se serazi za sebe."""
-        ids = list(room_ids) or self.env["elite.vet.room"].search([]).ids
+        """Zamek ordinaci proti dvojimu zapisu stejneho slotu.
+
+        Odoo bezi na REPEATABLE READ: snapshot se zafixuje prvnim dotazem transakce.
+        Samotny SELECT ... FOR UPDATE nestaci: druhy zapis na zamek pocka, po jeho
+        uvolneni ale hleda prekryv ve starem snapshotu a vitezovu rezervaci nevidi.
+        PostgreSQL vyhodi chybu serializace az kdyz byl zamceny radek *zmenen*, proto
+        radky ordinaci po zamceni i fiktivne updatujeme. Porazeny dostane
+        SerializationFailure, request ho zopakuje s novym snapshotem a _check_overlap
+        uz vitezovu rezervaci uvidi. Zamykame vzdy podle id, aby se dva zapisy
+        nezablokovaly navzajem.
+        """
+        ids = sorted(set(room_ids)) or self.env["elite.vet.room"].search([]).ids
         if ids:
-            self.env.cr.execute("SELECT id FROM elite_vet_room WHERE id IN %s FOR UPDATE", (tuple(ids),))
+            cr = self.env.cr
+            cr.execute("SELECT id FROM elite_vet_room WHERE id IN %s ORDER BY id FOR UPDATE", (tuple(ids),))
+            cr.execute("UPDATE elite_vet_room SET write_date = write_date WHERE id IN %s", (tuple(ids),))
 
     def _po_prijeti_z_webu(self):
         """Hacek pro e-maily po prijeti z webu; naplni ho ukol 11."""
         return True
 
-    def _blokuje(self):
-        self.ensure_one()
-        return self.kind == "block" or self.state in BUSY_STATES
-
     def _check_overlap(self):
         for rec in self:
-            if rec.kind == "reservation" and rec.state in ("cancelled", "no_show"):
+            if rec.state in INACTIVE_STATES:
                 continue
             all_rooms = self.env["elite.vet.room"].search([]).ids
             rooms = [rec.room_id.id] if rec.room_id else all_rooms
@@ -124,7 +137,7 @@ class VetReservation(models.Model):
                 continue   # cekajici z webu bez ordinace se zatim nikam nepise
             self._lock_rooms(rooms)
             clash = self.search(self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id]), limit=1)
-            if clash and (rec._blokuje() or rec.state == "web_new"):
+            if clash:
                 raise ValidationError(_(
                     "Termín %s–%s v ordinaci %s je obsazený: %s."
                 ) % (fields.Datetime.context_timestamp(rec, rec.start).strftime("%d.%m. %H:%M"),
@@ -156,16 +169,17 @@ class VetReservation(models.Model):
             until = rec.repeat_weekly_until
             rec.repeat_weekly_until = False
             # Posun po tydnech v mistnim case, aby 12:00 zustalo 12:00 i pres zmenu letniho/zimniho casu.
-            tz_start = fields.Datetime.context_timestamp(rec, rec.start)
-            delka = rec.stop - rec.start
+            tz_start = pytz.utc.localize(rec.start).astimezone(TZ).replace(tzinfo=None)
+            tz_stop = pytz.utc.localize(rec.stop).astimezone(TZ).replace(tzinfo=None)
             vals_list = []
             for i in range(1, 53):
-                local = tz_start.tzinfo.localize(tz_start.replace(tzinfo=None) + timedelta(days=7 * i))
-                if local.date() > until:
+                shift = timedelta(days=7 * i)
+                if (tz_start + shift).date() > until:
                     break
-                start = local.astimezone(pytz.utc).replace(tzinfo=None)
-                vals_list.append({"kind": "block", "block_reason": rec.block_reason, "room_id": rec.room_id.id,
-                                  "start": start, "stop": start + delka, "note": rec.note})
+                vals_list.append({
+                    "kind": "block", "block_reason": rec.block_reason, "room_id": rec.room_id.id, "note": rec.note,
+                    "start": TZ.localize(tz_start + shift).astimezone(pytz.utc).replace(tzinfo=None),
+                    "stop": TZ.localize(tz_stop + shift).astimezone(pytz.utc).replace(tzinfo=None)})
             if vals_list:
                 self.create(vals_list)
 

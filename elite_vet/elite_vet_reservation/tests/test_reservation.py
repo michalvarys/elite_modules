@@ -10,6 +10,8 @@ D = date(2026, 10, 14)
 
 @tagged("post_install", "-at_install")
 class TestReservation(ReservationCase):
+    # Pozn.: soubeh dvou transakci (zamek ordinace pod REPEATABLE READ) tu testovat nejde,
+    # testy sdili jeden kurzor pod savepointem a druhy skutecny kurzor by se o zamek zablokoval.
 
     def test_stop_defaults_to_start_plus_duration(self):
         r = self.reservation(start=self.dt(D, 9, 0))
@@ -69,13 +71,24 @@ class TestReservation(ReservationCase):
         with self.assertRaises(ValidationError):
             self.reservation(start=self.dt(D, 12, 30), room_id=self.room2.id)
 
-    def test_block_repeat_weekly(self):
+    def test_cancelled_block_no_longer_blocks(self):
         blk = self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Oběd", "room_id": self.room1.id,
+            "start": self.dt(D, 12, 0), "stop": self.dt(D, 13, 0)})
+        with self.assertRaises(ValidationError):
+            self.reservation(start=self.dt(D, 12, 30))
+        blk.action_cancel()
+        self.reservation(start=self.dt(D, 12, 30))
+
+    def test_block_repeat_weekly(self):
+        self.env["elite.vet.reservation"].create({
             "kind": "block", "block_reason": "Oběd", "room_id": self.room1.id,
             "start": self.dt(D, 12, 0), "stop": self.dt(D, 13, 0),
             "repeat_weekly_until": date(2026, 11, 4)})
         copies = self.env["elite.vet.reservation"].search([("block_reason", "=", "Oběd"), ("kind", "=", "block")])
         self.assertEqual(len(copies), 4)   # 14.10, 21.10, 28.10, 4.11
+        # 25.10.2026 se meni cas: kopie musi zustat ve 12:00 mistniho casu
+        self.assertEqual(copies.sorted("start")[-1].start, self.dt(date(2026, 11, 4), 12, 0))
 
     def test_cancel_and_reschedule(self):
         r = self.reservation(start=self.dt(D, 9, 0))
