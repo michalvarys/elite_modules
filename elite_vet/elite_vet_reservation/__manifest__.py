@@ -29,6 +29,8 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/board_action.xml",
         "views/menus.xml",
         "views/booking_page.xml",
+        "data/mail_templates.xml",
+        "data/cron.xml",
     ],
     "assets": {
         "web.assets_backend": [

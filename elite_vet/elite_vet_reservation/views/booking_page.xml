@@ -115,4 +115,64 @@
             </section>
         </xpath>
     </template>
+    <template id="cancel_page" name="Elite Vet - Zrušení rezervace">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="true"/>
+            <t t-set="no_footer" t-value="true"/>
+            <t t-set="additional_title">Cancel appointment | Elite Vet</t>
+            <div id="wrap" class="oe_structure vet-page">
+                <t t-call="elite_vet_theme.vet_header"/>
+                <section class="evbk o_colored_level">
+                    <div class="ev-container evbk-inner" style="max-width:560px">
+                        <h1 style="font-size:28px;margin:24px 0 12px">Cancel appointment</h1>
+                        <div class="evbk-summary">
+                            <t t-out="rez.name"/><br/><t t-out="rez.start_display"/>
+                            <t t-if="rez.room_id"> · <t t-out="rez.room_id.name"/></t>
+                        </div>
+                        <t t-if="stav == 'zruseno'">
+                            <p class="evbk-note">The appointment has been cancelled. You can book a new one on the reservation page.</p>
+                        </t>
+                        <t t-elif="stav == 'uz_zruseno'">
+                            <p>This appointment is already cancelled.</p>
+                        </t>
+                        <t t-elif="stav == 'pozde'">
+                            <p>It is too late to cancel online. Please call the reception: <b t-out="telefon"/>.</p>
+                        </t>
+                        <t t-else="">
+                            <form method="post">
+                                <input type="hidden" name="potvrdit" value="1"/>
+                                <p>Do you really want to cancel this appointment?</p>
+                                <button type="submit" class="evbk-submit">Yes, cancel it</button>
+                            </form>
+                        </t>
+                        <p><a t-att-href="url_for('/rezervacni-system')">‹ Back to reservations</a></p>
+                    </div>
+                </section>
+                <t t-call="elite_vet_theme.vet_footer"/>
+            </div>
+        </t>
+    </template>
+
+    <template id="deposit_page" name="Elite Vet - Záloha">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="true"/>
+            <t t-set="no_footer" t-value="true"/>
+            <t t-set="additional_title">Deposit | Elite Vet</t>
+            <div id="wrap" class="oe_structure vet-page">
+                <t t-call="elite_vet_theme.vet_header"/>
+                <section class="evbk o_colored_level">
+                    <div class="ev-container evbk-inner" style="max-width:560px">
+                        <h1 style="font-size:28px;margin:24px 0 12px">Deposit</h1>
+                        <div class="evbk-summary"><t t-out="rez.name"/><br/><t t-out="rez.start_display"/></div>
+                        <p t-if="rez.deposit_state == 'paid'">The deposit has been paid. Thank you.</p>
+                        <p t-elif="rez.deposit_state == 'pending'">Deposit of <b t-out="rez.procedure_id.deposit_amount"/> Kč is pending.
+                           Online payment will be available soon; until then the reception will send you the payment details.</p>
+                        <p t-else="">No deposit is required for this appointment.</p>
+                        <p><a t-att-href="url_for('/rezervacni-system')">‹ Back to reservations</a></p>
+                    </div>
+                </section>
+                <t t-call="elite_vet_theme.vet_footer"/>
+            </div>
+        </t>
+    </template>
 </odoo>

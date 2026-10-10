@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_web_received" model="mail.template">
+            <field name="name">Rezervace: přijato z webu</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">{{ object.procedure_id.name }} – request received for {{ object.start_display }}</field>
+            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>Hello <t t-out="object.contact_name"/>,</p>
+    <p>we have received your request for <b t-out="object.procedure_id.name"/> on <b t-out="object.start_display"/>.
+       Our reception will confirm it shortly by e-mail.</p>
+    <p t-if="object.procedure_id.client_note" style="background:#e0f2f0;padding:10px 14px;border-radius:8px" t-out="object.procedure_id.client_note"/>
+    <p>Elite Vet Karlovy Vary</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_new_for_clinic" model="mail.template">
+            <field name="name">Rezervace: nová z webu (klinika)</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Nová rezervace z webu: {{ object.name }} – {{ object.start_display }}</field>
+            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif">
+    <p><b t-out="object.contact_name"/> · <t t-out="object.contact_phone"/> · <t t-out="object.contact_email"/></p>
+    <p>Mazlíček: <t t-out="object.pet_name"/> (<t t-out="dict(object._fields['pet_species'].selection).get(object.pet_species, '')"/>)</p>
+    <p>Úkon: <t t-out="object.procedure_id.name"/> · <t t-out="object.start_display"/><t t-if="object.doctor_id"> · <t t-out="object.doctor_id.name"/></t></p>
+    <p>Popis: <t t-out="object.problem"/></p>
+    <p><a t-attf-href="{{ object.get_base_url() }}/odoo/action-elite_vet_reservation.action_reservation_waiting">Otevřít frontu Čekající z webu</a></p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_confirmed" model="mail.template">
+            <field name="name">Rezervace: potvrzeno</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Appointment confirmed – {{ object.start_display }}</field>
+            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>Hello <t t-out="object.contact_name"/>,</p>
+    <p>your appointment is confirmed:</p>
+    <table style="border-collapse:collapse">
+        <tr><td style="padding:4px 12px 4px 0;color:#64748b">When</td><td><b t-out="object.start_display"/></td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#64748b">Reason</td><td t-out="object.procedure_id.name"/></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#64748b">Room</td><td t-out="object.room_id.name"/></tr>
+        <tr t-if="object.doctor_id"><td style="padding:4px 12px 4px 0;color:#64748b">Doctor</td><td t-out="object.doctor_id.name"/></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#64748b">Where</td><td>Hybešova 167/18, Karlovy Vary</td></tr>
+    </table>
+    <p t-if="object.procedure_id.client_note" style="background:#e0f2f0;padding:10px 14px;border-radius:8px" t-out="object.procedure_id.client_note"/>
+    <p>If you cannot come, please cancel here: <a t-att-href="object.cancel_url" t-out="object.cancel_url"/></p>
+    <p>Elite Vet Karlovy Vary</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_rescheduled" model="mail.template">
+            <field name="name">Rezervace: změna termínu</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Appointment moved – {{ object.start_display }}</field>
+            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>Hello <t t-out="object.contact_name"/>,</p>
+    <p>your appointment for <b t-out="object.procedure_id.name"/> has been moved to <b t-out="object.start_display"/>
+       (<t t-out="object.room_id.name"/>). If it does not suit you, cancel here: <a t-att-href="object.cancel_url" t-out="object.cancel_url"/></p>
+    <p>Elite Vet Karlovy Vary</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_cancelled" model="mail.template">
+            <field name="name">Rezervace: zrušeno</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Appointment cancelled – {{ object.start_display }}</field>
+            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>The appointment <b t-out="object.name"/> on <b t-out="object.start_display"/> has been cancelled.</p>
+    <p>You can book a new one at <a t-attf-href="{{ object.get_base_url() }}/rezervacni-system">our website</a> or call the reception.</p>
+    <p>Elite Vet Karlovy Vary</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_reminder" model="mail.template">
+            <field name="name">Rezervace: připomínka</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Reminder – {{ object.start_display }}</field>
+            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>Hello <t t-out="object.contact_name"/>, a reminder of your appointment <b t-out="object.procedure_id.name"/>
+       on <b t-out="object.start_display"/> (<t t-out="object.room_id.name"/>).</p>
+    <p t-if="object.procedure_id.client_note" t-out="object.procedure_id.client_note"/>
+    <p>Cannot come? Cancel here: <a t-att-href="object.cancel_url" t-out="object.cancel_url"/></p>
+</div>
+            </field>
+        </record>
+    </data>
+</odoo>

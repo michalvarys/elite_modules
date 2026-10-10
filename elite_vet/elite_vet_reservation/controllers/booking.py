@@ -1,6 +1,8 @@
 import re
 import time
 
+from werkzeug.exceptions import NotFound
+
 from odoo import _, fields, http
 from odoo.http import request
 
@@ -148,3 +150,30 @@ class BookingController(http.Controller):
         rec = request.env["elite.vet.reservation"].sudo().create(vals)
         rec._po_prijeti_z_webu()
         return {"ok": True, "token": rec.cancel_token, "deposit": rec.deposit_state == "pending"}
+
+    # csrf=False: akci autorizuje nahodny token v URL (odkaz z e-mailu), klient nema session s CSRF tokenem.
+    @http.route("/rezervace/zruseni/<string:token>", type="http", auth="public", website=True,
+                methods=["GET", "POST"], sitemap=False, csrf=False)
+    def zruseni(self, token, **post):
+        rez = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
+        if not rez or rez.kind != "reservation":
+            raise NotFound()
+        s = self._setting()
+        stav = "dotaz"
+        if rez.state in ("cancelled", "no_show", "done"):
+            stav = "uz_zruseno"
+        elif not rez.muze_zrusit_klient():
+            stav = "pozde"
+        elif request.httprequest.method == "POST" and post.get("potvrdit"):
+            rez.action_cancel("client")
+            stav = "zruseno"
+        return request.render("elite_vet_reservation.cancel_page", {
+            "rez": rez, "stav": stav, "telefon": s.phone_display or s.phone or "",
+        })
+
+    @http.route("/rezervace/platba/<string:token>", type="http", auth="public", website=True, methods=["GET"], sitemap=False)
+    def platba(self, token, **kw):
+        rez = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
+        if not rez or rez.kind != "reservation":
+            raise NotFound()
+        return request.render("elite_vet_reservation.deposit_page", {"rez": rez})
