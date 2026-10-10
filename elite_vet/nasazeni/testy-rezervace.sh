@@ -14,8 +14,10 @@ docker compose up -d db
 docker compose run --rm odoo odoo -d ev_test $MODE elite_vet_reservation \
   --without-demo=all --test-enable --test-tags "$TAGS" \
   --stop-after-init --log-level=test 2>&1 | tee /tmp/ev_test.log
-# Odoo vraci 0 i pri padlem testu, proto se hleda v logu.
-if grep -qE "ERROR|FAIL" /tmp/ev_test.log; then
+# Odoo vraci 0 i pri padlem testu, proto se hleda v logu. Soudi se podle urovne
+# logu (format "CAS PID UROVEN db logger: zprava"), ne podle podretezce, a chybejici
+# modul ("invalid module names") nesmi projit jako zeleny beh bez testu.
+if grep -qE " (ERROR|CRITICAL) |invalid module names" /tmp/ev_test.log; then
   echo "TESTY SELHALY"; exit 1
 fi
 echo "TESTY OK"
