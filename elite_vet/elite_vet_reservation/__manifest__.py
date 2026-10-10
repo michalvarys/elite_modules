@@ -26,9 +26,14 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/reservation_views.xml",
         "views/partner_views.xml",
         "views/setting_views.xml",
+        "views/board_action.xml",
         "views/menus.xml",
     ],
-    "assets": {},
+    "assets": {
+        "web.assets_backend": [
+            "elite_vet_reservation/static/src/board/**/*",
+        ],
+    },
     "post_init_hook": "_pri_instalaci",
     "installable": True,
     "application": True,

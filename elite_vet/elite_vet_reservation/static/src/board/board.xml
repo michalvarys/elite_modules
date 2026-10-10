@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="elite_vet_reservation.Board">
+        <div class="evb o_action">
+            <div class="evb-toolbar">
+                <button class="btn btn-secondary" t-on-click="() => this.shiftDay(-1)">‹</button>
+                <input type="date" class="form-control evb-date" t-att-value="state.date" t-on-change="onDateInput"/>
+                <button class="btn btn-secondary" t-on-click="() => this.shiftDay(1)">›</button>
+                <button class="btn btn-link" t-on-click="today">Dnes</button>
+                <span class="flex-grow-1"/>
+                <button class="btn btn-primary" t-on-click="() => this.openForm(false, {default_kind: 'reservation', default_state: 'confirmed'})">Nová rezervace</button>
+                <button class="btn btn-outline-secondary" t-on-click="newBlock">Nová blokace</button>
+            </div>
+            <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
+            <div t-else="" class="evb-body">
+                <aside class="evb-waiting">
+                    <h5>Čekající z webu (<t t-esc="state.data.waiting.length"/>)</h5>
+                    <p t-if="!state.data.waiting.length" class="text-muted small">Nic nečeká.</p>
+                    <div t-foreach="state.data.waiting" t-as="w" t-key="w.id" class="evb-card" draggable="true"
+                         t-on-dragstart="(ev) => this.onDragStart(ev, w, 'waiting')">
+                        <strong t-esc="w.name"/>
+                        <div class="small"><t t-esc="w.date"/> <t t-esc="w.time"/> · <t t-esc="w.procedure"/> (<t t-esc="w.duration"/> min)</div>
+                        <div class="small text-muted"><t t-esc="w.phone"/> · <t t-esc="w.email"/></div>
+                        <div t-if="w.doctor" class="small">Lékař: <t t-esc="w.doctor"/></div>
+                        <div t-if="w.problem" class="small evb-problem" t-esc="w.problem"/>
+                        <div class="evb-card-actions">
+                            <button class="btn btn-sm btn-primary" t-on-click="() => this.openForm(w.id)">Potvrdit / upravit</button>
+                            <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.reject(w)">Odmítnout</button>
+                        </div>
+                        <div class="small text-muted">Přetáhněte do sloupce = potvrdit v tom čase.</div>
+                    </div>
+                </aside>
+                <div class="evb-grid">
+                    <div class="evb-axis">
+                        <div class="evb-head"/>
+                        <div class="evb-axis-body" t-att-style="'height:' + height(axis.from, axis.to) + 'px'">
+                            <div t-foreach="rows" t-as="m" t-key="m" class="evb-tick" t-att-style="'top:' + top(m) + 'px'"
+                                 t-att-class="{'evb-tick-hour': m % 60 === 0}">
+                                <span t-if="m % 60 === 0" t-esc="hhmm(m)"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div t-foreach="state.data.rooms" t-as="room" t-key="room.id" class="evb-col">
+                        <div class="evb-head" t-att-style="'border-top: 4px solid ' + room.color_hex">
+                            <div class="evb-room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
+                            <div class="evb-doctors">
+                                <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge text-bg-light">
+                                    <t t-esc="d.name"/> <t t-esc="hhmm(d.from)"/>–<t t-esc="hhmm(d.to)"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="evb-col-body" t-att-style="'height:' + height(axis.from, axis.to) + 'px'"
+                             t-on-click="(ev) => this.onColumnClick(ev, room)"
+                             t-on-dragover="onDragOver" t-on-drop="(ev) => this.onDrop(ev, room)">
+                            <div t-foreach="rows" t-as="m" t-key="m" class="evb-cell"
+                                 t-att-class="{'evb-closed': !isOpen(room, m), 'evb-hour': m % 60 === 0}"
+                                 t-att-style="'top:' + top(m) + 'px;height:' + height(m, m + state.data.step) + 'px'"/>
+                            <div t-foreach="globalBlocks" t-as="b" t-key="'g' + b.id" class="evb-event evb-block"
+                                 t-att-style="'top:' + top(b.start) + 'px;height:' + height(b.start, b.end) + 'px'"
+                                 t-on-click.stop="() => this.openForm(b.id)">
+                                <t t-esc="b.name"/>
+                            </div>
+                            <div t-foreach="eventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
+                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show'}"
+                                 t-att-style="'top:' + top(e.start) + 'px;height:' + height(e.start, e.end) + 'px;background:' + e.color_hex"
+                                 t-att-title="e.procedure + '\n' + e.phone + '\n' + e.email + (e.problem ? '\n' + e.problem : '')"
+                                 draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')"
+                                 t-on-click.stop="() => this.openForm(e.id)">
+                                <span t-if="e.symbol" class="evb-symbol" t-esc="e.symbol"/>
+                                <t t-esc="e.name"/>
+                                <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

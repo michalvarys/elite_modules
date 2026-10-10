@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_board" model="ir.actions.client">
+        <field name="name">Tabule</field>
+        <field name="tag">elite_vet_reservation.board</field>
+    </record>
+</odoo>

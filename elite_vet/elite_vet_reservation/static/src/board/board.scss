@@ -1,0 +1,24 @@
+.evb { display: flex; flex-direction: column; height: 100%; }
+.evb-toolbar { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+.evb-date { width: 160px; }
+.evb-body { display: flex; flex: 1; min-height: 0; }
+.evb-waiting { width: 280px; flex-shrink: 0; overflow: auto; border-right: 1px solid #e2e8f0; padding: 10px; background: #f7f9fb; }
+.evb-card { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #2b7870; border-radius: 8px; padding: 8px; margin-bottom: 8px; cursor: grab; }
+.evb-card-actions { display: flex; gap: 6px; margin: 6px 0; }
+.evb-problem { white-space: pre-wrap; max-height: 60px; overflow: hidden; }
+.evb-grid { display: flex; flex: 1; overflow: auto; }
+.evb-axis { width: 56px; flex-shrink: 0; }
+.evb-axis-body, .evb-col-body { position: relative; }
+.evb-tick { position: absolute; left: 0; right: 0; font-size: 11px; color: #64748b; padding-left: 4px; }
+.evb-head { height: 64px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; background: #fff; position: sticky; top: 0; z-index: 2; }
+.evb-room { font-weight: 700; }
+.evb-doctors { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
+.evb-col { flex: 1; min-width: 200px; border-left: 1px solid #e2e8f0; }
+.evb-cell { position: absolute; left: 0; right: 0; border-top: 1px dashed #f1f5f9; }
+.evb-cell.evb-hour { border-top: 1px solid #e2e8f0; }
+.evb-cell.evb-closed { background: repeating-linear-gradient(135deg, #f1f5f9 0 6px, #e9eef3 6px 12px); }
+.evb-event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 2px 6px; color: #fff; font-size: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.15); z-index: 1; }
+.evb-event.evb-block { background: repeating-linear-gradient(135deg, #94a3b8 0 6px, #64748b 6px 12px) !important; left: 0; right: 0; border-radius: 0; }
+.evb-event.evb-muted { opacity: .55; }
+.evb-symbol { display: inline-block; min-width: 16px; margin-right: 4px; padding: 0 3px; border-radius: 3px; background: rgba(255,255,255,.3); font-weight: 700; }
+.evb-web { float: right; }

@@ -224,3 +224,67 @@ class VetReservation(models.Model):
                 rec.partner_id = Partner.najit_nebo_zalozit_klienta(rec.contact_name, rec.contact_email, rec.contact_phone)
             if not rec.pet_id and rec.pet_name:
                 rec.pet_id = Pet.najit_nebo_zalozit(rec.partner_id, rec.pet_name, rec.pet_species)
+
+    # ---------- tabule ----------
+    @api.model
+    def board_data(self, day_str):
+        day = fields.Date.from_string(day_str)
+        A = self.env["elite.vet.availability"]
+        s = self.env["elite.vet.setting"].nastaveni()
+        rooms = self.env["elite.vet.room"].search([])
+        start, stop = A.local_to_utc(day, 0), A.local_to_utc(day, 1440)
+        assignments = self.env["elite.vet.doctor.assignment"].search([("date", "=", day)])
+        rooms_out, axis_from, axis_to = [], 8 * 60, 20 * 60
+        for room in rooms:
+            open_iv = A.open_minutes(room, day)
+            for f, t in open_iv:
+                axis_from, axis_to = min(axis_from, f), max(axis_to, t)
+            rooms_out.append({
+                "id": room.id, "name": room.name, "color_hex": room.color_hex, "online": room.online,
+                "open": [[f, t] for f, t in open_iv],
+                "doctors": [{"id": a.doctor_id.id, "name": a.doctor_id.name,
+                             "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
+                            for a in assignments if a.room_id == room],
+            })
+        events = []
+        for r in self.search([("start", "<", stop), ("stop", ">", start),
+                              "|", ("kind", "=", "block"), ("state", "in", ("confirmed", "done", "no_show"))]):
+            events.append({
+                "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
+                "room_id": r.room_id.id or False,
+                "start": A.utc_to_local_minutes(r.start, day), "end": A.utc_to_local_minutes(r.stop, day),
+                "color_hex": r.color_hex, "symbol": r.procedure_id.symbol or "",
+                "phone": r.contact_phone or r.partner_id.phone or "", "email": r.contact_email or "",
+                "problem": r.problem or "", "procedure": r.procedure_id.name or "",
+                "doctor": r.doctor_id.name or "", "source": r.source,
+            })
+        waiting = []
+        for w in self.search([("state", "=", "web_new"), ("stop", ">=", fields.Datetime.now())], order="start"):
+            # Mistni cas ordinace (TZ modulu), ne tz prihlaseneho uzivatele - ten nemusi byt nastaven.
+            local = pytz.utc.localize(w.start).astimezone(TZ)
+            waiting.append({
+                "id": w.id, "name": w.name, "date": local.strftime("%Y-%m-%d"), "time": local.strftime("%H:%M"),
+                "procedure": w.procedure_id.name or "", "duration": w.duration_minutes,
+                "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
+                "doctor": w.doctor_id.name or "",
+            })
+        return {"date": day_str, "step": s.booking_slot_step, "axis": {"from": axis_from, "to": axis_to},
+                "rooms": rooms_out, "events": events, "waiting": waiting}
+
+    @api.model
+    def board_slot_utc(self, day_str, minute):
+        A = self.env["elite.vet.availability"]
+        return fields.Datetime.to_string(A.local_to_utc(fields.Date.from_string(day_str), int(minute)))
+
+    @api.model
+    def board_move(self, res_id, day_str, minute, room_id):
+        rec = self.browse(res_id)
+        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id or None)
+        return True
+
+    @api.model
+    def board_confirm(self, res_id, day_str, minute, room_id):
+        rec = self.browse(res_id)
+        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id)
+        rec.action_confirm()
+        return True
