@@ -15,8 +15,18 @@ class ReservationCase(TransactionCase):
         cls.vacc = Proc.create({"name": "Vaccination", "duration": 15, "symbol": "V", "color": "green"})
         cls.derm = Proc.create({"name": "Dermatological problem", "duration": 30, "symbol": "D",
                                 "color": "blue", "room_ids": [(6, 0, [cls.room1.id])]})
+        Doctor = cls.env["elite.vet.doctor"]
+        cls.dr_a = Doctor.create({"name": "MVDr. Alena Testová"})
+        cls.dr_b = Doctor.create({"name": "MVDr. Bára Testová"})
 
     def hours(self, room, weekday, h_from, h_to, **extra):
         vals = {"room_id": room.id, "weekday": str(weekday), "hour_from": h_from, "hour_to": h_to}
         vals.update(extra)
         return self.env["elite.vet.room.hours"].create(vals)
+
+    def assign(self, doctor, room, day, h_from, h_to, procedures=None):
+        vals = {"doctor_id": doctor.id, "room_id": room.id, "date": day,
+                "hour_from": h_from, "hour_to": h_to}
+        if procedures:
+            vals["procedure_ids"] = [(6, 0, procedures.ids)]
+        return self.env["elite.vet.doctor.assignment"].create(vals)

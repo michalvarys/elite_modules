@@ -21,6 +21,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "security/ir.model.access.csv",
         "views/room_views.xml",
         "views/procedure_views.xml",
+        "views/doctor_assignment_views.xml",
         "views/menus.xml",
     ],
     "assets": {},

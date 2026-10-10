@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_assignment_list" model="ir.ui.view">
+        <field name="name">elite.vet.doctor.assignment.list</field>
+        <field name="model">elite.vet.doctor.assignment</field>
+        <field name="arch" type="xml">
+            <list string="Rozpis lékařů" editable="bottom" multi_edit="1" default_order="date, room_id, hour_from">
+                <field name="date"/>
+                <field name="doctor_id"/>
+                <field name="room_id"/>
+                <field name="hour_from" widget="float_time"/>
+                <field name="hour_to" widget="float_time"/>
+                <field name="procedure_ids" widget="many2many_tags" optional="hide"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_assignment_calendar" model="ir.ui.view">
+        <field name="name">elite.vet.doctor.assignment.calendar</field>
+        <field name="model">elite.vet.doctor.assignment</field>
+        <field name="arch" type="xml">
+            <calendar string="Rozpis lékařů" date_start="date" color="room_id" mode="week" quick_create="0">
+                <field name="doctor_id"/>
+                <field name="room_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_assignment_search" model="ir.ui.view">
+        <field name="name">elite.vet.doctor.assignment.search</field>
+        <field name="model">elite.vet.doctor.assignment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="doctor_id"/>
+                <field name="room_id"/>
+                <filter name="od_dneska" string="Od dneška"
+                        domain="[('date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Seskupit podle">
+                    <filter name="group_date" string="Den" context="{'group_by': 'date:day'}"/>
+                    <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_assignment" model="ir.actions.act_window">
+        <field name="name">Rozpis lékařů</field>
+        <field name="res_model">elite.vet.doctor.assignment</field>
+        <field name="view_mode">list,calendar,form</field>
+        <field name="context">{'search_default_od_dneska': 1, 'search_default_group_date': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Zapište, kdo kdy slouží</p>
+            <p>Datum, lékařka, ordinace, od–do. Podle toho se na webu nabízí termíny
+               „k lékaři“ a na tabuli je vidět, kdo je v ordinaci.</p>
+        </field>
+    </record>
+</odoo>
