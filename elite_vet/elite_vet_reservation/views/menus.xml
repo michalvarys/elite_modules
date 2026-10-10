@@ -2,6 +2,12 @@
 <odoo>
     <!-- Aplikace Rezervace uz existuje v elite_vet_web (nastaveni + FAQ).
          Nic noveho se nezaklada, jen se do ni vesi dalsi polozky. -->
+    <menuitem id="menu_reservation_waiting" name="Čekající z webu"
+              parent="elite_vet_web.menu_rezervace_root" action="action_reservation_waiting" sequence="20"
+              groups="elite_vet_reservation.group_reservation_reception"/>
+    <menuitem id="menu_reservation_all" name="Rezervace"
+              parent="elite_vet_web.menu_rezervace_root" action="action_reservation" sequence="30"
+              groups="elite_vet_reservation.group_reservation_reception"/>
     <menuitem id="menu_reservation_assignment" name="Rozpis lékařů"
               parent="elite_vet_web.menu_rezervace_root" action="action_assignment" sequence="40"
               groups="elite_vet_reservation.group_reservation_reception"/>

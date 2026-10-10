@@ -23,6 +23,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/procedure_views.xml",
         "views/doctor_assignment_views.xml",
         "views/pet_views.xml",
+        "views/reservation_views.xml",
         "views/partner_views.xml",
         "views/menus.xml",
     ],

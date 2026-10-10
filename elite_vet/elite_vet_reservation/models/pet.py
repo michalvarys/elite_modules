@@ -45,6 +45,7 @@ class ResPartner(models.Model):
     pet_ids = fields.One2many("elite.vet.pet", "partner_id", string="Mazlíčci")
     # Misto pro budouci export z WinVetu. Ted se nikde nevyplnuje.
     winvet_ref = fields.Char(string="ID ve WinVetu", index=True)
+    reservation_ids = fields.One2many("elite.vet.reservation", "partner_id", string="Rezervace")
 
     @api.model
     def najit_nebo_zalozit_klienta(self, name, email, phone):

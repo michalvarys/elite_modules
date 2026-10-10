@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import pytz
+
 from odoo.tests import TransactionCase
 
 
@@ -30,3 +34,18 @@ class ReservationCase(TransactionCase):
         if procedures:
             vals["procedure_ids"] = [(6, 0, procedures.ids)]
         return self.env["elite.vet.doctor.assignment"].create(vals)
+
+    TZ = pytz.timezone("Europe/Prague")
+
+    def dt(self, day, h, m=0):
+        """Prazsky cas -> naivni UTC, jak ho Odoo uklada."""
+        local = self.TZ.localize(datetime(day.year, day.month, day.day, h, m))
+        return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+    def reservation(self, **vals):
+        base = {"kind": "reservation", "state": "confirmed", "source": "internal",
+                "procedure_id": self.vacc.id, "room_id": self.room1.id,
+                "contact_name": "Test Klient", "contact_email": "klient@example.cz",
+                "contact_phone": "+420777000111", "pet_name": "Rex"}
+        base.update(vals)
+        return self.env["elite.vet.reservation"].create(base)
