@@ -3,4 +3,5 @@ from . import procedure
 from . import doctor_assignment
 from . import pet
 from . import reservation
+from . import availability
 from . import setting
