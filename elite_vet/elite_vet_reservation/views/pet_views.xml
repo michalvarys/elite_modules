@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pet_list" model="ir.ui.view">
+        <field name="name">elite.vet.pet.list</field>
+        <field name="model">elite.vet.pet</field>
+        <field name="arch" type="xml">
+            <list string="Mazlíčci">
+                <field name="name"/>
+                <field name="species"/>
+                <field name="breed" optional="show"/>
+                <field name="partner_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pet_form" model="ir.ui.view">
+        <field name="name">elite.vet.pet.form</field>
+        <field name="model">elite.vet.pet</field>
+        <field name="arch" type="xml">
+            <form string="Mazlíček">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group>
+                            <field name="species"/>
+                            <field name="species_other" invisible="species != 'other'"/>
+                            <field name="breed"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Poznámka pro recepci"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pet" model="ir.actions.act_window">
+        <field name="name">Mazlíčci</field>
+        <field name="res_model">elite.vet.pet</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

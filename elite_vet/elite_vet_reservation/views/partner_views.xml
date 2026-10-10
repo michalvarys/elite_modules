@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_vet" model="ir.ui.view">
+        <field name="name">res.partner.form.vet</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Mazlíčci" name="vet_pets" invisible="not is_vet_client">
+                    <field name="is_vet_client" invisible="1"/>
+                    <field name="pet_ids">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="species"/>
+                            <field name="breed"/>
+                            <field name="note"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="winvet_ref"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    <record id="action_client" model="ir.actions.act_window">
+        <field name="name">Klienti</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_vet_client', '=', True)]</field>
+        <field name="context">{'default_is_vet_client': True}</field>
+    </record>
+</odoo>
