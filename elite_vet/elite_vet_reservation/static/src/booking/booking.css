@@ -1,3 +1,5 @@
+/* Skryvani kroku nesmi zalezet na reboot pravidle Bootstrapu */
+.evbk [hidden]{display:none !important}
 .evbk{padding:24px 0 48px;background:#fff}
 .evbk-inner{max-width:860px}
 .evbk-intro{margin-bottom:20px;color:var(--ev-text-secondary,#64748b)}

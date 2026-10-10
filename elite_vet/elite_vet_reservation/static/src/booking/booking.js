@@ -60,6 +60,7 @@
         renderProcedures(q('[data-list="procedures"]'), o.procedures);
         var dl = q('[data-list="doctors"]'); dl.innerHTML = "";
         q('[data-empty="doctors"]').hidden = o.doctors.length > 0;
+        q('[data-empty="specializations"]').hidden = o.specializations.length > 0;
         o.doctors.forEach(function (d) {
             var c = el("button", "evbk-card"); c.type = "button";
             if (d.photo) { var img = el("img"); img.src = d.photo; img.alt = ""; c.appendChild(img); }
@@ -121,6 +122,7 @@
         var grid = q('[data-cal="grid"]'); grid.innerHTML = "";
         days.forEach(function (d) { grid.appendChild(el("div", "evbk-dow", d)); });
         var first = new Date(state.year, state.month - 1, 1);
+        // Tyden zacina pondelim, JS getDay() ma nedeli = 0, proto posun (getDay()+6)%7
         var offset = (first.getDay() + 6) % 7;
         for (var i = 0; i < offset; i++) grid.appendChild(el("div", "evbk-day is-pad"));
         var count = new Date(state.year, state.month, 0).getDate();
@@ -142,14 +144,19 @@
         q('[data-slots="hint"]').hidden = false;
         ["am", "pm"].forEach(function (k) { q('[data-slots="' + k + '"]').innerHTML = ""; q('[data-slots="' + k + '-title"]').hidden = true; });
         q('[data-slots="doctor-pick"]').hidden = true;
+        q('[data-slots="taken"]').hidden = true;
     }
     function loadSlots() {
         resetSlots();
+        return loadSlotsInner();
+    }
+    function loadSlotsInner() {
         var p = filters(); p.date = state.date;
-        rpc("/rezervace/api/slots", p).then(function (slots) {
+        return rpc("/rezervace/api/slots", p).then(function (slots) {
             q('[data-slots="hint"]').hidden = slots.length > 0;
             if (!slots.length) { q('[data-slots="hint"]').hidden = false; return; }
             slots.forEach(function (s) {
+                // 720 minut = poledne od pulnoci: dopoledne / odpoledne sloupec
                 var k = s.minute < 720 ? "am" : "pm";
                 q('[data-slots="' + k + '-title"]').hidden = false;
                 var b = el("button", "evbk-slot", s.time); b.type = "button";
@@ -194,18 +201,22 @@
     function showErrors(fields, general) {
         qa(".evbk-form .is-invalid").forEach(function (x) { x.classList.remove("is-invalid"); });
         qa(".evbk-form .evbk-field-error").forEach(function (x) { x.remove(); });
+        var orphan = [];
         Object.keys(fields || {}).forEach(function (name) {
             var input = q('.evbk-form [name="' + name + '"]');
-            if (!input) return;
+            // Pole bez vstupu (procedure_id, time...) by se jinak ztratilo: ukazeme ho v obecne chybe
+            if (!input) { orphan.push(fields[name]); return; }
             input.classList.add("is-invalid");
             input.closest("label").appendChild(el("span", "evbk-field-error", fields[name]));
         });
         var g = q('[data-error="form"]');
-        g.hidden = !general; g.textContent = general || "";
+        var text = [general].concat(orphan).filter(Boolean).join(" ");
+        g.hidden = !text; g.textContent = text;
     }
     q(".evbk-form").addEventListener("submit", function (ev) {
         ev.preventDefault();
         var f = ev.target, data = filters();
+        // hp = honeypot, posila se na server, kde se vyhodnoti jako spam
         ["contact_name", "pet_name", "pet_species", "problem", "contact_email", "contact_phone", "hp"].forEach(function (n) { data[n] = f.elements[n].value; });
         data.consent = f.elements.consent.checked;
         data.date = state.date; data.time = state.time;
@@ -214,7 +225,12 @@
         rpc("/rezervace/api/submit", data).then(function (res) {
             btn.disabled = false;
             if (res.ok) { gotoDone(res); return; }
-            if (res.error === "slot_taken") { showStep(2); loadSlots(); showErrors({}, ""); q('[data-slots="hint"]').textContent = "⚠ " + q('[data-empty="days"]').textContent; return; }
+            if (res.error === "slot_taken") {
+                // Termin mezitim nekdo zabral: zpet na vyber, prekreslit mesic (den mohl zaplnit) a slotty
+                showErrors({}, ""); showStep(2); loadMonth();
+                loadSlots().then(function () { q('[data-slots="taken"]').hidden = false; });
+                return;
+            }
             if (res.error === "rate_limit") { showErrors({}, q('[data-error="fatal"]').textContent); return; }
             showErrors(res.fields, "");
         }).catch(function () { btn.disabled = false; fatal(); });

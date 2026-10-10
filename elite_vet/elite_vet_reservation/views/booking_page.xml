@@ -31,13 +31,14 @@
                             <p class="evbk-hint">Choose a doctor, then the reason for your visit.</p>
                             <div class="evbk-cards" data-list="doctors"></div>
                             <div class="evbk-list" data-list="procedures-for-doctor" hidden="hidden"></div>
+                            <p class="evbk-empty" data-empty="doctors" hidden="hidden">No doctor has online appointments in the coming weeks. Choose by problem or call us.</p>
                         </div>
                         <div class="evbk-tab" data-tab="specialization" hidden="hidden">
                             <p class="evbk-hint">Choose a specialization, then the reason for your visit.</p>
                             <div class="evbk-cards" data-list="specializations"></div>
                             <div class="evbk-list" data-list="procedures-for-spec" hidden="hidden"></div>
+                            <p class="evbk-empty" data-empty="specializations" hidden="hidden">No specializations are set up yet. Choose by problem.</p>
                         </div>
-                        <p class="evbk-empty" data-empty="doctors" hidden="hidden">No doctor has online appointments in the coming weeks. Choose by problem or call us.</p>
                     </div>
 
                     <!-- KROK 2 -->
@@ -54,6 +55,7 @@
                         </div>
                         <div class="evbk-slots">
                             <p class="evbk-hint" data-slots="hint">Pick a day first.</p>
+                            <p class="evbk-error" data-slots="taken" hidden="hidden">This time has just been taken. Please choose another.</p>
                             <h4 data-slots="am-title" hidden="hidden">Morning</h4>
                             <div class="evbk-slot-grid" data-slots="am"></div>
                             <h4 data-slots="pm-title" hidden="hidden">Afternoon</h4>
@@ -88,6 +90,7 @@
                                 <span t-if="ev_rez.booking_consent_text" t-out="ev_rez.booking_consent_text"/>
                                 <span t-else="">I agree to the processing of my personal data for the purpose of this appointment.</span>
                             </label>
+                            <!-- Honeypot: skryte pole, ktere clovek nevyplni; boti ano a server je zahodi -->
                             <input name="hp" type="text" tabindex="-1" autocomplete="off" class="evbk-hp"/>
                             <p class="evbk-error" data-error="form" hidden="hidden"></p>
                             <button type="submit" class="evbk-submit">Send the request</button>
