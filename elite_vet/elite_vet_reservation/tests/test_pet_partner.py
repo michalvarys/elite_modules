@@ -34,3 +34,16 @@ class TestPetPartner(ReservationCase):
     def test_normalize_phone(self):
         from odoo.addons.elite_vet_reservation.models.pet import normalizuj_telefon
         self.assertEqual(normalizuj_telefon("+420 722-599 699"), "420722599699")
+
+    def test_wildcard_email_does_not_match_existing_partner(self):
+        existing = self.env["res.partner"].create({"name": "Cizí", "email": "a@example.cz"})
+        for email in ("%", "%@%"):
+            found = self.env["res.partner"].najit_nebo_zalozit_klienta("Útočník", email, "")
+            self.assertNotEqual(found, existing)
+            self.assertFalse(existing.is_vet_client)
+
+    def test_phone_match_sees_unflushed_write(self):
+        p = self.env["res.partner"].create({"name": "Bez telefonu"})
+        p.phone = "+420 601 000 999"
+        found = self.env["res.partner"].najit_nebo_zalozit_klienta("Bez telefonu", "", "601000999")
+        self.assertEqual(found, p)

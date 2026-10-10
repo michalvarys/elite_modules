@@ -53,11 +53,15 @@ class ResPartner(models.Model):
         digits = normalizuj_telefon(phone)
         partner = self.browse()
         if email:
-            partner = self.search([("email", "=ilike", email)], limit=1)
+            # email_normalized (male pismena) misto =ilike: ten bere % a _ jako zastupne
+            # znaky a verejny formular by tak mohl "trefit" cizi kontakt.
+            partner = self.search([("email_normalized", "=", email.lower())], limit=1)
         if not partner and len(digits) >= 9:
             tail = digits[-9:]
             # Telefony jsou v bazi zapsane ruzne ("+420 722 599 699"), proto se
             # porovnava jen cislice; ilike na cast cisla by mezery rozbily.
+            # Raw SQL nevidi necommitnute ORM zapisy, proto je predtim flushneme.
+            self.flush_model(["phone", "active"])
             self.env.cr.execute(
                 "SELECT id FROM res_partner WHERE active"
                 " AND regexp_replace(phone, '\\D', '', 'g') LIKE %s ORDER BY id LIMIT 1",
