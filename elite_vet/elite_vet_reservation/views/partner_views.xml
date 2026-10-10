@@ -6,7 +6,8 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page string="Mazlíčci" name="vet_pets" invisible="not is_vet_client">
+                <page string="Mazlíčci" name="vet_pets" invisible="not is_vet_client"
+                      groups="elite_vet_reservation.group_reservation_reception">
                     <field name="is_vet_client" invisible="1"/>
                     <field name="pet_ids">
                         <list editable="bottom">

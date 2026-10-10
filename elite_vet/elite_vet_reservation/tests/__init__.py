@@ -8,3 +8,4 @@ from . import test_availability
 from . import test_board
 from . import test_controllers
 from . import test_mail
+from . import test_access

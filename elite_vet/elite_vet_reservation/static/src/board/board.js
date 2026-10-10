@@ -57,7 +57,7 @@ export class ReservationBoard extends Component {
     hhmm(m) { return hhmm(m); }
     isOpen(room, min) { return room.open.some(([f, t]) => f <= min && min < t); }
     eventsFor(room) { return this.state.data.events.filter((e) => e.room_id === room.id); }
-    get globalBlocks() { return this.state.data.events.filter((e) => !e.room_id); }
+    get globalBlocks() { return this.state.data.events.filter((e) => !e.room_id && e.kind === 'block'); }
     minuteFromDrop(ev, column) {
         const rect = column.getBoundingClientRect();
         const y = ev.clientY - rect.top + column.scrollTop;

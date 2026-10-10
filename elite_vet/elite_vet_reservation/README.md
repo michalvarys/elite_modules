@@ -10,6 +10,8 @@ Aplikace **Rezervace** má položky: **Tabule**, **Čekající z webu**,
 
 ## Denní práce recepce
 
+Personálu přidělte skupinu **Recepce** pro denní práci (tabule, rezervace, klienti) a **Správce rezervací** pro konfiguraci (ordinace, úkony, nastavení).
+
 1. **Tabule** – jeden den, sloupec na každou ordinaci. Šrafované = zavřeno,
    v hlavičce sloupce je, kdo slouží. Klik do prázdna = nová rezervace
    v tom čase. Přetažení přesune rezervaci na jiný čas nebo ordinaci.

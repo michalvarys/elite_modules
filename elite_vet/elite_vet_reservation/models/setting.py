@@ -1,4 +1,5 @@
-from odoo import fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class EliteVetSetting(models.Model):
@@ -23,3 +24,11 @@ class EliteVetSetting(models.Model):
                                               help="Dokud je vypnuté, záloha se nikde neukazuje.")
     booking_consent_text = fields.Html("Text souhlasu pod formulářem", translate=True, sanitize=False)
     booking_intro = fields.Html("Text nad rezervací", translate=True, sanitize=False)
+
+    @api.constrains("booking_slot_step", "booking_min_hours_before", "booking_max_days_ahead", "booking_cancel_hours_before")
+    def _check_booking_numbers(self):
+        for rec in self:
+            if rec.booking_slot_step <= 0 or rec.booking_slot_step % 5:
+                raise ValidationError(_("Krok slotů musí být kladný násobek 5 minut."))
+            if min(rec.booking_min_hours_before, rec.booking_max_days_ahead, rec.booking_cancel_hours_before) < 0:
+                raise ValidationError(_("Hodnoty časových limitů nesmí být záporné."))

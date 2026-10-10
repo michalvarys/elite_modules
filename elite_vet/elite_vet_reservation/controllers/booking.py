@@ -120,8 +120,6 @@ class BookingController(http.Controller):
         if data.get("hp"):
             return {"ok": True, "token": "", "deposit": False}   # robot: tvarime se, ze proslo
         ip = request.httprequest.remote_addr or "?"
-        if not _rate_ok(ip):
-            return {"ok": False, "error": "rate_limit", "fields": {}}
         proc = self._procedure(data.get("procedure_id"))
         if not proc:
             return {"ok": False, "error": "validation", "fields": {"procedure_id": _("Vyberte důvod návštěvy.")}}
@@ -140,6 +138,9 @@ class BookingController(http.Controller):
         slot = next((sl for sl in A.slots(proc, day, doctor, spec) if sl["minute"] == minute), None)
         if not slot:
             return {"ok": False, "error": "slot_taken", "fields": {}}
+        # Limit se počítá až u odeslání, které opravdu založí záznam (chybné pokusy se nepočítají).
+        if not _rate_ok(ip):
+            return {"ok": False, "error": "rate_limit", "fields": {}}
         s = self._setting()
         vals = dict(clean, **{
             "kind": "reservation", "state": "web_new", "source": "web",

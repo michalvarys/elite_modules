@@ -105,3 +105,18 @@ class TestReservation(ReservationCase):
         self.assertEqual(r.partner_id.email, "novy@example.cz")
         self.assertEqual((r.pet_id.name, r.pet_id.species), ("Fík", "cat"))
         self.assertIn(r, r.partner_id.reservation_ids)
+
+    def test_confirmed_reservation_requires_room(self):
+        with self.assertRaises(ValidationError):
+            self.reservation(start=self.dt(date(2026, 10, 14), 9, 0), room_id=False)
+        r = self.reservation(start=self.dt(date(2026, 10, 14), 9, 0), state="web_new", source="web", room_id=False)
+        self.assertFalse(r.room_id)
+
+    def test_busy_domain_ignores_roomless_reservations(self):
+        d = date(2026, 10, 14)
+        r = self.reservation(start=self.dt(d, 9, 0), state="web_new", source="web", room_id=False)
+        dom = self.env["elite.vet.reservation"]._busy_domain([self.room1.id], self.dt(d, 8, 0), self.dt(d, 10, 0))
+        self.assertNotIn(r, self.env["elite.vet.reservation"].search(dom))
+        block = self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Celá klinika", "start": self.dt(d, 9, 0), "stop": self.dt(d, 10, 0)})
+        self.assertIn(block, self.env["elite.vet.reservation"].search(dom))

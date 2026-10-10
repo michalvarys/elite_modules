@@ -27,6 +27,8 @@
                 <header>
                     <button name="action_confirm" type="object" string="Potvrdit" class="btn-primary"
                             invisible="state != 'web_new' or kind == 'block'"/>
+                    <button name="action_send_confirmation" type="object" string="Poslat potvrzení"
+                            invisible="state != 'confirmed' or kind == 'block' or not contact_email"/>
                     <button name="action_done" type="object" string="Proběhla" invisible="state != 'confirmed' or kind == 'block'"/>
                     <button name="action_no_show" type="object" string="Nedorazil" invisible="state != 'confirmed' or kind == 'block'"/>
                     <button name="action_cancel" type="object" string="Zrušit" invisible="state in ('cancelled','done','no_show')"
@@ -44,7 +46,7 @@
                         <group string="Termín">
                             <field name="procedure_id" invisible="kind == 'block'" required="kind == 'reservation'"/>
                             <field name="block_reason" invisible="kind == 'reservation'" required="kind == 'block'"/>
-                            <field name="room_id"/>
+                            <field name="room_id" required="kind == 'reservation' and state in ('confirmed', 'done')"/>
                             <field name="doctor_id" invisible="kind == 'block'"/>
                             <field name="start"/>
                             <field name="stop"/>

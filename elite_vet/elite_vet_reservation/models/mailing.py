@@ -70,11 +70,28 @@ class VetReservationMailing(models.Model):
                 self._poslat("mail_cancelled", email_to=notify)
         return res
 
-    def action_reschedule(self, start, room_id=None, doctor_id=None):
-        before = (self.start, self.room_id.id)
-        res = super().action_reschedule(start, room_id=room_id, doctor_id=doctor_id)
-        if self.kind == "reservation" and self.state == "confirmed" and before != (self.start, self.room_id.id):
-            self._poslat("mail_rescheduled")
+    def action_send_confirmation(self):
+        self.filtered(lambda r: r.kind == "reservation" and r.state == "confirmed" and r.contact_email)._poslat("mail_confirmed")
+        return True
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        if not self.env.context.get("ev_bez_mailu"):
+            records.filtered(lambda r: r.kind == "reservation" and r.source == "internal"
+                             and r.state == "confirmed" and r.contact_email).action_send_confirmation()
+        return records
+
+    def write(self, vals):
+        if self.env.context.get("ev_skip_mail") or not ({"start", "room_id"} & set(vals)):
+            return super().write(vals)
+        before = {r.id: (r.start, r.room_id.id) for r in self if r.kind == "reservation" and r.state == "confirmed"}
+        res = super().write(vals)
+        moved = self.filtered(lambda r: r.id in before and r.state == "confirmed"
+                              and before[r.id] != (r.start, r.room_id.id))
+        if moved:
+            moved.with_context(ev_skip_mail=True).write({"reminder_sent": False})
+            moved._poslat("mail_rescheduled")
         return res
 
     @api.model

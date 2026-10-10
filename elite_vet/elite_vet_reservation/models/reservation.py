@@ -98,11 +98,18 @@ class VetReservation(models.Model):
             # Blokace blokuje, dokud neni zrusena; rezervace jen potvrzena / proběhla.
             "|", "&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES),
             ("state", "in", BUSY_STATES),
-            "|", ("room_id", "=", False), ("room_id", "in", list(room_ids)),
+            # Bez ordinace blokuje jen blokace (celoklinicka); rezervace bez ordinace nikoho neblokuje.
+            "|", "&", ("room_id", "=", False), ("kind", "=", "block"), ("room_id", "in", list(room_ids)),
         ]
         if exclude_ids:
             domain.append(("id", "not in", list(exclude_ids)))
         return domain
+
+    @api.constrains("kind", "state", "room_id")
+    def _check_room_required(self):
+        for rec in self:
+            if rec.kind == "reservation" and rec.state in BUSY_STATES and not rec.room_id:
+                raise ValidationError(_("Potvrzená rezervace musí mít ordinaci."))
 
     @api.model
     def _lock_rooms(self, room_ids):

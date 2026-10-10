@@ -2,6 +2,10 @@
 <odoo>
     <!-- Aplikace Rezervace uz existuje v elite_vet_web (nastaveni + FAQ).
          Nic noveho se nezaklada, jen se do ni vesi dalsi polozky. -->
+    <!-- Kořen patří elite_vet_web a vidí ho jen správce kalendáře; Recepce ho musí vidět taky. -->
+    <record id="elite_vet_web.menu_rezervace_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(4, ref('elite_vet_reservation.group_reservation_reception'))]"/>
+    </record>
     <menuitem id="menu_reservation_board" name="Tabule"
               parent="elite_vet_web.menu_rezervace_root" action="action_board" sequence="10"
               groups="elite_vet_reservation.group_reservation_reception"/>

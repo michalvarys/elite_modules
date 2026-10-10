@@ -9,6 +9,8 @@ class TestControllers(HttpCase):
 
     def setUp(self):
         super().setUp()
+        from odoo.addons.elite_vet_reservation.controllers import booking
+        booking._SUBMITS.clear()
         Room = self.env["elite.vet.room"]
         self.room = Room.create({"name": "Ordinace T", "color": "teal"})
         for wd in range(7):
@@ -56,6 +58,13 @@ class TestControllers(HttpCase):
         self.assertFalse(res["ok"])
         self.assertEqual(res["error"], "validation")
         self.assertEqual(set(res["fields"]), {"contact_email", "problem", "consent"})
+
+    def test_rate_limit_counts_only_valid_submits(self):
+        for _i in range(6):
+            res = self.rpc("/rezervace/api/submit", self.good_submit(contact_email="neni-email"))
+            self.assertEqual(res["error"], "validation")
+        res = self.rpc("/rezervace/api/submit", self.good_submit())
+        self.assertTrue(res["ok"], res)
 
     def test_submit_honeypot_silently_ok(self):
         res = self.rpc("/rezervace/api/submit", self.good_submit(hp="spam"))

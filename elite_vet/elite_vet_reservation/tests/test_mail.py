@@ -36,6 +36,7 @@ class TestMail(ReservationCase):
     def test_reminder_cron_marks_and_sends_once(self):
         soon = fields.Datetime.now() + timedelta(hours=20)
         r = self.reservation(start=soon)
+        self.env["mail.mail"].search([]).unlink()
         s = self.env["elite.vet.setting"].nastaveni()
         s.write({"booking_reminder_enabled": True, "booking_reminder_hours_before": 24})
         self.env["elite.vet.reservation"]._cron_pripominky()
@@ -47,6 +48,38 @@ class TestMail(ReservationCase):
     def test_start_display_in_prague_time(self):
         r = self.reservation(start=self.dt(WED, 9, 0))
         self.assertEqual(r.start_display, "14. 10. 2026 9:00")
+
+    def test_form_reschedule_sends_mail_and_resets_reminder(self):
+        r = self.reservation(start=self.dt(WED, 9, 0))
+        r.reminder_sent = True
+        before = self.mails_to("klient@example.cz")
+        r.write({"start": self.dt(WED, 11, 0), "stop": self.dt(WED, 11, 15)})
+        new = self.mails_to("klient@example.cz") - before
+        self.assertEqual(len(new), 1)
+        self.assertFalse(r.reminder_sent)
+
+    def test_board_confirm_sends_only_confirmation(self):
+        r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web", room_id=False)
+        before = self.mails_to("klient@example.cz")
+        self.env["elite.vet.reservation"].board_confirm(r.id, WED.isoformat(), 600, self.room1.id)
+        new = self.mails_to("klient@example.cz") - before
+        self.assertEqual(len(new), 1)
+        self.assertTrue(new.subject.startswith("Termín potvrzen"), new.subject)
+
+    def test_internal_confirmed_create_sends_confirmation(self):
+        r = self.reservation(start=self.dt(WED, 9, 0))
+        self.assertEqual(len(self.mails_to("klient@example.cz")), 1)
+        n = len(self.mails_to("jiny@example.cz"))
+        self.env["elite.vet.reservation"].with_context(ev_bez_mailu=True).create({
+            "kind": "reservation", "state": "confirmed", "source": "internal", "room_id": self.room1.id,
+            "start": self.dt(WED, 10, 0), "procedure_id": self.vacc.id, "contact_email": "jiny@example.cz"})
+        self.assertEqual(len(self.mails_to("jiny@example.cz")), n)
+
+    def test_action_send_confirmation_resends(self):
+        r = self.reservation(start=self.dt(WED, 9, 0))
+        before = self.mails_to("klient@example.cz")
+        r.action_send_confirmation()
+        self.assertEqual(len(self.mails_to("klient@example.cz") - before), 1)
 
 
 @tagged("post_install", "-at_install")

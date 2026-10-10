@@ -40,3 +40,10 @@ class TestSetting(ReservationCase):
         self.assertEqual(vacc.name, "Vaccination")
         if "cs_CZ" in self.env["res.lang"].search([]).mapped("code"):
             self.assertEqual(vacc.with_context(lang="cs_CZ").name, "Vakcinace")
+
+    def test_slot_step_must_be_positive(self):
+        from odoo.exceptions import ValidationError
+        s = self.env["elite.vet.setting"].nastaveni()
+        for bad in ({"booking_slot_step": 0}, {"booking_slot_step": 7}, {"booking_min_hours_before": -1}):
+            with self.assertRaises(ValidationError), self.cr.savepoint():
+                s.write(bad)
