@@ -9,4 +9,6 @@
               parent="menu_reservation_config" action="action_room" sequence="10"/>
     <menuitem id="menu_reservation_room_exception" name="Výjimky ordinační doby"
               parent="menu_reservation_config" action="action_room_exception" sequence="20"/>
+    <menuitem id="menu_reservation_procedure" name="Úkony"
+              parent="menu_reservation_config" action="action_procedure" sequence="30"/>
 </odoo>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_procedure_list" model="ir.ui.view">
+        <field name="name">elite.vet.procedure.list</field>
+        <field name="model">elite.vet.procedure</field>
+        <field name="arch" type="xml">
+            <list string="Úkony" editable="bottom" multi_edit="1">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="duration"/>
+                <field name="symbol"/>
+                <field name="color"/>
+                <field name="online"/>
+                <field name="room_ids" widget="many2many_tags" optional="show"/>
+                <field name="specialization_ids" widget="many2many_tags" optional="show"/>
+                <field name="deposit_required" optional="hide"/>
+                <field name="deposit_amount" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_procedure_form" model="ir.ui.view">
+        <field name="name">elite.vet.procedure.form</field>
+        <field name="model">elite.vet.procedure</field>
+        <field name="arch" type="xml">
+            <form string="Úkon">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="duration"/>
+                            <field name="symbol"/>
+                            <field name="color"/>
+                        </group>
+                        <group>
+                            <field name="online"/>
+                            <field name="room_ids" widget="many2many_tags"/>
+                            <field name="specialization_ids" widget="many2many_tags"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    <group string="Instrukce pro klienta">
+                        <field name="client_note" nolabel="1" colspan="2"
+                               placeholder="Zvíře přiveďte nalačno (8–12 hodin bez jídla)."/>
+                    </group>
+                    <group string="Záloha">
+                        <field name="deposit_required"/>
+                        <field name="deposit_amount" invisible="not deposit_required"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_procedure" model="ir.actions.act_window">
+        <field name="name">Úkony</field>
+        <field name="res_model">elite.vet.procedure</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
