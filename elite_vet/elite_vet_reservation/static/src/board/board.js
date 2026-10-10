@@ -20,14 +20,19 @@ export class ReservationBoard extends Component {
         this.state = useState({ date: isoDate(new Date()), data: null, loading: true, drag: null });
         onWillStart(() => this.load());
         // Recepce nechava tabuli otevrenou celý den, nove zadosti z webu se musi objevit bez F5.
-        this.timer = setInterval(() => this.load(true), 30000);
+        // Neuspesna obnova (vyprsela session, server nedostupny) nesmi kazdych 30 s hodit neosetreny reject.
+        this.timer = setInterval(() => this.load(true).catch(() => {}), 30000);
         onWillUnmount(() => clearInterval(this.timer));
     }
 
     // ---------- data ----------
     async load(silent = false) {
         if (!silent) this.state.loading = true;
-        this.state.data = await this.orm.call("elite.vet.reservation", "board_data", [this.state.date]);
+        const date = this.state.date;
+        const data = await this.orm.call("elite.vet.reservation", "board_data", [date]);
+        // Mezitim se mohl prepnout den; starsi odpoved by prepsala tabuli daty jineho dne.
+        if (date !== this.state.date) return;
+        this.state.data = data;
         this.state.loading = false;
     }
     shiftDay(delta) {
@@ -82,6 +87,7 @@ export class ReservationBoard extends Component {
         ev.dataTransfer.effectAllowed = "move";
         ev.dataTransfer.setData("text/plain", String(item.id));
     }
+    onDragEnd() { this.state.drag = null; }   // zruseny tah (Esc) nesmi dokoncit pozdejsi cizi drop
     onDragOver(ev) { ev.preventDefault(); }
     async onDrop(ev, room) {
         ev.preventDefault();

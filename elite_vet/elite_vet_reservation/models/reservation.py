@@ -248,7 +248,8 @@ class VetReservation(models.Model):
             })
         events = []
         for r in self.search([("start", "<", stop), ("stop", ">", start),
-                              "|", ("kind", "=", "block"), ("state", "in", ("confirmed", "done", "no_show"))]):
+                              "|", "&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES),
+                              ("state", "in", ("confirmed", "done", "no_show"))]):
             events.append({
                 "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
                 "room_id": r.room_id.id or False,

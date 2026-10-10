@@ -17,7 +17,7 @@
                     <h5>Čekající z webu (<t t-esc="state.data.waiting.length"/>)</h5>
                     <p t-if="!state.data.waiting.length" class="text-muted small">Nic nečeká.</p>
                     <div t-foreach="state.data.waiting" t-as="w" t-key="w.id" class="evb-card" draggable="true"
-                         t-on-dragstart="(ev) => this.onDragStart(ev, w, 'waiting')">
+                         t-on-dragstart="(ev) => this.onDragStart(ev, w, 'waiting')" t-on-dragend="onDragEnd">
                         <strong t-esc="w.name"/>
                         <div class="small"><t t-esc="w.date"/> <t t-esc="w.time"/> · <t t-esc="w.procedure"/> (<t t-esc="w.duration"/> min)</div>
                         <div class="small text-muted"><t t-esc="w.phone"/> · <t t-esc="w.email"/></div>
@@ -64,7 +64,7 @@
                                  t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show'}"
                                  t-att-style="'top:' + top(e.start) + 'px;height:' + height(e.start, e.end) + 'px;background:' + e.color_hex"
                                  t-att-title="e.procedure + '\n' + e.phone + '\n' + e.email + (e.problem ? '\n' + e.problem : '')"
-                                 draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')"
+                                 draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openForm(e.id)">
                                 <span t-if="e.symbol" class="evb-symbol" t-esc="e.symbol"/>
                                 <t t-esc="e.name"/>

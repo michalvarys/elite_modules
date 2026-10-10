@@ -30,8 +30,8 @@ class TestBoard(ReservationCase):
         self.assertEqual(room["doctors"][0]["name"], "MVDr. Alena Testová")
         ev = next(e for e in d["events"] if e["id"] == self.r.id)
         self.assertEqual((ev["start"], ev["end"], ev["room_id"]), (540, 555, self.room1.id))
-        self.assertEqual(d["waiting"][0]["id"], self.w.id)
-        self.assertEqual(d["waiting"][0]["time"], "10:00")
+        wrow = next(w for w in d["waiting"] if w["id"] == self.w.id)
+        self.assertEqual(wrow["time"], "10:00")
         self.assertLessEqual(d["axis"]["from"], 480)
         self.assertGreaterEqual(d["axis"]["to"], 1170)
 
@@ -50,3 +50,13 @@ class TestBoard(ReservationCase):
 
     def test_board_slot_utc(self):
         self.assertEqual(self.R.board_slot_utc("2026-10-14", 540), "2026-10-14 07:00:00")
+
+    def test_board_data_hides_cancelled_block(self):
+        block = self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Test", "room_id": self.room1.id, "state": "confirmed",
+            "start": self.dt(WED, 12, 0), "stop": self.dt(WED, 13, 0)})
+        ids = [e["id"] for e in self.R.board_data("2026-10-14")["events"]]
+        self.assertIn(block.id, ids)
+        block.action_cancel()
+        ids = [e["id"] for e in self.R.board_data("2026-10-14")["events"]]
+        self.assertNotIn(block.id, ids)
