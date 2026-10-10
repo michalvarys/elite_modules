@@ -10,20 +10,20 @@ po projektech.
 elite_modules/
 ├── docker-compose.yml     Odoo 18 + PostgreSQL
 ├── config/odoo.conf       addons_path, připojení k databázi
-└── elite.vet/             klinika Elite Vet
+└── elite_vet/             klinika Elite Vet
     ├── elite_vet_calendar/   Rozpis služeb lékařů
     └── elite_vet_team/       Stránka Náš tým
 ```
 
 Celý repozitář je v kontejneru namountovaný do `/mnt/modules`.
 
-**Nový modul stejného projektu** = nová podsložka v `elite.vet/`. Nic se nenastavuje.
+**Nový modul stejného projektu** = nová podsložka v `elite_vet/`. Nic se nenastavuje.
 
-**Nový projekt** = nová složka vedle `elite.vet/` a jeden záznam navíc
+**Nový projekt** = nová složka vedle `elite_vet/` a jeden záznam navíc
 v `addons_path` v [config/odoo.conf](config/odoo.conf):
 
 ```ini
-addons_path = /mnt/modules/elite.vet,/mnt/modules/dalsi-projekt,/usr/lib/python3/dist-packages/odoo/addons
+addons_path = /mnt/modules/elite_vet,/mnt/modules/dalsi-projekt,/usr/lib/python3/dist-packages/odoo/addons
 ```
 
 ## Spuštění
@@ -37,7 +37,7 @@ docker compose up -d
 Odoo běží na `http://localhost:8069`. Nasazení na existující server je
 v [DOCKER.md](DOCKER.md).
 
-## elite.vet — klinika Elite Vet
+## elite_vet — klinika Elite Vet
 
 ### `elite_vet_calendar` — Rozpis služeb
 
@@ -69,7 +69,7 @@ Typ se zaškrtnutou **Celodenní poznámkou** není služba lékařky — nezad�
 lékařka ani čas a na webu se vypíše přes celou buňku. Stejně se dá založit
 `Den otevřených dveří` nebo `Sanitární den`, každý ve své barvě.
 
-Detaily v [elite.vet/elite_vet_calendar/README.md](elite.vet/elite_vet_calendar/README.md).
+Detaily v [elite_vet/elite_vet_calendar/README.md](elite_vet/elite_vet_calendar/README.md).
 
 ### `elite_vet_team` — Náš tým
 
@@ -90,4 +90,4 @@ archivovat.
 Po instalaci je stránka naplněná tím, co na ní bylo předtím: 4 sekce, 8 lidí,
 38 podrobností.
 
-Detaily v [elite.vet/elite_vet_team/README.md](elite.vet/elite_vet_team/README.md).
+Detaily v [elite_vet/elite_vet_team/README.md](elite_vet/elite_vet_team/README.md).

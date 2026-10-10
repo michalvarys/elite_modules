@@ -1,7 +1,7 @@
 # Nasazení přes Docker
 
 Celý repozitář se v kontejneru mountuje do `/mnt/modules`. Moduly jsou v něm
-po projektech, `elite.vet/` jsou moduly Elite Vet. Nic se nikam nekopíruje.
+po projektech, `elite_vet/` jsou moduly Elite Vet. Nic se nikam nekopíruje.
 
 ---
 
@@ -56,10 +56,10 @@ volumes:
 A do `odoo.conf` cestu ke složce projektu:
 
 ```ini
-addons_path = /mnt/modules/elite.vet,/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
+addons_path = /mnt/modules/elite_vet,/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
 ```
 
-> Do `addons_path` patří složka **projektu** (`/mnt/modules/elite.vet`), ne složka
+> Do `addons_path` patří složka **projektu** (`/mnt/modules/elite_vet`), ne složka
 > modulu. Odoo si moduly uvnitř najde samo.
 
 Aktualizace později:
@@ -113,7 +113,7 @@ Mřížka bude po instalaci prázdná — naplní se v Odoo v aplikaci
 
 | příznak | příčina |
 |---|---|
-| není v Aplikacích ani po *Aktualizovat seznam aplikací* | v `addons_path` chybí `/mnt/modules/elite.vet`, nebo je tam uvedená složka modulu místo složky projektu |
+| není v Aplikacích ani po *Aktualizovat seznam aplikací* | v `addons_path` chybí `/mnt/modules/elite_vet`, nebo je tam uvedená složka modulu místo složky projektu |
 | v logu `Skipped unreadable module` | práva, viz krok 3 |
 | instalace spadne na duplicitní URL | nesmazaná ruční stránka `/rozpis-lekaru`, viz krok 0 |
 | aplikace je vidět, ale stránka hlásí 404 | modul nainstalovaný, ale stránka není publikovaná — Web → Stránky |
