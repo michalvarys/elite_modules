@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Nahrazuje iframe WinVetu vlastnim pruvodcem. Texty jsou anglicky (zdroj),
+         cestina/nemcina/rustina v i18n. JavaScript jen plni data do techto bloku. -->
+    <template id="rezervace_widget" inherit_id="elite_vet_web.rezervace" name="Elite Vet - Rezervace: vlastní průvodce">
+        <xpath expr="//div[hasclass('evrez')]" position="replace">
+            <t t-set="ev_rez" t-value="request.env['elite.vet.setting'].sudo().nastaveni()"/>
+            <section id="ev-booking" class="evbk o_colored_level" t-att-data-lang="request.env.lang">
+                <div class="ev-container evbk-inner">
+                    <div t-if="ev_rez.booking_intro" class="evbk-intro" t-out="ev_rez.booking_intro"/>
+
+                    <ol class="evbk-steps" aria-label="Steps">
+                        <li data-step="1" class="is-active">1 · What do you need</li>
+                        <li data-step="2">2 · Date and time</li>
+                        <li data-step="3">3 · Your details</li>
+                        <li data-step="4">4 · Done</li>
+                    </ol>
+
+                    <!-- KROK 1 -->
+                    <div class="evbk-step" data-step="1">
+                        <div class="evbk-tabs" role="tablist">
+                            <button type="button" class="is-active" data-tab="procedure">By problem</button>
+                            <button type="button" data-tab="doctor">By doctor</button>
+                            <button type="button" data-tab="specialization">By specialization</button>
+                        </div>
+                        <div class="evbk-tab" data-tab="procedure">
+                            <p class="evbk-hint">Choose the reason for your visit.</p>
+                            <div class="evbk-list" data-list="procedures"></div>
+                        </div>
+                        <div class="evbk-tab" data-tab="doctor" hidden="hidden">
+                            <p class="evbk-hint">Choose a doctor, then the reason for your visit.</p>
+                            <div class="evbk-cards" data-list="doctors"></div>
+                            <div class="evbk-list" data-list="procedures-for-doctor" hidden="hidden"></div>
+                        </div>
+                        <div class="evbk-tab" data-tab="specialization" hidden="hidden">
+                            <p class="evbk-hint">Choose a specialization, then the reason for your visit.</p>
+                            <div class="evbk-cards" data-list="specializations"></div>
+                            <div class="evbk-list" data-list="procedures-for-spec" hidden="hidden"></div>
+                        </div>
+                        <p class="evbk-empty" data-empty="doctors" hidden="hidden">No doctor has online appointments in the coming weeks. Choose by problem or call us.</p>
+                    </div>
+
+                    <!-- KROK 2 -->
+                    <div class="evbk-step" data-step="2" hidden="hidden">
+                        <div class="evbk-summary" data-summary="choice"></div>
+                        <div class="evbk-cal">
+                            <div class="evbk-cal-head">
+                                <button type="button" data-cal="prev" aria-label="Previous month">‹</button>
+                                <strong data-cal="title"></strong>
+                                <button type="button" data-cal="next" aria-label="Next month">›</button>
+                            </div>
+                            <div class="evbk-cal-grid" data-cal="grid"></div>
+                            <p class="evbk-empty" data-empty="days" hidden="hidden">No free appointments in this month. Try the next one.</p>
+                        </div>
+                        <div class="evbk-slots">
+                            <p class="evbk-hint" data-slots="hint">Pick a day first.</p>
+                            <h4 data-slots="am-title" hidden="hidden">Morning</h4>
+                            <div class="evbk-slot-grid" data-slots="am"></div>
+                            <h4 data-slots="pm-title" hidden="hidden">Afternoon</h4>
+                            <div class="evbk-slot-grid" data-slots="pm"></div>
+                            <div class="evbk-doctor-pick" data-slots="doctor-pick" hidden="hidden">
+                                <p>Which doctor?</p>
+                                <span data-text="any-doctor" hidden="hidden">Any doctor</span>
+                                <div data-list="slot-doctors"></div>
+                            </div>
+                        </div>
+                        <button type="button" class="evbk-back" data-back="1">‹ Back</button>
+                    </div>
+
+                    <!-- KROK 3 -->
+                    <div class="evbk-step" data-step="3" hidden="hidden">
+                        <div class="evbk-summary" data-summary="slot"></div>
+                        <form class="evbk-form" novalidate="novalidate">
+                            <label>Your full name <input name="contact_name" type="text" autocomplete="name" required="required"/></label>
+                            <label>Pet's name <input name="pet_name" type="text" required="required"/></label>
+                            <label>Kind of animal
+                                <select name="pet_species">
+                                    <option value="dog">Dog</option><option value="cat">Cat</option>
+                                    <option value="rabbit">Rabbit</option><option value="rodent">Rodent</option>
+                                    <option value="bird">Bird</option><option value="reptile">Reptile</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </label>
+                            <label>Describe the problem <textarea name="problem" rows="3" required="required"></textarea></label>
+                            <label>E-mail for confirmation <input name="contact_email" type="email" autocomplete="email" required="required"/></label>
+                            <label>Phone <input name="contact_phone" type="tel" autocomplete="tel" required="required"/></label>
+                            <label class="evbk-consent"><input name="consent" type="checkbox"/>
+                                <span t-if="ev_rez.booking_consent_text" t-out="ev_rez.booking_consent_text"/>
+                                <span t-else="">I agree to the processing of my personal data for the purpose of this appointment.</span>
+                            </label>
+                            <input name="hp" type="text" tabindex="-1" autocomplete="off" class="evbk-hp"/>
+                            <p class="evbk-error" data-error="form" hidden="hidden"></p>
+                            <button type="submit" class="evbk-submit">Send the request</button>
+                        </form>
+                        <button type="button" class="evbk-back" data-back="2">‹ Back</button>
+                    </div>
+
+                    <!-- KROK 4 -->
+                    <div class="evbk-step" data-step="4" hidden="hidden">
+                        <div class="evbk-done">
+                            <div class="evbk-done-icon">✓</div>
+                            <h3>We have received your request</h3>
+                            <p>We will confirm the appointment by e-mail. If anything is unclear, we will call you.</p>
+                            <div class="evbk-summary" data-summary="final"></div>
+                            <p class="evbk-note" data-done="note" hidden="hidden"></p>
+                            <p class="evbk-deposit" data-done="deposit" hidden="hidden">The appointment becomes valid after the deposit is paid. We will send the payment instructions by e-mail.</p>
+                        </div>
+                    </div>
+
+                    <p class="evbk-fatal" data-error="fatal" hidden="hidden">The booking system is temporarily unavailable. Please call the reception.</p>
+                </div>
+            </section>
+        </xpath>
+    </template>
+</odoo>

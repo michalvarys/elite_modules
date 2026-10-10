@@ -28,10 +28,15 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/setting_views.xml",
         "views/board_action.xml",
         "views/menus.xml",
+        "views/booking_page.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "elite_vet_reservation/static/src/board/**/*",
+        ],
+        "web.assets_frontend": [
+            "elite_vet_reservation/static/src/booking/booking.css",
+            "elite_vet_reservation/static/src/booking/booking.js",
         ],
     },
     "post_init_hook": "_pri_instalaci",
