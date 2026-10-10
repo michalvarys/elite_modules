@@ -31,6 +31,33 @@ PROCEDURES = [
 ]
 
 
+# Německé a ruské názvy výchozích úkonů (čeština je ve PROCEDURES). Záznamy nejsou
+# v XML, proto je .po soubory nepokryjí; překládají se při seedu, pokud je jazyk nainstalovaný.
+PROCEDURES_I18N = {
+    "Vaccination": {"de_DE": "Impfung", "ru_RU": "Вакцинация"},
+    "Clinical examination – check-up": {"de_DE": "Klinische Untersuchung – Kontrolle", "ru_RU": "Клинический осмотр – контроль"},
+    "Clinical examination – healthy pet": {"de_DE": "Klinische Untersuchung – gesundes Tier", "ru_RU": "Клинический осмотр – здоровое животное"},
+    "Clinical examination – health problem": {"de_DE": "Klinische Untersuchung – Gesundheitsproblem", "ru_RU": "Клинический осмотр – проблема со здоровьем"},
+    "Dental examination": {"de_DE": "Zahnuntersuchung", "ru_RU": "Стоматологический осмотр"},
+    "Blood sampling (fasting 8–12 h)": {"de_DE": "Blutentnahme (nüchtern, 8–12 Stunden)", "ru_RU": "Забор крови (натощак, 8–12 часов)"},
+    "Diarrhoea / vomiting": {"de_DE": "Durchfall / Erbrechen", "ru_RU": "Диарея / рвота"},
+    "Cough / breathing problem": {"de_DE": "Husten / Atemprobleme", "ru_RU": "Кашель / проблемы с дыханием"},
+    "Claws / glands": {"de_DE": "Krallen / Drüsen", "ru_RU": "Когти / железы"},
+    "Pre-operative examination": {"de_DE": "Voruntersuchung vor der Operation", "ru_RU": "Предоперационный осмотр"},
+    "Castration – tomcat": {"de_DE": "Kastration – Kater", "ru_RU": "Кастрация – кот"},
+    "Injury": {"de_DE": "Verletzung", "ru_RU": "Травма"},
+    "Urination problem": {"de_DE": "Probleme beim Wasserlassen", "ru_RU": "Проблемы с мочеиспусканием"},
+    "Food intake problem": {"de_DE": "Probleme bei der Futteraufnahme", "ru_RU": "Проблемы с приёмом пищи"},
+    "Dermatological problem": {"de_DE": "Hautproblem", "ru_RU": "Дерматологическая проблема"},
+    "Ultrasound / X-ray examination": {"de_DE": "Ultraschall- / Röntgenuntersuchung", "ru_RU": "УЗИ / рентген"},
+    "Mobility problem": {"de_DE": "Bewegungsproblem", "ru_RU": "Проблемы с подвижностью"},
+    "Ear problem": {"de_DE": "Ohrenproblem", "ru_RU": "Проблема с ушами"},
+    "Eye problem": {"de_DE": "Augenproblem", "ru_RU": "Проблема с глазами"},
+    "Skin lump / tumour": {"de_DE": "Knoten / Tumor", "ru_RU": "Шишка / опухоль"},
+    "Other": {"de_DE": "Sonstiges", "ru_RU": "Другое"},
+}
+
+
 def _pri_instalaci(env):
     """Výchozí ordinace, úkony a hodiny. Jen při prázdném modulu, pak patří klinice."""
     if env["elite.vet.room"].search_count([]):
@@ -67,6 +94,9 @@ def _seed_procedures(env):
                            "sequence": (i + 1) * 10})
         if "cs_CZ" in jazyky:
             rec.with_context(lang="cs_CZ").name = cs
+        for lang, name in PROCEDURES_I18N[en].items():
+            if lang in jazyky:
+                rec.with_context(lang=lang).name = name
 
 
 def _seed_settings(env):

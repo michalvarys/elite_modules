@@ -12,6 +12,7 @@ elite_modules/
 ├── config/odoo.conf       addons_path, připojení k databázi
 └── elite_vet/             klinika Elite Vet
     ├── elite_vet_calendar/   Rozpis služeb lékařů
+    ├── elite_vet_reservation/   Rezervační kalendář (nahrazuje WinVet)
     └── elite_vet_team/       Stránka Náš tým
 ```
 
@@ -91,3 +92,16 @@ Po instalaci je stránka naplněná tím, co na ní bylo předtím: 4 sekce, 8 l
 38 podrobností.
 
 Detaily v [elite_vet/elite_vet_team/README.md](elite_vet/elite_vet_team/README.md).
+
+### `elite_vet_reservation` — Rezervace
+
+Aplikace **Rezervace** nahrazuje WinVet: ordinace, ordinační doba, rozpis
+lékařů, úkony a rezervace jsou v Odoo a na `/rezervacni-system` běží vlastní
+průvodce místo iframu. Recepce pracuje s Tabulí (sloupec na ordinaci) a frontou
+žádostí z webu; stránka je česky, německy a rusky.
+
+**Nasazení:** v produkčním `odoo.conf` za reverzní proxy musí být
+`proxy_mode = True`, jinak by limit rezervací na IP adresu počítal adresu proxy
+za všechny klienty dohromady.
+
+Detaily v [elite_vet/elite_vet_reservation/README.md](elite_vet/elite_vet_reservation/README.md).
