@@ -25,8 +25,9 @@ class TestSetting(ReservationCase):
         from odoo.addons.elite_vet_reservation import _pri_instalaci, PROCEDURES
         self.env["elite.vet.reservation"].search([]).unlink()
         self.env["elite.vet.doctor.assignment"].search([]).unlink()
-        self.env["elite.vet.procedure"].search([]).unlink()
-        self.env["elite.vet.room"].search([]).unlink()
+        # Vcetne archivovanych (common.py archivuje vychozi data), jinak by guard seed preskocil.
+        self.env["elite.vet.procedure"].with_context(active_test=False).search([]).unlink()
+        self.env["elite.vet.room"].with_context(active_test=False).search([]).unlink()
         _pri_instalaci(self.env)
         rooms = self.env["elite.vet.room"].search([], order="sequence")
         self.assertEqual(rooms.mapped("name"), ["Ordinace 1", "Ordinace 2", "Sál"])

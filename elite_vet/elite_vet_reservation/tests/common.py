@@ -11,6 +11,13 @@ class ReservationCase(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Vychozi data z post_init_hook (ordinace, hodiny, ukony) i cokoliv, co v DB
+        # uz je, by testum podsouvalo cizi ordinace a sloty. Archivujeme to;
+        # search([]) pak vraci jen fixtures z teto tridy.
+        for model in ("elite.vet.room", "elite.vet.procedure"):
+            cls.env[model].search([]).write({"active": False})
+        cls.env["elite.vet.doctor.assignment"].search([]).unlink()
+        cls.env["elite.vet.reservation"].search([("kind", "=", "block")]).unlink()
         Room = cls.env["elite.vet.room"]
         cls.room1 = Room.create({"name": "Ordinace 1", "sequence": 10, "color": "teal"})
         cls.room2 = Room.create({"name": "Ordinace 2", "sequence": 20, "color": "blue"})
