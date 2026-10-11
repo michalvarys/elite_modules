@@ -157,7 +157,9 @@ tady je potřeba ordinace a přesný čas).
    vybrané úkony (prázdné = všechny, které umí); **Poznámka**.
 
 Jedna lékařka nemůže mít dvě služby přes sebe. Ve stejné ordinaci mohou sloužit
-dvě lékařky současně.
+dvě lékařky současně – tabule je ukáže jako dva barevné proužky vedle sebe a štítek
+„2 lékařky 10:00–14:00“ v hlavičce sloupce. Kapacita ordinace zůstává **jeden pacient
+naráz**; druhá lékařka znamená jen to, že úkon může dělat kterákoli z nich.
 
 Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékařka**,
 **Ordinace**. Vpravo nahoře lze přepnout na týdenní kalendář.
@@ -185,6 +187,8 @@ Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékař
 | **Nejdál dopředu (dní)** | 60 | Jak daleko dopředu web nabízí termíny. Recepce může až ~400 dní. |
 | **Klient může zrušit do (hodin před)** | 12 | Do kolika hodin před termínem funguje odkaz na zrušení v e-mailu. **0** = klient rušit odkazem nemůže. |
 | **Online jen tam, kde slouží lékař** | vypnuto | Zapnuto: web nabízí termín jen v čase, kdy má ordinace v Rozpisu lékařů zapsanou službu. Vypnuto: úkony bez specializace se nabízejí podle ordinační doby, i když rozpis chybí. |
+| **Víkendy jen ručně (web neobjednává)** | zapnuto | Web v sobotu a v neděli nenabízí žádné termíny. Recepce objednává dál (i ručním časem). |
+| **Státní svátky jen ručně (web neobjednává)** | zapnuto | Web ve státní svátek nenabízí žádné termíny. Svátky (i Velký pátek a Velikonoční pondělí) se počítají samy, nic se nezadává. Recepce objednává dál. |
 | **E-mail pro upozornění** | info@elite-vet.cz | Sem chodí upozornění na každou novou žádost z webu a na zrušení klientem. Prázdné = nic nechodí. |
 | **Posílat připomínku** | vypnuto | Zapne připomínkový e-mail klientům. |
 | **Připomínka (hodin před)** | 24 | Kolik hodin před termínem připomínka odejde (ukáže se po zapnutí). |

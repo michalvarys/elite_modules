@@ -33,7 +33,10 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | Co | Význam |
 |---|---|
 | Světle šedé šrafování | Ordinace je zavřená (mimo ordinační dobu nebo výjimka). |
-| Tmavě šedý šrafovaný pruh | Blokace (např. „Oběd“). Blokace pro všechny ordinace se táhne přes všechny sloupce. |
+| Tmavě šedý šrafovaný pruh | Úplná blokace (např. „Oběd“). Blokace pro všechny ordinace se táhne přes všechny sloupce. |
+| Světlé čárkované šrafování se štítkem „jen web“ | Blokace jen pro web: web tam nic nenabízí, vy tam objednat smíte. Klik do ní otevře průvodce, klik na štítek otevře blokaci. |
+| Barevný svislý proužek vlevo ve sloupci | Služba lékařky: iniciály a čas (např. „GC 8:15–14:00“). Každá lékařka má svou barvu, stejnou i ve štítku v hlavičce. |
+| Dva proužky vedle sebe | V ordinaci slouží současně dvě lékařky (viz níže). |
 | Barevná karta | Rezervace. Barva patří úkonu (např. vakcinace zelená, problém modrý). |
 | Písmeno vlevo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
@@ -41,7 +44,9 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | 🌐 | Rezervace přišla z webu. |
 | Zkratka vpravo (např. **GC**) | Iniciály lékařky. Po najetí myší uvidíte celé jméno. |
 | Bledší karta | Proběhla nebo Nedorazil. |
-| Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 08:15–14:00“. |
+| Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 8:15–14:00“, v barvě lékařky. |
+| Žlutý štítek „2 lékařky 10:00–14:00“ | V tomto čase slouží v ordinaci dvě lékařky současně. |
+| Žlutý štítek u nadpisu dne | „Víkend – web neobjednává“ nebo „Státní svátek: … – web neobjednává“. Web ten den nic nenabízí, recepce objednává normálně. |
 | „interní“ u názvu | Ordinace, kam se klienti z webu objednat nemohou (např. Sál). |
 | Červená čára | Aktuální čas (jen u dneška). Čas je i na ose. |
 
@@ -49,6 +54,19 @@ Zrušené rezervace se na tabuli neukazují.
 
 Najedete-li myší na kartu, zobrazí se podrobnosti: úkon, lékařka, telefon, e-mail
 a popis problému. Kliknutím na kartu otevřete celou rezervaci.
+
+### Dvě lékařky v jedné ordinaci
+
+Mají-li v Rozpisu lékařů dvě lékařky službu ve stejné ordinaci ve stejnou dobu, tabule
+to ukáže takto:
+
+- vlevo ve sloupci jsou **dva barevné proužky vedle sebe** – každý s iniciálami a časem
+  služby jedné lékařky,
+- v hlavičce sloupce je žlutý štítek **„2 lékařky 10:00–14:00“** (úsek, kdy slouží obě).
+
+Ordinace má pořád **jen jedno místo**: v jednu chvíli tam může být jen jeden pacient.
+Druhá lékařka tedy neznamená dvojnásobek termínů – jen to, že úkon může dělat kterákoli
+z nich. Kterou lékařku rezervace má, ukazují iniciály vpravo na kartě.
 
 ### Živá aktualizace
 
@@ -156,7 +174,27 @@ Seznam volných časů v daný den: **Čas**, **Ordinace**, **Lékařka**.
 
 Recepce může objednávat i na dnešek a daleko dopředu – omezení pro web
 („nejdříve za X hodin“, „nejdál X dní“) tady neplatí. Průvodce nabízí i ordinace,
-které nejsou online (např. Sál), pokud mají ordinační dobu.
+které nejsou online (např. Sál), pokud mají ordinační dobu. Blokace **jen pro web**,
+víkend ani státní svátek tu nevadí.
+
+### Ruční čas (mimo nabízené časy)
+
+Někdy potřebujete objednat mimo běžné časy – po ordinační době, v sobotu, když lékařka
+nemá v rozpisu službu, nebo do Sálu. Pak:
+
+1. V kroku 2 zapněte **Zadat čas ručně**.
+2. Vyberte **Ordinaci** (kteroukoli aktivní) a **Čas** (po čtvrthodinách 6:00–21:45).
+3. Klikněte **Použít ruční čas** a pokračujte na klienta.
+
+Ručně vložit **nejde** jen tam, kde už je jiná rezervace nebo **úplná** blokace – průvodce
+to hned řekne. Ordinační doba, služba lékařky, blokace jen pro web, víkend ani svátek
+nevadí. Lékařka zvolená v kroku 1 nemusí mít v tu dobu službu; když žádnou nezvolíte,
+zapíše se ta, která v ordinaci zrovna slouží (pokud nějaká). Ve shrnutí je u termínu
+„(zadáno ručně)“.
+
+Klik do tabule **mimo nabízené časy** (zavřená ordinace, víkend, bez služby) průvodce
+neodmítne: předvyplní ruční čas a ordinaci a jen upozorní „Mimo běžnou ordinační dobu –
+vkládáte ručně“. Zkontrolujte čas a klikněte **Použít ruční čas**.
 
 ### Krok 3 – Klient
 
@@ -242,27 +280,44 @@ změn a zpráv (kdo co kdy změnil).
 
 ## 6. Blokace (oběd, porada, zavřená ordinace)
 
-Blokace zabere čas v ordinaci, takže se tam nedá objednat ani z webu, ani průvodcem.
+Blokace zabere čas v ordinaci. Jsou dva druhy:
+
+| Druh blokace | Web | Recepce (průvodce, přetažení, návrhy u žádostí) | Na tabuli | Kdy použít |
+|---|---|---|---|---|
+| **Úplná** (výchozí) | nenabízí | nesmí – nikdo tam nic nevytvoří | tmavé šrafování | oběd, porada, úklid, ordinace mimo provoz |
+| **Jen web** | nenabízí | smí | světlé čárkované, štítek „jen web“ | čas, který chcete obsazovat jen po telefonu (akutní případy, kontroly) |
+
+Úplnou blokaci nejde založit přes potvrzenou rezervaci. Blokaci jen pro web založíte
+kdykoli, i přes existující rezervace – ty zůstanou, jak jsou.
 
 ### Nová blokace
 
 1. Na tabuli klikněte **Nová blokace**.
 2. Vyplňte **Důvod blokace** (např. „Oběd“).
-3. **Ordinace** – vyberte jednu, nebo nechte prázdné = **všechny ordinace**.
-4. **Začátek** a **Konec**.
-5. Opakování: **Opakovat týdně do** – blokace se zkopíruje na stejný den v týdnu
-   každý týden až do zadaného data (nejvýš na rok dopředu). Pole je jen při zakládání.
-6. Uložte.
+3. **Druh blokace** – **Úplná**, nebo **Jen web**.
+4. **Ordinace** – vyberte jednu, nebo nechte prázdné = **všechny ordinace**.
+5. **Začátek** a **Konec**.
+6. Opakování: **Opakovat týdně do** – blokace se zkopíruje na stejný den v týdnu
+   každý týden až do zadaného data (nejvýš na rok dopředu), se stejným druhem. Pole je jen při zakládání.
+7. Uložte.
 
-Blokaci nejde založit přes již potvrzenou rezervaci – nejdřív rezervaci přesuňte.
+Úplnou blokaci nejde založit přes již potvrzenou rezervaci – nejdřív rezervaci přesuňte.
 
 ### Zrušení blokace
 
-1. Klikněte na blokaci na tabuli.
+1. Klikněte na blokaci na tabuli (u blokace jen pro web na štítek „jen web“).
 2. Klikněte **Zrušit blokaci**.
 
 Opakovaná blokace jsou samostatné kopie – každý týden se ruší zvlášť.
-Všechny najdete v **Rezervace** s filtrem **Jen blokace**.
+Všechny najdete v **Rezervace** s filtrem **Jen blokace** (blokace jen pro web má
+vlastní filtr **Blokace jen pro web**).
+
+### Víkendy a státní svátky
+
+O víkendech a ve státní svátky web sám **nic nenabízí** (pokud to správce v nastavení
+nevypnul). Nic se nezadává – svátky včetně Velkého pátku a Velikonočního pondělí se
+počítají samy. Na tabuli je u nadpisu dne žlutý štítek, např. „Víkend – web neobjednává“.
+Recepce v takový den objednává normálně, mimo ordinační dobu ručním časem.
 
 ---
 
@@ -354,6 +409,7 @@ Na webu si klient lékařku vybírá v záložce **Podle lékaře**.
 ### Zavřeno celý den nebo část dne
 
 - Jednorázově na pár hodin: **Nová blokace** (bez ordinace = celá klinika).
+- Jen pro web (po telefonu objednávat dál): **Nová blokace** s druhem **Jen web**.
 - Celý den (svátek, školení): správce zadá výjimku ordinační doby
   (viz [Nastavení](nastaveni.md)).
 

@@ -22,7 +22,7 @@ a postupuje takto:
 
    Jinak stačí ordinační doba (úkon bez specializace se nabídne, i když rozpis chybí).
 3. **− obsazené** – odečtou se potvrzené a proběhlé rezervace a blokace
-   (viz „Co blokuje termín“).
+   (na webu obě blokace, u recepce jen úplná – viz „Co blokuje termín“).
 4. **Krok** – ve zbylém volném čase se nabízejí začátky po **Krok slotů** (obvykle 15 min),
    zarovnané na celé kroky (8:15, 8:30…). Termín se nabídne, jen když se do volna
    vejde **celá délka úkonu**.
@@ -30,6 +30,15 @@ a postupuje takto:
    Recepce (průvodce, návrhy na tabuli) tento limit nemá – může objednat i na teď.
 6. **Horizont** – web nabízí dny nejvýš **Nejdál dopředu (dní)** od dneška.
    Recepce v průvodci až zhruba 400 dní.
+7. **Víkend a státní svátek** – web v takový den nenabídne nic, pokud je v nastavení
+   zapnuté **Víkendy jen ručně** / **Státní svátky jen ručně** (výchozí obojí zapnuto).
+   Svátky se počítají v kódu: pevné (1. 1., 1. 5., 8. 5., 5. 7., 6. 7., 28. 9., 28. 10.,
+   17. 11., 24.–26. 12.) a pohyblivé Velký pátek a Velikonoční pondělí podle data Velikonoc.
+   Recepce tento krok nemá.
+
+Recepce může navíc v průvodci zadat **ruční čas**: kroky 1, 2, 5, 6 a 7 se pak
+neuplatní vůbec – kontroluje se jen, že termín nekoliduje s jinou rezervací nebo
+úplnou blokací.
 
 Příklad: Ordinace 1 má 8:15–19:30, lékařka se stomatologií slouží 8:15–14:00, mezi 9:00
 a 9:30 je potvrzená rezervace. Stomatologické vyšetření (30 min) se nabídne v 8:15, 8:30,
@@ -123,6 +132,20 @@ Web funguje i na mobilu:
 **Blokuje:** potvrzené rezervace, proběhlé rezervace, blokace (dokud nejsou zrušené).
 Blokace bez ordinace blokuje **všechny ordinace**.
 
+Záleží ale na druhu blokace a na tom, kdo objednává:
+
+| | Web (veřejné objednávání) | Recepce (průvodce, přetažení, návrhy, uložení) |
+|---|---|---|
+| Potvrzená / proběhlá rezervace | blokuje | blokuje |
+| Úplná blokace | blokuje | blokuje |
+| Blokace jen pro web | blokuje | **neblokuje** |
+| Víkend / státní svátek (podle nastavení) | blokuje celý den | neblokuje |
+| Mimo ordinační dobu / bez služby lékařky | nenabídne | nenabídne, ale ručním časem jde |
+
+Pravidlo „co je obsazené“ je v kódu na jednom místě (web a recepce se liší jen
+přepínačem), takže se web a recepce nemůžou rozejít. Úplnou blokaci nejde založit
+přes potvrzenou rezervaci; blokaci jen pro web jde založit kdykoli.
+
 **Neblokuje:** čekající žádosti z webu, zrušené rezervace, Nedorazil.
 
 Důsledek: na stejný čas mohou přijít dvě žádosti z webu. Potvrdit jde jen první;
@@ -133,8 +156,9 @@ u druhé zmizí návrhy a recepce ji přeplánuje.
 ## 5. Ochrana proti dvojímu zabrání
 
 Výpočet volných termínů jen **radí**, co nabídnout. Poslední slovo má kontrola
-při **uložení**: každá potvrzená rezervace a blokace se před zápisem porovná s ostatními
-v téže ordinaci. Když se překrývá, uložení se odmítne hláškou
+při **uložení**: každá potvrzená rezervace a úplná blokace se před zápisem porovná
+s ostatními v téže ordinaci (s rezervacemi a úplnými blokacemi; blokace jen pro web se
+nepočítá a sama se nekontroluje). Když se překrývá, uložení se odmítne hláškou
 „Termín … v ordinaci … je obsazený: …“.
 
 Když dvě recepční (nebo recepční a web) ukládají stejný čas ve stejnou chvíli,
