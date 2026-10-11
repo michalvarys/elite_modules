@@ -10,6 +10,8 @@
                 </header>
                 <field name="povolene_lekarky_ids" invisible="1"/>
                 <field name="minute" invisible="1"/>
+                <field name="ma_mazlicka" invisible="1"/>
+                <field name="send_email_nabidnuto" invisible="1"/>
 
                 <!-- 1. Co a kdy -->
                 <group invisible="step != 'co'">
@@ -38,6 +40,9 @@
                     <div class="text-muted mb-2">
                         <field name="procedure_id" readonly="1" class="d-inline" options="{'no_open': True}"/>
                         <span invisible="not doctor_id"> · <field name="doctor_id" readonly="1" class="d-inline" options="{'no_open': True}"/></span>
+                    </div>
+                    <div invisible="not upozorneni" class="alert alert-warning" role="status">
+                        <field name="upozorneni" readonly="1" nolabel="1"/>
                     </div>
                     <div invisible="slot_ids" class="alert alert-info" role="status">
                         V tento den není volný čas. Zkuste „Další volný den“.
@@ -68,8 +73,8 @@
                         <group string="Mazlíček">
                             <field name="pet_id" invisible="partner_mode != 'existing' or not partner_id"
                                    options="{'no_create': True}"/>
-                            <field name="pet_name" invisible="pet_id"/>
-                            <field name="pet_species" invisible="pet_id"/>
+                            <field name="pet_name" invisible="ma_mazlicka"/>
+                            <field name="pet_species" invisible="ma_mazlicka"/>
                         </group>
                     </group>
                     <group>

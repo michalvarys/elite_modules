@@ -29,11 +29,11 @@
     function T(key, name) {
         var n = q('[data-text="' + key + '"]');
         var t = n ? n.textContent.trim() : "";
-        return name != null ? t.replace("{name}", name) : t;
+        return name != null ? t.replace("{name}", function () { return name; }) : t;
     }
     function loadingEl() { return el("p", "evbk-loading", T("loading")); }
     // Porovnání bez ohledu na velikost písmen a diakritiku
-    function norm(s) { return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
+    function norm(s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
 
     function rpc(path, params) {
         return fetch(path, { method: "POST", credentials: "same-origin",
@@ -222,10 +222,15 @@
                 state.loadingDays = false;
                 state.daysOk = list; grid.classList.remove("is-loading");
                 renderMonth(); updateArrows();
-                // Automaticky vybrat první volný den, pokud vybraný den není v tomto měsíci
+                // Vybraný den z jiného měsíce se zahodí i s jeho časy; je-li v tomto
+                // měsíci volno, vybere se automaticky první volný den.
                 var prefix = state.year + "-" + pad(state.month) + "-";
-                if (list.length && !(state.date && state.date.indexOf(prefix) === 0)) {
-                    state.date = list.slice().sort()[0]; renderMonth(); loadSlots();
+                if (!(state.date && state.date.indexOf(prefix) === 0)) {
+                    if (state.date) {
+                        state.date = null; state.slot = null; state.time = null; state.slotDoctor = null;
+                        seq.slots++; resetSlots();
+                    }
+                    if (list.length) { state.date = list.slice().sort()[0]; renderMonth(); loadSlots(); }
                 }
             });
         }

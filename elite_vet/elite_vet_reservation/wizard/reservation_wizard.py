@@ -15,11 +15,9 @@ from odoo.exceptions import UserError
 from odoo.tools.misc import clean_context
 
 from ..models.pet import SPECIES
-from ..models.reservation import DNY_KRATCE, TZ, cas_label
+from ..models.reservation import DNY_KRATCE, HORIZONT_RECEPCE, TZ, cas_label
 
 KROKY = [("co", "Co a kdy"), ("cas", "Volný čas"), ("klient", "Klient"), ("souhrn", "Shrnutí")]
-# Recepce objednává i daleko dopředu (očkování za rok); web má vlastní horizont v nastavení.
-HORIZONT_RECEPCE = 400
 
 
 def dnes_v_praze():
@@ -46,12 +44,14 @@ class ReservationWizard(models.TransientModel):
     slot_doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka termínu")
     slot_ids = fields.One2many("elite.vet.reservation.wizard.slot", "wizard_id", string="Volné časy")
     den_label = fields.Char(compute="_compute_den_label")
+    upozorneni = fields.Char(string="Upozornění", readonly=True,
+                             help="Proč se předvyplněný čas z tabule nepoužil.")
     cas_label = fields.Char(compute="_compute_cas_label")
 
     # 3. Klient
     partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient")],
                                     string="Klient", default="existing", required=True)
-    partner_id = fields.Many2one("res.partner", string="Vyhledat klienta",
+    partner_id = fields.Many2one("res.partner", string="Vyhledat klienta", domain=[("type", "=", "contact")],
                                  help="Hledá podle jména, telefonu i e-mailu.")
     contact_name = fields.Char(string="Jméno a příjmení", compute="_compute_kontakt", store=True, readonly=False)
     contact_phone = fields.Char(string="Telefon", compute="_compute_kontakt", store=True, readonly=False)
@@ -59,10 +59,14 @@ class ReservationWizard(models.TransientModel):
     pet_id = fields.Many2one("elite.vet.pet", string="Mazlíček", domain="[('partner_id', '=', partner_id)]")
     pet_name = fields.Char(string="Nový mazlíček – jméno")
     pet_species = fields.Selection(SPECIES, string="Druh", default="dog")
+    ma_mazlicka = fields.Boolean(compute="_compute_ma_mazlicka",
+                                 help="Vybraný mazlíček patří vybranému existujícímu klientovi.")
     problem = fields.Text(string="Popis problému")
     note = fields.Text(string="Interní poznámka")
     send_email = fields.Boolean(string="Poslat klientovi potvrzení e-mailem",
                                 compute="_compute_send_email", store=True, readonly=False)
+    # Zaškrtnutí se nabídne jen poprvé, když se e-mail vyplní; pak platí volba recepce.
+    send_email_nabidnuto = fields.Boolean(compute="_compute_send_email", store=True, readonly=False)
 
     # 4. Shrnutí
     souhrn = fields.Html(compute="_compute_souhrn", sanitize=False)
@@ -84,32 +88,59 @@ class ReservationWizard(models.TransientModel):
         for w in self:
             w.cas_label = cas_label(w.minute)
 
-    @api.depends("partner_id", "partner_mode")
+    @api.depends("partner_id")
     def _compute_kontakt(self):
+        # Bez vybraného klienta se kontakt nemění: přepínání Existující / Nový klient
+        # nesmaže, co recepce u nového klienta napsala (kontakt vybraného maže
+        # _onchange_partner_mode).
         for w in self:
-            if w.partner_mode == "existing" and w.partner_id:
+            if w.partner_id:
                 w.contact_name = w.partner_id.name
                 w.contact_phone = w.partner_id.phone or w.partner_id.mobile
                 w.contact_email = w.partner_id.email
-            else:
-                # Přepnutí na nového klienta (nebo smazání vybraného) začíná s prázdným kontaktem.
-                w.contact_name = w.contact_phone = w.contact_email = False
 
     @api.depends("contact_email")
     def _compute_send_email(self):
         for w in self:
-            w.send_email = bool(w.contact_email)
+            if not w.contact_email:
+                w.send_email = False
+            elif not w.send_email_nabidnuto:
+                w.send_email = True
+            w.send_email_nabidnuto = w.send_email_nabidnuto or bool(w.contact_email)
+
+    @api.depends("partner_mode", "partner_id", "pet_id")
+    def _compute_ma_mazlicka(self):
+        for w in self:
+            w.ma_mazlicka = bool(w._vybrany_mazlicek())
+
+    def _vybrany_klient(self):
+        """Existující klient, ke kterému se rezervace uloží (jinak prázdný záznam)."""
+        self.ensure_one()
+        if self.partner_mode == "existing" and self.partner_id:
+            return self.partner_id
+        return self.env["res.partner"]
+
+    def _vybrany_mazlicek(self):
+        """Vybraný mazlíček, jen pokud patří vybranému existujícímu klientovi."""
+        self.ensure_one()
+        partner = self._vybrany_klient()
+        if partner and self.pet_id and self.pet_id.partner_id == partner:
+            return self.pet_id
+        return self.env["elite.vet.pet"]
 
     @api.depends("procedure_id", "date", "minute", "room_id", "slot_doctor_id", "doctor_id", "contact_name",
-                 "contact_phone", "contact_email", "partner_id", "pet_id", "pet_name", "pet_species", "send_email")
+                 "contact_phone", "contact_email", "partner_mode", "partner_id", "pet_id", "pet_name",
+                 "pet_species", "send_email")
     def _compute_souhrn(self):
         species = dict(SPECIES)
         for w in self:
-            pet = w.pet_id.name or w.pet_name
-            if pet and not w.pet_id and w.pet_species:
+            # Stejné pravidlo jako action_ulozit: mazlíček jen vybraného klienta.
+            vybrany = w._vybrany_mazlicek()
+            pet = vybrany.name or (w.pet_name or "").strip()
+            if pet and not vybrany and w.pet_species:
                 pet = "%s (%s, nový)" % (pet, species.get(w.pet_species))
             klient = w.contact_name or ""
-            if w.partner_mode == "new" or not w.partner_id:
+            if not w._vybrany_klient():
                 klient += " (nový klient)"
             radky = [
                 ("Úkon", w.procedure_id.name or ""),
@@ -129,6 +160,15 @@ class ReservationWizard(models.TransientModel):
         if self.doctor_id and self.procedure_id and self.doctor_id not in self.procedure_id.doctors_for_booking():
             self.doctor_id = False
 
+    @api.onchange("partner_mode")
+    def _onchange_partner_mode(self):
+        """Přepnutí na nového klienta zahodí vybraného klienta i jeho mazlíčka a kontakt."""
+        if self.partner_mode == "new" and self.partner_id:
+            self.partner_id = False
+            self.pet_id = False
+            self.contact_name = self.contact_phone = self.contact_email = False
+            self.send_email_nabidnuto = False
+
     @api.onchange("partner_id")
     def _onchange_partner(self):
         if self.pet_id and self.pet_id.partner_id != self.partner_id:
@@ -146,9 +186,12 @@ class ReservationWizard(models.TransientModel):
         }
 
     def _volne(self, day):
+        # Recepce objednává do všech ordinací s ordinační dobou (i do Sálu, který
+        # není online); web dál jen do online ordinací.
         A = self.env["elite.vet.availability"]
         return A.slots(self.procedure_id, day, doctor=self.doctor_id or None,
-                       min_hours=0, max_days=HORIZONT_RECEPCE)
+                       min_hours=0, max_days=HORIZONT_RECEPCE,
+                       rooms=self.procedure_id.rooms_for_reception())
 
     def _nacist_sloty(self):
         """Naplní řádky volných časů pro self.date: jeden řádek = čas × ordinace."""
@@ -175,21 +218,24 @@ class ReservationWizard(models.TransientModel):
         self.ensure_one()
         if not self.procedure_id:
             raise UserError(_("Vyberte úkon."))
+        upozorneni = False
         if self.room_id:
             par = self._volny_par()
             if par:
-                self.write({"slot_doctor_id": par[1] or self.doctor_id.id, "step": "klient"})
+                self.write({"slot_doctor_id": par[1] or self.doctor_id.id, "step": "klient", "upozorneni": False})
                 return self._znovu()
-        self.write({"room_id": False, "slot_doctor_id": False, "step": "cas"})
+            upozorneni = _("%(cas)s v %(ordinace)s není pro tento úkon volný – vyberte jiný čas.",
+                           cas=cas_label(self.minute), ordinace=self.room_id.name)
+        self.write({"room_id": False, "slot_doctor_id": False, "step": "cas", "upozorneni": upozorneni})
         self._nacist_sloty()
         return self._znovu()
 
     def action_zpet_co(self):
-        self.write({"step": "co", "room_id": False, "slot_doctor_id": False, "minute": 0})
+        self.write({"step": "co", "room_id": False, "slot_doctor_id": False, "minute": 0, "upozorneni": False})
         return self._znovu()
 
     def action_zpet_cas(self):
-        self.write({"step": "cas", "room_id": False, "slot_doctor_id": False})
+        self.write({"step": "cas", "room_id": False, "slot_doctor_id": False, "upozorneni": False})
         self._nacist_sloty()
         return self._znovu()
 
@@ -238,12 +284,11 @@ class ReservationWizard(models.TransientModel):
         if not (self.procedure_id and self.room_id):
             raise UserError(_("Chybí úkon nebo termín."))
         env = self.with_context(clean_context(self.env.context)).env
-        if self.partner_mode == "existing" and self.partner_id:
-            partner = self.partner_id
-        else:
+        partner = self._vybrany_klient()
+        pet = self._vybrany_mazlicek()
+        if not partner:
             partner = env["res.partner"].najit_nebo_zalozit_klienta(
                 self.contact_name, self.contact_email, self.contact_phone)
-        pet = self.pet_id if self.pet_id and self.pet_id.partner_id == partner else env["elite.vet.pet"]
         if not pet and (self.pet_name or "").strip():
             pet = env["elite.vet.pet"].najit_nebo_zalozit(partner, self.pet_name, self.pet_species)
         start = env["elite.vet.availability"].local_to_utc(self.date, self.minute)

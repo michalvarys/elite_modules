@@ -117,11 +117,14 @@ class VetAvailability(models.AbstractModel):
         return s, earliest, latest_day
 
     @api.model
-    def slots(self, procedure, day, doctor=None, specialization=None, now=None, min_hours=None, max_days=None):
+    def slots(self, procedure, day, doctor=None, specialization=None, now=None, min_hours=None, max_days=None,
+              rooms=None):
+        """rooms=None = online ordinace pro web (rooms_for_booking); recepce předá vlastní."""
         s, earliest, latest_day = self._window(now, min_hours, max_days)
         if day > latest_day:
             return []
-        rooms = procedure.rooms_for_booking()
+        if rooms is None:
+            rooms = procedure.rooms_for_booking()
         if not rooms:
             return []
         step, dur = s.booking_slot_step, procedure.duration

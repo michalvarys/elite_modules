@@ -1,6 +1,6 @@
 """18.0.1.2.0: přepočet názvů rezervací.
 
-Před verzí 18.0.1.1.0 se název počítal v jazyce toho, kdo rezervaci založil
+Před verzí 18.0.1.2.0 se název počítal v jazyce toho, kdo rezervaci založil
 (web v němčině, správce v angličtině). Teď se počítá v jazyce kliniky;
 staré rezervace přepočítáme, ať tabule i seznamy mluví česky.
 """

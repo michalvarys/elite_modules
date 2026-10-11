@@ -49,6 +49,19 @@ class TestControllers(HttpCase):
         slots = self.rpc("/rezervace/api/slots", {"procedure_id": self.proc.id, "date": self.day})
         self.assertIn("10:00", [s["time"] for s in slots])
 
+    def test_public_slots_skip_non_online_room(self):
+        # Sál s ordinační dobou objedná recepce v průvodci, web ne.
+        sal = self.env["elite.vet.room"].create({"name": "Sál T", "color": "purple", "online": False})
+        for wd in range(7):
+            self.env["elite.vet.room.hours"].create({"room_id": sal.id, "weekday": str(wd), "hour_from": 8.0, "hour_to": 18.0})
+        proc = self.env["elite.vet.procedure"].create({"name": "Sál úkon T", "duration": 15, "symbol": "S",
+                                                       "room_ids": [(6, 0, sal.ids)]})
+        self.assertEqual(self.rpc("/rezervace/api/slots", {"procedure_id": proc.id, "date": self.day}), [])
+        w = self.env["elite.vet.reservation.wizard"].create({"procedure_id": proc.id,
+                                                             "date": date.fromisoformat(self.day)})
+        w.action_krok_cas()
+        self.assertIn(sal, w.slot_ids.room_id)
+
     def test_submit_creates_waiting_reservation(self):
         res = self.rpc("/rezervace/api/submit", self.good_submit())
         self.assertTrue(res["ok"], res)

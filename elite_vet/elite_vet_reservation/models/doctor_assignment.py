@@ -66,9 +66,13 @@ class VetDoctorAssignment(models.Model):
 
     def action_kopirovat_tyden(self):
         """Zkopíruje vybrané služby o týden dál. Kopie, která by se překrývala
-        s jinou službou téže lékařky, se přeskočí (a nepadá celé kopírování)."""
+        s jinou službou téže lékařky, se přeskočí (a nepadá celé kopírování). Stejně
+        tak služba lékařky, která už nepřijímá rezervace."""
         zkopirovano, preskoceno = 0, 0
         for rec in self.sorted(lambda r: (r.date, r.hour_from)):
+            if not rec.doctor_id.prijima_rezervace:
+                preskoceno += 1
+                continue
             novy_den = rec.date + timedelta(days=7)
             clash = self.search_count([
                 ("doctor_id", "=", rec.doctor_id.id), ("date", "=", novy_den),

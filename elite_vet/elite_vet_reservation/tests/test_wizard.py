@@ -7,7 +7,7 @@ import pytz
 from odoo import fields
 from odoo.addons.bus.models.bus import channel_with_db, json_dump
 from odoo.exceptions import UserError, ValidationError
-from odoo.tests import tagged
+from odoo.tests import Form, tagged
 
 from .common import ReservationCase
 
@@ -140,6 +140,90 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(w.step, "cas")
         self.assertFalse(w.room_id)
         self.assertTrue(w.slot_ids)
+        self.assertEqual(w.upozorneni, "10:00 v Ordinace 1 není pro tento úkon volný – vyberte jiný čas.")
+        w.slot_ids[0].action_vybrat()
+        w.action_zpet_cas()
+        self.assertFalse(w.upozorneni)
+
+    def test_reception_books_non_online_room(self):
+        # Sál není online: web ho nenabízí, recepce (průvodce i klik z tabule) ano.
+        for wd in range(7):
+            self.hours(self.sal, wd, 0.0, 24.0)
+        self.assertNotIn(self.sal.id, [r for s in self.env["elite.vet.availability"].slots(self.vacc, self.day)
+                                       for r in s["room_ids"]])
+        w = self.wizard()
+        w.action_krok_cas()
+        self.assertIn((600, self.sal.id, False), self.lines(w))
+        # Klik do prázdné buňky Sálu: volný čas krok 2 přeskočí.
+        w = self.W.with_context(default_date=fields.Date.to_string(self.day), default_minute=600,
+                                default_room_id=self.sal.id).create({"procedure_id": self.vacc.id})
+        w.action_krok_cas()
+        self.assertEqual((w.step, w.room_id), ("klient", self.sal))
+        self.fill_new_client(w)
+        w.action_krok_souhrn()
+        w.action_ulozit()
+        r = self.env["elite.vet.reservation"].search([("contact_email", "=", "jana.pruvodce@example.cz")])
+        self.assertEqual(r.room_id, self.sal)
+        # Úkon omezený na jiné ordinace Sál nenabídne ani recepci; Sál bez ordinační doby taky ne.
+        w = self.wizard(procedure_id=self.derm.id)
+        w.action_krok_cas()
+        self.assertEqual({room for _m, room, _d in self.lines(w)}, {self.room1.id})
+
+    def test_switch_to_new_client_drops_other_clients_pet(self):
+        partner = self.env["res.partner"].create({"name": "Petr Cizí", "email": "petr.cizi@example.cz",
+                                                  "is_vet_client": True})
+        pet = self.env["elite.vet.pet"].create({"name": "Brok", "partner_id": partner.id, "species": "dog"})
+        w = self.wizard(minute=600, room_id=self.room1.id)
+        w.action_krok_cas()
+        with Form(w) as f:
+            f.partner_mode = "existing"
+            f.partner_id = partner
+            self.assertEqual(f.pet_id, pet)
+            self.assertTrue(f.ma_mazlicka)
+            f.partner_mode = "new"
+            self.assertFalse(f.partner_id)
+            self.assertFalse(f.pet_id)
+            self.assertFalse(f.contact_email)
+            self.assertFalse(f.ma_mazlicka)   # jméno a druh mazlíčka jsou vidět
+            f.contact_name = "Nová Klientka"
+            f.contact_phone = "+420 606 333 444"
+            f.contact_email = "nova.klientka@example.cz"
+            self.assertTrue(f.send_email)
+            f.send_email = False
+            f.contact_email = "nova.k@example.cz"
+            self.assertFalse(f.send_email)   # odškrtnutí recepcí platí
+            # Přepnutí tam a zpět nesmaže, co recepce napsala.
+            f.partner_mode = "existing"
+            f.partner_mode = "new"
+            self.assertEqual(f.contact_name, "Nová Klientka")
+            f.pet_name = "Micka"
+            f.pet_species = "cat"
+        w.action_krok_souhrn()
+        self.assertIn("Micka", w.souhrn)
+        self.assertNotIn("Brok", w.souhrn)
+        self.assertIn("nový klient", w.souhrn)
+        w.action_ulozit()
+        r = self.env["elite.vet.reservation"].search([("contact_email", "=", "nova.k@example.cz")])
+        self.assertEqual(r.pet_id.name, "Micka")
+        self.assertNotEqual(r.partner_id, partner)
+        self.assertEqual(r.pet_id.partner_id, r.partner_id)
+        self.assertFalse(self.mails_to("nova.k@example.cz"))
+
+    def test_pet_of_other_client_is_ignored_in_summary_and_save(self):
+        # Zápis bez onchange (např. starý stav dialogu): mazlíček jiného klienta se nepoužije.
+        partner = self.env["res.partner"].create({"name": "Eva Majitelka", "is_vet_client": True})
+        pet = self.env["elite.vet.pet"].create({"name": "Bobík", "partner_id": partner.id})
+        w = self.wizard(minute=600, room_id=self.room1.id)
+        w.action_krok_cas()
+        self.fill_new_client(w, pet_id=pet.id, partner_id=partner.id, pet_name="Líza")
+        self.assertFalse(w.ma_mazlicka)
+        w.action_krok_souhrn()
+        self.assertIn("Líza", w.souhrn)
+        self.assertNotIn("Bobík", w.souhrn)
+        w.action_ulozit()
+        r = self.env["elite.vet.reservation"].search([("pet_name", "=", "Líza")])
+        self.assertNotEqual(r.partner_id, partner)
+        self.assertEqual(r.pet_id.name, "Líza")
 
     def test_existing_client_and_pet_are_reused(self):
         partner = self.env["res.partner"].create({"name": "Petr Stálý", "phone": "+420 777 888 999",

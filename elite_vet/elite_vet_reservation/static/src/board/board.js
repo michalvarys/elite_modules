@@ -47,7 +47,7 @@ export class ReservationBoard extends Component {
     onLiveChange(payload) {
         if (payload?.new_web) {
             for (const label of payload.web || []) {
-                this.notification.add("Nová žádost z webu: " + label, { type: "info" });
+                this.notification.add("Nová žádost z webu: " + label, { type: "info", sticky: true });
             }
         }
         this.load(true).catch(() => {});

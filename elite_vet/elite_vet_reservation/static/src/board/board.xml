@@ -41,7 +41,10 @@
                                     t-on-click="() => this.confirmSuggestion(w, sug)">
                                 Potvrdit → <t t-esc="sug.room"/><t t-if="sug.doctor"> · <t t-esc="sug.doctor"/></t>
                             </button>
-                            <div t-if="!w.suggestions.length" class="small evb-no-suggestion">
+                            <div t-if="!w.suggestions.length and w.past" class="small evb-no-suggestion">
+                                Požadovaný čas už uplynul – otevřete a přeplánujte.
+                            </div>
+                            <div t-elif="!w.suggestions.length" class="small evb-no-suggestion">
                                 Požadovaný čas už není volný – otevřete a přeplánujte.
                             </div>
                         </div>

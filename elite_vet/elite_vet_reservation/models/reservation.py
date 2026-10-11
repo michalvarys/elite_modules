@@ -18,6 +18,8 @@ INACTIVE_STATES = ("cancelled", "no_show")
 TZ = pytz.timezone("Europe/Prague")
 # České názvy dnů natvrdo: nesmí záviset na jazyce uživatele ani prohlížeče.
 DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"]
+# Recepce objednává i daleko dopředu (očkování za rok); web má vlastní horizont v nastavení.
+HORIZONT_RECEPCE = 400
 TITULY = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
@@ -310,6 +312,7 @@ class VetReservation(models.Model):
                 "procedure": w.procedure_id.with_context(lang=lang).name or "", "duration": w.duration_minutes,
                 "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
                 "doctor": w.doctor_id.name or "",
+                "past": w.start <= fields.Datetime.now(),
                 # Navrhy rovnou tady: jeden dotaz na obnovu tabule, ne jeden za kazdou kartu.
                 "suggestions": w.board_suggestions(w.id),
             })
@@ -335,7 +338,8 @@ class VetReservation(models.Model):
         doctor = rec.doctor_id or None
         # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web:
         # min_hours=0 nechá ve hře vše, co ještě nezačalo.
-        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0) if x["minute"] == minute), None)
+        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0, max_days=HORIZONT_RECEPCE)
+                     if x["minute"] == minute), None)
         if not slot:
             return []
         Room, Doctor = self.env["elite.vet.room"], self.env["elite.vet.doctor"]

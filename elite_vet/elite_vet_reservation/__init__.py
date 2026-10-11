@@ -73,11 +73,36 @@ PROCEDURE_SPECS = {
 def _pri_instalaci(env):
     """Propojí lékařky s kartami týmu; výchozí ordinace, úkony a hodiny jen při prázdném modulu."""
     _propojit_lekarky(env)
+    presunout_cizi_menu(env)
     if env["elite.vet.room"].search_count([]):
         return
     _seed_rooms_and_hours(env)
     _seed_procedures(env)
     _seed_settings(env)
+
+
+# Menu elite_vet_web, která patří pod Konfigurace: (xml id, pořadí).
+CIZI_MENU_DO_KONFIGURACE = [
+    ("elite_vet_web.menu_rezervace_nastaveni", 40),
+    ("elite_vet_web.menu_rezervace_faq", 50),
+]
+
+
+def presunout_cizi_menu(env):
+    """Přesune Nastavení rezervace a Časté dotazy (menu z elite_vet_web) pod Konfigurace.
+
+    Totéž dělají datové záznamy ve views/menus.xml; samostatný upgrade
+    `-u elite_vet_web` ale menu vrátí pod kořen Rezervace. Po upgradu samotného
+    elite_vet_web proto stačí `-u elite_vet_reservation`, který přesun obnoví
+    (data i tahle funkce z post_init_hook a migrace 18.0.1.3.0).
+    """
+    config = env.ref("elite_vet_reservation.menu_reservation_config", raise_if_not_found=False)
+    if not config:
+        return
+    for xmlid, sequence in CIZI_MENU_DO_KONFIGURACE:
+        menu = env.ref(xmlid, raise_if_not_found=False)
+        if menu and (menu.parent_id != config or menu.sequence != sequence):
+            menu.write({"parent_id": config.id, "sequence": sequence})
 
 
 def _propojit_lekarky(env):

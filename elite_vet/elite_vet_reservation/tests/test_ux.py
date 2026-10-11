@@ -105,6 +105,17 @@ class TestBoardSuggestions(ReservationCase):
         self.assertEqual((w.state, w.room_id, w.doctor_id, w.start),
                          ("confirmed", self.room2, self.dr_b, self.dt(self.day, 9, 0)))
 
+    def test_waiting_row_flags_past_request(self):
+        w = self.waiting()
+        row = next(x for x in self.R.board_data(self.day.isoformat())["waiting"] if x["id"] == w.id)
+        self.assertFalse(row["past"])
+        today = date.today()
+        old = self.reservation(start=self.dt(today, 0, 0), state="web_new", source="web", room_id=False)
+        old.stop = self.dt(today + timedelta(days=1), 23, 0)   # ještě v seznamu čekajících
+        row = next(x for x in self.R.board_data(today.isoformat())["waiting"] if x["id"] == old.id)
+        self.assertTrue(row["past"])
+        self.assertEqual(row["suggestions"], [])
+
     def test_confirmed_reservation_has_no_suggestions(self):
         self.assertEqual(self.R.board_suggestions(self.reservation(start=self.dt(self.day, 9, 0)).id), [])
 
@@ -158,6 +169,16 @@ class TestAdminUx(ReservationCase):
         copy = A.search([("doctor_id", "=", self.dr_a.id), ("date", "=", WED + timedelta(days=7))])
         self.assertEqual((copy.room_id, copy.hour_from, copy.hour_to), (self.room1, 8.0, 12.0))
         self.assertEqual(A.search_count([("doctor_id", "=", self.dr_b.id), ("date", "=", WED + timedelta(days=7))]), 1)
+
+    def test_copy_week_skips_doctor_no_longer_taking_reservations(self):
+        A = self.env["elite.vet.doctor.assignment"]
+        a1 = self.assign(self.dr_a, self.room1, WED, 8.0, 12.0)
+        a2 = self.assign(self.dr_b, self.room2, WED, 13.0, 18.0)
+        self.dr_b.prijima_rezervace = False
+        res = (a1 | a2).action_kopirovat_tyden()
+        self.assertIn("Zkopírováno 1, přeskočeno 1", res["params"]["message"])
+        self.assertEqual(A.search_count([("doctor_id", "=", self.dr_a.id), ("date", "=", WED + timedelta(days=7))]), 1)
+        self.assertFalse(A.search_count([("doctor_id", "=", self.dr_b.id), ("date", "=", WED + timedelta(days=7))]))
 
     def test_hours_summary_format(self):
         lines = [(wd, 8.25, 19.5) for wd in range(5)] + [(6, 10.25, 17.75)]

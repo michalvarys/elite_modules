@@ -69,6 +69,13 @@ class VetProcedure(models.Model):
         rooms = self.room_ids or self.env["elite.vet.room"].search([])
         return rooms.filtered("online")
 
+    def rooms_for_reception(self):
+        """Ordinace, kam úkon objedná recepce: všechny aktivní (i ty, které nejsou
+        online, např. Sál), omezené seznamem ordinací úkonu. Ordinační dobu
+        v daný den hlídá až výpočet volných časů (open_minutes)."""
+        self.ensure_one()
+        return (self.room_ids or self.env["elite.vet.room"].search([])).filtered("active")
+
     def doctors_for_booking(self):
         """Lékařky, které úkon dělají.
 
