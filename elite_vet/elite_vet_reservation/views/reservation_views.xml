@@ -31,8 +31,16 @@
                             invisible="state != 'confirmed' or kind == 'block' or not contact_email"/>
                     <button name="action_done" type="object" string="Proběhla" invisible="state != 'confirmed' or kind == 'block'"/>
                     <button name="action_no_show" type="object" string="Nedorazil" invisible="state != 'confirmed' or kind == 'block'"/>
-                    <button name="action_cancel" type="object" string="Zrušit" invisible="state in ('cancelled','done','no_show')"
+                    <!-- Tri varianty zruseni: blokace nema komu psat, rezervace bez e-mailu taky ne.
+                         Varovani o e-mailu jen tam, kde opravdu odejde. -->
+                    <button name="action_cancel" type="object" string="Zrušit"
+                            invisible="kind == 'block' or not contact_email or state in ('cancelled','done','no_show')"
                             confirm="Opravdu zrušit? Klientovi odejde e-mail o zrušení."/>
+                    <button name="action_cancel" type="object" string="Zrušit"
+                            invisible="kind == 'block' or contact_email or state in ('cancelled','done','no_show')"
+                            confirm="Opravdu zrušit tuto rezervaci?"/>
+                    <button name="action_cancel" type="object" string="Zrušit blokaci"
+                            invisible="kind != 'block' or state in ('cancelled','done','no_show')"/>
                     <button name="action_sparovat" type="object" string="Spárovat klienta"
                             invisible="partner_id or kind == 'block'"/>
                     <field name="state" widget="statusbar" statusbar_visible="web_new,confirmed,done" invisible="kind == 'block'"/>
