@@ -54,6 +54,7 @@
                         <group string="Termín">
                             <field name="procedure_id" invisible="kind == 'block'" required="kind == 'reservation'"/>
                             <field name="block_reason" invisible="kind == 'reservation'" required="kind == 'block'"/>
+                            <field name="block_scope" widget="radio" invisible="kind != 'block'" required="kind == 'block'"/>
                             <field name="room_id" required="kind == 'reservation' and state in ('confirmed', 'done')"/>
                             <field name="doctor_id" invisible="kind == 'block'"/>
                             <field name="start"/>
@@ -136,6 +137,7 @@
                 <filter name="confirmed" string="Potvrzené" domain="[('state', '=', 'confirmed')]"/>
                 <filter name="reservations" string="Jen rezervace" domain="[('kind', '=', 'reservation')]"/>
                 <filter name="blocks" string="Jen blokace" domain="[('kind', '=', 'block')]"/>
+                <filter name="blocks_web" string="Blokace jen pro web" domain="[('kind', '=', 'block'), ('block_scope', '=', 'web')]"/>
                 <filter name="od_dneska" string="Od dneška" domain="[('stop', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Seskupit podle">
                     <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>

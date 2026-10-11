@@ -12,7 +12,7 @@ import pytz
 from odoo import api, fields, models
 
 from .reservation import TZ
-
+from .svatky import svatek
 
 
 def to_min(hour_float):
@@ -91,17 +91,33 @@ class VetAvailability(models.AbstractModel):
         return out
 
     @api.model
-    def busy_minutes(self, room_ids, day):
+    def busy_minutes(self, room_ids, day, scope="web"):
+        """Obsazené minuty po ordinacích; scope viz elite.vet.reservation._busy_domain."""
         Res = self.env["elite.vet.reservation"]
         start, stop = self.local_to_utc(day, 0), self.local_to_utc(day, 1440)
         out = {rid: [] for rid in room_ids}
-        for r in Res.search(Res._busy_domain(room_ids, start, stop)):
+        for r in Res.search(Res._busy_domain(room_ids, start, stop, scope=scope)):
             iv = (self.utc_to_local_minutes(r.start, day), self.utc_to_local_minutes(r.stop, day))
             targets = [r.room_id.id] if r.room_id else list(room_ids)
             for rid in targets:
                 if rid in out:
                     out[rid].append(iv)
         return out
+
+    @api.model
+    def web_day_note(self, day):
+        """Proč web v tento den neobjednává (víkend / státní svátek dle nastavení), jinak None.
+
+        Platí jen pro web; recepce v takový den objednává normálně. Nic se
+        nezakládá - počítá se z data a nastavení.
+        """
+        s = self.env["elite.vet.setting"].nastaveni()
+        nazev = svatek(day)
+        if nazev and s.booking_block_holidays:
+            return "Státní svátek: %s – web neobjednává" % nazev
+        if day.weekday() >= 5 and s.booking_block_weekends:
+            return "Víkend – web neobjednává"
+        return None
 
     # ---------- vystup ----------
     @api.model
@@ -118,10 +134,18 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def slots(self, procedure, day, doctor=None, specialization=None, now=None, min_hours=None, max_days=None,
-              rooms=None):
-        """rooms=None = online ordinace pro web (rooms_for_booking); recepce předá vlastní."""
+              rooms=None, scope="web"):
+        """rooms=None = online ordinace pro web (rooms_for_booking); recepce předá vlastní.
+
+        scope="web" (výchozí, veřejné API): obsazené jsou obě blokace a víkend /
+        státní svátek (podle nastavení) nenabídne nic. scope="internal" (recepce):
+        brání jen úplná blokace. Výchozí hodnota je schválně ta přísnější, aby
+        veřejné API omylem nepoužilo pravidla recepce.
+        """
         s, earliest, latest_day = self._window(now, min_hours, max_days)
         if day > latest_day:
+            return []
+        if scope == "web" and self.web_day_note(day):
             return []
         if rooms is None:
             rooms = procedure.rooms_for_booking()
@@ -132,7 +156,7 @@ class VetAvailability(models.AbstractModel):
         # Sluzby se nacitaji vzdy: doctor_ids ve slotu jsou informativni (kdo zrovna slouzi),
         # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
         assignments = self.assignment_minutes(day, procedure, doctor, specialization)
-        busy = self.busy_minutes(rooms.ids, day)
+        busy = self.busy_minutes(rooms.ids, day, scope=scope)
         # utc_to_local_minutes orizne na 0 / 1440, takze den pred earliest dava 1440
         # (zadny slot) a den po nem 0 - netreba rozlisovat data zvlast.
         earliest_min = self.utc_to_local_minutes(earliest, day)
@@ -203,6 +227,6 @@ class VetAvailability(models.AbstractModel):
             day = date(year, month, d)
             if day < first_allowed or day > latest_day:
                 continue
-            if self.slots(procedure, day, doctor, specialization, now=now):
+            if self.slots(procedure, day, doctor, specialization, now=now, scope="web"):
                 out.append(day.isoformat())
         return out

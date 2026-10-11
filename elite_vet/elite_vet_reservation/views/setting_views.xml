@@ -13,6 +13,8 @@
                         <field name="booking_max_days_ahead"/>
                         <field name="booking_cancel_hours_before"/>
                         <field name="booking_require_doctor"/>
+                        <field name="booking_block_weekends"/>
+                        <field name="booking_block_holidays"/>
                     </group>
                     <group>
                         <field name="booking_notify_email"/>

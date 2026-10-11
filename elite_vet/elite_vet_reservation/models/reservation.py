@@ -20,6 +20,10 @@ TZ = pytz.timezone("Europe/Prague")
 DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"]
 # Recepce objednává i daleko dopředu (očkování za rok); web má vlastní horizont v nastavení.
 HORIZONT_RECEPCE = 400
+# Druh blokace: „jen web“ zavře čas jen pro online objednávky, „úplná“ pro všechny.
+BLOCK_SCOPES = [("web", "Jen web"), ("full", "Úplná")]
+# Stabilní barvy lékařek na tabuli (podle id), dobře čitelné s bílým písmem.
+BARVY_LEKAREK = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
 TITULY = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
@@ -35,6 +39,39 @@ def inicialy(jmeno):
 
 def cas_label(minuta):
     return "%d:%02d" % (minuta // 60, minuta % 60)
+
+
+def barva_lekarky(doctor_id):
+    return BARVY_LEKAREK[(doctor_id or 0) % len(BARVY_LEKAREK)]
+
+
+def pruhy_sluzeb(sluzby):
+    """Služby v jedné ordinaci -> (sluzby s `lane`, počet pruhů, souběhy).
+
+    `sluzby` = [{"id", "from", "to", ...}]. Překrývající se služby dostanou
+    různé pruhy (vedle sebe), souběhy = úseky, kdy slouží víc různých lékařek:
+    [{"from", "to", "count", "label": "2 lékařky 10:00–14:00"}].
+    """
+    konce = []   # konec poslední služby v každém pruhu
+    for s in sorted(sluzby, key=lambda x: (x["from"], x["to"])):
+        lane = next((i for i, konec in enumerate(konce) if konec <= s["from"]), None)
+        if lane is None:
+            lane = len(konce)
+            konce.append(0)
+        konce[lane] = s["to"]
+        s["lane"] = lane
+    body = sorted({s["from"] for s in sluzby} | {s["to"] for s in sluzby})
+    soubehy = []
+    for f, t in zip(body, body[1:]):
+        pocet = len({s["id"] for s in sluzby if s["from"] <= f and t <= s["to"]})
+        if pocet >= 2:
+            if soubehy and soubehy[-1]["to"] == f and soubehy[-1]["count"] == pocet:
+                soubehy[-1]["to"] = t
+            else:
+                soubehy.append({"from": f, "to": t, "count": pocet})
+    for x in soubehy:
+        x["label"] = "%d lékařky %s–%s" % (x["count"], cas_label(x["from"]), cas_label(x["to"]))
+    return sluzby, len(konce), soubehy
 
 
 class VetReservation(models.Model):
@@ -69,6 +106,10 @@ class VetReservation(models.Model):
     problem = fields.Text(string="Popis problému")
     note = fields.Text(string="Interní poznámka")
     block_reason = fields.Char(string="Důvod blokace", translate=True)
+    block_scope = fields.Selection(
+        BLOCK_SCOPES, string="Druh blokace", default="full",
+        help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
+             "Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí.")
     repeat_weekly_until = fields.Date(string="Opakovat týdně do", help="Jen u blokace: založí kopie na stejný den v týdnu až do tohoto data.")
     cancel_token = fields.Char(default=lambda self: uuid.uuid4().hex, index=True, copy=False)
     cancel_reason = fields.Selection([("client", "Klient"), ("clinic", "Klinika"), ("no_show", "Nedorazil")], string="Důvod zrušení")
@@ -119,13 +160,23 @@ class VetReservation(models.Model):
 
     # ---------- prekryvy ----------
     @api.model
-    def _busy_domain(self, room_ids, start, stop, exclude_ids=None):
-        """Zaznamy, ktere v danem case opravdu blokuji ordinace (potvrzene + blokace)."""
+    def _busy_domain(self, room_ids, start, stop, exclude_ids=None, scope="internal"):
+        """Záznamy, které v daném čase opravdu blokují ordinace (potvrzené + blokace).
+
+        Jediné místo s pravidlem, co je obsazené:
+        - scope="web" (veřejný web): obě blokace, „jen web“ i úplná;
+        - scope="internal" (recepce, kontrola překryvu při zápisu): jen úplná blokace.
+        """
+        if scope not in ("web", "internal"):
+            raise ValueError("scope musí být 'web' nebo 'internal'")
+        blokace = ["&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES)]
+        if scope == "internal":
+            blokace = ["&"] + blokace + [("block_scope", "=", "full")]
         domain = [
             ("start", "<", stop), ("stop", ">", start),
             # Blokace blokuje, dokud neni zrusena; rezervace jen potvrzena / proběhla.
-            "|", "&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES),
-            ("state", "in", BUSY_STATES),
+            "|", *blokace,
+            "&", ("kind", "=", "reservation"), ("state", "in", BUSY_STATES),
             # Bez ordinace blokuje jen blokace (celoklinicka); rezervace bez ordinace nikoho neblokuje.
             "|", "&", ("room_id", "=", False), ("kind", "=", "block"), ("room_id", "in", list(room_ids)),
         ]
@@ -170,6 +221,8 @@ class VetReservation(models.Model):
             rooms = [rec.room_id.id] if rec.room_id else all_rooms
             if not rec.room_id and rec.kind == "reservation":
                 continue   # cekajici z webu bez ordinace se zatim nikam nepise
+            if rec.kind == "block" and rec.block_scope == "web":
+                continue   # blokace jen pro web nikomu nebrání, jde založit kdykoli
             self._lock_rooms(rooms)
             clash = self.search(self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id]), limit=1)
             if clash:
@@ -194,7 +247,7 @@ class VetReservation(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if {"start", "stop", "room_id", "state", "kind"} & set(vals):
+        if {"start", "stop", "room_id", "state", "kind", "block_scope"} & set(vals):
             self._check_overlap()
         return res
 
@@ -212,7 +265,8 @@ class VetReservation(models.Model):
                 if (tz_start + shift).date() > until:
                     break
                 vals_list.append({
-                    "kind": "block", "block_reason": rec.block_reason, "room_id": rec.room_id.id, "note": rec.note,
+                    "kind": "block", "block_reason": rec.block_reason, "block_scope": rec.block_scope,
+                    "room_id": rec.room_id.id, "note": rec.note,
                     "start": TZ.localize(tz_start + shift).astimezone(pytz.utc).replace(tzinfo=None),
                     "stop": TZ.localize(tz_stop + shift).astimezone(pytz.utc).replace(tzinfo=None)})
             if vals_list:
@@ -275,12 +329,18 @@ class VetReservation(models.Model):
             open_iv = A.open_minutes(room, day)
             for f, t in open_iv:
                 axis_from, axis_to = min(axis_from, f), max(axis_to, t)
+            # Služby lékařek = svislé pruhy vlevo ve sloupci; souběh dvou lékařek vedle sebe.
+            sluzby, lanes, soubehy = pruhy_sluzeb([
+                {"id": a.id, "doctor_id": a.doctor_id.id, "name": a.doctor_id.name,
+                 "initials": inicialy(a.doctor_id.name), "color": barva_lekarky(a.doctor_id.id),
+                 "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
+                for a in assignments if a.room_id == room])
+            for d in sluzby:
+                d["time_label"] = "%s–%s" % (cas_label(d["from"]), cas_label(d["to"]))
             rooms_out.append({
                 "id": room.id, "name": room.name, "color_hex": room.color_hex, "online": room.online,
                 "open": [[f, t] for f, t in open_iv],
-                "doctors": [{"id": a.doctor_id.id, "name": a.doctor_id.name,
-                             "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
-                            for a in assignments if a.room_id == room],
+                "doctors": sluzby, "lanes": lanes, "overlaps": soubehy,
             })
         events = []
         for r in self.search([("start", "<", stop), ("stop", ">", start),
@@ -289,6 +349,7 @@ class VetReservation(models.Model):
             ev_start, ev_end = A.utc_to_local_minutes(r.start, day), A.utc_to_local_minutes(r.stop, day)
             events.append({
                 "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
+                "block_scope": r.block_scope if r.kind == "block" else False,
                 "room_id": r.room_id.id or False,
                 "start": ev_start, "end": ev_end,
                 "time_label": "%s–%s" % (cas_label(ev_start), cas_label(ev_end)),
@@ -317,7 +378,9 @@ class VetReservation(models.Model):
                 "suggestions": w.board_suggestions(w.id),
             })
         return {"date": day_str, "step": s.booking_slot_step, "axis": {"from": axis_from, "to": axis_to},
-                "rooms": rooms_out, "events": events, "waiting": waiting}
+                "rooms": rooms_out, "events": events, "waiting": waiting,
+                # Víkend / státní svátek, kdy web neobjednává (jen štítek; recepce objednává dál).
+                "day_note": A.web_day_note(day) or ""}
 
     @api.model
     def board_suggestions(self, res_id):
@@ -338,7 +401,9 @@ class VetReservation(models.Model):
         doctor = rec.doctor_id or None
         # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web:
         # min_hours=0 nechá ve hře vše, co ještě nezačalo.
-        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0, max_days=HORIZONT_RECEPCE)
+        # scope="internal": blokace „jen web“, víkend ani svátek recepci nebrání.
+        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0, max_days=HORIZONT_RECEPCE,
+                                        scope="internal")
                      if x["minute"] == minute), None)
         if not slot:
             return []

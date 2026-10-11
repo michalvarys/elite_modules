@@ -34,6 +34,11 @@ class ReservationCase(TransactionCase):
         Doctor.search([]).write({"prijima_rezervace": False})
         cls.dr_a = Doctor.create({"name": "MVDr. Alena Testová", "prijima_rezervace": True})
         cls.dr_b = Doctor.create({"name": "MVDr. Bára Testová", "prijima_rezervace": True})
+        # Víkendy a svátky jen ručně (výchozí ano) by starším testům s pevnými daty
+        # (28. 10.) a „dnes + N dní“ měnily výsledek podle kalendáře. Vypnuto;
+        # testy víkendů a svátků (test_blokace) si je zapínají samy.
+        cls.env["elite.vet.setting"].nastaveni().write({
+            "booking_block_weekends": False, "booking_block_holidays": False})
 
     def hours(self, room, weekday, h_from, h_to, **extra):
         vals = {"room_id": room.id, "weekday": str(weekday), "hour_from": h_from, "hour_to": h_to}

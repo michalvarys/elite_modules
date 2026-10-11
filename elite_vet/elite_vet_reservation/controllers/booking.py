@@ -117,7 +117,7 @@ class BookingController(http.Controller):
             return []
         doctor, spec = self._filters(kw)
         day = fields.Date.from_string(date)
-        return request.env["elite.vet.availability"].sudo().slots(proc, day, doctor, spec)
+        return request.env["elite.vet.availability"].sudo().slots(proc, day, doctor, spec, scope="web")
 
     @http.route("/rezervace/api/submit", type="json", auth="public", website=True, methods=["POST"], csrf=False)
     def submit(self, **data):
@@ -139,7 +139,7 @@ class BookingController(http.Controller):
             return {"ok": False, "error": "validation", "fields": errors}
         doctor, spec = self._filters(data)
         A = request.env["elite.vet.availability"].sudo()
-        slot = next((sl for sl in A.slots(proc, day, doctor, spec) if sl["minute"] == minute), None)
+        slot = next((sl for sl in A.slots(proc, day, doctor, spec, scope="web") if sl["minute"] == minute), None)
         if not slot:
             return {"ok": False, "error": "slot_taken", "fields": {}}
         # Limit se počítá až u odeslání, které opravdu založí záznam (chybné pokusy se nepočítají).

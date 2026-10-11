@@ -19,6 +19,9 @@ class TestControllers(HttpCase):
             self.env["elite.vet.room.hours"].create({"room_id": self.room.id, "weekday": str(wd), "hour_from": 8.0, "hour_to": 18.0})
         self.proc = self.env["elite.vet.procedure"].create({"name": "Vaccination T", "duration": 15, "symbol": "V"})
         self.day = (date.today() + timedelta(days=3)).isoformat()
+        # „Dnes + 3“ může padnout na víkend/svátek; ty má vlastní test níže.
+        self.setting = self.env["elite.vet.setting"].nastaveni()
+        self.setting.write({"booking_block_weekends": False, "booking_block_holidays": False})
 
     def rpc(self, path, params):
         resp = self.url_open(path, data=json.dumps({"jsonrpc": "2.0", "method": "call", "params": params}),
@@ -103,3 +106,20 @@ class TestControllers(HttpCase):
         errors, clean = validate_submit(self.good_submit(contact_phone="777 111 222"))
         self.assertFalse(errors)
         self.assertEqual(clean["contact_phone"], "+420777111222")
+
+    def test_web_api_skips_weekend_and_web_block(self):
+        """Veřejné API počítá s pravidly webu: víkend nic, blokace jen pro web obsazuje."""
+        d = date.today() + timedelta(days=3)
+        A = self.env["elite.vet.availability"]
+        self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_scope": "web", "block_reason": "Jen telefonem", "room_id": self.room.id,
+            "start": A.local_to_utc(d, 600), "stop": A.local_to_utc(d, 660)})
+        # Jiné ordinace z ukázkových dat můžou mít volno; sleduje se jen Ordinace T.
+        res = self.rpc("/rezervace/api/slots", {"procedure_id": self.proc.id, "date": self.day})
+        times = [s["time"] for s in res if self.room.id in s["room_ids"]]
+        self.assertIn("09:45", times)
+        self.assertFalse({"10:00", "10:45"} & set(times))
+        self.assertIn("11:00", times)
+        self.setting.booking_block_weekends = True
+        sat = d + timedelta(days=(5 - d.weekday()) % 7)
+        self.assertEqual(self.rpc("/rezervace/api/slots", {"procedure_id": self.proc.id, "date": sat.isoformat()}), [])

@@ -18,6 +18,14 @@ class EliteVetSetting(models.Model):
                                        help="Sem chodí zpráva o každé nové rezervaci z webu.")
     booking_require_doctor = fields.Boolean("Online jen tam, kde slouží lékař", default=False,
                                             help="Zapnuté = termín se nabídne jen v čase, kdy má ordinace zapsanou službu lékaře.")
+    booking_block_weekends = fields.Boolean(
+        "Víkendy jen ručně (web neobjednává)", default=True,
+        help="Zapnuté = web v sobotu a neděli nenabízí žádné termíny. Recepce objednává dál "
+             "(i ručním časem mimo ordinační dobu).")
+    booking_block_holidays = fields.Boolean(
+        "Státní svátky jen ručně (web neobjednává)", default=True,
+        help="Zapnuté = web ve státní svátek (včetně Velkého pátku a Velikonočního pondělí) nenabízí "
+             "žádné termíny. Svátky se počítají samy, nic se nezadává. Recepce objednává dál.")
     booking_reminder_enabled = fields.Boolean("Posílat připomínku", default=False)
     booking_reminder_hours_before = fields.Integer("Připomínka (hodin před)", default=24)
     booking_deposits_enabled = fields.Boolean("Zálohy zapnuté", default=False,
