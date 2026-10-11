@@ -105,16 +105,20 @@ class VetAvailability(models.AbstractModel):
 
     # ---------- vystup ----------
     @api.model
-    def _window(self, now):
+    def _window(self, now, min_hours=None, max_days=None):
+        """Okno, ve kterém se dá objednat. min_hours / max_days = None bere nastavení
+        pro web; recepce si předá vlastní (např. min_hours=0 = i na dnešek)."""
         s = self.env["elite.vet.setting"].nastaveni()
         now = now or fields.Datetime.now()
-        earliest = now + timedelta(hours=s.booking_min_hours_before)
-        latest_day = pytz.utc.localize(now).astimezone(TZ).date() + timedelta(days=s.booking_max_days_ahead)
+        hours = s.booking_min_hours_before if min_hours is None else min_hours
+        days = s.booking_max_days_ahead if max_days is None else max_days
+        earliest = now + timedelta(hours=hours)
+        latest_day = pytz.utc.localize(now).astimezone(TZ).date() + timedelta(days=days)
         return s, earliest, latest_day
 
     @api.model
-    def slots(self, procedure, day, doctor=None, specialization=None, now=None):
-        s, earliest, latest_day = self._window(now)
+    def slots(self, procedure, day, doctor=None, specialization=None, now=None, min_hours=None, max_days=None):
+        s, earliest, latest_day = self._window(now, min_hours, max_days)
         if day > latest_day:
             return []
         rooms = procedure.rooms_for_booking()
@@ -154,6 +158,22 @@ class VetAvailability(models.AbstractModel):
             e = by_minute[m]
             e["time"] = "%02d:%02d" % (m // 60, m % 60)
             out.append(e)
+        return out
+
+    @api.model
+    def room_doctors(self, procedure, day, slot, doctor=None):
+        """Pro jeden slot ze slots(): [(room_id, doctor_id | False)] – v každé volné
+        ordinaci lékařka, která tam v tu dobu slouží a úkon dělá (zvolená, jinak
+        první podle začátku služby). Úkon bez nutné lékařky může být bez ní."""
+        serving = self.assignment_minutes(day, procedure, doctor)
+        minute, dur = slot["minute"], procedure.duration
+        out = []
+        for room_id in slot["room_ids"]:
+            doc_ids = [did for f, t, did in sorted(serving.get(room_id, []))
+                       if f <= minute and minute + dur <= t]
+            if doctor:
+                doc_ids = [did for did in doc_ids if did == doctor.id]
+            out.append((room_id, doc_ids[0] if doc_ids else False))
         return out
 
     @api.model

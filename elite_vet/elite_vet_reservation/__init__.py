@@ -4,6 +4,7 @@ _logger = logging.getLogger(__name__)
 
 from . import models
 from . import controllers
+from . import wizard
 
 # (název EN, český překlad, délka, zkratka, barva)
 PROCEDURES = [

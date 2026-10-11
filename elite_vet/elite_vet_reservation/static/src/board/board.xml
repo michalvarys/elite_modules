@@ -17,7 +17,7 @@
                     </button>
                 </div>
                 <span class="flex-grow-1"/>
-                <button class="btn btn-primary" t-on-click="() => this.openForm(false, {default_kind: 'reservation', default_state: 'confirmed'})">Nová rezervace</button>
+                <button class="btn btn-primary" t-on-click="() => this.openWizard()">Nová rezervace</button>
                 <button class="btn btn-outline-secondary" t-on-click="newBlock">Nová blokace</button>
             </div>
             <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>

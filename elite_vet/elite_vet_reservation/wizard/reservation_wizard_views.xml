@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_reservation_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.wizard.form</field>
+        <field name="model">elite.vet.reservation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Nová rezervace">
+                <header>
+                    <field name="step" widget="statusbar" readonly="1"/>
+                </header>
+                <field name="povolene_lekarky_ids" invisible="1"/>
+                <field name="minute" invisible="1"/>
+
+                <!-- 1. Co a kdy -->
+                <group invisible="step != 'co'">
+                    <group>
+                        <field name="procedure_id" required="step == 'co'" options="{'no_create': True, 'no_open': True}"/>
+                        <field name="doctor_id" placeholder="Kterákoli, která úkon dělá"
+                               options="{'no_create': True, 'no_open': True}"/>
+                        <field name="date"/>
+                    </group>
+                    <group invisible="not room_id">
+                        <div class="text-muted" colspan="2">
+                            Předvyplněno z tabule: <field name="room_id" readonly="1" class="d-inline" options="{'no_open': True}"/> v <field name="cas_label" class="d-inline"/>.
+                            Je-li čas volný, krok s výběrem času se přeskočí.
+                        </div>
+                    </group>
+                </group>
+
+                <!-- 2. Volný čas -->
+                <div invisible="step != 'cas'">
+                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                        <button name="action_den_predchozi" type="object" string="‹ Předchozí den" class="btn-secondary"/>
+                        <h4 class="mb-0 mx-2"><field name="den_label" readonly="1"/></h4>
+                        <button name="action_den_dalsi" type="object" string="Další den ›" class="btn-secondary"/>
+                        <button name="action_dalsi_volny_den" type="object" string="Další volný den" class="btn-link"/>
+                    </div>
+                    <div class="text-muted mb-2">
+                        <field name="procedure_id" readonly="1" class="d-inline" options="{'no_open': True}"/>
+                        <span invisible="not doctor_id"> · <field name="doctor_id" readonly="1" class="d-inline" options="{'no_open': True}"/></span>
+                    </div>
+                    <div invisible="slot_ids" class="alert alert-info" role="status">
+                        V tento den není volný čas. Zkuste „Další volný den“.
+                    </div>
+                    <field name="slot_ids" invisible="not slot_ids" nolabel="1">
+                        <list create="0" delete="0" no_open="1">
+                            <field name="minute" column_invisible="1"/>
+                            <field name="time_label"/>
+                            <field name="room_id" readonly="1" options="{'no_open': True}"/>
+                            <field name="doctor_id" readonly="1" options="{'no_open': True}"/>
+                            <button name="action_vybrat" type="object" string="Vybrat" class="btn-primary btn-sm"/>
+                        </list>
+                    </field>
+                </div>
+
+                <!-- 3. Klient -->
+                <div invisible="step != 'klient'">
+                    <field name="partner_mode" widget="radio" options="{'horizontal': true}"/>
+                    <group>
+                        <group string="Klient">
+                            <field name="partner_id" invisible="partner_mode != 'existing'"
+                                   context="{'ev_hledat_telefon': True, 'default_is_vet_client': True}"
+                                   placeholder="Jméno, telefon nebo e-mail" options="{'no_create': True}"/>
+                            <field name="contact_name" required="step == 'klient' and partner_mode == 'new'"/>
+                            <field name="contact_phone" widget="phone"/>
+                            <field name="contact_email" widget="email"/>
+                        </group>
+                        <group string="Mazlíček">
+                            <field name="pet_id" invisible="partner_mode != 'existing' or not partner_id"
+                                   options="{'no_create': True}"/>
+                            <field name="pet_name" invisible="pet_id"/>
+                            <field name="pet_species" invisible="pet_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="problem" placeholder="S čím klient přichází"/>
+                        <field name="note" placeholder="Interní poznámka recepce"/>
+                        <field name="send_email" readonly="not contact_email"/>
+                    </group>
+                </div>
+
+                <!-- 4. Shrnutí -->
+                <div invisible="step != 'souhrn'">
+                    <field name="souhrn" readonly="1" nolabel="1"/>
+                </div>
+
+                <footer>
+                    <button name="action_krok_cas" type="object" string="Dále" class="btn-primary" invisible="step != 'co'"/>
+                    <button name="action_zpet_co" type="object" string="Zpět" class="btn-secondary" invisible="step != 'cas'"/>
+                    <button name="action_zpet_cas" type="object" string="Zpět" class="btn-secondary" invisible="step != 'klient'"/>
+                    <button name="action_krok_souhrn" type="object" string="Dále" class="btn-primary" invisible="step != 'klient'"/>
+                    <button name="action_zpet_klient" type="object" string="Zpět" class="btn-secondary" invisible="step != 'souhrn'"/>
+                    <button name="action_ulozit" type="object" string="Uložit rezervaci" class="btn-primary" invisible="step != 'souhrn'"/>
+                    <button special="cancel" string="Zavřít" class="btn-link"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_reservation_wizard" model="ir.actions.act_window">
+        <field name="name">Nová rezervace</field>
+        <field name="res_model">elite.vet.reservation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

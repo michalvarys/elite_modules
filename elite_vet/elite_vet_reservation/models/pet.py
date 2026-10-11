@@ -1,6 +1,7 @@
 import re
 
 from odoo import api, fields, models
+from odoo.osv import expression
 
 SPECIES = [
     ("dog", "Pes"), ("cat", "Kočka"), ("rabbit", "Králík"), ("rodent", "Hlodavec"),
@@ -46,6 +47,24 @@ class ResPartner(models.Model):
     # Misto pro budouci export z WinVetu. Ted se nikde nevyplnuje.
     winvet_ref = fields.Char(string="ID ve WinVetu", index=True)
     reservation_ids = fields.One2many("elite.vet.reservation", "partner_id", string="Rezervace")
+
+    @api.model
+    def _search_display_name(self, operator, value):
+        """V průvodci rezervací (kontext ev_hledat_telefon) se klient hledá i podle
+        telefonu - jen podle číslic, telefony jsou v bázi zapsané různě."""
+        domain = super()._search_display_name(operator, value)
+        digits = normalizuj_telefon(value) if isinstance(value, str) else ""
+        if self.env.context.get("ev_hledat_telefon") and operator == "ilike" and len(digits) >= 4:
+            self.flush_model(["phone", "mobile", "active"])
+            self.env.cr.execute(
+                "SELECT id FROM res_partner WHERE regexp_replace(coalesce(phone, ''), '\\D', '', 'g') LIKE %s"
+                " OR regexp_replace(coalesce(mobile, ''), '\\D', '', 'g') LIKE %s",
+                ["%" + digits + "%"] * 2,
+            )
+            ids = [r[0] for r in self.env.cr.fetchall()]
+            if ids:
+                domain = expression.OR([domain, [("id", "in", ids)]])
+        return domain
 
     @api.model
     def najit_nebo_zalozit_klienta(self, name, email, phone):

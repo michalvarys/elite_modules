@@ -11,3 +11,4 @@ from . import test_mail
 from . import test_access
 from . import test_lekarky
 from . import test_ux
+from . import test_wizard

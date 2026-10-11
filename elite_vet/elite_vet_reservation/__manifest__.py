@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rezervace",
-    "version": "18.0.1.1.0",
+    "version": "18.0.1.2.0",
     "category": "Website",
     "summary": "Rezervacni kalendar kliniky: ordinace, ukony, rozpis lekaru, online rezervace.",
     "description": """
@@ -14,7 +14,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
     "author": "Michal Varys",
     "website": "https://www.michalvarys.eu",
     "license": "LGPL-3",
-    "depends": ["website", "mail", "payment", "elite_vet_theme", "elite_vet_team",
+    "depends": ["website", "mail", "bus", "payment", "elite_vet_theme", "elite_vet_team",
                 "elite_vet_calendar", "elite_vet_web"],
     "data": [
         "security/groups.xml",
@@ -28,6 +28,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/partner_views.xml",
         "views/setting_views.xml",
         "views/board_action.xml",
+        "wizard/reservation_wizard_views.xml",
         "views/menus.xml",
         "views/booking_page.xml",
         "data/mail_templates.xml",

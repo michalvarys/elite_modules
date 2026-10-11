@@ -29,10 +29,28 @@ export class ReservationBoard extends Component {
             data: null, loading: true, drag: null, busy: false,
         });
         onWillStart(() => this.load());
-        // Recepce nechava tabuli otevrenou celý den, nove zadosti z webu se musi objevit bez F5.
-        // Neuspesna obnova (vyprsela session, server nedostupny) nesmi kazdych 30 s hodit neosetreny reject.
-        this.timer = setInterval(() => this.load(true).catch(() => {}), 30000);
-        onWillUnmount(() => clearInterval(this.timer));
+        // Živá aktualizace: server po každé změně rezervací / rozpisu pošle zprávu skupině Recepce
+        // (viz models/live.py) a tabule se hned tiše obnoví.
+        this.busService = useService("bus_service");
+        this.onBusChange = (payload) => this.onLiveChange(payload);
+        this.busService.subscribe("elite_vet_reservation/changed", this.onBusChange);
+        this.busService.start();
+        // Polling jen jako záloha (spadlé spojení websocketu); nové žádosti nese bus hned.
+        // Neuspesna obnova (vyprsela session, server nedostupny) nesmi hodit neosetreny reject.
+        this.timer = setInterval(() => this.load(true).catch(() => {}), 60000);
+        onWillUnmount(() => {
+            clearInterval(this.timer);
+            this.busService.unsubscribe("elite_vet_reservation/changed", this.onBusChange);
+        });
+    }
+
+    onLiveChange(payload) {
+        if (payload?.new_web) {
+            for (const label of payload.web || []) {
+                this.notification.add("Nová žádost z webu: " + label, { type: "info" });
+            }
+        }
+        this.load(true).catch(() => {});
     }
 
     // ---------- data ----------
@@ -131,9 +149,15 @@ export class ReservationBoard extends Component {
             views: [[false, "form"]], target: "new", context,
         }, { onClose: () => this.load(true) });
     }
-    async newAt(room, min) {
-        const start = await this.orm.call("elite.vet.reservation", "board_slot_utc", [this.state.date, min]);
-        this.openForm(false, { default_room_id: room.id, default_start: start, default_kind: "reservation", default_state: "confirmed" });
+    // Nová rezervace jde přes průvodce (úkon → volný čas → klient → shrnutí), ne přes prázdný formulář.
+    openWizard(context = {}) {
+        this.action.doAction("elite_vet_reservation.action_reservation_wizard", {
+            additionalContext: { default_date: this.state.date, ...context },
+            onClose: () => this.load(true),
+        });
+    }
+    newAt(room, min) {
+        this.openWizard({ default_minute: min, default_room_id: room.id });
     }
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
     onColumnClick(ev, room) {

@@ -7,3 +7,4 @@ from . import reservation
 from . import mailing
 from . import availability
 from . import setting
+from . import live

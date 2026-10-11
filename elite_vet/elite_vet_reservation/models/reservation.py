@@ -329,27 +329,19 @@ class VetReservation(models.Model):
         if not rec or rec.kind != "reservation" or not rec.procedure_id or rec.state != "web_new":
             return []
         A = self.env["elite.vet.availability"]
-        s = self.env["elite.vet.setting"].nastaveni()
         proc = rec.procedure_id
         local = pytz.utc.localize(rec.start).astimezone(TZ)
         day, minute = local.date(), local.hour * 60 + local.minute
         doctor = rec.doctor_id or None
-        # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web;
-        # posun „teď“ o tuto lhůtu zpět nechá ve hře vše, co ještě nezačalo.
-        now = fields.Datetime.now() - timedelta(hours=s.booking_min_hours_before)
-        slot = next((x for x in A.slots(proc, day, doctor=doctor, now=now) if x["minute"] == minute), None)
+        # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web:
+        # min_hours=0 nechá ve hře vše, co ještě nezačalo.
+        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0) if x["minute"] == minute), None)
         if not slot:
             return []
-        serving = A.assignment_minutes(day, proc, doctor)
-        dur = proc.duration
         Room, Doctor = self.env["elite.vet.room"], self.env["elite.vet.doctor"]
         out = []
-        for room_id in slot["room_ids"]:
-            doc_ids = [did for f, t, did in sorted(serving.get(room_id, []))
-                       if f <= minute and minute + dur <= t]
-            if doctor:
-                doc_ids = [did for did in doc_ids if did == doctor.id]
-            doc = Doctor.browse(doc_ids[0]) if doc_ids else Doctor
+        for room_id, doc_id in A.room_doctors(proc, day, slot, doctor):
+            doc = Doctor.browse(doc_id)
             out.append({"room_id": room_id, "room": Room.browse(room_id).name,
                         "doctor_id": doc.id or False, "doctor": doc.name or ""})
         return out
