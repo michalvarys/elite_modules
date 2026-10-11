@@ -369,12 +369,13 @@ class TestLiveUpdate(ReservationCase):
 
     def test_web_request_flags_new_web(self):
         self.env.cr.precommit.run()
-        self.reservation(start=self.dt(fields.Date.today() + timedelta(days=5), 9, 0),
-                         state="web_new", source="web", room_id=False)
+        r = self.reservation(start=self.dt(fields.Date.today() + timedelta(days=5), 9, 0),
+                             state="web_new", source="web", room_id=False)
         payload = self.bus_messages()[-1]
         self.assertTrue(payload["new_web"])
         self.assertEqual(len(payload["web"]), 1)
         self.assertIn("Rex", payload["web"][0])
+        self.assertEqual(payload["web_ids"], [r.id])
 
     def test_assignment_change_notifies(self):
         self.env.cr.precommit.run()

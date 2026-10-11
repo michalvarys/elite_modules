@@ -1,6 +1,7 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { nastavitZvuk, zahrat, zvukZapnuty } from "@elite_vet_reservation/zvuk/zvuk";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
 const PX_PER_MIN = 1.6;   // 15 min = 24 px
@@ -39,6 +40,7 @@ export class ReservationBoard extends Component {
             date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
             data: null, loading: true, drag: null, busy: false,
             preview: null,   // náhled čekající žádosti při najetí myší (viz hoverWaiting)
+            zvuk: zvukZapnuty(),
         });
         this.gridRef = useRef("grid");
         onWillStart(() => this.load());
@@ -58,12 +60,8 @@ export class ReservationBoard extends Component {
         });
     }
 
-    onLiveChange(payload) {
-        if (payload?.new_web) {
-            for (const label of payload.web || []) {
-                this.notification.add("Nová žádost z webu: " + label, { type: "info", sticky: true });
-            }
-        }
+    onLiveChange() {
+        // Zprávu „Nová žádost z webu“ a zvuk má na starosti služba ../zvuk (v celém Odoo).
         this.load(true).catch(() => {});
     }
 
@@ -247,6 +245,13 @@ export class ReservationBoard extends Component {
         }
         await this.load(true);
     }
+    // Zvuk nové žádosti hraje služba ../zvuk (v celém Odoo); tady jen vypínač.
+    prepnoutZvuk() {
+        this.state.zvuk = !this.state.zvuk;
+        nastavitZvuk(this.state.zvuk);
+        if (this.state.zvuk) zahrat();   // ukázka, jak zní
+    }
+
     // ---------- náhled čekající žádosti ----------
     // Najetí myší na žádost přepne tabuli na její den (a tam zůstane), odroluje na čas
     // a do navržených ordinací nakreslí přerušovaný náhled. Krátká prodleva, ať tabule

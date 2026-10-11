@@ -38,6 +38,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
     "assets": {
         "web.assets_backend": [
             "elite_vet_reservation/static/src/board/**/*",
+            "elite_vet_reservation/static/src/zvuk/zvuk.js",
         ],
         "web.assets_frontend": [
             "elite_vet_reservation/static/src/booking/booking.css",

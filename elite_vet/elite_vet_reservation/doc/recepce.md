@@ -76,6 +76,12 @@ něco změní, tabule se sama překreslí. Při nové žádosti z webu vyskočí
 upozornění „Nová žádost z webu: …“, které zůstane, dokud ho nezavřete. Kdyby spojení vypadlo, tabule se pro jistotu
 obnoví sama každou minutu.
 
+**Zvuk.** Nová žádost z webu zároveň zazvoní (krátké „ding-dong“) a upozornění
+vyskočí v celém Odoo, ne jen na tabuli. Zvuk vypnete tlačítkem **🔔 Zvuk** na tabuli
+(přepne se na **🔕 Bez zvuku**); volba platí pro tento prohlížeč. Prohlížeč pustí zvuk
+až poté, co na stránku Odoo jednou kliknete – po ranním otevření tedy stačí kamkoli
+kliknout. Po obnovení stránky se už ohlášená žádost znovu neohlásí.
+
 ---
 
 ## 2. Čekající žádosti z webu

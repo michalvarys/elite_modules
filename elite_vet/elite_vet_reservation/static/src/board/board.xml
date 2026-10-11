@@ -20,6 +20,10 @@
                     </button>
                 </div>
                 <span class="flex-grow-1"/>
+                <button type="button" class="btn btn-light evb-zvuk" t-on-click="prepnoutZvuk"
+                        t-att-title="state.zvuk ? 'Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete' : 'Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete'">
+                    <t t-if="state.zvuk">🔔 Zvuk</t><t t-else="">🔕 Bez zvuku</t>
+                </button>
                 <button class="btn btn-primary" t-on-click="() => this.openWizard()">Nová rezervace</button>
                 <button class="btn btn-outline-secondary" t-on-click="newBlock">Nová blokace</button>
             </div>

@@ -30,7 +30,11 @@ def oznamit_tabuli(env, nove_z_webu=()):
             group = env.ref("elite_vet_reservation.group_reservation_reception", raise_if_not_found=False)
             if not group:
                 return
-            env["bus.bus"].sudo()._sendone(group.sudo(), ZPRAVA, {"new_web": bool(nove), "web": nove})
+            # web_ids: prohlížeč podle nich pozná žádost, kterou už ohlásil (bus po
+            # načtení stránky doručí i zprávy z poslední chvíle znovu).
+            env["bus.bus"].sudo()._sendone(group.sudo(), ZPRAVA, {
+                "new_web": bool(nove), "web": [label for _id, label in nove],
+                "web_ids": [rid for rid, _label in nove]})
     data[KLIC].extend(nove_z_webu)
 
 
@@ -47,7 +51,7 @@ class VetReservationLive(models.Model):
         records = super().create(vals_list)
         nove = records.filtered(lambda r: r.kind == "reservation" and r.state == "web_new")
         if records:
-            oznamit_tabuli(self.env, [r._popisek_zadosti() for r in nove])
+            oznamit_tabuli(self.env, [(r.id, r._popisek_zadosti()) for r in nove])
         return records
 
     def write(self, vals):
