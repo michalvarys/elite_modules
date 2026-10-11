@@ -16,6 +16,23 @@ BUSY_STATES = ("confirmed", "done")
 INACTIVE_STATES = ("cancelled", "no_show")
 # Ordinacni cas kliniky; nesmi zalezet na casove zone prave jednajiciho uzivatele (cron, sudo, web).
 TZ = pytz.timezone("Europe/Prague")
+# České názvy dnů natvrdo: nesmí záviset na jazyce uživatele ani prohlížeče.
+DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"]
+TITULY = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
+
+
+def inicialy(jmeno):
+    """„MVDr. Dana Pokorná“ -> „DP“ (tituly a zkratky s tečkou se přeskočí)."""
+    slova = [w for w in (jmeno or "").replace(",", " ").split()
+             if w.lower() not in TITULY and not w.endswith(".")]
+    if not slova:
+        return ""
+    vyber = [slova[0], slova[-1]] if len(slova) > 1 else slova[:1]
+    return "".join(w[0].upper() for w in vyber)
+
+
+def cas_label(minuta):
+    return "%d:%02d" % (minuta // 60, minuta % 60)
 
 
 class VetReservation(models.Model):
@@ -64,14 +81,23 @@ class VetReservation(models.Model):
     ]
 
     # ---------- compute ----------
+    @api.model
+    def _jazyk_kliniky(self):
+        """Název rezervace a tabule mluví jazykem kliniky, ne jazykem toho, kdo
+        rezervaci založil (klient z německého webu, správce v angličtině)."""
+        installed = dict(self.env["res.lang"].get_installed())
+        return "cs_CZ" if "cs_CZ" in installed else (self.env.lang or "en_US")
+
     @api.depends("kind", "contact_name", "partner_id.name", "pet_name", "pet_id.name", "procedure_id.name", "block_reason")
     def _compute_name(self):
+        lang = self._jazyk_kliniky()
         for rec in self:
+            loc = rec.with_context(lang=lang)
             if rec.kind == "block":
-                rec.name = rec.block_reason or _("Blokace")
+                rec.name = loc.block_reason or loc.env._("Blokace")
                 continue
-            parts = [rec.partner_id.name or rec.contact_name or _("Bez jména"),
-                     rec.pet_id.name or rec.pet_name or "", rec.procedure_id.name or ""]
+            parts = [rec.partner_id.name or rec.contact_name or loc.env._("Bez jména"),
+                     rec.pet_id.name or rec.pet_name or "", loc.procedure_id.name or ""]
             rec.name = " / ".join(p for p in parts if p)
 
     @api.depends("start", "stop")
@@ -238,6 +264,7 @@ class VetReservation(models.Model):
         day = fields.Date.from_string(day_str)
         A = self.env["elite.vet.availability"]
         s = self.env["elite.vet.setting"].nastaveni()
+        lang = self._jazyk_kliniky()
         rooms = self.env["elite.vet.room"].search([])
         start, stop = A.local_to_utc(day, 0), A.local_to_utc(day, 1440)
         assignments = self.env["elite.vet.doctor.assignment"].search([("date", "=", day)])
@@ -257,14 +284,19 @@ class VetReservation(models.Model):
         for r in self.search([("start", "<", stop), ("stop", ">", start),
                               "|", "&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES),
                               ("state", "in", ("confirmed", "done", "no_show"))]):
+            ev_start, ev_end = A.utc_to_local_minutes(r.start, day), A.utc_to_local_minutes(r.stop, day)
             events.append({
                 "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
                 "room_id": r.room_id.id or False,
-                "start": A.utc_to_local_minutes(r.start, day), "end": A.utc_to_local_minutes(r.stop, day),
+                "start": ev_start, "end": ev_end,
+                "time_label": "%s–%s" % (cas_label(ev_start), cas_label(ev_end)),
+                "pet": r.pet_id.name or r.pet_name or "",
+                "owner": r.partner_id.name or r.contact_name or "",
                 "color_hex": r.color_hex, "symbol": r.procedure_id.symbol or "",
-                "phone": r.contact_phone or r.partner_id.phone or "", "email": r.contact_email or "",
-                "problem": r.problem or "", "procedure": r.procedure_id.name or "",
-                "doctor": r.doctor_id.name or "", "source": r.source,
+                "phone": r.contact_phone or r.partner_id.phone or "", "email": r.contact_email or r.partner_id.email or "",
+                "problem": r.problem or "", "procedure": r.procedure_id.with_context(lang=lang).name or "",
+                "doctor": r.doctor_id.name or "", "doctor_initials": inicialy(r.doctor_id.name),
+                "source": r.source,
             })
         waiting = []
         for w in self.search([("state", "=", "web_new"), ("stop", ">=", fields.Datetime.now())], order="start"):
@@ -272,12 +304,55 @@ class VetReservation(models.Model):
             local = pytz.utc.localize(w.start).astimezone(TZ)
             waiting.append({
                 "id": w.id, "name": w.name, "date": local.strftime("%Y-%m-%d"), "time": local.strftime("%H:%M"),
-                "procedure": w.procedure_id.name or "", "duration": w.duration_minutes,
+                "minute": local.hour * 60 + local.minute,
+                "date_label": "%s %d. %d. %s" % (DNY_KRATCE[local.weekday()], local.day, local.month,
+                                                 local.strftime("%H:%M")),
+                "procedure": w.procedure_id.with_context(lang=lang).name or "", "duration": w.duration_minutes,
                 "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
                 "doctor": w.doctor_id.name or "",
+                # Navrhy rovnou tady: jeden dotaz na obnovu tabule, ne jeden za kazdou kartu.
+                "suggestions": w.board_suggestions(w.id),
             })
         return {"date": day_str, "step": s.booking_slot_step, "axis": {"from": axis_from, "to": axis_to},
                 "rooms": rooms_out, "events": events, "waiting": waiting}
+
+    @api.model
+    def board_suggestions(self, res_id):
+        """Kam jde čekající žádost potvrdit přesně v požadovaném čase.
+
+        Ordinace, kde je čas volný a slouží lékařka, která úkon dělá (nebo ta,
+        kterou si klient vybral). Lékařka = vybraná, jinak první sloužící.
+        Úkon, který lékařku nepotřebuje (stejné pravidlo jako ve slots), se
+        nabídne i do ordinace bez služby - bez lékařky.
+        """
+        rec = self.browse(res_id).exists()
+        if not rec or rec.kind != "reservation" or not rec.procedure_id or rec.state != "web_new":
+            return []
+        A = self.env["elite.vet.availability"]
+        s = self.env["elite.vet.setting"].nastaveni()
+        proc = rec.procedure_id
+        local = pytz.utc.localize(rec.start).astimezone(TZ)
+        day, minute = local.date(), local.hour * 60 + local.minute
+        doctor = rec.doctor_id or None
+        # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web;
+        # posun „teď“ o tuto lhůtu zpět nechá ve hře vše, co ještě nezačalo.
+        now = fields.Datetime.now() - timedelta(hours=s.booking_min_hours_before)
+        slot = next((x for x in A.slots(proc, day, doctor=doctor, now=now) if x["minute"] == minute), None)
+        if not slot:
+            return []
+        serving = A.assignment_minutes(day, proc, doctor)
+        dur = proc.duration
+        Room, Doctor = self.env["elite.vet.room"], self.env["elite.vet.doctor"]
+        out = []
+        for room_id in slot["room_ids"]:
+            doc_ids = [did for f, t, did in sorted(serving.get(room_id, []))
+                       if f <= minute and minute + dur <= t]
+            if doctor:
+                doc_ids = [did for did in doc_ids if did == doctor.id]
+            doc = Doctor.browse(doc_ids[0]) if doc_ids else Doctor
+            out.append({"room_id": room_id, "room": Room.browse(room_id).name,
+                        "doctor_id": doc.id or False, "doctor": doc.name or ""})
+        return out
 
     @api.model
     def board_slot_utc(self, day_str, minute):
@@ -291,8 +366,10 @@ class VetReservation(models.Model):
         return True
 
     @api.model
-    def board_confirm(self, res_id, day_str, minute, room_id):
+    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None):
+        """doctor_id=None lékařku nemění; číslo ji nastaví (návrh z panelu Čekající)."""
         rec = self.browse(res_id)
-        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id)
+        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id,
+                              doctor_id=doctor_id or None)
         rec.action_confirm()
         return True

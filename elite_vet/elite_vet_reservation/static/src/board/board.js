@@ -8,6 +8,13 @@ const PX_PER_MIN = 1.6;   // 15 min = 24 px
 function pad(n) { return String(n).padStart(2, "0"); }
 function hhmm(min) { return pad(Math.floor(min / 60)) + ":" + pad(min % 60); }
 function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+// Poledne, aby posun o dny nepreskocil kvuli zmene letniho casu.
+function parseIso(iso) { return new Date(iso + "T12:00:00"); }
+function nowMinute() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+// Ceske nazvy natvrdo: nesmi zalezet na jazyce prohlizece ani uzivatele.
+const DNY = ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle"];
+const DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"];
+function weekdayIndex(d) { return (d.getDay() + 6) % 7; }   // 0 = pondělí
 
 export class ReservationBoard extends Component {
     static template = "elite_vet_reservation.Board";
@@ -17,7 +24,10 @@ export class ReservationBoard extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
-        this.state = useState({ date: isoDate(new Date()), data: null, loading: true, drag: null });
+        this.state = useState({
+            date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
+            data: null, loading: true, drag: null, busy: false,
+        });
         onWillStart(() => this.load());
         // Recepce nechava tabuli otevrenou celý den, nove zadosti z webu se musi objevit bez F5.
         // Neuspesna obnova (vyprsela session, server nedostupny) nesmi kazdych 30 s hodit neosetreny reject.
@@ -32,18 +42,64 @@ export class ReservationBoard extends Component {
         const data = await this.orm.call("elite.vet.reservation", "board_data", [date]);
         // Mezitim se mohl prepnout den; starsi odpoved by prepsala tabuli daty jineho dne.
         if (date !== this.state.date) return;
+        // Cara „teď“ a zvyrazneni dneska se posouvaji s kazdou obnovou (i pres pulnoc).
+        this.state.today = isoDate(new Date());
+        this.state.now = nowMinute();
         this.state.data = data;
         this.state.loading = false;
     }
     shiftDay(delta) {
-        // Poledne, aby posun o den nepreskocil kvuli zmene letniho casu.
-        const d = new Date(this.state.date + "T12:00:00");
+        const d = parseIso(this.state.date);
         d.setDate(d.getDate() + delta);
-        this.state.date = isoDate(d);
-        this.load();
+        this.goTo(isoDate(d));
     }
-    today() { this.state.date = isoDate(new Date()); this.load(); }
-    onDateInput(ev) { if (ev.target.value) { this.state.date = ev.target.value; this.load(); } }
+    goTo(iso) { this.state.date = iso; this.load(); }
+    today() { this.goTo(isoDate(new Date())); }
+    onDateInput(ev) { if (ev.target.value) { this.goTo(ev.target.value); } }
+
+    // ---------- hlavicka ----------
+    get dayTitle() {
+        const d = parseIso(this.state.date);
+        return DNY[weekdayIndex(d)] + " " + d.getDate() + ". " + (d.getMonth() + 1) + ". " + d.getFullYear();
+    }
+    get weekDays() {
+        const monday = parseIso(this.state.date);
+        monday.setDate(monday.getDate() - weekdayIndex(monday));
+        const out = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const iso = isoDate(d);
+            out.push({
+                iso, short: DNY_KRATCE[i], label: d.getDate() + ". " + (d.getMonth() + 1) + ".",
+                selected: iso === this.state.date, today: iso === this.state.today,
+            });
+        }
+        return out;
+    }
+
+    // ---------- cara „teď“ ----------
+    get showNow() {
+        return this.state.date === this.state.today && this.state.now >= this.axis.from && this.state.now <= this.axis.to;
+    }
+
+    // ---------- udalosti ----------
+    eventLabel(e) {
+        if (e.kind === "block") return e.name;
+        if (e.pet && e.owner) return e.pet + " (" + e.owner + ")";
+        return e.pet || e.owner || e.name;
+    }
+    eventTitle(e) {
+        if (e.kind === "block") return e.time_label + "\n" + e.name;
+        const lines = [e.time_label + " · " + this.eventLabel(e)];
+        if (e.procedure) lines.push("Úkon: " + e.procedure);
+        if (e.doctor) lines.push("Lékařka: " + e.doctor);
+        if (e.phone) lines.push("Telefon: " + e.phone);
+        if (e.email) lines.push("E-mail: " + e.email);
+        if (e.problem) lines.push("Popis problému: " + e.problem);
+        return lines.join("\n");
+    }
+    isShort(e) { return e.end - e.start <= 15; }
 
     // ---------- geometrie ----------
     get axis() { return this.state.data.axis; }
@@ -58,12 +114,14 @@ export class ReservationBoard extends Component {
     isOpen(room, min) { return room.open.some(([f, t]) => f <= min && min < t); }
     eventsFor(room) { return this.state.data.events.filter((e) => e.room_id === room.id); }
     get globalBlocks() { return this.state.data.events.filter((e) => !e.room_id && e.kind === 'block'); }
-    minuteFromDrop(ev, column) {
+    minuteFromDrop(ev, column, floor = false) {
         const rect = column.getBoundingClientRect();
         const y = ev.clientY - rect.top + column.scrollTop;
         const raw = this.axis.from + y / PX_PER_MIN;
         const step = this.state.data.step;
-        return Math.max(this.axis.from, Math.round(raw / step) * step);
+        // Klik do bunky = jeji zacatek (floor); pretazeni = nejblizsi cas (round).
+        const snapped = (floor ? Math.floor(raw / step) : Math.round(raw / step)) * step;
+        return Math.max(this.axis.from, snapped);
     }
 
     // ---------- interakce ----------
@@ -80,7 +138,7 @@ export class ReservationBoard extends Component {
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
     onColumnClick(ev, room) {
         if (ev.target.closest(".evb-event")) return;
-        this.newAt(room, this.minuteFromDrop(ev, ev.currentTarget));
+        this.newAt(room, this.minuteFromDrop(ev, ev.currentTarget, true));
     }
     onDragStart(ev, item, kind) {
         this.state.drag = { id: item.id, kind };
@@ -105,6 +163,20 @@ export class ReservationBoard extends Component {
             this.notification.add(e.data?.message || e.message, { type: "danger" });
         }
         this.state.drag = null;
+        await this.load(true);
+    }
+    async confirmSuggestion(w, sug) {
+        if (this.state.busy) return;
+        this.state.busy = true;
+        try {
+            await this.orm.call("elite.vet.reservation", "board_confirm",
+                [w.id, w.date, w.minute, sug.room_id, sug.doctor_id || null]);
+            this.notification.add("Potvrzeno: " + w.date_label + " · " + sug.room, { type: "success" });
+        } catch (e) {
+            this.notification.add(e.data?.message || e.message, { type: "danger" });
+        } finally {
+            this.state.busy = false;
+        }
         await this.load(true);
     }
     async reject(item) {

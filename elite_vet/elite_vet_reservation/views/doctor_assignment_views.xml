@@ -49,11 +49,23 @@
         <field name="name">Rozpis lékařů</field>
         <field name="res_model">elite.vet.doctor.assignment</field>
         <field name="view_mode">list,calendar,form</field>
-        <field name="context">{'search_default_od_dneska': 1, 'search_default_group_date': 1}</field>
+        <!-- Bez výchozího seskupení: řádky seřazené podle data a ordinace jsou čitelnější. -->
+        <field name="context">{'search_default_od_dneska': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Zapište, kdo kdy slouží</p>
             <p>Datum, lékařka, ordinace, od–do. Podle toho se na webu nabízí termíny
                „k lékaři“ a na tabuli je vidět, kdo je v ordinaci.</p>
         </field>
+    </record>
+
+    <!-- Akce nad vybranými řádky v seznamu (menu Akce). -->
+    <record id="action_assignment_kopirovat_tyden" model="ir.actions.server">
+        <field name="name">Zkopírovat na další týden</field>
+        <field name="model_id" ref="model_elite_vet_doctor_assignment"/>
+        <field name="binding_model_id" ref="model_elite_vet_doctor_assignment"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.action_kopirovat_tyden()</field>
     </record>
 </odoo>

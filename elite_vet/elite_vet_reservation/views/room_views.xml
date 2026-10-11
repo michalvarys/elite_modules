@@ -9,6 +9,7 @@
                 <field name="name"/>
                 <field name="color"/>
                 <field name="online"/>
+                <field name="hours_summary" string="Ordinační doba"/>
                 <field name="note" optional="show"/>
             </list>
         </field>

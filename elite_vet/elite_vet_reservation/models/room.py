@@ -24,6 +24,31 @@ def format_hour(value):
     return "%d:%02d" % (hours, minutes)
 
 
+def format_hours_summary(lines):
+    """[(den, od, do), …] -> „Po–Pá 8:15–19:30 · Ne 10:15–17:45“.
+
+    Po sobě jdoucí dny se stejnými hodinami se sloučí; přestávka = dva časy
+    za sebou („Po 8:00–12:00, 13:00–18:00“). Bez řádků prázdný text.
+    """
+    per_day = {}
+    for wd, h_from, h_to in sorted(lines):
+        per_day.setdefault(wd, []).append("%s–%s" % (format_hour(h_from), format_hour(h_to)))
+    groups = []   # [[první den, poslední den, text]]
+    for wd in range(7):
+        if wd not in per_day:
+            continue
+        text = ", ".join(per_day[wd])
+        if groups and groups[-1][1] == wd - 1 and groups[-1][2] == text:
+            groups[-1][1] = wd
+        else:
+            groups.append([wd, wd, text])
+    out = []
+    for first, last, text in groups:
+        days = WEEKDAY_SHORT[first] if first == last else "%s–%s" % (WEEKDAY_SHORT[first], WEEKDAY_SHORT[last])
+        out.append("%s %s" % (days, text))
+    return " · ".join(out)
+
+
 class VetRoom(models.Model):
     """Ordinace = sloupec v kalendari. Sal je taky ordinace, jen ne online."""
 
@@ -41,12 +66,23 @@ class VetRoom(models.Model):
     note = fields.Char(string="Poznámka")
     hours_ids = fields.One2many("elite.vet.room.hours", "room_id", string="Ordinační doba")
     exception_ids = fields.One2many("elite.vet.room.exception", "room_id", string="Výjimky")
+    hours_summary = fields.Char(compute="_compute_hours_summary", string="Souhrn ordinační doby")
     active = fields.Boolean(string="Aktivní", default=True)
 
     @api.depends("color")
     def _compute_color_hex(self):
         for rec in self:
             rec.color_hex = COLORS.get(rec.color, COLORS["grey"])
+
+    @api.depends("hours_ids.weekday", "hours_ids.hour_from", "hours_ids.hour_to",
+                 "hours_ids.date_from", "hours_ids.date_to")
+    @api.depends_context("tz")
+    def _compute_hours_summary(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            rec.hours_summary = format_hours_summary(
+                (int(h.weekday), h.hour_from, h.hour_to)
+                for h in rec.hours_ids if h.plati_v_den(today))
 
 
 class VetRoomHours(models.Model):

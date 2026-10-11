@@ -13,6 +13,7 @@
                 <field name="online"/>
                 <field name="room_ids" widget="many2many_tags" optional="show"/>
                 <field name="specialization_ids" widget="many2many_tags" optional="show"/>
+                <field name="kdo_dela" optional="show"/>
                 <field name="deposit_required" optional="hide"/>
                 <field name="deposit_amount" optional="hide"/>
                 <field name="currency_id" column_invisible="1"/>

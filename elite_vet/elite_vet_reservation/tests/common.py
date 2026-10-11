@@ -30,6 +30,8 @@ class ReservationCase(TransactionCase):
         cls.derm = Proc.create({"name": "Dermatological problem", "duration": 30, "symbol": "D",
                                 "color": "blue", "room_ids": [(6, 0, [cls.room1.id])]})
         Doctor = cls.env["elite.vet.doctor"]
+        # Skutečné lékařky z ukázkových dat by se testům míchaly do „kdo úkon dělá“.
+        Doctor.search([]).write({"prijima_rezervace": False})
         cls.dr_a = Doctor.create({"name": "MVDr. Alena Testová", "prijima_rezervace": True})
         cls.dr_b = Doctor.create({"name": "MVDr. Bára Testová", "prijima_rezervace": True})
 

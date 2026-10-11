@@ -33,4 +33,16 @@
               parent="menu_reservation_config" action="action_room_exception" sequence="20"/>
     <menuitem id="menu_reservation_procedure" name="Úkony"
               parent="menu_reservation_config" action="action_procedure" sequence="30"/>
+
+    <!-- Nastavení a časté dotazy patří elite_vet_web; recepce je denně nepotřebuje,
+         proto je přesuneme do Konfigurace (jen datovým záznamem, cizí soubor se nemění). -->
+    <record id="elite_vet_web.menu_rezervace_nastaveni" model="ir.ui.menu">
+        <field name="name">Nastavení rezervace</field>
+        <field name="parent_id" ref="menu_reservation_config"/>
+        <field name="sequence">40</field>
+    </record>
+    <record id="elite_vet_web.menu_rezervace_faq" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_reservation_config"/>
+        <field name="sequence">50</field>
+    </record>
 </odoo>

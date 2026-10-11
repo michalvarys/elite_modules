@@ -10,7 +10,7 @@
 .evb-axis { width: 56px; flex-shrink: 0; }
 .evb-axis-body, .evb-col-body { position: relative; }
 .evb-tick { position: absolute; left: 0; right: 0; font-size: 11px; color: #64748b; padding-left: 4px; }
-.evb-head { height: 64px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; background: #fff; position: sticky; top: 0; z-index: 2; }
+.evb-head { height: 64px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; background: #fff; position: sticky; top: 0; z-index: 4; }
 .evb-room { font-weight: 700; }
 .evb-doctors { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
 .evb-col { flex: 1; min-width: 200px; border-left: 1px solid #e2e8f0; }
@@ -22,3 +22,46 @@
 .evb-event.evb-muted { opacity: .55; }
 .evb-symbol { display: inline-block; min-width: 16px; margin-right: 4px; padding: 0 3px; border-radius: 3px; background: rgba(255,255,255,.3); font-weight: 700; }
 .evb-web { float: right; }
+
+// ---------- hlavička: nadpis dne a dny v týdnu ----------
+.evb-toolbar { flex-wrap: wrap; }
+.evb-day-title { margin: 0 8px 0 4px; font-size: 1.35rem; font-weight: 700; white-space: nowrap; }
+.evb-week { display: flex; gap: 4px; }
+.evb-weekday {
+    display: flex; flex-direction: column; align-items: center; min-width: 52px; padding: 2px 6px;
+    border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; color: #334155; line-height: 1.15;
+    &:hover { background: #f1f5f9; }
+}
+.evb-weekday-short { font-weight: 700; text-transform: capitalize; font-size: 12px; }
+.evb-weekday-date { font-size: 11px; color: #64748b; }
+.evb-weekday-today { border-color: #dc2626; .evb-weekday-short { color: #dc2626; } }
+.evb-weekday-selected {
+    background: #2b7870; border-color: #2b7870; color: #fff;
+    &:hover { background: #2b7870; }
+    .evb-weekday-short, .evb-weekday-date { color: #fff; }
+}
+
+// ---------- události ----------
+.evb-event { line-height: 16px; }
+.evb-ev-line { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.evb-ev-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.evb-ev-proc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .92; }
+.evb-event.evb-short { padding-top: 1px; padding-bottom: 0; }
+.evb-web { float: none; flex-shrink: 0; }
+.evb-initials {
+    flex-shrink: 0; margin-left: 4px; padding: 0 4px; border-radius: 3px;
+    background: rgba(255,255,255,.3); font-size: 11px; font-weight: 700; letter-spacing: .02em;
+}
+
+// ---------- čára „teď“ ----------
+.evb-now { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid #dc2626; z-index: 3; pointer-events: none; }
+.evb-now-axis span {
+    position: absolute; right: 2px; top: -9px; padding: 0 3px; border-radius: 3px;
+    background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px;
+}
+
+// ---------- panel Čekající ----------
+.evb-card-when { font-weight: 700; color: #2b7870; }
+.evb-suggestions { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.evb-suggestion { text-align: left; white-space: normal; }
+.evb-no-suggestion { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 6px; }

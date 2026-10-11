@@ -33,6 +33,7 @@ class VetProcedure(models.Model):
     deposit_required = fields.Boolean(string="Vyžaduje zálohu")
     deposit_amount = fields.Monetary(string="Záloha", currency_field="currency_id")
     currency_id = fields.Many2one("res.currency", default=lambda self: self.env.company.currency_id)
+    kdo_dela = fields.Char(compute="_compute_kdo_dela", string="Kdo dělá")
     sequence = fields.Integer(string="Pořadí", default=10)
     active = fields.Boolean(string="Aktivní", default=True)
 
@@ -40,6 +41,15 @@ class VetProcedure(models.Model):
     def _compute_color_hex(self):
         for rec in self:
             rec.color_hex = COLORS.get(rec.color, COLORS["grey"])
+
+    @api.depends("specialization_ids")
+    def _compute_kdo_dela(self):
+        for rec in self:
+            if not rec.specialization_ids:
+                rec.kdo_dela = _("kterákoli lékařka")
+                continue
+            names = rec.doctors_for_booking().mapped("name")
+            rec.kdo_dela = ", ".join(names) or _("žádná lékařka – zkontrolujte specializace")
 
     @api.constrains("duration")
     def _check_duration(self):

@@ -7,6 +7,15 @@
                 <input type="date" class="form-control evb-date" t-att-value="state.date" t-on-change="onDateInput"/>
                 <button class="btn btn-secondary" t-on-click="() => this.shiftDay(1)">›</button>
                 <button class="btn btn-link" t-on-click="today">Dnes</button>
+                <h3 class="evb-day-title" t-esc="dayTitle"/>
+                <div class="evb-week" role="group" aria-label="Dny v týdnu">
+                    <button t-foreach="weekDays" t-as="d" t-key="d.iso" type="button" class="evb-weekday"
+                            t-att-class="{'evb-weekday-selected': d.selected, 'evb-weekday-today': d.today}"
+                            t-att-title="d.today ? 'Dnes' : ''" t-on-click="() => this.goTo(d.iso)">
+                        <span class="evb-weekday-short" t-esc="d.short"/>
+                        <span class="evb-weekday-date" t-esc="d.label"/>
+                    </button>
+                </div>
                 <span class="flex-grow-1"/>
                 <button class="btn btn-primary" t-on-click="() => this.openForm(false, {default_kind: 'reservation', default_state: 'confirmed'})">Nová rezervace</button>
                 <button class="btn btn-outline-secondary" t-on-click="newBlock">Nová blokace</button>
@@ -14,20 +23,32 @@
             <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
             <div t-else="" class="evb-body">
                 <aside class="evb-waiting">
-                    <h5>Čekající z webu (<t t-esc="state.data.waiting.length"/>)</h5>
-                    <p t-if="!state.data.waiting.length" class="text-muted small">Nic nečeká.</p>
+                    <h5 class="mb-1">Čekající z webu (<t t-esc="state.data.waiting.length"/>)</h5>
+                    <p t-if="state.data.waiting.length" class="small text-muted mb-2">
+                        Potvrďte návrhem, nebo přetáhněte kartu do sloupce ordinace na požadovaný čas.
+                    </p>
+                    <p t-else="" class="text-muted small">Nic nečeká.</p>
                     <div t-foreach="state.data.waiting" t-as="w" t-key="w.id" class="evb-card" draggable="true"
                          t-on-dragstart="(ev) => this.onDragStart(ev, w, 'waiting')" t-on-dragend="onDragEnd">
+                        <div class="evb-card-when"><t t-esc="w.date_label"/> <span class="text-muted fw-normal">(<t t-esc="w.duration"/> min)</span></div>
                         <strong t-esc="w.name"/>
-                        <div class="small"><t t-esc="w.date"/> <t t-esc="w.time"/> · <t t-esc="w.procedure"/> (<t t-esc="w.duration"/> min)</div>
-                        <div class="small text-muted"><t t-esc="w.phone"/> · <t t-esc="w.email"/></div>
-                        <div t-if="w.doctor" class="small">Lékař: <t t-esc="w.doctor"/></div>
+                        <div class="small text-muted"><t t-esc="w.phone"/><t t-if="w.phone and w.email"> · </t><t t-esc="w.email"/></div>
+                        <div t-if="w.doctor" class="small">Lékařka: <t t-esc="w.doctor"/></div>
                         <div t-if="w.problem" class="small evb-problem" t-esc="w.problem"/>
+                        <div class="evb-suggestions">
+                            <button t-foreach="w.suggestions" t-as="sug" t-key="sug.room_id" type="button"
+                                    class="btn btn-sm btn-success evb-suggestion" t-att-disabled="state.busy"
+                                    t-on-click="() => this.confirmSuggestion(w, sug)">
+                                Potvrdit → <t t-esc="sug.room"/><t t-if="sug.doctor"> · <t t-esc="sug.doctor"/></t>
+                            </button>
+                            <div t-if="!w.suggestions.length" class="small evb-no-suggestion">
+                                Požadovaný čas už není volný – otevřete a přeplánujte.
+                            </div>
+                        </div>
                         <div class="evb-card-actions">
-                            <button class="btn btn-sm btn-primary" t-on-click="() => this.openForm(w.id)">Potvrdit / upravit</button>
+                            <button class="btn btn-sm btn-outline-primary" t-on-click="() => this.openForm(w.id)">Upravit</button>
                             <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.reject(w)">Odmítnout</button>
                         </div>
-                        <div class="small text-muted">Přetáhněte do sloupce = potvrdit v tom čase.</div>
                     </div>
                 </aside>
                 <div class="evb-grid">
@@ -37,6 +58,9 @@
                             <div t-foreach="rows" t-as="m" t-key="m" class="evb-tick" t-att-style="'top:' + top(m) + 'px'"
                                  t-att-class="{'evb-tick-hour': m % 60 === 0}">
                                 <span t-if="m % 60 === 0" t-esc="hhmm(m)"/>
+                            </div>
+                            <div t-if="showNow" class="evb-now evb-now-axis" t-att-style="'top:' + top(state.now) + 'px'">
+                                <span t-esc="hhmm(state.now)"/>
                             </div>
                         </div>
                     </div>
@@ -61,15 +85,20 @@
                                 <t t-esc="b.name"/>
                             </div>
                             <div t-foreach="eventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
-                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show'}"
+                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
                                  t-att-style="'top:' + top(e.start) + 'px;height:' + height(e.start, e.end) + 'px;background:' + e.color_hex"
-                                 t-att-title="e.procedure + '\n' + e.phone + '\n' + e.email + (e.problem ? '\n' + e.problem : '')"
+                                 t-att-title="eventTitle(e)"
                                  draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openForm(e.id)">
-                                <span t-if="e.symbol" class="evb-symbol" t-esc="e.symbol"/>
-                                <t t-esc="e.name"/>
-                                <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
+                                <div class="evb-ev-line">
+                                    <span t-if="e.symbol" class="evb-symbol" t-esc="e.symbol"/>
+                                    <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
+                                    <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
+                                    <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
+                                </div>
+                                <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>
                             </div>
+                            <div t-if="showNow" class="evb-now" t-att-style="'top:' + top(state.now) + 'px'"/>
                         </div>
                     </div>
                 </div>

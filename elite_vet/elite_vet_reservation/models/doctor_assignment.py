@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -17,8 +19,9 @@ class VetDoctorAssignment(models.Model):
                                 domain=[("prijima_rezervace", "=", True)])
     room_id = fields.Many2one("elite.vet.room", string="Ordinace", required=True, ondelete="restrict")
     date = fields.Date(string="Datum", required=True, default=fields.Date.context_today)
-    hour_from = fields.Float(string="Od", required=True, default=8.0)
-    hour_to = fields.Float(string="Do", required=True, default=14.0)
+    # Součet hodin ve skupině (např. „Od 32:00“ za den) nedává smysl.
+    hour_from = fields.Float(string="Od", required=True, default=8.0, aggregator=None)
+    hour_to = fields.Float(string="Do", required=True, default=14.0, aggregator=None)
     procedure_ids = fields.Many2many(
         "elite.vet.procedure", "elite_vet_assignment_procedure_rel", "assignment_id", "procedure_id",
         string="Jen tyto úkony", help="Prázdné = všechny úkony, které se v ordinaci dělají.")
@@ -60,3 +63,28 @@ class VetDoctorAssignment(models.Model):
         if self.doctor_id not in procedure.doctors_for_booking():
             return False
         return not self.procedure_ids or procedure in self.procedure_ids
+
+    def action_kopirovat_tyden(self):
+        """Zkopíruje vybrané služby o týden dál. Kopie, která by se překrývala
+        s jinou službou téže lékařky, se přeskočí (a nepadá celé kopírování)."""
+        zkopirovano, preskoceno = 0, 0
+        for rec in self.sorted(lambda r: (r.date, r.hour_from)):
+            novy_den = rec.date + timedelta(days=7)
+            clash = self.search_count([
+                ("doctor_id", "=", rec.doctor_id.id), ("date", "=", novy_den),
+                ("hour_from", "<", rec.hour_to), ("hour_to", ">", rec.hour_from),
+            ])
+            if clash:
+                preskoceno += 1
+                continue
+            rec.copy({"date": novy_den})
+            zkopirovano += 1
+        return {
+            "type": "ir.actions.client", "tag": "display_notification",
+            "params": {
+                "title": _("Kopírování na další týden"),
+                "message": _("Zkopírováno %(ok)s, přeskočeno %(skip)s.", ok=zkopirovano, skip=preskoceno),
+                "type": "success" if not preskoceno else "warning",
+                "next": {"type": "ir.actions.client", "tag": "soft_reload"},
+            },
+        }

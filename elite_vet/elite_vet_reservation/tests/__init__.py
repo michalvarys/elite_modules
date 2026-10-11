@@ -10,3 +10,4 @@ from . import test_controllers
 from . import test_mail
 from . import test_access
 from . import test_lekarky
+from . import test_ux
