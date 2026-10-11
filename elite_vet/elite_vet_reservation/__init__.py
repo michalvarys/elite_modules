@@ -73,6 +73,7 @@ PROCEDURE_SPECS = {
 def _pri_instalaci(env):
     """Propojí lékařky s kartami týmu; výchozí ordinace, úkony a hodiny jen při prázdném modulu."""
     _propojit_lekarky(env)
+    env["elite.vet.doctor"].with_context(active_test=False).search([]).vyplnit_barvy()
     presunout_cizi_menu(env)
     if env["elite.vet.room"].search_count([]):
         return

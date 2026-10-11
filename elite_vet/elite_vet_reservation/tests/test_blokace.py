@@ -339,7 +339,7 @@ class TestDveLekarky(ReservationCase):
         self.assertEqual([o["label"] for o in room["overlaps"]], ["2 lékařky 10:00–14:00"])
         by_doc = {d["doctor_id"]: d for d in room["doctors"]}
         self.assertEqual({by_doc[self.dr_a.id]["lane"], by_doc[self.dr_b.id]["lane"]}, {0, 1})
-        self.assertEqual(by_doc[self.dr_a.id]["color"], barva_lekarky(self.dr_a.id))
+        self.assertEqual(by_doc[self.dr_a.id]["color"], barva_lekarky(self.dr_a))
         self.assertEqual(by_doc[self.dr_a.id]["initials"], "AT")
         self.assertEqual(by_doc[self.dr_b.id]["time_label"], "10:00–16:00")
         # Kapacita ordinace zůstává jeden pacient naráz.

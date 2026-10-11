@@ -13,3 +13,4 @@ from . import test_lekarky
 from . import test_ux
 from . import test_wizard
 from . import test_blokace
+from . import test_barvy

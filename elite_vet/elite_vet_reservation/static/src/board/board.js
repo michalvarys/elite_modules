@@ -18,6 +18,15 @@ const DNY = ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", 
 const DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"];
 function weekdayIndex(d) { return (d.getDay() + 6) % 7; }   // 0 = pondělí
 
+// Na světlé barvě (lékařka si může vybrat třeba žlutou) by bílý text nebyl čitelný.
+function textOn(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+    if (!m) return "#fff";
+    const n = parseInt(m[1], 16);
+    const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    return lum > 0.62 ? "#1e293b" : "#fff";
+}
+
 export class ReservationBoard extends Component {
     static template = "elite_vet_reservation.Board";
     static props = ["*"];
@@ -149,7 +158,7 @@ export class ReservationBoard extends Component {
     eventStyle(room, e) {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
         if (e.kind !== "block") {
-            style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex;
+            style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex + ";color:" + textOn(e.color_hex);
         }
         return style;
     }

@@ -9,6 +9,7 @@
         <field name="arch" type="xml">
             <field name="member_id" position="after">
                 <field name="prijima_rezervace" string="Lékařka (rezervace)"/>
+                <field name="barva" widget="color" optional="show"/>
             </field>
         </field>
     </record>
@@ -19,6 +20,7 @@
         <field name="arch" type="xml">
             <field name="member_id" position="after">
                 <field name="prijima_rezervace"/>
+                <field name="barva" widget="color" invisible="not prijima_rezervace"/>
             </field>
         </field>
     </record>

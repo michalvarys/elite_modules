@@ -41,8 +41,15 @@ def cas_label(minuta):
     return "%d:%02d" % (minuta // 60, minuta % 60)
 
 
-def barva_lekarky(doctor_id):
-    return BARVY_LEKAREK[(doctor_id or 0) % len(BARVY_LEKAREK)]
+def barva_lekarky(doctor):
+    """Barva lékařky na tabuli: vybraná na její kartě, jinak stálá barva podle id.
+
+    Bere záznam i samotné id (id = automatická barva), aby šla volat odkudkoli."""
+    if hasattr(doctor, "barva"):
+        if doctor.barva:
+            return doctor.barva
+        doctor = doctor.id
+    return BARVY_LEKAREK[(doctor or 0) % len(BARVY_LEKAREK)]
 
 
 def pruhy_sluzeb(sluzby):
@@ -148,10 +155,17 @@ class VetReservation(models.Model):
         for rec in self:
             rec.duration_minutes = int((rec.stop - rec.start).total_seconds() // 60) if rec.start and rec.stop else 0
 
-    @api.depends("kind", "procedure_id.color_hex")
+    @api.depends("kind", "procedure_id.color_hex", "doctor_id.barva")
     def _compute_color_hex(self):
+        # Klinika si přála barvu podle lékařky, ke které je klient objednaný;
+        # dokud lékařka není přiřazená (např. čekající žádost), barva úkonu.
         for rec in self:
-            rec.color_hex = "#64748b" if rec.kind == "block" else (rec.procedure_id.color_hex or "#64748b")
+            if rec.kind == "block":
+                rec.color_hex = "#64748b"
+            elif rec.doctor_id:
+                rec.color_hex = barva_lekarky(rec.doctor_id)
+            else:
+                rec.color_hex = rec.procedure_id.color_hex or "#64748b"
 
     @api.onchange("procedure_id", "start")
     def _onchange_stop(self):
@@ -332,7 +346,7 @@ class VetReservation(models.Model):
             # Služby lékařek = svislé pruhy vlevo ve sloupci; souběh dvou lékařek vedle sebe.
             sluzby, lanes, soubehy = pruhy_sluzeb([
                 {"id": a.id, "doctor_id": a.doctor_id.id, "name": a.doctor_id.name,
-                 "initials": inicialy(a.doctor_id.name), "color": barva_lekarky(a.doctor_id.id),
+                 "initials": inicialy(a.doctor_id.name), "color": barva_lekarky(a.doctor_id),
                  "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
                 for a in assignments if a.room_id == room])
             for d in sluzby:

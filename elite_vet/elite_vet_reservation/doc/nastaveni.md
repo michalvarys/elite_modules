@@ -40,6 +40,9 @@ U každé veterinární lékařky:
 2. Zaškrtněte **Lékařka – přijímá rezervace** (v seznamu sloupec „Lékařka (rezervace)“).
 3. Zkontrolujte **Karta v týmu** – propojení na její kartu na stránce Náš tým.
    Z karty se berou specializace.
+4. Případně změňte **Barva v kalendáři**. V této barvě se na tabuli i v kalendáři
+   zobrazují její rezervace, proužek služby a štítek. Barva se přidělí automaticky
+   (každá lékařka jinou), stačí ji upravit, když se dvě podobají.
 
 Co příznak dělá:
 
@@ -123,7 +126,7 @@ Seznam lze upravovat přímo v řádcích; pořadí se mění přetažením.
 | **Název** | Co klient vidí na webu a v e-mailu. Překládá se (viz Překlady). |
 | **Délka (min)** | Jak dlouho úkon trvá. Násobek 5 minut. |
 | **Zkratka** | 1–3 znaky na kartě v tabuli (V, P, KA…). |
-| **Barva** | Barva karty na tabuli. |
+| **Barva** | Barva karty na tabuli, jen pokud rezervace nemá přiřazenou lékařku (jinak má karta barvu lékařky). |
 | **Nabízet online** | Odškrtnuté = jen pro recepci, na webu se nenabízí. |
 | **Ordinace** | Kde se úkon dělá. Prázdné = ve všech ordinacích rezervovatelných online. |
 | **Specializace** | **Kdo úkon dělá**: jen lékařky s aspoň jednou z těchto specializací. Prázdné = kterákoli lékařka. |

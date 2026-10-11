@@ -26,7 +26,7 @@ Tabule ukazuje **jeden den**. Každá ordinace má svůj sloupec, vlevo je časo
   Vybraný den je zelený, dnešek má červený rámeček.
 
 Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, otevřete
-**Rezervace** a přepněte vpravo nahoře na zobrazení kalendáře (barvy podle ordinace).
+**Rezervace** a přepněte vpravo nahoře na zobrazení kalendáře (barvy podle lékařky).
 
 ### Co na tabuli vidíte
 
@@ -37,7 +37,7 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | Světlé čárkované šrafování se štítkem „jen web“ | Blokace jen pro web: web tam nic nenabízí, vy tam objednat smíte. Klik do ní otevře průvodce, klik na štítek otevře blokaci. |
 | Barevný svislý proužek vlevo ve sloupci | Služba lékařky: iniciály a čas (např. „GC 8:15–14:00“). Každá lékařka má svou barvu, stejnou i ve štítku v hlavičce. |
 | Dva proužky vedle sebe | V ordinaci slouží současně dvě lékařky (viz níže). |
-| Barevná karta | Rezervace. Barva patří úkonu (např. vakcinace zelená, problém modrý). |
+| Barevná karta | Rezervace. Má barvu lékařky, ke které je klient objednaný – stejnou jako její proužek a štítek. Rezervace bez lékařky má barvu úkonu. Zkratka úkonu je v rohu karty (např. V = vakcinace). |
 | Písmeno vlevo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
 | Druhý řádek | Název úkonu (jen u delších karet). |
