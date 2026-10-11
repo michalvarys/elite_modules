@@ -17,6 +17,14 @@
                 <group invisible="step != 'co'">
                     <group>
                         <field name="procedure_id" required="step == 'co'" options="{'no_create': True, 'no_open': True}"/>
+                        <label for="duration"/>
+                        <div class="d-flex align-items-center gap-2">
+                            <field name="duration" class="oe_inline" style="width: 5em;"/>
+                            <button name="action_delka_plus" type="object" string="+15 min" class="btn-secondary btn-sm"
+                                    context="{'minut': 15}" invisible="not procedure_id"/>
+                            <button name="action_delka_plus" type="object" string="+30 min" class="btn-secondary btn-sm"
+                                    context="{'minut': 30}" invisible="not procedure_id"/>
+                        </div>
                         <field name="doctor_id" placeholder="Kterákoli, která úkon dělá"
                                options="{'no_create': True, 'no_open': True}"/>
                         <field name="date"/>
@@ -39,6 +47,7 @@
                     </div>
                     <div class="text-muted mb-2">
                         <field name="procedure_id" readonly="1" class="d-inline" options="{'no_open': True}"/>
+                        · <field name="duration" readonly="1" class="d-inline"/> min
                         <span invisible="not doctor_id"> · <field name="doctor_id" readonly="1" class="d-inline" options="{'no_open': True}"/></span>
                     </div>
                     <div invisible="not upozorneni" class="alert alert-warning" role="status">

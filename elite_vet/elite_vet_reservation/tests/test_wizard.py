@@ -80,6 +80,58 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.pet_id.partner_id, r.partner_id)
         self.assertEqual(r.pet_id.species, "cat")
 
+    def test_custom_duration_limits_slots_and_sets_stop(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        # Od 10:15 je obsazeno: 10:00 se vejde na 15 min, na 45 min ne.
+        self.reservation(start=self.dt(self.day, 10, 15), room_id=self.room1.id)
+        w = self.wizard(doctor_id=self.dr_a.id)
+        self.assertEqual(w.duration, 15)
+        w.action_krok_cas()
+        self.assertIn((600, self.room1.id, self.dr_a.id), self.lines(w))
+        w.duration = 45
+        w.action_zpet_co()
+        w.action_krok_cas()
+        self.assertNotIn(585, [m for m, _r, _d in self.lines(w)])
+        self.assertNotIn(600, [m for m, _r, _d in self.lines(w)])
+        self.assertIn(570, [m for m, _r, _d in self.lines(w)])
+        # Změna lékařky/data nepřepíše zvýšenou délku, změna úkonu ano.
+        w.doctor_id = False
+        self.assertEqual(w.duration, 45)
+        w.procedure_id = self.vacc
+        self.assertEqual(w.duration, 15)
+        w.duration = 45
+        w.action_zpet_co()
+        w.action_krok_cas()
+        w.slot_ids.filtered(lambda ln: ln.minute == 11 * 60)[:1].action_vybrat()
+        self.fill_new_client(w)
+        w.action_krok_souhrn()
+        self.assertIn("11:00–11:45 (45 min)", w.souhrn)
+        w.action_ulozit()
+        r = self.env["elite.vet.reservation"].search([("contact_email", "=", "jana.pruvodce@example.cz")])
+        self.assertEqual(r.stop - r.start, timedelta(minutes=45))
+
+    def test_custom_duration_validation(self):
+        for bad in (0, 7, 485):
+            with self.assertRaises(ValidationError):
+                self.wizard(duration=bad)
+        self.assertEqual(self.wizard(duration=480).duration, 480)
+
+    def test_manual_time_uses_custom_duration(self):
+        self.reservation(start=self.dt(self.day, 10, 30), room_id=self.room1.id)
+        w = self.wizard(duration=45, manual=True, manual_room_id=self.room1.id, manual_time="10:00")
+        with self.assertRaises(UserError):
+            w.action_rucni_cas()
+        w.duration = 30
+        w.action_rucni_cas()
+        self.assertEqual(w.step, "klient")
+
+    def test_public_slots_ignore_wizard_duration(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        A = self.env["elite.vet.availability"]
+        base = A.slots(self.vacc, self.day, min_hours=0, scope="web")
+        self.assertEqual(base, A.slots(self.vacc, self.day, min_hours=0, scope="web", duration=None))
+        self.assertNotEqual(base, A.slots(self.vacc, self.day, min_hours=0, scope="web", duration=45))
+
     def test_slots_respect_doctor_and_busy_times(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)

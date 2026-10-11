@@ -134,13 +134,16 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def slots(self, procedure, day, doctor=None, specialization=None, now=None, min_hours=None, max_days=None,
-              rooms=None, scope="web"):
+              rooms=None, scope="web", duration=None):
         """rooms=None = online ordinace pro web (rooms_for_booking); recepce předá vlastní.
 
         scope="web" (výchozí, veřejné API): obsazené jsou obě blokace a víkend /
         státní svátek (podle nastavení) nenabídne nic. scope="internal" (recepce):
         brání jen úplná blokace. Výchozí hodnota je schválně ta přísnější, aby
         veřejné API omylem nepoužilo pravidla recepce.
+
+        duration (minuty) přebije délku úkonu pro kontrolu, že se návštěva vejde; předává
+        ji jen průvodce recepce, veřejný kontroler ne.
         """
         s, earliest, latest_day = self._window(now, min_hours, max_days)
         if day > latest_day:
@@ -151,7 +154,7 @@ class VetAvailability(models.AbstractModel):
             rooms = procedure.rooms_for_booking()
         if not rooms:
             return []
-        step, dur = s.booking_slot_step, procedure.duration
+        step, dur = s.booking_slot_step, duration or procedure.duration
         need_doctor = self.need_doctor(procedure, doctor, specialization)
         # Sluzby se nacitaji vzdy: doctor_ids ve slotu jsou informativni (kdo zrovna slouzi),
         # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
@@ -194,27 +197,28 @@ class VetAvailability(models.AbstractModel):
         return bool(doctor or specialization or s.booking_require_doctor or procedure.specialization_ids)
 
     @api.model
-    def serving_doctors(self, procedure, day, room_id, minute, doctor=None, serving=None):
+    def serving_doctors(self, procedure, day, room_id, minute, doctor=None, serving=None, duration=None):
         """Id lékařek, které v ordinaci po celou dobu úkonu od `minute` slouží a úkon
         dělají (jen zvolená, je-li `doctor`), seřazené podle začátku služby."""
         if serving is None:
             serving = self.assignment_minutes(day, procedure, doctor)
         out = []
         for f, t, did in sorted(serving.get(room_id, [])):
-            if f <= minute and minute + procedure.duration <= t and did not in out \
+            if f <= minute and minute + (duration or procedure.duration) <= t and did not in out \
                     and (not doctor or did == doctor.id):
                 out.append(did)
         return out
 
     @api.model
-    def room_doctors(self, procedure, day, slot, doctor=None):
+    def room_doctors(self, procedure, day, slot, doctor=None, duration=None):
         """Pro jeden slot ze slots(): [(room_id, doctor_id | False)] – v každé volné
         ordinaci lékařka, která tam v tu dobu slouží a úkon dělá (zvolená, jinak
         první podle začátku služby). Úkon bez nutné lékařky může být bez ní."""
         serving = self.assignment_minutes(day, procedure, doctor)
         out = []
         for room_id in slot["room_ids"]:
-            doc_ids = self.serving_doctors(procedure, day, room_id, slot["minute"], doctor, serving=serving)
+            doc_ids = self.serving_doctors(procedure, day, room_id, slot["minute"], doctor, serving=serving,
+                                           duration=duration)
             out.append((room_id, doc_ids[0] if doc_ids else False))
         return out
 

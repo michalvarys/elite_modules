@@ -156,7 +156,11 @@ Mezi kroky se pohybujete tlačítky **Dále** a **Zpět**, **Zavřít** průvodc
 2. **Lékařka** – nepovinné. Nabízí se jen lékařky, které daný úkon dělají.
    Necháte-li prázdné, systém vezme kteroukoli, která úkon dělá a v tu dobu slouží.
 3. **Datum** – předvyplněný je den otevřený na tabuli.
-4. Klikněte **Dále**.
+4. **Délka (min)** – výchozí je délka úkonu. Když víte, že návštěva potrvá déle
+   (např. jeden klient se dvěma psy), prodlužte ji (násobky 5 minut, tlačítka **+15 min** / **+30 min**).
+   Nabídnou se jen časy, kam se celá délka vejde, a rezervace se uloží s touto délkou.
+   Při změně úkonu se délka vrátí na výchozí.
+5. Klikněte **Dále**.
 
 Pokud jste průvodce otevřeli kliknutím do tabule a čas v ordinaci je volný,
 krok 2 se přeskočí a jdete rovnou na klienta. Když volný není, krok 2 se otevře

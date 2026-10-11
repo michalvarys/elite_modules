@@ -11,7 +11,7 @@ import pytz
 from markupsafe import Markup, escape
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools.misc import clean_context
 
 from ..models.pet import SPECIES
@@ -42,6 +42,9 @@ class ReservationWizard(models.TransientModel):
     # 1. Co a kdy
     procedure_id = fields.Many2one("elite.vet.procedure", string="Úkon")
     povolene_lekarky_ids = fields.Many2many("elite.vet.doctor", compute="_compute_povolene_lekarky")
+    duration = fields.Integer(string="Délka (min)", compute="_compute_duration", store=True, readonly=False,
+                              help="Výchozí je délka úkonu. Prodlužte, když víte, že návštěva potrvá déle "
+                                   "(např. dva psi).")
     doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka",
                                 domain="[('id', 'in', povolene_lekarky_ids)]",
                                 help="Volitelné. Nabízí se jen lékařky, které úkon dělají.")
@@ -93,6 +96,30 @@ class ReservationWizard(models.TransientModel):
     def _compute_povolene_lekarky(self):
         for w in self:
             w.povolene_lekarky_ids = w.procedure_id.doctors_for_booking() if w.procedure_id else False
+
+    @api.depends("procedure_id")
+    def _compute_duration(self):
+        # Mění se jen s úkonem; zvýšenou délku nechá, když se mění lékařka či datum.
+        for w in self:
+            if w.procedure_id:
+                w.duration = w.procedure_id.duration
+            elif not w.duration:
+                w.duration = 0
+
+    @api.constrains("duration", "procedure_id")
+    def _check_duration(self):
+        for w in self:
+            if w.procedure_id and (w.duration < 5 or w.duration % 5 or w.duration > 480):
+                raise ValidationError(_("Délka musí být násobek 5 minut, nejméně 5 a nejvýše 480."))
+
+    def _delka(self):
+        self.ensure_one()
+        return self.duration or self.procedure_id.duration
+
+    def action_delka_plus(self):
+        self.ensure_one()
+        self.duration = self._delka() + int(self.env.context.get("minut", 15))
+        return self._znovu()
 
     @api.depends("date")
     def _compute_den_label(self):
@@ -147,7 +174,7 @@ class ReservationWizard(models.TransientModel):
 
     @api.depends("procedure_id", "date", "minute", "room_id", "slot_doctor_id", "doctor_id", "contact_name",
                  "contact_phone", "contact_email", "partner_mode", "partner_id", "pet_id", "pet_name",
-                 "pet_species", "send_email", "rucne")
+                 "pet_species", "send_email", "rucne", "duration")
     def _compute_souhrn(self):
         species = dict(SPECIES)
         for w in self:
@@ -161,7 +188,8 @@ class ReservationWizard(models.TransientModel):
                 klient += " (nový klient)"
             radky = [
                 ("Úkon", w.procedure_id.name or ""),
-                ("Termín", "%s %s%s" % (w.den_label, cas_label(w.minute), " (zadáno ručně)" if w.rucne else "")
+                ("Termín", "%s %s–%s (%d min)%s" % (w.den_label, cas_label(w.minute), cas_label(w.minute + w._delka()),
+                                                    w._delka(), " (zadáno ručně)" if w.rucne else "")
                  if w.room_id else ""),
                 ("Ordinace", w.room_id.name or ""),
                 ("Lékařka", (w.slot_doctor_id or w.doctor_id).name or "—"),
@@ -210,7 +238,8 @@ class ReservationWizard(models.TransientModel):
         # scope="internal": blokace jen pro web, víkend ani svátek recepci nebrání.
         return A.slots(self.procedure_id, day, doctor=self.doctor_id or None,
                        min_hours=0, max_days=HORIZONT_RECEPCE,
-                       rooms=self.procedure_id.rooms_for_reception(), scope="internal")
+                       rooms=self.procedure_id.rooms_for_reception(), scope="internal",
+                       duration=self._delka())
 
     def _nacist_sloty(self):
         """Naplní řádky volných časů pro self.date: jeden řádek = čas × ordinace."""
@@ -218,7 +247,8 @@ class ReservationWizard(models.TransientModel):
         A = self.env["elite.vet.availability"]
         lines = [(5, 0, 0)]
         for slot in self._volne(self.date):
-            for room_id, doc_id in A.room_doctors(self.procedure_id, self.date, slot, self.doctor_id or None):
+            for room_id, doc_id in A.room_doctors(self.procedure_id, self.date, slot, self.doctor_id or None,
+                                          duration=self._delka()):
                 lines.append((0, 0, {"minute": slot["minute"], "room_id": room_id, "doctor_id": doc_id}))
         self.with_context(clean_context(self.env.context)).slot_ids = lines
 
@@ -228,7 +258,8 @@ class ReservationWizard(models.TransientModel):
         slot = next((s for s in self._volne(self.date) if s["minute"] == self.minute), None)
         if not slot:
             return None
-        return next((p for p in A.room_doctors(self.procedure_id, self.date, slot, self.doctor_id or None)
+        return next((p for p in A.room_doctors(self.procedure_id, self.date, slot, self.doctor_id or None,
+                                    duration=self._delka())
                      if p[0] == self.room_id.id), None)
 
     def _kolize(self, room, minute):
@@ -237,7 +268,7 @@ class ReservationWizard(models.TransientModel):
         A = self.env["elite.vet.availability"]
         Res = self.env["elite.vet.reservation"]
         start = A.local_to_utc(self.date, minute)
-        stop = start + timedelta(minutes=self.procedure_id.duration)
+        stop = start + timedelta(minutes=self._delka())
         return Res.search(Res._busy_domain([room.id], start, stop, scope="internal"), limit=1)
 
     # ---------- kroky ----------
@@ -294,7 +325,7 @@ class ReservationWizard(models.TransientModel):
         doc = self.doctor_id
         if not doc:
             sluzi = self.env["elite.vet.availability"].serving_doctors(
-                self.procedure_id, self.date, self.manual_room_id.id, minute)
+                self.procedure_id, self.date, self.manual_room_id.id, minute, duration=self._delka())
             doc = self.env["elite.vet.doctor"].browse(sluzi[:1])
         self.write({"minute": minute, "room_id": self.manual_room_id.id, "slot_doctor_id": doc.id or False,
                     "step": "klient", "upozorneni": False, "rucne": True})
@@ -370,7 +401,7 @@ class ReservationWizard(models.TransientModel):
             "kind": "reservation", "state": "confirmed", "source": "internal",
             "procedure_id": self.procedure_id.id, "room_id": self.room_id.id,
             "doctor_id": (self.slot_doctor_id or self.doctor_id).id or False,
-            "start": start, "stop": start + timedelta(minutes=self.procedure_id.duration),
+            "start": start, "stop": start + timedelta(minutes=self._delka()),
             "partner_id": partner.id, "pet_id": pet.id or False,
             "contact_name": self.contact_name or partner.name,
             "contact_phone": self.contact_phone or False, "contact_email": self.contact_email or False,
