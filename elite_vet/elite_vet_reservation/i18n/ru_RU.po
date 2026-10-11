@@ -1804,3 +1804,58 @@ msgstr "‹ Назад"
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.deposit_page
 msgid "‹ Back to reservations"
 msgstr "‹ Назад к записи"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Search…"
+msgstr "Поиск…"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Search for the reason for your visit"
+msgstr "Поиск причины визита"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Nothing matches your search. Try another word or choose by doctor."
+msgstr "Ничего не найдено. Попробуйте другое слово или выберите врача."
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Change"
+msgstr "Изменить"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Free day"
+msgstr "Свободный день"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Selected"
+msgstr "Выбрано"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Today"
+msgstr "Сегодня"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Loading…"
+msgstr "Загрузка…"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Examinations in {name}"
+msgstr "Обследования по направлению {name}"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Other examinations with doctors of this specialization"
+msgstr "Другие обследования у врачей этого направления"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Done by: {name}"
+msgstr "Проводит: {name}"

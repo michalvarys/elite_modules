@@ -56,4 +56,40 @@
 .evbk-done{text-align:center;padding:24px 0}
 .evbk-done-icon{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;background:var(--ev-accent-light,#e0f2f0);color:var(--ev-accent,#2b7870);font-size:32px;line-height:64px}
 .evbk-note{color:#2b7870;font-weight:600}
-@media (max-width:640px){.evbk-step[data-step="2"]{grid-template-columns:1fr}.evbk-steps{font-size:11px}.evbk-steps li{padding:6px 4px}}
+/* Hledání úkonu, skupiny úkonů, lékařky v kartě úkonu */
+.evbk-search{margin-bottom:12px}
+.evbk-search input{width:100%;max-width:420px;border:1.5px solid #e2e8f0;border-radius:9999px;padding:9px 16px;font:inherit}
+.evbk-search input:focus{outline:none;border-color:var(--ev-accent,#2b7870)}
+.evbk-group-title{grid-column:1/-1;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#64748b;margin:10px 0 2px}
+.evbk-group-title:first-child{margin-top:0}
+.evbk-item-doctors{font-size:12.5px;color:#1a2744}
+.evbk-card > span{text-align:center}
+.evbk-card-specs{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.evbk-card .evbk-spec-icon{width:22px;height:22px;border-radius:0;object-fit:contain}
+.evbk-spec-chip{font-size:11px;font-weight:600;background:#f1f5f9;color:#475569;border-radius:9999px;padding:2px 8px}
+.evbk-loading{color:#64748b;font-style:italic;margin:6px 0;grid-column:1/-1}
+.evbk-tabs button:disabled{opacity:.5;cursor:default}
+/* Shrnutí v kroku 2 s odkazem Změnit */
+.evbk-summary-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.evbk-change{background:none;border:0;padding:0;color:var(--ev-accent,#2b7870);font-weight:700;text-decoration:underline;cursor:pointer}
+/* Šipky měsíce a legenda kalendáře */
+.evbk-cal-head button:disabled{opacity:.35;cursor:default}
+.evbk-cal-grid.is-loading .evbk-loading{text-align:center}
+.evbk-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px;color:#64748b}
+.evbk-lg{display:flex;align-items:center;gap:6px}
+.evbk-lg::before{content:"";width:16px;height:16px;border-radius:4px;display:inline-block}
+.evbk-lg-free::before{background:#fff7cc}
+.evbk-lg-selected::before{background:var(--ev-accent,#2b7870)}
+.evbk-lg-today::before{outline:2px solid #e2e8f0;outline-offset:-2px;background:#fff}
+@media (max-width:640px){
+.evbk-step[data-step="2"]{grid-template-columns:1fr}
+.evbk-steps{font-size:11px;gap:4px;margin-bottom:16px}
+.evbk-steps li{padding:6px 2px;line-height:1.25}
+.evbk-tabs button{padding:7px 14px;font-size:14px}
+.evbk-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+.evbk-list{grid-template-columns:1fr}
+.evbk-search input{max-width:none}
+.evbk-day{height:40px}
+.evbk-slot-grid{grid-template-columns:repeat(3,1fr)}
+.evbk-slot{padding:10px 0}
+}

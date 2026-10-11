@@ -25,7 +25,11 @@
                         </div>
                         <div class="evbk-tab" data-tab="procedure">
                             <p class="evbk-hint">Choose the reason for your visit.</p>
+                            <div class="evbk-search">
+                                <input type="search" data-search="procedures" placeholder="Search…" aria-label="Search for the reason for your visit" autocomplete="off"/>
+                            </div>
                             <div class="evbk-list" data-list="procedures"></div>
+                            <p class="evbk-empty" data-empty="search" hidden="hidden">Nothing matches your search. Try another word or choose by doctor.</p>
                         </div>
                         <div class="evbk-tab" data-tab="doctor" hidden="hidden">
                             <p class="evbk-hint">Choose a doctor, then the reason for your visit.</p>
@@ -43,7 +47,10 @@
 
                     <!-- KROK 2 -->
                     <div class="evbk-step" data-step="2" hidden="hidden">
-                        <div class="evbk-summary" data-summary="choice"></div>
+                        <div class="evbk-summary evbk-summary-row">
+                            <div data-summary="choice"></div>
+                            <button type="button" class="evbk-change" data-back="1">Change</button>
+                        </div>
                         <div class="evbk-cal">
                             <div class="evbk-cal-head">
                                 <button type="button" data-cal="prev" aria-label="Previous month">‹</button>
@@ -51,6 +58,11 @@
                                 <button type="button" data-cal="next" aria-label="Next month">›</button>
                             </div>
                             <div class="evbk-cal-grid" data-cal="grid"></div>
+                            <div class="evbk-legend">
+                                <div class="evbk-lg evbk-lg-free">Free day</div>
+                                <div class="evbk-lg evbk-lg-selected">Selected</div>
+                                <div class="evbk-lg evbk-lg-today">Today</div>
+                            </div>
                             <p class="evbk-empty" data-empty="days" hidden="hidden">No free appointments in this month. Try the next one.</p>
                         </div>
                         <div class="evbk-slots">
@@ -108,6 +120,15 @@
                             <p class="evbk-note" data-done="note" hidden="hidden"></p>
                             <p class="evbk-deposit" data-done="deposit" hidden="hidden">The appointment becomes valid after the deposit is paid. We will send the payment instructions by e-mail.</p>
                         </div>
+                    </div>
+
+                    <!-- Texty pro JavaScript (překládají se v i18n jako ostatní QWeb texty).
+                         {name} nahradí skript skutečným názvem. -->
+                    <div class="evbk-texts" hidden="hidden">
+                        <div data-text="loading">Loading…</div>
+                        <div data-text="spec-procedures">Examinations in {name}</div>
+                        <div data-text="spec-general">Other examinations with doctors of this specialization</div>
+                        <div data-text="done-by">Done by: {name}</div>
                     </div>
 
                     <p class="evbk-fatal" data-error="fatal" hidden="hidden">The booking system is temporarily unavailable. Please call the reception.</p>

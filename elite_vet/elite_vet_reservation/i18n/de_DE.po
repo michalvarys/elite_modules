@@ -1804,3 +1804,58 @@ msgstr "‹ Zurück"
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.deposit_page
 msgid "‹ Back to reservations"
 msgstr "‹ Zurück zu den Reservierungen"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Search…"
+msgstr "Suchen…"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Search for the reason for your visit"
+msgstr "Grund des Besuchs suchen"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Nothing matches your search. Try another word or choose by doctor."
+msgstr "Keine Treffer. Versuchen Sie ein anderes Wort oder wählen Sie nach Ärztin."
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Change"
+msgstr "Ändern"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Free day"
+msgstr "Freier Tag"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Selected"
+msgstr "Ausgewählt"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Today"
+msgstr "Heute"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Loading…"
+msgstr "Wird geladen…"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Examinations in {name}"
+msgstr "Untersuchungen im Fachgebiet {name}"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Other examinations with doctors of this specialization"
+msgstr "Weitere Untersuchungen bei Ärztinnen dieses Fachgebiets"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+msgid "Done by: {name}"
+msgstr "Durchgeführt von: {name}"
