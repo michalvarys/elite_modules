@@ -13,7 +13,8 @@ class VetDoctorAssignment(models.Model):
     _description = "Služba lékaře v ordinaci"
     _order = "date, room_id, hour_from"
 
-    doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka", required=True, ondelete="restrict")
+    doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka", required=True, ondelete="restrict",
+                                domain=[("prijima_rezervace", "=", True)])
     room_id = fields.Many2one("elite.vet.room", string="Ordinace", required=True, ondelete="restrict")
     date = fields.Date(string="Datum", required=True, default=fields.Date.context_today)
     hour_from = fields.Float(string="Od", required=True, default=8.0)
@@ -43,6 +44,19 @@ class VetDoctorAssignment(models.Model):
             if clash:
                 raise ValidationError(_("%s už v tu dobu slouží: %s.") % (rec.doctor_id.name, clash.display_name))
 
+    @api.constrains("doctor_id")
+    def _check_lekarka(self):
+        for rec in self:
+            if not rec.doctor_id.prijima_rezervace:
+                raise ValidationError(_(
+                    "%s nemá zaškrtnuto „Lékařka – přijímá rezervace“. Do rozpisu lékařů "
+                    "patří jen lékařky; nastavuje se v Rozpis služeb → Lékařky."
+                ) % rec.doctor_id.name)
+
     def serves(self, procedure):
+        """Smí lékařka v této službě udělat úkon? Musí ho umět (specializace)
+        a služba ho nesmí vylučovat seznamem „Jen tyto úkony“."""
         self.ensure_one()
+        if self.doctor_id not in procedure.doctors_for_booking():
+            return False
         return not self.procedure_ids or procedure in self.procedure_ids

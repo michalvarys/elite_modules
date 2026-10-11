@@ -11,6 +11,8 @@ class TestControllers(HttpCase):
         super().setUp()
         from odoo.addons.elite_vet_reservation.controllers import booking
         booking._SUBMITS.clear()
+        # rezervace z rucniho zkouseni by obsazovaly testovane sloty (vrati se rollbackem)
+        self.env["elite.vet.reservation"].search([]).unlink()
         Room = self.env["elite.vet.room"]
         self.room = Room.create({"name": "Ordinace T", "color": "teal"})
         for wd in range(7):
@@ -36,6 +38,8 @@ class TestControllers(HttpCase):
     def test_options_lists_online_procedures(self):
         res = self.rpc("/rezervace/api/options", {})
         self.assertIn(self.proc.id, [p["id"] for p in res["procedures"]])
+        proc = next(p for p in res["procedures"] if p["id"] == self.proc.id)
+        self.assertIn("doctor_ids", proc)
         self.assertEqual(res["settings"]["step"], 15)
 
     def test_days_and_slots(self):

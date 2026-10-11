@@ -80,13 +80,17 @@ class BookingController(http.Controller):
         today = fields.Date.context_today(env["elite.vet.setting"].sudo())
         horizon = fields.Date.add(today, days=s.booking_max_days_ahead)
         assignments = env["elite.vet.doctor.assignment"].sudo().search([("date", ">=", today), ("date", "<=", horizon)])
-        doctors = assignments.mapped("doctor_id").sorted("name")
-        specs = env["elite.vet.team.specialization"].sudo().search([])
+        doctors = assignments.mapped("doctor_id").filtered("prijima_rezervace").sorted("name")
+        # Nabízí se jen specializace, kterou má aspoň jedna lékařka - jinak by
+        # klient vybral obor, ke kterému se nedá objednat.
+        all_doctors = env["elite.vet.doctor"].sudo().search([("prijima_rezervace", "=", True)])
+        specs = all_doctors.mapped("specialization_ids").sorted(lambda s: (s.sequence, s.name))
         procs = env["elite.vet.procedure"].sudo().search([("online", "=", True)])
         return {
             "procedures": [{"id": p.id, "name": p.name, "duration": p.duration, "client_note": p.client_note or "",
                             "deposit": p.deposit_amount if (s.booking_deposits_enabled and p.deposit_required) else 0,
-                            "specialization_ids": p.specialization_ids.ids} for p in procs],
+                            "specialization_ids": p.specialization_ids.ids,
+                            "doctor_ids": p.doctors_for_booking().ids} for p in procs],
             "doctors": [{"id": d.id, "name": d.name,
                          "photo": "/web/image/elite.vet.team.member/%s/image_128" % d.member_id.id if d.member_id else "",
                          "specialization_ids": d.specialization_ids.ids} for d in doctors],

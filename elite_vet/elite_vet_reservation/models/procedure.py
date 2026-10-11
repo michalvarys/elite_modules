@@ -24,7 +24,9 @@ class VetProcedure(models.Model):
     specialization_ids = fields.Many2many(
         "elite.vet.team.specialization", "elite_vet_procedure_specialization_rel",
         "procedure_id", "specialization_id", string="Specializace",
-        help="Podle nich klient hledá úkon přes záložku Specializace.")
+        help="Kdo úkon dělá: jen lékařky s aspoň jednou z těchto specializací "
+             "(na kartě v Náš tým). Prázdné = kterákoli lékařka. Podle toho web "
+             "nabízí časy a lékařky.")
     client_note = fields.Text(
         string="Instrukce pro klienta", translate=True,
         help="Ukáže se ve výběru i v potvrzovacím e-mailu, např. „Zvíře musí být nalačno 8–12 hodin“.")
@@ -56,3 +58,16 @@ class VetProcedure(models.Model):
         self.ensure_one()
         rooms = self.room_ids or self.env["elite.vet.room"].search([])
         return rooms.filtered("online")
+
+    def doctors_for_booking(self):
+        """Lékařky, které úkon dělají.
+
+        Úkon bez specializace zvládne kterákoli lékařka; úkon se specializací jen
+        ta, která má na kartě v Náš tým aspoň jednu z nich. Sestry a recepce
+        (bez příznaku Přijímá rezervace) nikdy.
+        """
+        self.ensure_one()
+        doctors = self.env["elite.vet.doctor"].search([("prijima_rezervace", "=", True)])
+        if self.specialization_ids:
+            doctors = doctors.filtered(lambda d: d.specialization_ids & self.specialization_ids)
+        return doctors

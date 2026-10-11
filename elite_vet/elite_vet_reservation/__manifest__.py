@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rezervace",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "category": "Website",
     "summary": "Rezervacni kalendar kliniky: ordinace, ukony, rozpis lekaru, online rezervace.",
     "description": """
@@ -21,6 +21,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "security/ir.model.access.csv",
         "views/room_views.xml",
         "views/procedure_views.xml",
+        "views/doctor_views.xml",
         "views/doctor_assignment_views.xml",
         "views/pet_views.xml",
         "views/reservation_views.xml",

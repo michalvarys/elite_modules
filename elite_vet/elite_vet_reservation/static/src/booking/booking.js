@@ -68,7 +68,8 @@
             c.addEventListener("click", function () {
                 state.doctor = d; state.spec = null;
                 qa('[data-list="doctors"] .evbk-card').forEach(function (x) { x.classList.toggle("is-active", x === c); });
-                renderProcedures(q('[data-list="procedures-for-doctor"]'), o.procedures);
+                // jen úkony, které lékařka dělá
+                renderProcedures(q('[data-list="procedures-for-doctor"]'), o.procedures.filter(function (p) { return p.doctor_ids.indexOf(d.id) !== -1; }));
             });
             dl.appendChild(c);
         });
@@ -80,8 +81,11 @@
             c.addEventListener("click", function () {
                 state.spec = s; state.doctor = null;
                 qa('[data-list="specializations"] .evbk-card').forEach(function (x) { x.classList.toggle("is-active", x === c); });
-                var list = o.procedures.filter(function (p) { return p.specialization_ids.indexOf(s.id) !== -1; });
-                renderProcedures(q('[data-list="procedures-for-spec"]'), list.length ? list : o.procedures);
+                // úkony daného oboru, k nim obecné úkony (dělá je kterákoli lékařka, termíny se pak
+                // omezí na lékařky s touto specializací)
+                var list = o.procedures.filter(function (p) { return p.specialization_ids.indexOf(s.id) !== -1; })
+                    .concat(o.procedures.filter(function (p) { return p.specialization_ids.length === 0; }));
+                renderProcedures(q('[data-list="procedures-for-spec"]'), list);
             });
             sl.appendChild(c);
         });

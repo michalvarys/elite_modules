@@ -121,7 +121,8 @@ class VetAvailability(models.AbstractModel):
         if not rooms:
             return []
         step, dur = s.booking_slot_step, procedure.duration
-        need_doctor = bool(doctor or specialization or s.booking_require_doctor)
+        # Úkon se specializací jde objednat jen tam, kde slouží lékařka, která ho umí.
+        need_doctor = bool(doctor or specialization or s.booking_require_doctor or procedure.specialization_ids)
         # Sluzby se nacitaji vzdy: doctor_ids ve slotu jsou informativni (kdo zrovna slouzi),
         # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
         assignments = self.assignment_minutes(day, procedure, doctor, specialization)

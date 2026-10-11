@@ -58,13 +58,42 @@ PROCEDURES_I18N = {
 }
 
 
+# Úkony, které dělá jen lékařka s danou specializací (xml id z elite_vet_team).
+# Ostatní úkony zvládne kterákoli lékařka.
+PROCEDURE_SPECS = {
+    "Dental examination": ["elite_vet_team.spec_stomatologie"],
+    "Eye problem": ["elite_vet_team.spec_oftalmologie"],
+    "Ultrasound / X-ray examination": ["elite_vet_team.spec_sonografie"],
+    "Castration – tomcat": ["elite_vet_team.spec_chirurgie"],
+    "Skin lump / tumour": ["elite_vet_team.spec_chirurgie"],
+}
+
+
 def _pri_instalaci(env):
-    """Výchozí ordinace, úkony a hodiny. Jen při prázdném modulu, pak patří klinice."""
+    """Propojí lékařky s kartami týmu; výchozí ordinace, úkony a hodiny jen při prázdném modulu."""
+    _propojit_lekarky(env)
     if env["elite.vet.room"].search_count([]):
         return
     _seed_rooms_and_hours(env)
     _seed_procedures(env)
     _seed_settings(env)
+
+
+def _propojit_lekarky(env):
+    """Lékařky z Rozpisu služeb dostanou kartu z Náš tým (podle shodného jména),
+    aby se k nim dostaly specializace, a příznak „přijímá rezervace“.
+
+    Za lékařku se při instalaci považuje člověk s titulem MVDr. - v týmu kliniky
+    ho mají právě a jen veterinární lékařky. Dál si to klinika upravuje sama.
+    """
+    Doctor = env["elite.vet.doctor"].with_context(active_test=False)
+    Member = env["elite.vet.team.member"].with_context(active_test=False)
+    for doctor in Doctor.search([("member_id", "=", False)]):
+        member = Member.search([("name", "=", doctor.name)], limit=1)
+        if member:
+            doctor.member_id = member
+    if not Doctor.search_count([("prijima_rezervace", "=", True)]):
+        Doctor.search([("name", "=like", "MVDr.%")]).write({"prijima_rezervace": True})
 
 
 def _seed_rooms_and_hours(env):
@@ -94,9 +123,13 @@ def _seed_procedures(env):
                            "sequence": (i + 1) * 10})
         if "cs_CZ" in jazyky:
             rec.with_context(lang="cs_CZ").name = cs
-        for lang, name in PROCEDURES_I18N[en].items():
+        for lang, name in PROCEDURES_I18N.get(en, {}).items():
             if lang in jazyky:
                 rec.with_context(lang=lang).name = name
+        specs = [env.ref(x, raise_if_not_found=False) for x in PROCEDURE_SPECS.get(en, [])]
+        specs = [s for s in specs if s]
+        if specs:
+            rec.specialization_ids = [(6, 0, [s.id for s in specs])]
 
 
 def _seed_settings(env):
