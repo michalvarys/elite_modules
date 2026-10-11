@@ -20,9 +20,24 @@
                         <field name="booking_reminder_hours_before" invisible="not booking_reminder_enabled"/>
                         <field name="booking_deposits_enabled"/>
                     </group>
-                    <field name="booking_intro" colspan="2" placeholder="Text nad rezervačním průvodcem"/>
-                    <field name="booking_consent_text" colspan="2" placeholder="Souhlasím se zpracováním údajů…"/>
                 </group>
+                <!-- Html pole přes celou šířku mimo group by bylo bez popisku; label dáme výslovně. -->
+                <div class="mb-3">
+                    <label for="booking_intro" string="Text nad rezervací" class="o_form_label d-block"/>
+                    <field name="booking_intro" placeholder="Text nad rezervačním průvodcem"/>
+                </div>
+                <div class="mb-3">
+                    <label for="booking_consent_text" string="Text souhlasu pod formulářem" class="o_form_label d-block"/>
+                    <field name="booking_consent_text" placeholder="Souhlasím se zpracováním údajů…"/>
+                </div>
+            </xpath>
+            <!-- Starý WinVet (odkaz na cizí rezervaci a hláška při načítání) stránka už nepoužívá.
+                 Skrýváme jen tyto skupiny; telefon a odkaz na rozpis služeb zůstávají. -->
+            <xpath expr="//field[@name='booking_url']/parent::group" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='booking_loading_title']/parent::group" position="attributes">
+                <attribute name="invisible">1</attribute>
             </xpath>
         </field>
     </record>

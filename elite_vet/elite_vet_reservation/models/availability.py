@@ -128,8 +128,7 @@ class VetAvailability(models.AbstractModel):
         if not rooms:
             return []
         step, dur = s.booking_slot_step, procedure.duration
-        # Úkon se specializací jde objednat jen tam, kde slouží lékařka, která ho umí.
-        need_doctor = bool(doctor or specialization or s.booking_require_doctor or procedure.specialization_ids)
+        need_doctor = self.need_doctor(procedure, doctor, specialization)
         # Sluzby se nacitaji vzdy: doctor_ids ve slotu jsou informativni (kdo zrovna slouzi),
         # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
         assignments = self.assignment_minutes(day, procedure, doctor, specialization)
@@ -164,18 +163,34 @@ class VetAvailability(models.AbstractModel):
         return out
 
     @api.model
+    def need_doctor(self, procedure, doctor=None, specialization=None):
+        """Musí v ordinaci sloužit lékařka? Úkon se specializací jde objednat jen tam,
+        kde slouží lékařka, která ho umí; stejně tak při zvolené lékařce / povinném lékaři."""
+        s = self.env["elite.vet.setting"].nastaveni()
+        return bool(doctor or specialization or s.booking_require_doctor or procedure.specialization_ids)
+
+    @api.model
+    def serving_doctors(self, procedure, day, room_id, minute, doctor=None, serving=None):
+        """Id lékařek, které v ordinaci po celou dobu úkonu od `minute` slouží a úkon
+        dělají (jen zvolená, je-li `doctor`), seřazené podle začátku služby."""
+        if serving is None:
+            serving = self.assignment_minutes(day, procedure, doctor)
+        out = []
+        for f, t, did in sorted(serving.get(room_id, [])):
+            if f <= minute and minute + procedure.duration <= t and did not in out \
+                    and (not doctor or did == doctor.id):
+                out.append(did)
+        return out
+
+    @api.model
     def room_doctors(self, procedure, day, slot, doctor=None):
         """Pro jeden slot ze slots(): [(room_id, doctor_id | False)] – v každé volné
         ordinaci lékařka, která tam v tu dobu slouží a úkon dělá (zvolená, jinak
         první podle začátku služby). Úkon bez nutné lékařky může být bez ní."""
         serving = self.assignment_minutes(day, procedure, doctor)
-        minute, dur = slot["minute"], procedure.duration
         out = []
         for room_id in slot["room_ids"]:
-            doc_ids = [did for f, t, did in sorted(serving.get(room_id, []))
-                       if f <= minute and minute + dur <= t]
-            if doctor:
-                doc_ids = [did for did in doc_ids if did == doctor.id]
+            doc_ids = self.serving_doctors(procedure, day, room_id, slot["minute"], doctor, serving=serving)
             out.append((room_id, doc_ids[0] if doc_ids else False))
         return out
 

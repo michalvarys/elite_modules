@@ -355,17 +355,61 @@ class VetReservation(models.Model):
         A = self.env["elite.vet.availability"]
         return fields.Datetime.to_string(A.local_to_utc(fields.Date.from_string(day_str), int(minute)))
 
+    def _board_doctor_check(self, day_str, minute, room_id, doctor=None, strict=True):
+        """Smí rezervace na tabuli do ordinace `room_id` v čase `minute`?
+
+        Stejné pravidlo jako návrhy a průvodce: v ordinaci musí po celou dobu úkonu
+        sloužit lékařka, která úkon dělá (při `strict` přímo `doctor`), pokud úkon
+        lékařku potřebuje; ordinace musí být mezi ordinacemi úkonu pro recepci.
+        Kolize hlídá až zápis (_check_overlap). Vrací id lékařky, kterou zapsat
+        (jediná sloužící), False = vyprázdnit, None = neměnit.
+        """
+        self.ensure_one()
+        proc = self.procedure_id
+        if self.kind != "reservation" or not proc or not room_id:
+            return None
+        A = self.env["elite.vet.availability"]
+        day, minute = fields.Date.from_string(day_str), int(minute)
+        room = self.env["elite.vet.room"].browse(room_id)
+        proc_name = proc.with_context(lang=self._jazyk_kliniky()).name
+        if room not in proc.rooms_for_reception():
+            raise UserError(_("Úkon %s se v %s nedělá.") % (proc_name, room.name))
+        wanted = doctor if strict else None
+        doc_ids = A.serving_doctors(proc, day, room.id, minute, wanted or None)
+        if not doc_ids and A.need_doctor(proc, wanted or None):
+            if wanted:
+                raise UserError(_("V %s v %s neslouží %s.") % (cas_label(minute), room.name, wanted.name))
+            raise UserError(_("V %s v %s neslouží lékařka, která dělá %s.")
+                            % (cas_label(minute), room.name, proc_name))
+        if doctor and doctor.id in doc_ids:
+            return None
+        if len(doc_ids) == 1:
+            return doc_ids[0]
+        # Původní lékařka v novém čase/ordinaci neslouží: nenechat tam špatné jméno.
+        return False if doctor else None
+
     @api.model
     def board_move(self, res_id, day_str, minute, room_id):
+        """Přesun na tabuli. Rezervace jen tam, kde slouží lékařka, která úkon dělá
+        (když v novém místě nemá službu dosavadní lékařka, přepíše se); blokace kamkoli."""
         rec = self.browse(res_id)
-        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id or None)
+        doctor_id = rec._board_doctor_check(day_str, minute, room_id or rec.room_id.id,
+                                            doctor=rec.doctor_id, strict=False)
+        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id or None,
+                              doctor_id=doctor_id)
         return True
 
     @api.model
     def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None):
-        """doctor_id=None lékařku nemění; číslo ji nastaví (návrh z panelu Čekající)."""
+        """doctor_id=None lékařku nemění; číslo ji nastaví (návrh z panelu Čekající).
+        Zkontroluje, že v čase a ordinaci slouží lékařka, která úkon dělá (nebo
+        ta, kterou si klient vybral); slouží-li jediná, zapíše ji."""
         rec = self.browse(res_id)
+        doctor = self.env["elite.vet.doctor"].browse(doctor_id) if doctor_id else rec.doctor_id
+        found = rec._board_doctor_check(day_str, minute, room_id, doctor=doctor)
+        if doctor_id:
+            found = doctor_id
         rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id,
-                              doctor_id=doctor_id or None)
+                              doctor_id=found)
         rec.action_confirm()
         return True

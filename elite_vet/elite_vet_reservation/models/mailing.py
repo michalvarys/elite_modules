@@ -83,12 +83,12 @@ class VetReservationMailing(models.Model):
         return records
 
     def write(self, vals):
-        if self.env.context.get("ev_skip_mail") or not ({"start", "room_id"} & set(vals)):
+        # Klienta zajímá jen čas; přesun do jiné ordinace ve stejný čas e-mail nepošle.
+        if self.env.context.get("ev_skip_mail") or "start" not in vals:
             return super().write(vals)
-        before = {r.id: (r.start, r.room_id.id) for r in self if r.kind == "reservation" and r.state == "confirmed"}
+        before = {r.id: r.start for r in self if r.kind == "reservation" and r.state == "confirmed"}
         res = super().write(vals)
-        moved = self.filtered(lambda r: r.id in before and r.state == "confirmed"
-                              and before[r.id] != (r.start, r.room_id.id))
+        moved = self.filtered(lambda r: r.id in before and r.state == "confirmed" and before[r.id] != r.start)
         if moved:
             moved.with_context(ev_skip_mail=True).write({"reminder_sent": False})
             moved._poslat("mail_rescheduled")

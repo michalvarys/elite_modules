@@ -58,6 +58,17 @@ class TestMail(ReservationCase):
         self.assertEqual(len(new), 1)
         self.assertFalse(r.reminder_sent)
 
+    def test_room_change_alone_sends_no_mail(self):
+        r = self.reservation(start=self.dt(WED, 9, 0))
+        r.reminder_sent = True
+        before = self.mails_to("klient@example.cz")
+        r.write({"room_id": self.room2.id})
+        self.assertFalse(self.mails_to("klient@example.cz") - before)
+        self.assertTrue(r.reminder_sent)
+        r.action_reschedule(self.dt(WED, 10, 0), room_id=self.room1.id)
+        self.assertEqual(len(self.mails_to("klient@example.cz") - before), 1)
+        self.assertFalse(r.reminder_sent)
+
     def test_board_confirm_sends_only_confirmation(self):
         r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web", room_id=False)
         before = self.mails_to("klient@example.cz")

@@ -94,8 +94,10 @@ rezervace se rovnou **potvrdí** v tomto čase a ordinaci a klient dostane potvr
 
 - Pozor: kartu pouštíte na den, který je právě na tabuli. Chcete-li jiný den,
   nejdřív si ho na tabuli otevřete.
-- Při přetažení se nekontroluje, kdo v ordinaci slouží – jen to, že čas je volný.
-  Lékařka zůstane ta, kterou si vybral klient (nebo žádná).
+- Při přetažení se kontroluje, že čas je volný a že v té ordinaci v tu dobu slouží
+  lékařka, která úkon dělá (nebo ta, kterou si vybral klient). Když ne, objeví se
+  červená hláška „V 9:00 v Ordinace 1 neslouží lékařka, která dělá …“ a nic se neuloží.
+  Slouží-li tam jediná taková lékařka, zapíše se k rezervaci sama.
 
 ### Úprava žádosti (tlačítko **Upravit**)
 
@@ -195,10 +197,13 @@ Přetahovat jde jen v rámci zobrazeného dne. Na jiný den přesunete rezervaci
 ve formuláři: klikněte na kartu a změňte **Začátek**.
 
 Je-li cílový čas obsazený, objeví se červená hláška „Termín … v ordinaci … je obsazený: …“
-a karta zůstane na původním místě.
+a karta zůstane na původním místě. Stejně tak u rezervace, když v cílové ordinaci
+a čase neslouží lékařka, která úkon dělá („V … v … neslouží lékařka, která dělá …“).
+Neslouží-li tam dosavadní lékařka, zapíše se ta, která tam slouží (blokace jdou
+přesunout kamkoli).
 
-Klient s e-mailem dostane po přesunu potvrzené rezervace automaticky e-mail
-**o změně termínu** (i když změníte jen ordinaci).
+Klient s e-mailem dostane po přesunu potvrzené rezervace na jiný čas automaticky
+e-mail **o změně termínu**. Při změně jen ordinace (stejný čas) e-mail nechodí.
 
 ### Prodloužení
 
@@ -288,7 +293,7 @@ mohou dorazit s několikaminutovým zpožděním.
 | Přijato z webu | Klient odešle žádost na webu | klientovi |
 | Nová rezervace z webu | Klient odešle žádost na webu | klinice (adresa z nastavení), s odkazem na frontu Čekající z webu |
 | Potvrzeno | **Potvrdit**, potvrzení z tabule, přetažení žádosti do sloupce, uložení průvodce (je-li zaškrtnuté), **Poslat potvrzení** | klientovi; obsahuje čas, ordinaci, lékařku, instrukce k úkonu a odkaz na zrušení |
-| Změna termínu | Potvrzené rezervaci se změní začátek nebo ordinace | klientovi |
+| Změna termínu | Potvrzené rezervaci se změní začátek (samotná změna ordinace e-mail neposílá) | klientovi |
 | Zrušeno | **Zrušit**, **Odmítnout**, zrušení klientem | klientovi; při zrušení klientem i klinice |
 | Připomínka | X hodin před termínem, je-li zapnutá v nastavení | klientovi |
 

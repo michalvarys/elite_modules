@@ -189,16 +189,16 @@ Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékař
 | **Posílat připomínku** | vypnuto | Zapne připomínkový e-mail klientům. |
 | **Připomínka (hodin před)** | 24 | Kolik hodin před termínem připomínka odejde (ukáže se po zapnutí). |
 | **Zálohy zapnuté** | vypnuto | Dokud je vypnuté, záloha se nikde neukazuje. |
-| Text nad rezervačním průvodcem | – | Text nad rezervací na webu (pole bez popisku, s nápovědou v šedé). |
-| Souhlasím se zpracováním údajů… | – | Text souhlasu pod formulářem na webu (pole bez popisku). Prázdné = výchozí věta. |
+| **Text nad rezervací** | – | Text nad rezervačním průvodcem na webu. |
+| **Text souhlasu pod formulářem** | – | Text souhlasu pod formulářem na webu. Prázdné = výchozí věta. |
 
 Ve stejném formuláři jsou i starší části:
 
 - **Telefon na recepci** – **Telefon na recepci** a **Recepce jak se zobrazí**. Používá se,
   když je na zrušení odkazem pozdě („zavolejte na recepci“).
 - **Odkaz na rozpis služeb pod rezervací** – text a tlačítko pod rezervací na webu.
-- **Rezervační systém (odkaz na WinVet)** a **Hláška, dokud se rezervace načítá** patří
-  ke starému vloženému WinVetu. Vlastní rezervace je nepoužívá.
+- Pole starého vloženého WinVetu (odkaz na rezervační systém a hláška při načítání)
+  vlastní rezervace nepoužívá, proto jsou ve formuláři skrytá.
 
 **Zálohy:** online platební brána zatím **není**. Při zapnutých zálohách se na webu ukáže
 částka a klient dostane informaci, že platební údaje mu pošle recepce.
@@ -215,7 +215,7 @@ režim vývojáře), hledejte „Rezervace:“.
 | Rezervace: přijato z webu | klientovi po odeslání žádosti |
 | Rezervace: nová z webu (klinika) | klinice na E-mail pro upozornění |
 | Rezervace: potvrzeno | klientovi při potvrzení |
-| Rezervace: změna termínu | klientovi při přesunu potvrzené rezervace |
+| Rezervace: změna termínu | klientovi při přesunu potvrzené rezervace na jiný čas (ne při změně jen ordinace) |
 | Rezervace: zrušeno | klientovi při zrušení (a klinice při zrušení klientem) |
 | Rezervace: připomínka | klientovi X hodin před termínem (běží každou hodinu) |
 

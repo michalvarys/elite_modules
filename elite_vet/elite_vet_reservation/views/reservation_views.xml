@@ -106,7 +106,7 @@
         <field name="name">elite.vet.reservation.kanban.waiting</field>
         <field name="model">elite.vet.reservation</field>
         <field name="arch" type="xml">
-            <kanban default_order="start">
+            <kanban default_order="start" create="0">
                 <field name="name"/><field name="start"/><field name="procedure_id"/>
                 <field name="contact_phone"/><field name="contact_email"/><field name="problem"/>
                 <templates>
@@ -153,12 +153,29 @@
         <field name="context">{'search_default_od_dneska': 1, 'search_default_reservations': 1}</field>
     </record>
 
+    <!-- Čekající přicházejí jen z webu; ručně se tu nic nezakládá (na to je Nová rezervace). -->
+    <record id="view_reservation_list_waiting" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.list.waiting</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="inherit_id" ref="view_reservation_list"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <list position="attributes">
+                <attribute name="create">0</attribute>
+            </list>
+        </field>
+    </record>
+
     <record id="action_reservation_waiting" model="ir.actions.act_window">
         <field name="name">Čekající z webu</field>
         <field name="res_model">elite.vet.reservation</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="view_id" ref="view_reservation_kanban_waiting"/>
         <field name="domain">[('state', '=', 'web_new')]</field>
+        <field name="context">{'create': False}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_reservation_kanban_waiting')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_reservation_list_waiting')})]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Nic nečeká</p>
             <p>Sem padají rezervace z webu. Otevřete je, vyberte ordinaci a potvrďte.</p>

@@ -9,7 +9,6 @@
         <field name="arch" type="xml">
             <field name="member_id" position="after">
                 <field name="prijima_rezervace" string="Lékařka (rezervace)"/>
-                <field name="specialization_ids" widget="many2many_tags" optional="show"/>
             </field>
         </field>
     </record>

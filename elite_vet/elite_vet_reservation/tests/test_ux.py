@@ -2,6 +2,7 @@
 popisky událostí, kopírování rozpisu, souhrn ordinační doby, „Kdo dělá“."""
 from datetime import date, timedelta
 
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.elite_vet_reservation.models.reservation import inicialy
@@ -118,6 +119,64 @@ class TestBoardSuggestions(ReservationCase):
 
     def test_confirmed_reservation_has_no_suggestions(self):
         self.assertEqual(self.R.board_suggestions(self.reservation(start=self.dt(self.day, 9, 0)).id), [])
+
+    # ---------- tažení na tabuli hlídá lékařku ----------
+    def test_drag_confirm_without_qualified_doctor_fails(self):
+        self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)   # oční, zuby nedělá
+        w = self.waiting(self.zuby)
+        with self.assertRaisesRegex(UserError, "V 9:00 v Ordinace 1 neslouží lékařka, která dělá Dental examination UX"):
+            self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room1.id)
+        self.assertEqual(w.state, "web_new")
+
+    def test_drag_confirm_sets_single_qualified_doctor(self):
+        self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)
+        self.assign(self.dr_a, self.room2, self.day, 8.0, 12.0)
+        w = self.waiting(self.zuby)
+        self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room2.id)
+        self.assertEqual((w.state, w.room_id, w.doctor_id), ("confirmed", self.room2, self.dr_a))
+
+    def test_drag_confirm_respects_requested_doctor(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)
+        w = self.waiting(doctor=self.dr_b)
+        with self.assertRaisesRegex(UserError, "neslouží MVDr. Bára Testová"):
+            self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room1.id)
+        self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room2.id)
+        self.assertEqual((w.state, w.doctor_id), ("confirmed", self.dr_b))
+
+    def test_drag_confirm_outside_duty_fails(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.waiting(self.zuby, h=11, m=45)   # 30 min úkon přesahuje konec služby
+        with self.assertRaises(UserError):
+            self.R.board_confirm(w.id, self.day.isoformat(), 705, self.room1.id)
+
+    def test_drag_confirm_general_procedure_without_duty_allowed(self):
+        # Obecný úkon bez povinného lékaře jde i do ordinace bez služby (jako v návrzích).
+        w = self.waiting()
+        self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room2.id)
+        self.assertEqual((w.state, w.doctor_id.id), ("confirmed", False))
+
+    def test_move_reservation_checks_doctor_and_reassigns(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)
+        self.assign(self.dr_a, self.room2, self.day, 13.0, 17.0)
+        r = self.reservation(start=self.dt(self.day, 9, 0), procedure_id=self.zuby.id, doctor_id=self.dr_a.id)
+        with self.assertRaisesRegex(UserError, "neslouží lékařka, která dělá"):
+            self.R.board_move(r.id, self.day.isoformat(), 540, self.room2.id)   # jen oční dr. B
+        self.assertEqual(r.room_id, self.room1)
+        self.R.board_move(r.id, self.day.isoformat(), 840, self.room2.id)
+        self.assertEqual((r.room_id, r.start, r.doctor_id), (self.room2, self.dt(self.day, 14, 0), self.dr_a))
+        # Obecný úkon u lékařky, která v nové ordinaci neslouží: přepíše se na tu, která tam je.
+        v = self.reservation(start=self.dt(self.day, 10, 0), doctor_id=self.dr_a.id)
+        self.R.board_move(v.id, self.day.isoformat(), 600, self.room2.id)
+        self.assertEqual((v.room_id, v.doctor_id), (self.room2, self.dr_b))
+
+    def test_move_block_is_free(self):
+        blk = self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Úklid", "room_id": self.room1.id,
+            "start": self.dt(self.day, 12, 0), "stop": self.dt(self.day, 13, 0)})
+        self.R.board_move(blk.id, self.day.isoformat(), 900, self.room2.id)
+        self.assertEqual((blk.room_id, blk.start), (self.room2, self.dt(self.day, 15, 0)))
 
 
 @tagged("post_install", "-at_install")
