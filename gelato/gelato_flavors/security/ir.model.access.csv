@@ -1,7 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_gelato_flavor_staff,gelato.flavor.staff,model_gelato_flavor,group_gelato_staff,1,1,0,0
-access_gelato_flavor_manager,gelato.flavor.manager,model_gelato_flavor,group_gelato_manager,1,1,1,1
-access_gelato_flavor_category_staff,gelato.flavor.category.staff,model_gelato_flavor_category,group_gelato_staff,1,0,0,0
-access_gelato_flavor_category_manager,gelato.flavor.category.manager,model_gelato_flavor_category,group_gelato_manager,1,1,1,1
-access_gelato_flavor_tag_staff,gelato.flavor.tag.staff,model_gelato_flavor_tag,group_gelato_staff,1,0,0,0
-access_gelato_flavor_tag_manager,gelato.flavor.tag.manager,model_gelato_flavor_tag,group_gelato_manager,1,1,1,1

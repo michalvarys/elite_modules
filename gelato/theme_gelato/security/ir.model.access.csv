@@ -1,5 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_gelato_hero_slide_public,gelato.hero.slide.public,model_gelato_hero_slide,,1,0,0,0
-access_gelato_hero_slide_editor,gelato.hero.slide.editor,model_gelato_hero_slide,website.group_website_designer,1,1,1,1
-access_gelato_gallery_image_public,gelato.gallery.image.public,model_gelato_gallery_image,,1,0,0,0
-access_gelato_gallery_image_editor,gelato.gallery.image.editor,model_gelato_gallery_image,website.group_website_designer,1,1,1,1

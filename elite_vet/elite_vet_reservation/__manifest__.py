@@ -29,6 +29,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/setting_views.xml",
         "views/board_action.xml",
         "wizard/reservation_wizard_views.xml",
+        "wizard/druha_ordinace_wizard_views.xml",
         "views/menus.xml",
         "views/booking_page.xml",
         "data/mail_templates.xml",

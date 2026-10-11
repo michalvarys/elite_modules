@@ -9,6 +9,8 @@
                     <field name="step" widget="statusbar" readonly="1"/>
                 </header>
                 <field name="povolene_lekarky_ids" invisible="1"/>
+                <field name="lekarky_ve_sluzbe_ids" invisible="1"/>
+                <field name="vic_ve_sluzbe" invisible="1"/>
                 <field name="minute" invisible="1"/>
                 <field name="ma_mazlicka" invisible="1"/>
                 <field name="send_email_nabidnuto" invisible="1"/>
@@ -25,6 +27,9 @@
                             <button name="action_delka_plus" type="object" string="+30 min" class="btn-secondary btn-sm"
                                     context="{'minut': 30}" invisible="not procedure_id"/>
                         </div>
+                        <field name="lekarka_sluzby_id" widget="radio"
+                               invisible="not vic_ve_sluzbe"
+                               options="{'horizontal': true}"/>
                         <field name="doctor_id" placeholder="Kterákoli, která úkon dělá"
                                options="{'no_create': True, 'no_open': True}"/>
                         <field name="date"/>

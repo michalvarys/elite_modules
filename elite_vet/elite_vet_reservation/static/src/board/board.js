@@ -123,6 +123,7 @@ export class ReservationBoard extends Component {
         const lines = [e.time_label + " · " + this.eventLabel(e)];
         if (e.procedure) lines.push("Úkon: " + e.procedure);
         if (e.doctor) lines.push("Lékařka: " + e.doctor);
+        if (e.spojena) lines.push("Společný zákrok, také v: " + e.spojena);
         if (e.phone) lines.push("Telefon: " + e.phone);
         if (e.email) lines.push("E-mail: " + e.email);
         if (e.problem) lines.push("Popis problému: " + e.problem);

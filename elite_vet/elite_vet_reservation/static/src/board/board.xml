@@ -122,6 +122,7 @@
                                     <span t-if="e.symbol" class="evb-symbol" t-esc="e.symbol"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
                                     <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
+                                    <span t-if="e.spojena" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.spojena">🔗</span>
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                 </div>
                                 <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>

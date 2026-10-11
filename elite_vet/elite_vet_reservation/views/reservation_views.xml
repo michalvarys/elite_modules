@@ -41,6 +41,8 @@
                             confirm="Opravdu zrušit tuto rezervaci?"/>
                     <button name="action_cancel" type="object" string="Zrušit blokaci"
                             invisible="kind != 'block' or state in ('cancelled','done','no_show')"/>
+                    <button name="action_druha_ordinace" type="object" string="Přidat druhou ordinaci"
+                            invisible="kind == 'block' or state != 'confirmed' or spojena_id or druha_ordinace"/>
                     <button name="action_sparovat" type="object" string="Spárovat klienta"
                             invisible="partner_id or kind == 'block'"/>
                     <field name="state" widget="statusbar" statusbar_visible="web_new,confirmed,done" invisible="kind == 'block'"/>
@@ -57,6 +59,8 @@
                             <field name="block_scope" widget="radio" invisible="kind != 'block'" required="kind == 'block'"/>
                             <field name="room_id" required="kind == 'reservation' and state in ('confirmed', 'done')"/>
                             <field name="doctor_id" invisible="kind == 'block'"/>
+                            <field name="spojena_id" invisible="not spojena_id"/>
+                            <field name="druha_ordinace" invisible="not druha_ordinace"/>
                             <field name="start"/>
                             <field name="stop"/>
                             <field name="repeat_weekly_until" invisible="kind == 'reservation' or id"/>

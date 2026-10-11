@@ -4,6 +4,20 @@ from odoo.addons.elite_vet_calendar.models.vet_shift_type import COLORS
 
 from .room import COLOR_SELECTION
 
+# Světlé barvy jen pro úkony (karty na tabuli). Ordinace a typy směn mají dál
+# jen sytou paletu z elite_vet_calendar, kterou tento modul nemění.
+SVETLE_BARVY = {
+    "light_blue": ("Světle modrá", "#93c5fd"),
+    "light_green": ("Světle zelená", "#86efac"),
+    "light_yellow": ("Žlutá", "#fde047"),
+    "light_orange": ("Meruňková", "#fdba74"),
+    "light_pink": ("Světle růžová", "#f9a8d4"),
+    "light_purple": ("Levandulová", "#c4b5fd"),
+    "light_teal": ("Mátová", "#5eead4"),
+    "light_grey": ("Světle šedá", "#cbd5e1"),
+}
+BARVY_UKONU = COLOR_SELECTION + [(k, v[0]) for k, v in SVETLE_BARVY.items()]
+
 
 class VetProcedure(models.Model):
     """Úkon = důvod návštěvy, který si klient vybírá. Nese délku a barvu."""
@@ -15,7 +29,11 @@ class VetProcedure(models.Model):
     name = fields.Char(string="Název", required=True, translate=True)
     duration = fields.Integer(string="Délka (min)", required=True, default=30)
     symbol = fields.Char(string="Zkratka", size=3, help="Písmeno na tabuli, např. V = vakcinace.")
-    color = fields.Selection(COLOR_SELECTION, string="Barva", required=True, default="green")
+    color = fields.Selection(BARVY_UKONU, string="Barva", required=True, default="green")
+    barva_vlastni = fields.Char(
+        string="Vlastní barva",
+        help="Jakákoli barva podle přání. Když je vybraná, má přednost před barvou ze seznamu; "
+             "výběr barvy ze seznamu ji zase smaže.")
     color_hex = fields.Char(compute="_compute_color_hex")
     online = fields.Boolean(string="Nabízet online", default=True)
     room_ids = fields.Many2many(
@@ -37,10 +55,19 @@ class VetProcedure(models.Model):
     sequence = fields.Integer(string="Pořadí", default=10)
     active = fields.Boolean(string="Aktivní", default=True)
 
-    @api.depends("color")
+    @api.onchange("color")
+    def _onchange_color(self):
+        self.barva_vlastni = False
+
+    @api.depends("color", "barva_vlastni")
     def _compute_color_hex(self):
         for rec in self:
-            rec.color_hex = COLORS.get(rec.color, COLORS["grey"])
+            if rec.barva_vlastni:
+                rec.color_hex = rec.barva_vlastni
+            elif rec.color in SVETLE_BARVY:
+                rec.color_hex = SVETLE_BARVY[rec.color][1]
+            else:
+                rec.color_hex = COLORS.get(rec.color, COLORS["grey"])
 
     @api.depends("specialization_ids")
     def _compute_kdo_dela(self):

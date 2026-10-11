@@ -49,6 +49,13 @@ class ReservationWizard(models.TransientModel):
                                 domain="[('id', 'in', povolene_lekarky_ids)]",
                                 help="Volitelné. Nabízí se jen lékařky, které úkon dělají.")
     date = fields.Date(string="Datum", required=True, default=lambda self: dnes_v_praze())
+    # Klik do tabule: kdo v té ordinaci a čase slouží (a úkon dělá). Jedna = vybere se sama,
+    # víc (překryv služeb) = recepce vybere tlačítkem.
+    lekarky_ve_sluzbe_ids = fields.Many2many("elite.vet.doctor", compute="_compute_lekarky_ve_sluzbe")
+    vic_ve_sluzbe = fields.Boolean(compute="_compute_lekarky_ve_sluzbe")
+    lekarka_sluzby_id = fields.Many2one("elite.vet.doctor", string="Ve službě",
+                                        domain="[('id', 'in', lekarky_ve_sluzbe_ids)]",
+                                        help="V tu dobu se v ordinaci překrývají služby více lékařek – vyberte, ke které.")
 
     # 2. Volný čas (předvyplní i klik do tabule)
     minute = fields.Integer(string="Minuta od půlnoci")
@@ -201,10 +208,53 @@ class ReservationWizard(models.TransientModel):
             w.souhrn = Markup("<table class='table table-sm mb-0'>%s</table>") % Markup("").join(
                 Markup("<tr><th class='w-25'>%s</th><td>%s</td></tr>") % (escape(k), escape(v)) for k, v in radky)
 
-    @api.onchange("procedure_id")
+    @api.depends("room_id", "date", "minute", "procedure_id")
+    def _compute_lekarky_ve_sluzbe(self):
+        for w in self:
+            ve_sluzbe = w._lekarky_ve_sluzbe()
+            w.lekarky_ve_sluzbe_ids = ve_sluzbe
+            w.vic_ve_sluzbe = len(ve_sluzbe) > 1
+
+    def _lekarky_ve_sluzbe(self):
+        """Lékařky, které mají v předvyplněné ordinaci službu v předvyplněný čas,
+        seřazené podle začátku služby. Je-li vybraný úkon, jen ty, které ho tu dělají."""
+        Doctor = self.env["elite.vet.doctor"]
+        if not (self.room_id and self.date):
+            return Doctor
+        sluzby = self.env["elite.vet.doctor.assignment"].search(
+            [("date", "=", self.date), ("room_id", "=", self.room_id.id),
+             ("doctor_id.prijima_rezervace", "=", True)], order="hour_from, id")
+        out = Doctor
+        for a in sluzby:
+            if a.hour_from * 60 <= self.minute < a.hour_to * 60 \
+                    and (not self.procedure_id or a.serves(self.procedure_id)):
+                out |= a.doctor_id
+        return out
+
+    @api.onchange("procedure_id", "room_id", "date", "minute")
     def _onchange_procedure(self):
         if self.doctor_id and self.procedure_id and self.doctor_id not in self.procedure_id.doctors_for_booking():
             self.doctor_id = False
+        if not self.room_id:
+            return
+        ve_sluzbe = self._lekarky_ve_sluzbe()
+        if self.doctor_id in ve_sluzbe:
+            self.lekarka_sluzby_id = self.doctor_id
+        elif len(ve_sluzbe) == 1:
+            self.doctor_id = self.lekarka_sluzby_id = ve_sluzbe
+        elif len(ve_sluzbe) > 1:
+            # Překryv služeb: nic nevybírat potichu, ať recepce zvolí.
+            self.doctor_id = self.lekarka_sluzby_id = False
+
+    @api.onchange("lekarka_sluzby_id")
+    def _onchange_lekarka_sluzby(self):
+        if self.lekarka_sluzby_id:
+            self.doctor_id = self.lekarka_sluzby_id
+
+    @api.onchange("doctor_id")
+    def _onchange_doctor(self):
+        if self.room_id and self.lekarka_sluzby_id != self.doctor_id:
+            self.lekarka_sluzby_id = self.doctor_id if self.doctor_id in self._lekarky_ve_sluzbe() else False
 
     @api.onchange("partner_mode")
     def _onchange_partner_mode(self):

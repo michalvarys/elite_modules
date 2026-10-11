@@ -42,6 +42,7 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
 | Druhý řádek | Název úkonu (jen u delších karet). |
 | 🌐 | Rezervace přišla z webu. |
+| 🔗 | Společný zákrok dvou lékařek – rezervace je i v jiné ordinaci (najeďte myší, ukáže se kde). |
 | Zkratka vpravo (např. **GC**) | Iniciály lékařky. Po najetí myší uvidíte celé jméno. |
 | Bledší karta | Proběhla nebo Nedorazil. |
 | Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 8:15–14:00“, v barvě lékařky. |
@@ -155,6 +156,9 @@ Mezi kroky se pohybujete tlačítky **Dále** a **Zpět**, **Zavřít** průvodc
 1. **Úkon** – povinné.
 2. **Lékařka** – nepovinné. Nabízí se jen lékařky, které daný úkon dělají.
    Necháte-li prázdné, systém vezme kteroukoli, která úkon dělá a v tu dobu slouží.
+   Po kliknutí do tabule se lékařka vybere sama podle služby v té ordinaci a čase.
+   Když se tam v tu dobu překrývají služby dvou lékařek, objeví se řádek **Ve službě**
+   s oběma jmény – klikněte na tu, ke které klienta objednáváte.
 3. **Datum** – předvyplněný je den otevřený na tabuli.
 4. **Délka (min)** – výchozí je délka úkonu. Když víte, že návštěva potrvá déle
    (např. jeden klient se dvěma psy), prodlužte ji (násobky 5 minut, tlačítka **+15 min** / **+30 min**).
@@ -246,6 +250,26 @@ přesunout kamkoli).
 
 Klient s e-mailem dostane po přesunu potvrzené rezervace na jiný čas automaticky
 e-mail **o změně termínu**. Při změně jen ordinace (stejný čas) e-mail nechodí.
+
+### Zákrok pro dvě lékařky (druhá ordinace)
+
+Když zákrok potřebuje dvě lékařky nebo dvě ordinace, rezervaci zduplikujte:
+
+1. Klikněte na kartu potvrzené rezervace.
+2. Klikněte **Přidat druhou ordinaci**.
+3. Vyberte **Druhou ordinaci**. Lékařka, která tam v tu dobu slouží, se předvyplní.
+   Jinou vyberete v poli **Druhá lékařka**.
+4. Klikněte **Přidat**.
+
+V druhé ordinaci vznikne kopie ve stejném čase, obě karty mají ikonku 🔗.
+Je-li druhá ordinace v tu dobu obsazená, kopie nevznikne a objeví se hláška, čím.
+
+Obě rezervace jsou propojené:
+
+- přesun času jedné posune i druhou (každá zůstane ve své ordinaci),
+- **Zrušit**, **Proběhla** a **Nedorazil** u hlavní rezervace platí pro obě,
+- zrušení jen kopie hlavní rezervaci nechá – druhá lékařka už není potřeba,
+- klient dostává e-maily jen jednou (z hlavní rezervace).
 
 ### Prodloužení
 

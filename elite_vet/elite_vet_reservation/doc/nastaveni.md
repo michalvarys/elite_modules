@@ -126,7 +126,8 @@ Seznam lze upravovat přímo v řádcích; pořadí se mění přetažením.
 | **Název** | Co klient vidí na webu a v e-mailu. Překládá se (viz Překlady). |
 | **Délka (min)** | Jak dlouho úkon trvá. Násobek 5 minut. |
 | **Zkratka** | 1–3 znaky na kartě v tabuli (V, P, KA…). |
-| **Barva** | Barva karty na tabuli. |
+| **Barva** | Barva karty na tabuli. V seznamu jsou syté i světlé barvy (světle modrá, žlutá, mátová…). |
+| **Vlastní barva** | Jakákoli barva podle přání (výběr z palety). Má přednost před **Barvou**; výběr barvy ze seznamu ji zase smaže. Pole **Na tabuli** ukazuje výsledek. |
 | **Nabízet online** | Odškrtnuté = jen pro recepci, na webu se nenabízí. |
 | **Ordinace** | Kde se úkon dělá. Prázdné = ve všech ordinacích rezervovatelných online. |
 | **Specializace** | **Kdo úkon dělá**: jen lékařky s aspoň jednou z těchto specializací. Prázdné = kterákoli lékařka. |

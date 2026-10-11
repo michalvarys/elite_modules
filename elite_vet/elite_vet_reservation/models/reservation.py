@@ -124,6 +124,12 @@ class VetReservation(models.Model):
     transaction_id = fields.Many2one("payment.transaction", string="Platba", ondelete="set null")
     lang = fields.Char(string="Jazyk klienta", default="cs_CZ")
     color_hex = fields.Char(compute="_compute_color_hex")
+    # Zákrok pro dvě lékařky: kopie rezervace v druhé ordinaci (logika v druha_ordinace.py).
+    spojena_id = fields.Many2one("elite.vet.reservation", string="Společně s", copy=False, readonly=True,
+                                 ondelete="set null",
+                                 help="Druhá rezervace téhož zákroku v jiné ordinaci. Přesun a zrušení platí pro obě.")
+    druha_ordinace = fields.Boolean(string="Druhá ordinace", copy=False, readonly=True,
+                                    help="Kopie pro druhou lékařku. Klientovi se z ní neposílají e-maily.")
 
     _sql_constraints = [
         ("cancel_token_uniq", "unique(cancel_token)", "Token rezervace musí být jedinečný."),
@@ -412,6 +418,7 @@ class VetReservation(models.Model):
                 "problem": r.problem or "", "procedure": r.procedure_id.with_context(lang=lang).name or "",
                 "doctor": r.doctor_id.name or "", "doctor_initials": inicialy(r.doctor_id.name),
                 "doctor_color": barva_lekarky(r.doctor_id) if r.doctor_id else False,
+                "spojena": r._popisek_spojene(),
                 "source": r.source,
             })
         waiting = []
