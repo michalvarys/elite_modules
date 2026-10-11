@@ -32,7 +32,9 @@
                     </p>
                     <p t-else="" class="text-muted small">Nic nečeká.</p>
                     <div t-foreach="state.data.waiting" t-as="w" t-key="w.id" class="evb-card" draggable="true"
-                         t-on-dragstart="(ev) => this.onDragStart(ev, w, 'waiting')" t-on-dragend="onDragEnd">
+                         t-att-class="{'evb-card-active': state.preview and state.preview.id === w.id}"
+                         t-on-mouseenter="() => this.hoverWaiting(w)" t-on-mouseleave="leaveWaiting"
+                         t-on-dragstart="(ev) => { this.leaveWaiting(); this.onDragStart(ev, w, 'waiting'); }" t-on-dragend="onDragEnd">
                         <div class="evb-card-when"><t t-esc="w.date_label"/> <span class="text-muted fw-normal">(<t t-esc="w.duration"/> min)</span></div>
                         <strong t-esc="w.name"/>
                         <div class="small text-muted"><t t-esc="w.phone"/><t t-if="w.phone and w.email"> · </t><t t-esc="w.email"/></div>
@@ -41,6 +43,8 @@
                         <div class="evb-suggestions">
                             <button t-foreach="w.suggestions" t-as="sug" t-key="sug.room_id" type="button"
                                     class="btn btn-sm btn-success evb-suggestion" t-att-disabled="state.busy"
+                                    t-on-mouseenter="() => this.hoverSuggestion(w, sug)"
+                                    t-on-mouseleave="() => this.leaveSuggestion(w)"
                                     t-on-click="() => this.confirmSuggestion(w, sug)">
                                 Potvrdit → <t t-esc="sug.room"/><t t-if="sug.doctor"> · <t t-esc="sug.doctor"/></t>
                             </button>
@@ -57,7 +61,7 @@
                         </div>
                     </div>
                 </aside>
-                <div class="evb-grid">
+                <div class="evb-grid" t-ref="grid">
                     <div class="evb-axis">
                         <div class="evb-head"/>
                         <div class="evb-axis-body" t-att-style="'height:' + height(axis.from, axis.to) + 'px'">
@@ -127,6 +131,13 @@
                                     <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                 </div>
                                 <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>
+                            </div>
+                            <t t-set="pv" t-value="previewFor(room)"/>
+                            <div t-if="pv" class="evb-preview" t-att-class="previewClass(room, pv)" t-att-style="previewStyle(room, pv)">
+                                <span class="evb-preview-label">
+                                    <t t-if="pv.free">Náhled · </t><t t-else="">Požadovaný čas (obsazeno) · </t>
+                                    <t t-esc="pv.time"/> · <t t-esc="pv.name"/>
+                                </span>
                             </div>
                             <div t-if="showNow" class="evb-now" t-att-style="'top:' + top(state.now) + 'px'"/>
                         </div>

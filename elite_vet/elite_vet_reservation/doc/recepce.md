@@ -91,6 +91,17 @@ obnoví sama každou minutu.
 Každá karta v panelu ukazuje požadovaný den a čas, délku, jméno, telefon a e-mail,
 vybranou lékařku (pokud si ji klient zvolil) a popis problému.
 
+### Náhled: kam žádost patří
+
+Najeďte myší na žádost v panelu **Čekající z webu**. Tabule se sama přepne na den
+žádosti (a na tom dni zůstane) a odroluje na požadovaný čas:
+
+- **zelený přerušovaný rámeček** ukazuje, kam by rezervace šla – v ordinacích,
+  které nabízejí tlačítka **Potvrdit → …**,
+- při najetí na konkrétní tlačítko se zvýrazní jen jeho ordinace,
+- **červený rámeček** přes všechny ordinace znamená, že požadovaný čas už není volný –
+  hned vidíte, co tam je.
+
 ### Potvrzení jedním klikem (doporučeno)
 
 Pod kartou jsou zelená tlačítka **Potvrdit → Ordinace · lékařka**, např.

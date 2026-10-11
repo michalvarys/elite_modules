@@ -99,3 +99,17 @@
     background: #fff; border: 1px dashed #94a3b8; color: #475569; font-size: 11px; font-weight: 600;
     cursor: pointer; max-width: calc(100% - 4px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+// ---------- náhled čekající žádosti (najetí myší v panelu) ----------
+.evb-card-active { outline: 2px solid #16a34a; outline-offset: -1px; }
+.evb-preview {
+    position: absolute; right: 4px; z-index: 3; pointer-events: none; overflow: hidden;
+    border: 2px dashed #16a34a; border-radius: 6px; background: rgba(22, 163, 74, .14);
+    padding: 1px 6px; font-size: 12px; font-weight: 600; color: #14532d;
+    animation: evb-preview-pulse 1.2s ease-in-out infinite alternate;
+}
+.evb-preview-label { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.evb-preview.evb-preview-busy { border-color: #dc2626; background: rgba(220, 38, 38, .10); color: #7f1d1d; }
+.evb-preview.evb-preview-focus { border-style: solid; background: rgba(22, 163, 74, .28); }
+.evb-preview.evb-preview-dim { opacity: .35; animation: none; }
+@keyframes evb-preview-pulse { from { box-shadow: 0 0 0 0 rgba(22, 163, 74, .0); } to { box-shadow: 0 0 0 4px rgba(22, 163, 74, .25); } }

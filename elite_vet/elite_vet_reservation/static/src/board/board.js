@@ -1,7 +1,7 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { Component, useState, onWillStart, onWillUnmount } from "@odoo/owl";
+import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
 const PX_PER_MIN = 1.6;   // 15 min = 24 px
 const BAND_W = 16;        // šířka pruhu služby lékařky vlevo ve sloupci
@@ -38,7 +38,9 @@ export class ReservationBoard extends Component {
         this.state = useState({
             date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
             data: null, loading: true, drag: null, busy: false,
+            preview: null,   // náhled čekající žádosti při najetí myší (viz hoverWaiting)
         });
+        this.gridRef = useRef("grid");
         onWillStart(() => this.load());
         // Živá aktualizace: server po každé změně rezervací / rozpisu pošle zprávu skupině Recepce
         // (viz models/live.py) a tabule se hned tiše obnoví.
@@ -51,6 +53,7 @@ export class ReservationBoard extends Component {
         this.timer = setInterval(() => this.load(true).catch(() => {}), 60000);
         onWillUnmount(() => {
             clearInterval(this.timer);
+            clearTimeout(this.hoverTimer);
             this.busService.unsubscribe("elite_vet_reservation/changed", this.onBusChange);
         });
     }
@@ -238,6 +241,65 @@ export class ReservationBoard extends Component {
             this.state.busy = false;
         }
         await this.load(true);
+    }
+    // ---------- náhled čekající žádosti ----------
+    // Najetí myší na žádost přepne tabuli na její den (a tam zůstane), odroluje na čas
+    // a do navržených ordinací nakreslí přerušovaný náhled. Krátká prodleva, ať tabule
+    // neposkakuje, když myš jen přejíždí přes panel.
+    hoverWaiting(w) {
+        clearTimeout(this.hoverTimer);
+        this.hoverTimer = setTimeout(() => this.showPreview(w), 200);
+    }
+    leaveWaiting() {
+        clearTimeout(this.hoverTimer);
+        this.state.preview = null;
+    }
+    hoverSuggestion(w, sug) {
+        if (this.state.preview?.id === w.id) this.state.preview.focus = sug.room_id;
+    }
+    leaveSuggestion(w) {
+        if (this.state.preview?.id === w.id) this.state.preview.focus = null;
+    }
+    async showPreview(w) {
+        if (this.state.drag) return;
+        this.state.preview = {
+            id: w.id, date: w.date, minute: w.minute, end: w.minute + (w.duration || 15),
+            name: w.name, time: w.time, free: w.suggestions.length > 0,
+            rooms: w.suggestions.map((s) => s.room_id), focus: null,
+        };
+        if (w.date !== this.state.date) {
+            this.state.date = w.date;
+            await this.load(true);
+        }
+        this.scrollToMinute(w.minute, w.minute + (w.duration || 15));
+    }
+    scrollToMinute(from, to) {
+        const grid = this.gridRef.el;
+        if (!grid) return;
+        // Hlavička sloupců je sticky (100 px), čas 0 je hned pod ní.
+        const head = 100, y1 = this.top(from), y2 = this.top(to);
+        const visibleTop = grid.scrollTop, visibleBottom = grid.scrollTop + grid.clientHeight - head;
+        if (y1 < visibleTop || y2 > visibleBottom) {
+            grid.scrollTo({ top: Math.max(0, y1 - 60), behavior: "smooth" });
+        }
+    }
+    previewFor(room) {
+        const p = this.state.preview;
+        if (!p || !this.state.data || this.state.data.date !== p.date) return null;
+        // Volno: náhled v navržených ordinacích. Obsazeno: červeně přes všechny, ať je vidět, co tam je.
+        if (p.free && !p.rooms.includes(room.id)) return null;
+        return p;
+    }
+    previewStyle(room, p) {
+        return "top:" + this.top(p.minute) + "px;height:" + this.height(p.minute, p.end) + "px;left:" +
+            this.eventLeft(room) + "px";
+    }
+    previewClass(room, p) {
+        return {
+            "evb-preview-busy": !p.free,
+            "evb-preview-focus": p.focus === room.id,
+            "evb-preview-dim": p.focus !== null && p.focus !== room.id,
+        };
     }
     async reject(item) {
         if (!confirm("Odmítnout rezervaci " + item.name + "? Klientovi odejde e-mail o zrušení.")) return;
