@@ -120,6 +120,50 @@ class TestDruhBlokace(ReservationCase):
         self.block(WED, 13, 14, "web")
         self.block(WED, 13, 14, "full")
 
+    def _bloky(self, reason):
+        return {(b.room_id, b.start, b.stop) for b in self.R.search([("block_reason", "=", reason)])}
+
+    def test_all_rooms_full_block_fills_only_free_rooms(self):
+        self.block(WED, 10, 11, "full", room=self.room1, block_reason="Školení O1")
+        b = self.block(WED, 9, 12, "full", room_id=False, block_reason="Celá klinika")
+        self.assertEqual(self._bloky("Celá klinika"), {
+            (self.room1, self.dt(WED, 9), self.dt(WED, 10)),
+            (self.room1, self.dt(WED, 11), self.dt(WED, 12)),
+            (self.room2, self.dt(WED, 9), self.dt(WED, 12)),
+            (self.sal, self.dt(WED, 9), self.dt(WED, 12)),
+        })
+        self.assertTrue(b.exists() and b.room_id)
+
+    def test_all_rooms_full_block_stays_single_when_free(self):
+        b = self.block(WED, 9, 12, "full", room_id=False, block_reason="Celá klinika")
+        self.assertEqual(self._bloky("Celá klinika"), {(self.env["elite.vet.room"], b.start, b.stop)})
+
+    def test_all_rooms_full_block_over_web_block_stays_single(self):
+        self.block(WED, 10, 11, "web", room=self.room1)
+        b = self.block(WED, 9, 12, "full", room_id=False, block_reason="Celá klinika")
+        self.assertFalse(b.room_id)
+
+    def test_all_rooms_full_block_everything_taken(self):
+        for room in (self.room1, self.room2, self.sal):
+            self.block(WED, 8, 13, "full", room=room)
+        with self.assertRaises(ValidationError):
+            self.block(WED, 9, 12, "full", room_id=False)
+
+    def test_all_rooms_full_block_still_refused_over_reservation(self):
+        self.block(WED, 10, 11, "full", room=self.room2)
+        self.reservation(start=self.dt(WED, 10, 0))
+        with self.assertRaises(ValidationError):
+            self.block(WED, 9, 12, "full", room_id=False)
+
+    def test_all_rooms_full_block_repeat_splits_each_week(self):
+        self.block(WED + timedelta(days=7), 10, 11, "full", room=self.room1)
+        self.block(WED, 9, 12, "full", room_id=False, block_reason="Porada",
+                   repeat_weekly_until=WED + timedelta(days=14))
+        bloky = self.R.search([("block_reason", "=", "Porada")])
+        # 1. a 3. týden jedna celoklinická, 2. týden po ordinacích (O1 dva kusy, O2, Sál).
+        self.assertEqual(len(bloky), 2 + 4)
+        self.assertEqual(len(bloky.filtered(lambda b: not b.room_id)), 2)
+
     def test_repeat_weekly_keeps_scope(self):
         self.block(WED, 7, 8, "web", repeat_weekly_until=WED + timedelta(days=14))
         copies = self.R.search([("kind", "=", "block"), ("block_reason", "=", "Blokace web")])

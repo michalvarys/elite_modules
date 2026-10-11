@@ -307,6 +307,11 @@ kdykoli, i přes existující rezervace – ty zůstanou, jak jsou.
 
 Úplnou blokaci nejde založit přes již potvrzenou rezervaci – nejdřív rezervaci přesuňte.
 
+Když je úplná blokace pro **všechny ordinace** a některá ordinace už v tu dobu úplnou
+blokaci má, nic se neodmítne. Blokace se rozdělí po ordinacích a doplní se jen tam,
+kde ještě není. Na tabuli pak místo jednoho pruhu přes všechny sloupce uvidíte
+blokaci v každé ordinaci zvlášť.
+
 ### Zrušení blokace
 
 1. Klikněte na blokaci na tabuli (u blokace jen pro web na štítek „jen web“).

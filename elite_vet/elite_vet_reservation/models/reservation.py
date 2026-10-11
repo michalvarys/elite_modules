@@ -255,9 +255,50 @@ class VetReservation(models.Model):
                 minutes = proc.duration if proc else 30
                 vals["stop"] = fields.Datetime.to_datetime(vals["start"]) + timedelta(minutes=minutes)
         records = super().create(vals_list)
-        records._check_overlap()
+        # Kopie opakovane blokace se zakladaji z puvodniho zadani (vsechny ordinace),
+        # proto pred rozdelenim; kazda kopie se pak rozdeli podle sveho tydne.
         records._rozkopirovat_blokace()
+        records._rozdelit_blokaci_vsech_ordinaci()
+        records._check_overlap()
         return records
+
+    def _rozdelit_blokaci_vsech_ordinaci(self):
+        """Úplná blokace „všechny ordinace“ přes už zablokovaný čas.
+
+        Když některá ordinace má v tom čase vlastní (nebo jinou celoklinickou)
+        úplnou blokaci, nezamítáme celé zadání: blokace se rozpadne po ordinacích
+        a doplní jen ještě volné úseky. Potvrzená rezervace ale dál brání –
+        blokace přes klienta by ho tiše vyřadila z tabule.
+        """
+        for rec in self.filtered(lambda r: r.kind == "block" and r.block_scope == "full"
+                                 and not r.room_id and r.state not in INACTIVE_STATES):
+            rooms = self.env["elite.vet.room"].search([])
+            self._lock_rooms(rooms.ids)
+            existing = self.search(self._busy_domain(rooms.ids, rec.start, rec.stop, exclude_ids=[rec.id]))
+            if not existing:
+                continue   # nic tam neni, zustane jedna blokace pro celou kliniku
+            if existing.filtered(lambda r: r.kind == "reservation"):
+                continue   # rezervaci nahlasi _check_overlap jako dosud
+            pieces = []
+            for room in rooms:
+                taken = sorted((max(b.start, rec.start), min(b.stop, rec.stop))
+                               for b in existing if not b.room_id or b.room_id == room)
+                cursor = rec.start
+                for b_start, b_stop in taken:
+                    if b_start > cursor:
+                        pieces.append((room, cursor, b_start))
+                    cursor = max(cursor, b_stop)
+                if cursor < rec.stop:
+                    pieces.append((room, cursor, rec.stop))
+            if not pieces:
+                raise ValidationError(self.env._("Ve všech ordinacích už je v tomto čase úplná blokace."))
+            (room, start, stop), rest = pieces[0], pieces[1:]
+            rec.write({"room_id": room.id, "start": start, "stop": stop})
+            if rest:
+                self.create([{
+                    "kind": "block", "state": rec.state, "block_reason": rec.block_reason,
+                    "block_scope": "full", "note": rec.note,
+                    "room_id": r.id, "start": s, "stop": e} for r, s, e in rest])
 
     def write(self, vals):
         res = super().write(vals)

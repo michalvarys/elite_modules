@@ -130,7 +130,9 @@ Web funguje i na mobilu:
 ## 4. Co blokuje termín
 
 **Blokuje:** potvrzené rezervace, proběhlé rezervace, blokace (dokud nejsou zrušené).
-Blokace bez ordinace blokuje **všechny ordinace**.
+Blokace bez ordinace blokuje **všechny ordinace**. Když se úplná blokace pro všechny
+ordinace zakládá přes čas, kde už některá ordinace úplnou blokaci má, rozdělí se
+po ordinacích a doplní jen volné úseky.
 
 Záleží ale na druhu blokace a na tom, kdo objednává:
 
