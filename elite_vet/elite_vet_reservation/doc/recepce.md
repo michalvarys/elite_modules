@@ -38,12 +38,12 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | Barevný svislý proužek vlevo ve sloupci | Služba lékařky: iniciály a čas (např. „GC 8:15–14:00“). Každá lékařka má svou barvu, stejnou i ve štítku v hlavičce. |
 | Dva proužky vedle sebe | V ordinaci slouží současně dvě lékařky (viz níže). |
 | Barevná karta | Rezervace. Barva karty patří úkonu (např. vakcinace zelená, problém modrý). Proužek na levém okraji karty má barvu lékařky, ke které je klient objednaný – stejnou jako její služba a štítek. Rezervace bez lékařky proužek nemá. |
-| Písmeno vlevo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
+| Písmeno vpravo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
 | Druhý řádek | Název úkonu (jen u delších karet). |
 | 🌐 | Rezervace přišla z webu. |
 | 🔗 | Společný zákrok dvou lékařek – rezervace je i v jiné ordinaci (najeďte myší, ukáže se kde). |
-| Zkratka vpravo (např. **GC**) | Iniciály lékařky. Po najetí myší uvidíte celé jméno. |
+| Zkratka vlevo (např. **GC**) | Iniciály lékařky – vlevo u jejího barevného proužku. Po najetí myší uvidíte celé jméno. |
 | Bledší karta | Proběhla nebo Nedorazil. |
 | Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 8:15–14:00“, v barvě lékařky. |
 | Žlutý štítek „2 lékařky 10:00–14:00“ | V tomto čase slouží v ordinaci dvě lékařky současně. |
@@ -67,7 +67,7 @@ to ukáže takto:
 
 Ordinace má pořád **jen jedno místo**: v jednu chvíli tam může být jen jeden pacient.
 Druhá lékařka tedy neznamená dvojnásobek termínů – jen to, že úkon může dělat kterákoli
-z nich. Kterou lékařku rezervace má, ukazují iniciály vpravo na kartě.
+z nich. Kterou lékařku rezervace má, ukazují iniciály vlevo na kartě.
 
 ### Živá aktualizace
 

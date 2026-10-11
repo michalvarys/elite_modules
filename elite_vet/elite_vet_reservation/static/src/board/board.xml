@@ -119,11 +119,12 @@
                                  draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openForm(e.id)">
                                 <div class="evb-ev-line">
-                                    <span t-if="e.symbol" class="evb-symbol" t-esc="e.symbol"/>
+                                    <!-- Iniciály lékařky vlevo u jejího proužku, zkratka úkonu vpravo. -->
+                                    <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
                                     <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
                                     <span t-if="e.spojena" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.spojena">🔗</span>
-                                    <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
+                                    <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                 </div>
                                 <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>
                             </div>
