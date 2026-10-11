@@ -78,7 +78,7 @@
                         V tento den není volný čas. Zkuste „Další volný den“, nebo zadejte čas ručně.
                     </div>
                     <field name="slot_ids" invisible="manual or not slot_ids" nolabel="1">
-                        <list create="0" delete="0" no_open="1">
+                        <list create="0" delete="0" no_open="1" limit="500">
                             <field name="minute" column_invisible="1"/>
                             <field name="time_label"/>
                             <field name="room_id" readonly="1" options="{'no_open': True}"/>

@@ -70,10 +70,13 @@
 .evb-day-note {
     padding: 2px 8px; border-radius: 12px; border: 1px solid #fcd34d; background: #fffbeb;
     color: #92400e; font-size: 12px; font-weight: 600; white-space: nowrap;
+    max-width: 32ch; overflow: hidden; text-overflow: ellipsis;
 }
 
 // ---------- služby lékařek ----------
-.evb-head { height: 84px; overflow: hidden; }
+// Všechny hlavičky musí mít stejnou výšku, jinak by se časová osa sloupců rozjela;
+// proto pevná výška, ale s posuvníkem místo oříznutí.
+.evb-head { height: 100px; overflow-y: auto; }
 .evb-doctor-chip { color: #fff; font-weight: 600; }
 .evb-overlap { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-weight: 600; }
 .evb-band {

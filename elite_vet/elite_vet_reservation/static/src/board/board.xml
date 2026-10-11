@@ -9,7 +9,8 @@
                 <button class="btn btn-link" t-on-click="today">Dnes</button>
                 <h3 class="evb-day-title" t-esc="dayTitle"/>
                 <span t-if="!state.loading and state.data and state.data.day_note" class="evb-day-note"
-                      title="Recepce v tento den objednává normálně (i ručním časem)." t-esc="state.data.day_note"/>
+                      t-att-title="state.data.day_note + ' – recepce v tento den objednává normálně (i ručním časem).'"
+                      t-esc="state.data.day_note"/>
                 <div class="evb-week" role="group" aria-label="Dny v týdnu">
                     <button t-foreach="weekDays" t-as="d" t-key="d.iso" type="button" class="evb-weekday"
                             t-att-class="{'evb-weekday-selected': d.selected, 'evb-weekday-today': d.today}"
@@ -73,14 +74,15 @@
                         <div class="evb-head" t-att-style="'border-top: 4px solid ' + room.color_hex">
                             <div class="evb-room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
                             <div class="evb-doctors">
-                                <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge evb-doctor-chip"
-                                      t-att-style="'background:' + d.color" t-att-title="bandTitle(d)">
-                                    <t t-esc="d.name"/> <t t-esc="d.time_label"/>
-                                </span>
                                 <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge evb-overlap"
                                       title="Dvě lékařky v jedné ordinaci: pacient je ale vždy jen jeden naráz.">
                                     <t t-esc="o.label"/>
                                 </span>
+                                <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge evb-doctor-chip"
+                                      t-att-style="'background:' + d.color" t-att-title="bandTitle(d)">
+                                    <t t-esc="d.name"/> <t t-esc="d.time_label"/>
+                                </span>
+                                
                             </div>
                         </div>
                         <div class="evb-col-body" t-att-style="'height:' + height(axis.from, axis.to) + 'px'"
