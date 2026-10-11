@@ -4,53 +4,32 @@ Odoo 18 modul. Nahrazuje rezervační systém WinVet: ordinace, ordinační doba
 rozpis lékařů, úkony a rezervace jsou v Odoo, na webu `/rezervacni-system`
 běží vlastní průvodce místo iframu.
 
-Aplikace **Rezervace** má položky: **Tabule**, **Čekající z webu**,
-**Rezervace**, **Rozpis lékařů**, **Klienti**, **Mazlíčci**, **Konfigurace**
-(Ordinace, Výjimky ordinační doby, Úkony) a **Nastavení rezervace**.
+## Návody (česky)
 
-## Denní práce recepce
+- [Návod pro recepci](doc/recepce.md) – tabule, žádosti z webu, nová rezervace,
+  přesun, blokace, klienti, e-maily, časté situace.
+- [Návod pro správce](doc/nastaveni.md) – práva, lékařky a specializace, ordinace
+  a ordinační doba, úkony, rozpis lékařů, nastavení rezervace, kontrolní seznam
+  před spuštěním.
+- [Jak to funguje](doc/jak-to-funguje.md) – výpočet volných termínů, pravidlo
+  lékařka × úkon, cesta žádosti z webu, ochrana proti dvojímu zabrání.
 
-Personálu přidělte skupinu **Recepce** pro denní práci (tabule, rezervace, klienti) a **Správce rezervací** pro konfiguraci (ordinace, úkony, nastavení).
+Snímky obrazovek jsou v `doc/img/`.
 
-1. **Tabule** – jeden den, sloupec na každou ordinaci. Šrafované = zavřeno,
-   v hlavičce sloupce je, kdo slouží. Klik do prázdna = nová rezervace
-   v tom čase. Přetažení přesune rezervaci na jiný čas nebo ordinaci.
-2. **Čekající z webu** (levý panel tabule) – každá žádost z webu. Buď ji
-   přetáhněte do sloupce (potvrdí se v tom čase), nebo otevřete, vyberte
-   ordinaci a klikněte **Potvrdit**. **Odmítnout** pošle klientovi e-mail.
-3. Po návštěvě **Proběhla** / **Nedorazil** (volitelné, kvůli přehledům).
+## Stručně
 
-## Co nastavit jednou
-
-| Kde | Co |
-|---|---|
-| Konfigurace → Ordinace | název, barva, *Rezervovatelná online* (Sál odškrtnout), záložka **Ordinační doba** (týdenní šablona, přestávka = dva řádky), záložka **Výjimky** (svátek = zavřeno, nebo jiné hodiny) |
-| Konfigurace → Úkony | název, délka, barva, *Nabízet online*, ve kterých ordinacích, instrukce pro klienta (nalačno…), záloha |
-| Rozpis lékařů | kdo kdy v které ordinaci slouží; podle toho web nabízí „k lékaři“ a tabule ukazuje jména |
-| Nastavení rezervace | krok slotů, nejdřív za X hodin, nejdál X dní, zrušení klientem do X hodin, e-mail pro upozornění, připomínky, zálohy, texty nad formulářem a souhlasu |
-
-## Blokace (oběd, operace, zavřeno)
-
-Tabule → **Nová blokace**: důvod, ordinace (prázdné = všechny), od–do,
-případně *Opakovat týdně do*. Blokace se na webu nenabízí.
-
-## E-maily
-
-Klient dostane: přijato (z webu), potvrzeno (s odkazem na zrušení), změna
-termínu, zrušeno, připomínka (pokud je zapnutá). Klinika dostane každou novou
-žádost z webu na e-mail z Nastavení. Šablony: Nastavení → Technické →
-E-mailové šablony, hledat „Rezervace:“.
-
-## Překlady
-
-Zdroj je angličtina, čeština/němčina/ruština jsou v `i18n/`. Názvy úkonů,
-ordinací a instrukce se překládají přímo v záznamu (přepnout jazyk vpravo
-nahoře a přepsat).
+- Aplikace **Rezervace**: **Tabule**, **Nová rezervace**, **Čekající z webu**,
+  **Rezervace**, **Rozpis lékařů**, **Klienti**, **Mazlíčci**, **Konfigurace**
+  (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy).
+- Skupiny: **Recepce** (denní práce) a **Správce rezervací** (konfigurace).
+- Lékařka = **Lékařka – přijímá rezervace** v Rozpis služeb → Lékařky; kdo dělá
+  který úkon, plyne ze specializací na kartě v Náš tým.
 
 ## Nasazení
 
-V produkčním `odoo.conf` za reverzní proxy musí být `proxy_mode = True`, jinak by
-limit rezervací na IP adresu počítal adresu proxy za všechny klienty dohromady.
+- `proxy_mode = True` v `odoo.conf` za reverzní proxy (limit žádostí na IP adresu).
+- Funkční odchozí pošta a vyplněný e-mail firmy (odesílatel e-mailů).
+- Upgrade s novými překlady: `-u elite_vet_reservation --i18n-overwrite`.
 
 ## Co modul neumí (zatím)
 
