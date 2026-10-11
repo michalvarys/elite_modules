@@ -155,15 +155,12 @@ class VetReservation(models.Model):
         for rec in self:
             rec.duration_minutes = int((rec.stop - rec.start).total_seconds() // 60) if rec.start and rec.stop else 0
 
-    @api.depends("kind", "procedure_id.color_hex", "doctor_id.barva")
+    @api.depends("kind", "procedure_id.color_hex")
     def _compute_color_hex(self):
-        # Klinika si přála barvu podle lékařky, ke které je klient objednaný;
-        # dokud lékařka není přiřazená (např. čekající žádost), barva úkonu.
+        # Karta má barvu úkonu; lékařku ukazuje proužek vlevo (doctor_color na tabuli).
         for rec in self:
             if rec.kind == "block":
                 rec.color_hex = "#64748b"
-            elif rec.doctor_id:
-                rec.color_hex = barva_lekarky(rec.doctor_id)
             else:
                 rec.color_hex = rec.procedure_id.color_hex or "#64748b"
 
@@ -414,6 +411,7 @@ class VetReservation(models.Model):
                 "phone": r.contact_phone or r.partner_id.phone or "", "email": r.contact_email or r.partner_id.email or "",
                 "problem": r.problem or "", "procedure": r.procedure_id.with_context(lang=lang).name or "",
                 "doctor": r.doctor_id.name or "", "doctor_initials": inicialy(r.doctor_id.name),
+                "doctor_color": barva_lekarky(r.doctor_id) if r.doctor_id else False,
                 "source": r.source,
             })
         waiting = []

@@ -95,7 +95,7 @@
         <field name="name">elite.vet.reservation.calendar</field>
         <field name="model">elite.vet.reservation</field>
         <field name="arch" type="xml">
-            <calendar string="Rezervace" date_start="start" date_stop="stop" color="doctor_id" mode="week" quick_create="0">
+            <calendar string="Rezervace" date_start="start" date_stop="stop" color="procedure_id" mode="week" quick_create="0">
                 <field name="room_id" filters="1"/>
                 <field name="procedure_id"/>
                 <field name="contact_phone"/>

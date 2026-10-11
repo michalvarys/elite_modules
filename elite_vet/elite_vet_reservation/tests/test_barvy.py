@@ -10,12 +10,12 @@ D = date(2026, 10, 14)
 
 @tagged("post_install", "-at_install")
 class TestBarvy(ReservationCase):
-    """Rezervace má barvu lékařky, ke které je klient objednaný."""
+    """Karta má barvu úkonu, proužek vlevo barvu lékařky."""
 
-    def test_reservation_takes_doctor_colour(self):
+    def test_card_keeps_procedure_colour_with_doctor(self):
         self.dr_a.barva = "#123456"
         r = self.reservation(start=self.dt(D, 9, 0), doctor_id=self.dr_a.id)
-        self.assertEqual(r.color_hex, "#123456")
+        self.assertEqual(r.color_hex, self.vacc.color_hex)
 
     def test_without_doctor_procedure_colour(self):
         r = self.reservation(start=self.dt(D, 9, 0))
@@ -31,13 +31,17 @@ class TestBarvy(ReservationCase):
         d.prijima_rezervace = True
         self.assertTrue(d.barva)
 
-    def test_board_uses_doctor_colour(self):
+    def test_board_doctor_stripe_colour(self):
         self.hours(self.room1, 2, 8.0, 18.0)
         self.assign(self.dr_a, self.room1, D, 8.0, 12.0)
         self.dr_a.barva = "#abcdef"
         r = self.reservation(start=self.dt(D, 9, 0), doctor_id=self.dr_a.id)
         data = self.env["elite.vet.reservation"].board_data("2026-10-14")
         ev = next(e for e in data["events"] if e["id"] == r.id)
-        self.assertEqual(ev["color_hex"], "#abcdef")
+        self.assertEqual(ev["color_hex"], self.vacc.color_hex)
+        self.assertEqual(ev["doctor_color"], "#abcdef")
+        bez = self.reservation(start=self.dt(D, 10, 0))
+        ev = next(e for e in self.env["elite.vet.reservation"].board_data("2026-10-14")["events"] if e["id"] == bez.id)
+        self.assertFalse(ev["doctor_color"])
         room = next(x for x in data["rooms"] if x["id"] == self.room1.id)
         self.assertEqual(room["doctors"][0]["color"], "#abcdef")

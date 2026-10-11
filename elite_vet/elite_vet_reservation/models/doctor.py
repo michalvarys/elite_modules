@@ -17,7 +17,7 @@ class VetDoctor(models.Model):
 
     barva = fields.Char(
         string="Barva v kalendáři",
-        help="Barva jejích rezervací a služeb na tabuli. Když ji nevyberete, "
+        help="Barva jejího proužku na kartách rezervací a její služby na tabuli. Když ji nevyberete, "
              "přidělí se automaticky – každá lékařka má jinou.")
 
     def vyplnit_barvy(self):

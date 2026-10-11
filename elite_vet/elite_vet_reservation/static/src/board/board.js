@@ -159,6 +159,9 @@ export class ReservationBoard extends Component {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
         if (e.kind !== "block") {
             style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex + ";color:" + textOn(e.color_hex);
+            // Proužek vlevo v barvě lékařky, ke které je klient objednaný.
+            // Bílá linka ho oddělí i tam, kde má úkon podobnou barvu jako lékařka.
+            if (e.doctor_color) style += ";border-left:7px solid " + e.doctor_color + ";box-shadow:inset 2px 0 0 #fff,0 1px 2px rgba(0,0,0,.15)";
         }
         return style;
     }
