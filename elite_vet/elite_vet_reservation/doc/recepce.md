@@ -102,6 +102,8 @@ Najeďte myší na žádost v panelu **Čekající z webu**. Tabule se sama pře
 - **červený rámeček** přes všechny ordinace znamená, že požadovaný čas už není volný –
   hned vidíte, co tam je.
 
+![Náhled žádosti z webu](img/nahled-zadosti.png)
+
 ### Potvrzení jedním klikem (doporučeno)
 
 Pod kartou jsou zelená tlačítka **Potvrdit → Ordinace · lékařka**, např.
