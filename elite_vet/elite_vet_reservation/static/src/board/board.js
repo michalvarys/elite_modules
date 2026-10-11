@@ -78,6 +78,10 @@ export class ReservationBoard extends Component {
         this.state.today = isoDate(new Date());
         this.state.now = nowMinute();
         this.state.data = data;
+        // Potvrzená / odmítnutá žádost zmizí z panelu dřív, než přijde mouseleave – náhled
+        // by jinak zůstal viset v kalendáři.
+        const p = this.state.preview;
+        if (p && !data.waiting.some((w) => w.id === p.id)) this.state.preview = null;
         this.state.loading = false;
     }
     shiftDay(delta) {
@@ -230,6 +234,7 @@ export class ReservationBoard extends Component {
     }
     async confirmSuggestion(w, sug) {
         if (this.state.busy) return;
+        this.leaveWaiting();
         this.state.busy = true;
         try {
             await this.orm.call("elite.vet.reservation", "board_confirm",
@@ -302,6 +307,7 @@ export class ReservationBoard extends Component {
         };
     }
     async reject(item) {
+        this.leaveWaiting();
         if (!confirm("Odmítnout rezervaci " + item.name + "? Klientovi odejde e-mail o zrušení.")) return;
         await this.orm.call("elite.vet.reservation", "action_cancel", [[item.id], "clinic"]);
         await this.load(true);
