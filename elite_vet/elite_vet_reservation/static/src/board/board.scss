@@ -65,3 +65,34 @@
 .evb-suggestions { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .evb-suggestion { text-align: left; white-space: normal; }
 .evb-no-suggestion { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 6px; }
+
+// ---------- víkend / svátek v hlavičce ----------
+.evb-day-note {
+    padding: 2px 8px; border-radius: 12px; border: 1px solid #fcd34d; background: #fffbeb;
+    color: #92400e; font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+
+// ---------- služby lékařek ----------
+.evb-head { height: 84px; overflow: hidden; }
+.evb-doctor-chip { color: #fff; font-weight: 600; }
+.evb-overlap { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-weight: 600; }
+.evb-band {
+    position: absolute; z-index: 1; border-radius: 4px; opacity: .85; overflow: hidden;
+    color: #fff; font-size: 10px; font-weight: 700; line-height: 1;
+}
+.evb-band-text {
+    display: block; padding: 4px 0; writing-mode: vertical-rl; white-space: nowrap;
+    margin: 0 auto; letter-spacing: .03em;
+}
+.evb-event { z-index: 2; }
+
+// ---------- blokace jen pro web: světlé čárkované, kliky propouští do sloupce ----------
+.evb-event.evb-block.evb-block-web {
+    background: repeating-linear-gradient(135deg, rgba(148,163,184,.18) 0 6px, rgba(255,255,255,0) 6px 12px) !important;
+    border: 1px dashed #94a3b8; box-shadow: none; color: #475569; pointer-events: none; z-index: 1;
+}
+.evb-block-tag {
+    pointer-events: auto; display: inline-block; margin: 2px; padding: 0 6px; border-radius: 3px;
+    background: #fff; border: 1px dashed #94a3b8; color: #475569; font-size: 11px; font-weight: 600;
+    cursor: pointer; max-width: calc(100% - 4px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

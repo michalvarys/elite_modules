@@ -18,6 +18,15 @@ from ..models.pet import SPECIES
 from ..models.reservation import DNY_KRATCE, HORIZONT_RECEPCE, TZ, cas_label
 
 KROKY = [("co", "Co a kdy"), ("cas", "Volný čas"), ("klient", "Klient"), ("souhrn", "Shrnutí")]
+# Ruční čas po čtvrthodinách 6:00–21:45 (klíč „HH:MM“).
+RUCNI_CASY = [("%02d:%02d" % divmod(m, 60), cas_label(m)) for m in range(6 * 60, 22 * 60, 15)]
+
+
+def klic_casu(minute):
+    """Minuta -> klíč ručního času (zaokrouhleno dolů na čtvrthodinu), mimo rozsah None."""
+    m = (minute // 15) * 15
+    klic = "%02d:%02d" % divmod(m, 60)
+    return klic if klic in dict(RUCNI_CASY) else None
 
 
 def dnes_v_praze():
@@ -47,6 +56,14 @@ class ReservationWizard(models.TransientModel):
     upozorneni = fields.Char(string="Upozornění", readonly=True,
                              help="Proč se předvyplněný čas z tabule nepoužil.")
     cas_label = fields.Char(compute="_compute_cas_label")
+    # Ruční termín: mimo nabízené časy (zavřeno, bez služby, blokace jen pro web, víkend).
+    manual = fields.Boolean(string="Zadat čas ručně",
+                            help="Vložit rezervaci i mimo nabízené časy. Brání jen jiná rezervace "
+                                 "a úplná blokace; ordinační doba, služba lékařky, blokace jen pro web, "
+                                 "víkend ani svátek ne.")
+    manual_room_id = fields.Many2one("elite.vet.room", string="Ordinace (ručně)")
+    manual_time = fields.Selection(RUCNI_CASY, string="Čas (ručně)")
+    rucne = fields.Boolean(help="Termín byl zadán ručně (pro shrnutí).")
 
     # 3. Klient
     partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient")],
@@ -130,7 +147,7 @@ class ReservationWizard(models.TransientModel):
 
     @api.depends("procedure_id", "date", "minute", "room_id", "slot_doctor_id", "doctor_id", "contact_name",
                  "contact_phone", "contact_email", "partner_mode", "partner_id", "pet_id", "pet_name",
-                 "pet_species", "send_email")
+                 "pet_species", "send_email", "rucne")
     def _compute_souhrn(self):
         species = dict(SPECIES)
         for w in self:
@@ -144,7 +161,8 @@ class ReservationWizard(models.TransientModel):
                 klient += " (nový klient)"
             radky = [
                 ("Úkon", w.procedure_id.name or ""),
-                ("Termín", "%s %s" % (w.den_label, cas_label(w.minute)) if w.room_id else ""),
+                ("Termín", "%s %s%s" % (w.den_label, cas_label(w.minute), " (zadáno ručně)" if w.rucne else "")
+                 if w.room_id else ""),
                 ("Ordinace", w.room_id.name or ""),
                 ("Lékařka", (w.slot_doctor_id or w.doctor_id).name or "—"),
                 ("Klient", klient),
@@ -189,9 +207,10 @@ class ReservationWizard(models.TransientModel):
         # Recepce objednává do všech ordinací s ordinační dobou (i do Sálu, který
         # není online); web dál jen do online ordinací.
         A = self.env["elite.vet.availability"]
+        # scope="internal": blokace jen pro web, víkend ani svátek recepci nebrání.
         return A.slots(self.procedure_id, day, doctor=self.doctor_id or None,
                        min_hours=0, max_days=HORIZONT_RECEPCE,
-                       rooms=self.procedure_id.rooms_for_reception())
+                       rooms=self.procedure_id.rooms_for_reception(), scope="internal")
 
     def _nacist_sloty(self):
         """Naplní řádky volných časů pro self.date: jeden řádek = čas × ordinace."""
@@ -212,30 +231,82 @@ class ReservationWizard(models.TransientModel):
         return next((p for p in A.room_doctors(self.procedure_id, self.date, slot, self.doctor_id or None)
                      if p[0] == self.room_id.id), None)
 
+    def _kolize(self, room, minute):
+        """Rezervace nebo úplná blokace, která by ruční termín překryla (jinak prázdné).
+        Stejné pravidlo jako _check_overlap při uložení; ten má poslední slovo."""
+        A = self.env["elite.vet.availability"]
+        Res = self.env["elite.vet.reservation"]
+        start = A.local_to_utc(self.date, minute)
+        stop = start + timedelta(minutes=self.procedure_id.duration)
+        return Res.search(Res._busy_domain([room.id], start, stop, scope="internal"), limit=1)
+
     # ---------- kroky ----------
     def action_krok_cas(self):
-        """Krok 1 → 2. Předvyplněný volný čas a ordinace krok 2 přeskočí."""
+        """Krok 1 → 2. Předvyplněný volný čas a ordinace krok 2 přeskočí.
+
+        Klik z tabule mimo nabízené časy (zavřeno, bez služby, blokace jen pro
+        web, víkend) předvyplní ruční čas a jen upozorní; obsazený čas ne.
+        """
         self.ensure_one()
         if not self.procedure_id:
             raise UserError(_("Vyberte úkon."))
         upozorneni = False
+        rucni = {"manual": False}
         if self.room_id:
             par = self._volny_par()
             if par:
-                self.write({"slot_doctor_id": par[1] or self.doctor_id.id, "step": "klient", "upozorneni": False})
+                self.write({"slot_doctor_id": par[1] or self.doctor_id.id, "step": "klient", "upozorneni": False,
+                            "rucne": False, "manual": False})
                 return self._znovu()
-            upozorneni = _("%(cas)s v %(ordinace)s není pro tento úkon volný – vyberte jiný čas.",
-                           cas=cas_label(self.minute), ordinace=self.room_id.name)
-        self.write({"room_id": False, "slot_doctor_id": False, "step": "cas", "upozorneni": upozorneni})
+            klic = klic_casu(self.minute)
+            clash = self._kolize(self.room_id, self.minute)
+            if clash or not klic:
+                upozorneni = _("%(cas)s v %(ordinace)s není pro tento úkon volný – vyberte jiný čas.",
+                               cas=cas_label(self.minute), ordinace=self.room_id.name)
+            else:
+                rucni = {"manual": True, "manual_room_id": self.room_id.id, "manual_time": klic}
+                upozorneni = _("Mimo běžnou ordinační dobu – vkládáte ručně (%(cas)s, %(ordinace)s). "
+                               "Zkontrolujte čas a pokračujte tlačítkem „Použít ruční čas“.",
+                               cas=cas_label(self.minute), ordinace=self.room_id.name)
+        self.write(dict(rucni, room_id=False, slot_doctor_id=False, step="cas", upozorneni=upozorneni,
+                        rucne=False))
         self._nacist_sloty()
         return self._znovu()
 
+    def action_rucni_cas(self):
+        """Krok 2 → 3 s ručně zadaným časem a ordinací.
+
+        Ordinační doba, služba lékařky, blokace jen pro web, víkend ani svátek
+        nebrání; brání jen jiná rezervace nebo úplná blokace. Zvolená lékařka
+        nemusí mít v tu dobu službu.
+        """
+        self.ensure_one()
+        if not self.procedure_id:
+            raise UserError(_("Vyberte úkon."))
+        if not (self.manual_room_id and self.manual_time):
+            raise UserError(_("Vyberte ordinaci a čas."))
+        hh, mm = (int(x) for x in self.manual_time.split(":"))
+        minute = hh * 60 + mm
+        clash = self._kolize(self.manual_room_id, minute)
+        if clash:
+            raise UserError(_("%(cas)s v %(ordinace)s je obsazený: %(co)s.",
+                              cas=cas_label(minute), ordinace=self.manual_room_id.name, co=clash.name))
+        doc = self.doctor_id
+        if not doc:
+            sluzi = self.env["elite.vet.availability"].serving_doctors(
+                self.procedure_id, self.date, self.manual_room_id.id, minute)
+            doc = self.env["elite.vet.doctor"].browse(sluzi[:1])
+        self.write({"minute": minute, "room_id": self.manual_room_id.id, "slot_doctor_id": doc.id or False,
+                    "step": "klient", "upozorneni": False, "rucne": True})
+        return self._znovu()
+
     def action_zpet_co(self):
-        self.write({"step": "co", "room_id": False, "slot_doctor_id": False, "minute": 0, "upozorneni": False})
+        self.write({"step": "co", "room_id": False, "slot_doctor_id": False, "minute": 0, "upozorneni": False,
+                    "manual": False, "rucne": False})
         return self._znovu()
 
     def action_zpet_cas(self):
-        self.write({"step": "cas", "room_id": False, "slot_doctor_id": False, "upozorneni": False})
+        self.write({"step": "cas", "room_id": False, "slot_doctor_id": False, "upozorneni": False, "rucne": False})
         self._nacist_sloty()
         return self._znovu()
 
@@ -334,5 +405,5 @@ class ReservationWizardSlot(models.TransientModel):
         self.ensure_one()
         w = self.wizard_id
         w.write({"minute": self.minute, "room_id": self.room_id.id,
-                 "slot_doctor_id": self.doctor_id.id or w.doctor_id.id, "step": "klient"})
+                 "slot_doctor_id": self.doctor_id.id or w.doctor_id.id, "step": "klient", "rucne": False})
         return w._znovu()

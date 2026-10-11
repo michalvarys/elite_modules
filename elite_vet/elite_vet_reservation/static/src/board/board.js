@@ -4,6 +4,8 @@ import { useService } from "@web/core/utils/hooks";
 import { Component, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
 const PX_PER_MIN = 1.6;   // 15 min = 24 px
+const BAND_W = 16;        // šířka pruhu služby lékařky vlevo ve sloupci
+const BAND_GAP = 2;
 
 function pad(n) { return String(n).padStart(2, "0"); }
 function hhmm(min) { return pad(Math.floor(min / 60)) + ":" + pad(min % 60); }
@@ -131,6 +133,26 @@ export class ReservationBoard extends Component {
     hhmm(m) { return hhmm(m); }
     isOpen(room, min) { return room.open.some(([f, t]) => f <= min && min < t); }
     eventsFor(room) { return this.state.data.events.filter((e) => e.room_id === room.id); }
+    isWebBlock(e) { return e.kind === "block" && e.block_scope === "web"; }
+    webBlocksFor(room) { return this.eventsFor(room).filter((e) => this.isWebBlock(e)); }
+    otherEventsFor(room) { return this.eventsFor(room).filter((e) => !this.isWebBlock(e)); }
+    webBlockTitle(b) { return b.time_label + "\n" + b.name + "\nJen web – recepce sem objednat smí (klik do sloupce)."; }
+
+    // ---------- služby lékařek (pruhy vlevo) ----------
+    // Souběžné služby jsou vedle sebe (lane), události začínají až za pruhy.
+    bandStyle(d) {
+        return "top:" + this.top(d.from) + "px;height:" + this.height(d.from, d.to) + "px;left:" +
+            (BAND_GAP + d.lane * (BAND_W + BAND_GAP)) + "px;width:" + BAND_W + "px;background:" + d.color;
+    }
+    bandTitle(d) { return d.name + " " + d.time_label; }
+    eventLeft(room) { return 4 + (room.lanes || 0) * (BAND_W + BAND_GAP); }
+    eventStyle(room, e) {
+        let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
+        if (e.kind !== "block") {
+            style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex;
+        }
+        return style;
+    }
     get globalBlocks() { return this.state.data.events.filter((e) => !e.room_id && e.kind === 'block'); }
     minuteFromDrop(ev, column, floor = false) {
         const rect = column.getBoundingClientRect();
@@ -161,6 +183,7 @@ export class ReservationBoard extends Component {
     }
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
     onColumnClick(ev, room) {
+        // Blokace „jen web“ kliky propouští (pointer-events: none): recepce tam smí objednat.
         if (ev.target.closest(".evb-event")) return;
         this.newAt(room, this.minuteFromDrop(ev, ev.currentTarget, true));
     }

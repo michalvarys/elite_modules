@@ -8,6 +8,8 @@
                 <button class="btn btn-secondary" t-on-click="() => this.shiftDay(1)">›</button>
                 <button class="btn btn-link" t-on-click="today">Dnes</button>
                 <h3 class="evb-day-title" t-esc="dayTitle"/>
+                <span t-if="!state.loading and state.data and state.data.day_note" class="evb-day-note"
+                      title="Recepce v tento den objednává normálně (i ručním časem)." t-esc="state.data.day_note"/>
                 <div class="evb-week" role="group" aria-label="Dny v týdnu">
                     <button t-foreach="weekDays" t-as="d" t-key="d.iso" type="button" class="evb-weekday"
                             t-att-class="{'evb-weekday-selected': d.selected, 'evb-weekday-today': d.today}"
@@ -71,8 +73,13 @@
                         <div class="evb-head" t-att-style="'border-top: 4px solid ' + room.color_hex">
                             <div class="evb-room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
                             <div class="evb-doctors">
-                                <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge text-bg-light">
-                                    <t t-esc="d.name"/> <t t-esc="hhmm(d.from)"/>–<t t-esc="hhmm(d.to)"/>
+                                <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge evb-doctor-chip"
+                                      t-att-style="'background:' + d.color" t-att-title="bandTitle(d)">
+                                    <t t-esc="d.name"/> <t t-esc="d.time_label"/>
+                                </span>
+                                <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge evb-overlap"
+                                      title="Dvě lékařky v jedné ordinaci: pacient je ale vždy jen jeden naráz.">
+                                    <t t-esc="o.label"/>
                                 </span>
                             </div>
                         </div>
@@ -82,14 +89,30 @@
                             <div t-foreach="rows" t-as="m" t-key="m" class="evb-cell"
                                  t-att-class="{'evb-closed': !isOpen(room, m), 'evb-hour': m % 60 === 0}"
                                  t-att-style="'top:' + top(m) + 'px;height:' + height(m, m + state.data.step) + 'px'"/>
-                            <div t-foreach="globalBlocks" t-as="b" t-key="'g' + b.id" class="evb-event evb-block"
-                                 t-att-style="'top:' + top(b.start) + 'px;height:' + height(b.start, b.end) + 'px'"
-                                 t-on-click.stop="() => this.openForm(b.id)">
-                                <t t-esc="b.name"/>
+                            <div t-foreach="room.doctors" t-as="d" t-key="'d' + d.id" class="evb-band"
+                                 t-att-style="bandStyle(d)" t-att-title="bandTitle(d)">
+                                <span class="evb-band-text"><t t-esc="d.initials"/> <t t-esc="d.time_label"/></span>
                             </div>
-                            <div t-foreach="eventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
+                            <t t-foreach="globalBlocks" t-as="b" t-key="'g' + b.id">
+                                <div t-if="isWebBlock(b)" class="evb-event evb-block evb-block-web"
+                                     t-att-style="eventStyle(room, b)">
+                                    <span class="evb-block-tag" t-att-title="webBlockTitle(b)" t-on-click.stop="() => this.openForm(b.id)">jen web · <t t-esc="b.name"/></span>
+                                </div>
+                                <div t-else="" class="evb-event evb-block"
+                                     t-att-style="eventStyle(room, b)"
+                                     t-on-click.stop="() => this.openForm(b.id)">
+                                    <t t-esc="b.name"/>
+                                </div>
+                            </t>
+                            <div t-foreach="webBlocksFor(room)" t-as="e" t-key="e.id"
+                                 class="evb-event evb-block evb-block-web" t-att-style="eventStyle(room, e)">
+                                <span class="evb-block-tag" draggable="true" t-att-title="webBlockTitle(e)"
+                                      t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
+                                      t-on-click.stop="() => this.openForm(e.id)">jen web · <t t-esc="e.name"/></span>
+                            </div>
+                            <div t-foreach="otherEventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
                                  t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
-                                 t-att-style="'top:' + top(e.start) + 'px;height:' + height(e.start, e.end) + 'px;background:' + e.color_hex"
+                                 t-att-style="eventStyle(room, e)"
                                  t-att-title="eventTitle(e)"
                                  draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openForm(e.id)">
