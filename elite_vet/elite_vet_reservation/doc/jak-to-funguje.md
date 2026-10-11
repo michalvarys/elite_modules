@@ -141,12 +141,20 @@ Záleží ale na druhu blokace a na tom, kdo objednává:
 | Potvrzená / proběhlá rezervace | blokuje | blokuje |
 | Úplná blokace | blokuje | blokuje |
 | Blokace jen pro web | blokuje | **neblokuje** |
+| Nepotvrzená žádost z webu | drží jedno místo | **neblokuje** (vidíte ji v panelu) |
 | Víkend / státní svátek (podle nastavení) | blokuje celý den | neblokuje |
 | Mimo ordinační dobu / bez služby lékařky | nenabídne | nenabídne, ale ručním časem jde |
 
 Pravidlo „co je obsazené“ je v kódu na jednom místě (web a recepce se liší jen
 přepínačem), takže se web a recepce nemůžou rozejít. Úplnou blokaci nejde založit
 přes potvrzenou rezervaci; blokaci jen pro web jde založit kdykoli.
+
+**Nepotvrzená žádost z webu drží místo.** Žádost ještě nemá ordinaci, proto si
+„v duchu“ podrží tu, kam by šla potvrdit (první online ordinace úkonu, kde je volno
+a slouží lékařka, která úkon dělá; starší žádost má přednost). Když jsou v tu dobu
+volné dvě ordinace, web čas nabízí, dokud nepřijdou dvě žádosti. Další klient
+tak nedostane čas, o který už někdo žádá. Odmítnutí žádosti místo uvolní;
+po potvrzení ho drží už samotná rezervace.
 
 **Neblokuje:** čekající žádosti z webu, zrušené rezervace, Nedorazil.
 

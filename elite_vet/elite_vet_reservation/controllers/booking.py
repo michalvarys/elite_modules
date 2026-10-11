@@ -139,6 +139,9 @@ class BookingController(http.Controller):
             return {"ok": False, "error": "validation", "fields": errors}
         doctor, spec = self._filters(data)
         A = request.env["elite.vet.availability"].sudo()
+        # Zámek ordinací: dvě odeslání na stejný čas ve stejné chvíli se seřadí a druhé
+        # už uvidí první žádost (ta drží místo, viz availability.pending_holds).
+        request.env["elite.vet.reservation"].sudo()._lock_rooms(proc.rooms_for_booking().ids)
         slot = next((sl for sl in A.slots(proc, day, doctor, spec, scope="web") if sl["minute"] == minute), None)
         if not slot:
             return {"ok": False, "error": "slot_taken", "fields": {}}

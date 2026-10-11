@@ -123,3 +123,14 @@ class TestControllers(HttpCase):
         self.setting.booking_block_weekends = True
         sat = d + timedelta(days=(5 - d.weekday()) % 7)
         self.assertEqual(self.rpc("/rezervace/api/slots", {"procedure_id": self.proc.id, "date": sat.isoformat()}), [])
+
+    def test_pending_request_holds_slot(self):
+        """Druhá žádost z webu na čas, který drží nepotvrzená žádost, neprojde."""
+        proc = self.env["elite.vet.procedure"].create({"name": "Jen T", "duration": 15, "symbol": "J",
+                                                      "room_ids": [(6, 0, self.room.ids)]})
+        first = self.rpc("/rezervace/api/submit", self.good_submit(procedure_id=proc.id))
+        self.assertTrue(first["ok"])
+        slots = self.rpc("/rezervace/api/slots", {"procedure_id": proc.id, "date": self.day})
+        self.assertNotIn("10:00", [s["time"] for s in slots])
+        second = self.rpc("/rezervace/api/submit", self.good_submit(procedure_id=proc.id, contact_name="Petr Druhý"))
+        self.assertEqual(second["error"], "slot_taken")

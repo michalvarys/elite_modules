@@ -160,6 +160,11 @@ class VetAvailability(models.AbstractModel):
         # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
         assignments = self.assignment_minutes(day, procedure, doctor, specialization)
         busy = self.busy_minutes(rooms.ids, day, scope=scope)
+        if scope == "web":
+            # Nepotvrzené žádosti z webu drží místo, aby se na stejný čas nepřihlásil
+            # další klient (recepce je vidí v panelu a objednává dál bez omezení).
+            for room_id, ivs in self.pending_holds(day).items():
+                busy.setdefault(room_id, []).extend(ivs)
         # utc_to_local_minutes orizne na 0 / 1440, takze den pred earliest dava 1440
         # (zadny slot) a den po nem 0 - netreba rozlisovat data zvlast.
         earliest_min = self.utc_to_local_minutes(earliest, day)
@@ -188,6 +193,41 @@ class VetAvailability(models.AbstractModel):
             e["time"] = "%02d:%02d" % (m // 60, m % 60)
             out.append(e)
         return out
+
+    @api.model
+    def pending_holds(self, day, exclude_ids=()):
+        """Ordinace, které na webu drží nepotvrzené žádosti z webu: {room_id: [(od, do)]}.
+
+        Žádost ordinaci ještě nemá, proto se jí „v duchu“ přidělí ta, kam by ji šlo
+        potvrdit: první online ordinace úkonu, kde je v tu dobu volno a (je-li
+        potřeba) slouží lékařka, která úkon dělá. Starší žádost má přednost. Žádost,
+        pro kterou místo nezbylo, nedrží nic (recepce ji vyřeší ručně).
+        """
+        Res = self.env["elite.vet.reservation"].sudo()
+        start, stop = self.local_to_utc(day, 0), self.local_to_utc(day, 1440)
+        pending = Res.search([("kind", "=", "reservation"), ("state", "=", "web_new"), ("procedure_id", "!=", False),
+                              ("start", "<", stop), ("stop", ">", start),
+                              ("stop", ">", fields.Datetime.now()), ("id", "not in", list(exclude_ids))],
+                             order="create_date, id")
+        holds = {}
+        if not pending:
+            return holds
+        all_rooms = self.env["elite.vet.room"].sudo().search([])
+        busy = self.busy_minutes(all_rooms.ids, day, scope="web")
+        for req in pending:
+            proc, doctor = req.procedure_id, req.doctor_id or None
+            f, t = self.utc_to_local_minutes(req.start, day), self.utc_to_local_minutes(req.stop, day)
+            need = self.need_doctor(proc, doctor)
+            assignments = self.assignment_minutes(day, proc, doctor) if need else {}
+            for room in proc.rooms_for_booking():
+                free = self.open_minutes(room, day)
+                if need:
+                    free = intersect(free, [(af, at) for af, at, _d in assignments.get(room.id, [])])
+                free = subtract(free, busy.get(room.id, []) + holds.get(room.id, []))
+                if any(ff <= f and t <= ft for ff, ft in free):
+                    holds.setdefault(room.id, []).append((f, t))
+                    break
+        return holds
 
     @api.model
     def need_doctor(self, procedure, doctor=None, specialization=None):
