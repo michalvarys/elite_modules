@@ -97,6 +97,10 @@ kliknout. Po obnovení stránky se už ohlášená žádost znovu neohlásí.
 Každá karta v panelu ukazuje požadovaný den a čas, délku, jméno, telefon a e-mail,
 vybranou lékařku (pokud si ji klient zvolil) a popis problému.
 
+**Šířka panelu.** Panel **Čekající z webu** jde rozšířit nebo zúžit: chyťte jeho pravý
+okraj (kurzor se změní na ↔) a táhněte. Šířku si prohlížeč zapamatuje. Dvojklik
+na okraj vrátí výchozí šířku.
+
 ### Náhled: kam žádost patří
 
 Najeďte myší na žádost v panelu **Čekající z webu**. Tabule se sama přepne na den

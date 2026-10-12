@@ -28,6 +28,19 @@ function textOn(hex) {
     return lum > 0.62 ? "#1e293b" : "#fff";
 }
 
+// Šířka panelu „Čekající z webu“: táhlo mezi panelem a tabulí, pamatuje si ji prohlížeč.
+const PANEL_KLIC = "elite_vet_reservation.panel_sirka";
+const PANEL_VYCHOZI = 280, PANEL_MIN = 200, PANEL_MAX = 720;
+
+function nactiSirkuPanelu() {
+    try {
+        const w = parseInt(localStorage.getItem(PANEL_KLIC), 10);
+        return Number.isFinite(w) ? w : PANEL_VYCHOZI;
+    } catch {
+        return PANEL_VYCHOZI;
+    }
+}
+
 export class ReservationBoard extends Component {
     static template = "elite_vet_reservation.Board";
     static props = ["*"];
@@ -41,6 +54,7 @@ export class ReservationBoard extends Component {
             data: null, loading: true, drag: null, busy: false,
             preview: null,   // náhled čekající žádosti při najetí myší (viz hoverWaiting)
             zvuk: zvukZapnuty(),
+            panelSirka: nactiSirkuPanelu(),
         });
         this.gridRef = useRef("grid");
         onWillStart(() => this.load());
@@ -250,6 +264,52 @@ export class ReservationBoard extends Component {
         this.state.zvuk = !this.state.zvuk;
         nastavitZvuk(this.state.zvuk);
         if (this.state.zvuk) zahrat();   // ukázka, jak zní
+    }
+
+    // ---------- šířka panelu čekajících ----------
+    omezSirku(w) {
+        // Tabuli nechat aspoň 400 px, ať se panel nedá roztáhnout přes celou obrazovku.
+        const max = Math.max(PANEL_MIN, Math.min(PANEL_MAX, window.innerWidth - 400));
+        return Math.round(Math.min(max, Math.max(PANEL_MIN, w)));
+    }
+    get panelStyle() { return "width:" + this.omezSirku(this.state.panelSirka) + "px"; }
+    ulozSirku() {
+        try {
+            localStorage.setItem(PANEL_KLIC, String(this.state.panelSirka));
+        } catch {
+            // bez úložiště platí šířka jen do obnovení stránky
+        }
+    }
+    onResizeStart(ev) {
+        ev.preventDefault();
+        const handle = ev.currentTarget;
+        handle.setPointerCapture(ev.pointerId);
+        const startX = ev.clientX, startW = this.omezSirku(this.state.panelSirka);
+        document.body.classList.add("evb-resizing");
+        const move = (e) => { this.state.panelSirka = this.omezSirku(startW + e.clientX - startX); };
+        const up = () => {
+            handle.removeEventListener("pointermove", move);
+            handle.removeEventListener("pointerup", up);
+            handle.removeEventListener("pointercancel", up);
+            document.body.classList.remove("evb-resizing");
+            this.ulozSirku();
+        };
+        handle.addEventListener("pointermove", move);
+        handle.addEventListener("pointerup", up);
+        handle.addEventListener("pointercancel", up);
+    }
+    onResizeKey(ev) {
+        const krok = ev.shiftKey ? 60 : 20;
+        if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
+            ev.preventDefault();
+            const w = this.omezSirku(this.state.panelSirka);
+            this.state.panelSirka = this.omezSirku(w + (ev.key === "ArrowRight" ? krok : -krok));
+            this.ulozSirku();
+        }
+    }
+    resetSirky() {
+        this.state.panelSirka = PANEL_VYCHOZI;
+        this.ulozSirku();
     }
 
     // ---------- náhled čekající žádosti ----------

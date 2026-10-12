@@ -29,7 +29,7 @@
             </div>
             <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
             <div t-else="" class="evb-body">
-                <aside class="evb-waiting">
+                <aside class="evb-waiting" t-att-style="panelStyle">
                     <h5 class="mb-1">Čekající z webu (<t t-esc="state.data.waiting.length"/>)</h5>
                     <p t-if="state.data.waiting.length" class="small text-muted mb-2">
                         Potvrďte návrhem, nebo přetáhněte kartu do sloupce ordinace na požadovaný čas.
@@ -65,6 +65,10 @@
                         </div>
                     </div>
                 </aside>
+                <div class="evb-resizer" role="separator" aria-orientation="vertical" tabindex="0"
+                     aria-label="Šířka panelu čekajících žádostí"
+                     title="Táhnutím změníte šířku panelu · dvojklik = výchozí šířka"
+                     t-on-pointerdown="onResizeStart" t-on-dblclick="resetSirky" t-on-keydown="onResizeKey"/>
                 <div class="evb-grid" t-ref="grid">
                     <div class="evb-axis">
                         <div class="evb-head"/>
