@@ -3,6 +3,9 @@ from datetime import timedelta
 import pytz
 
 from odoo import api, fields, models
+from odoo.tools import formataddr
+
+JMENO_ODESILATELE = "Elite Vet Karlovy Vary"
 
 TZ = pytz.timezone("Europe/Prague")
 
@@ -30,6 +33,20 @@ class VetReservationMailing(models.Model):
         for rec in self:
             rec.cancel_url = "%s/rezervace/zruseni/%s" % (rec.get_base_url(), rec.cancel_token)
 
+    def _odesilatel(self):
+        """Odesílatel e-mailů k rezervacím: z nastavení rezervací, jinak e-mail firmy."""
+        s = self.env["elite.vet.setting"].sudo().nastaveni()
+        adresa = (s.booking_email_from or "").strip()
+        if adresa:
+            if "<" in adresa:
+                return adresa
+            return formataddr((JMENO_ODESILATELE, adresa))
+        return self.env.company.email_formatted or ""
+
+    def _odpovedi_na(self):
+        s = self.env["elite.vet.setting"].sudo().nastaveni()
+        return (s.booking_email_reply_to or "").strip() or self._odesilatel()
+
     def _poslat(self, xmlid, email_to=None):
         template = self.env.ref("elite_vet_reservation." + xmlid, raise_if_not_found=False)
         if not template:
@@ -39,7 +56,8 @@ class VetReservationMailing(models.Model):
             if not to:
                 continue
             template.with_context(lang=rec.lang or "cs_CZ").sudo().send_mail(
-                rec.id, force_send=False, email_values={"email_to": to})
+                rec.id, force_send=False,
+                email_values={"email_to": to, "email_from": rec._odesilatel(), "reply_to": rec._odpovedi_na()})
 
     def muze_zrusit_klient(self):
         self.ensure_one()

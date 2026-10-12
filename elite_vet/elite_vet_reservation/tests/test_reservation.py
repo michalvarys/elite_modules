@@ -99,7 +99,10 @@ class TestReservation(ReservationCase):
         self.reservation(start=self.dt(D, 10, 0), room_id=self.room2.id)   # zrusena uz neblokuje
 
     def test_sparovat_creates_partner_and_pet(self):
-        r = self.reservation(start=self.dt(D, 9, 0), contact_email="novy@example.cz", pet_name="Fík", pet_species="cat")
+        # Vlastní telefon: výchozí z common.py může v DB už mít klient z ručního zkoušení
+        # a párování podle telefonu by našlo jeho.
+        r = self.reservation(start=self.dt(D, 9, 0), contact_email="novy@example.cz", contact_phone="+420 603 918 274",
+                             pet_name="Fík", pet_species="cat")
         r.action_sparovat()
         self.assertTrue(r.partner_id.is_vet_client)
         self.assertEqual(r.partner_id.email, "novy@example.cz")

@@ -5,7 +5,7 @@
             <field name="name">Rezervace: přijato z webu</field>
             <field name="model_id" ref="model_elite_vet_reservation"/>
             <field name="subject">{{ object.procedure_id.name }} – request received for {{ object.start_display }}</field>
-            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="email_from">{{ object._odesilatel() }}</field>
             <field name="lang">{{ object.lang }}</field>
             <field name="body_html" type="html">
 <div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
@@ -22,7 +22,7 @@
             <field name="name">Rezervace: nová z webu (klinika)</field>
             <field name="model_id" ref="model_elite_vet_reservation"/>
             <field name="subject">Nová rezervace z webu: {{ object.name }} – {{ object.start_display }}</field>
-            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="email_from">{{ object._odesilatel() }}</field>
             <field name="body_html" type="html">
 <div style="font-family:system-ui,sans-serif">
     <p><b t-out="object.contact_name"/> · <t t-out="object.contact_phone"/> · <t t-out="object.contact_email"/></p>
@@ -38,7 +38,7 @@
             <field name="name">Rezervace: potvrzeno</field>
             <field name="model_id" ref="model_elite_vet_reservation"/>
             <field name="subject">Appointment confirmed – {{ object.start_display }}</field>
-            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="email_from">{{ object._odesilatel() }}</field>
             <field name="lang">{{ object.lang }}</field>
             <field name="body_html" type="html">
 <div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
@@ -62,7 +62,7 @@
             <field name="name">Rezervace: změna termínu</field>
             <field name="model_id" ref="model_elite_vet_reservation"/>
             <field name="subject">Appointment moved – {{ object.start_display }}</field>
-            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="email_from">{{ object._odesilatel() }}</field>
             <field name="lang">{{ object.lang }}</field>
             <field name="body_html" type="html">
 <div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
@@ -78,7 +78,7 @@
             <field name="name">Rezervace: zrušeno</field>
             <field name="model_id" ref="model_elite_vet_reservation"/>
             <field name="subject">Appointment cancelled – {{ object.start_display }}</field>
-            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="email_from">{{ object._odesilatel() }}</field>
             <field name="lang">{{ object.lang }}</field>
             <field name="body_html" type="html">
 <div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
@@ -93,7 +93,7 @@
             <field name="name">Rezervace: připomínka</field>
             <field name="model_id" ref="model_elite_vet_reservation"/>
             <field name="subject">Reminder – {{ object.start_display }}</field>
-            <field name="email_from">{{ user.company_id.email_formatted }}</field>
+            <field name="email_from">{{ object._odesilatel() }}</field>
             <field name="lang">{{ object.lang }}</field>
             <field name="body_html" type="html">
 <div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">

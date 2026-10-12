@@ -16,6 +16,15 @@ class EliteVetSetting(models.Model):
                                                  help="0 = klient nemůže rušit odkazem z e-mailu.")
     booking_notify_email = fields.Char("E-mail pro upozornění", default="info@elite-vet.cz",
                                        help="Sem chodí zpráva o každé nové rezervaci z webu.")
+    booking_email_from = fields.Char(
+        "Odesílatel e-mailů", default="rezervace@elite-vet.cz",
+        help="Adresa, ze které chodí klientům e-maily k rezervacím (potvrzení, změna, zrušení, "
+             "připomínka). Musí to být schránka, přes kterou Odoo odesílá (odchozí poštovní "
+             "server), jinak e-maily skončí ve spamu nebo je server odmítne. Jde zadat i se "
+             "jménem: Elite Vet Karlovy Vary <rezervace@elite-vet.cz>.")
+    booking_email_reply_to = fields.Char(
+        "Odpovědi klientů na", default="info@elite-vet.cz",
+        help="Kam dojde odpověď, když klient na e-mail k rezervaci odpoví. Prázdné = na odesílatele.")
     booking_require_doctor = fields.Boolean("Online jen tam, kde slouží lékař", default=False,
                                             help="Zapnuté = termín se nabídne jen v čase, kdy má ordinace zapsanou službu lékaře.")
     booking_block_weekends = fields.Boolean(

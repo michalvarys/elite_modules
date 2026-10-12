@@ -21,6 +21,21 @@ class TestMail(ReservationCase):
         self.assertEqual(len(self.mails_to("info@elite-vet.cz")), 1)
         self.assertIn("Vaccination", self.mails_to("klient@example.cz").subject)
 
+    def test_sender_and_reply_to_from_settings(self):
+        s = self.env["elite.vet.setting"].nastaveni()
+        s.write({"booking_email_from": "rezervace@elite-vet.cz", "booking_email_reply_to": "info@elite-vet.cz"})
+        r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web")
+        r.action_confirm()
+        mail = self.mails_to("klient@example.cz")[-1]
+        self.assertEqual(mail.email_from, '"Elite Vet Karlovy Vary" <rezervace@elite-vet.cz>')
+        self.assertEqual(mail.reply_to, "info@elite-vet.cz")
+        s.booking_email_from = "Klinika <posta@elite-vet.cz>"
+        r.action_send_confirmation()
+        self.assertEqual(self.mails_to("klient@example.cz")[-1].email_from, "Klinika <posta@elite-vet.cz>")
+        s.booking_email_reply_to = False
+        r.action_send_confirmation()
+        self.assertEqual(self.mails_to("klient@example.cz")[-1].reply_to, "Klinika <posta@elite-vet.cz>")
+
     def test_confirm_sends_confirmation_with_cancel_link(self):
         r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web")
         r.action_confirm()

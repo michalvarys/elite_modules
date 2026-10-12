@@ -194,6 +194,8 @@ Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékař
 | **Víkendy jen ručně (web neobjednává)** | zapnuto | Web v sobotu a v neděli nenabízí žádné termíny. Recepce objednává dál (i ručním časem). |
 | **Státní svátky jen ručně (web neobjednává)** | zapnuto | Web ve státní svátek nenabízí žádné termíny. Svátky (i Velký pátek a Velikonoční pondělí) se počítají samy, nic se nezadává. Recepce objednává dál. |
 | **E-mail pro upozornění** | info@elite-vet.cz | Sem chodí upozornění na každou novou žádost z webu a na zrušení klientem. Prázdné = nic nechodí. |
+| **Odesílatel e-mailů** | rezervace@elite-vet.cz | Adresa, ze které klientům chodí e-maily k rezervacím. Musí to být schránka, přes kterou Odoo odesílá (viz *Odesílání e-mailů* níže). Jde zadat i se jménem: `Elite Vet Karlovy Vary <rezervace@elite-vet.cz>`; bez jména se doplní „Elite Vet Karlovy Vary“. |
+| **Odpovědi klientů na** | info@elite-vet.cz | Kam dojde odpověď, když klient na e-mail odpoví. Prázdné = na odesílatele. |
 | **Posílat připomínku** | vypnuto | Zapne připomínkový e-mail klientům. |
 | **Připomínka (hodin před)** | 24 | Kolik hodin před termínem připomínka odejde (ukáže se po zapnutí). |
 | **Zálohy zapnuté** | vypnuto | Dokud je vypnuté, záloha se nikde neukazuje. |
@@ -232,7 +234,46 @@ e-mail v jazyce, ve kterém rezervoval. Upravujete-li text, upravte ho ve všech
 (přepínač jazyka u pole). Adresa v potvrzení (Hybešova 167/18, Karlovy Vary) je přímo
 v textu šablony.
 
-Odesílatel je e-mail firmy (**Nastavení → Firmy → e-mail**).
+Odesílatel a adresa pro odpovědi se nastavují v **Nastavení rezervace** (pole
+**Odesílatel e-mailů** a **Odpovědi klientů na**).
+
+### Odesílání e-mailů (Forpsi)
+
+Pošta pro elite-vet.cz je u Forpsi a doména má SPF `-all` a DMARC `quarantine`:
+e-mail s odesílatelem @elite-vet.cz, který neodejde přes Forpsi, skončí ve spamu
+nebo ho příjemce odmítne. Odoo proto musí posílat přes poštovní server Forpsi.
+
+1. **Schránka.** V administraci Forpsi založte schránku `rezervace@elite-vet.cz`
+   (nebo použijte existující, např. info@). Heslo si poznamenejte.
+2. **Odchozí server v Odoo.** Zapněte vývojářský režim, pak **Nastavení → Technické →
+   Odchozí poštovní servery → Nový**:
+
+   | Pole | Hodnota |
+   |---|---|
+   | Popis | Forpsi |
+   | Autentizace | Uživatelské jméno |
+   | SMTP server | `smtp.forpsi.com` |
+   | SMTP port | `465` |
+   | Šifrování | SSL/TLS |
+   | Uživatelské jméno | `rezervace@elite-vet.cz` |
+   | Heslo | heslo schránky |
+   | Filtr FROM | `rezervace@elite-vet.cz` |
+
+   Klikněte **Otestovat připojení**. (Port 587 se šifrováním STARTTLS funguje taky.)
+3. **Odesílatel.** V **Nastavení rezervace** nechte **Odesílatel e-mailů** =
+   stejná schránka jako v kroku 2. Jiná adresa než přihlašovací by Forpsi odmítl.
+4. **Webová adresa.** Systémový parametr `web.base.url` = `https://www.elite-vet.cz`
+   (z něj je odkaz na zrušení v e-mailu).
+5. **Zkouška.** Pošlete si zkušební rezervaci z webu na svůj e-mail; musí dorazit
+   e-mail klientovi i upozornění na **E-mail pro upozornění**, ne do spamu.
+
+Omezení Forpsi: nejvýš 250 e-mailů za minutu, 1000 za hodinu a 20 000 za den – pro
+rezervace bohatě stačí. Forpsi pouští odesílání jen ze zemí na svém výchozím
+seznamu; běží-li server Odoo v zahraničí (např. Německo) a test připojení selže na
+„GeoIP“, povolte zemi v administraci Forpsi u schránky.
+
+Při vývoji (Docker v tomto repozitáři) e-maily zachytí **Mailpit**: nic neodchází
+ven a všechny e-maily jsou vidět na http://localhost:8025.
 
 ---
 
@@ -270,7 +311,7 @@ Recepce na tabuli vidí vždy české názvy.
   adresu proxy a začne odmítat žádosti.
 - **Odchozí poštovní server** (Nastavení → Technické → Odchozí poštovní servery)
   musí být nastavený a funkční; e-maily jdou přes frontu (cron „Mail: Email Queue Manager“).
-- **E-mail firmy** musí být vyplněný – je odesílatelem všech rezervačních e-mailů.
+- **Odesílatel e-mailů** v Nastavení rezervace musí být schránka, přes kterou odchozí server posílá (viz Odesílání e-mailů).
 - Správná **webová adresa** (`web.base.url`) – z ní se skládá odkaz na zrušení v e-mailu.
 - Po aktualizaci modulu s novými překlady:
   `odoo -u elite_vet_reservation --i18n-overwrite` (bez toho se nové překlady
