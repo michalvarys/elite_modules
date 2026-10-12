@@ -1,8 +1,8 @@
-"""České státní svátky a ostatní svátky, kdy je zákonem zavřeno.
+"""Czech public holidays and other days when businesses are closed by law.
 
-Počítá se v kódu (žádné záznamy, žádná údržba). Pohyblivé jsou jen Velký pátek
-a Velikonoční pondělí – od Velikonoční neděle podle anonymního gregoriánského
-algoritmu (Meeus/Jones/Butcher).
+Computed in code (no records, no maintenance). Only Good Friday and Easter
+Monday move; they are derived from Easter Sunday using the anonymous Gregorian
+algorithm (Meeus/Jones/Butcher).
 """
 from datetime import date, timedelta
 from functools import lru_cache
@@ -22,10 +22,10 @@ FIXED_HOLIDAYS = [
 ]
 
 
-def easter_sunday(rok):
-    """Velikonoční neděle (gregoriánský kalendář)."""
-    a = rok % 19
-    b, c = divmod(rok, 100)
+def easter_sunday(year):
+    """Easter Sunday (Gregorian calendar)."""
+    a = year % 19
+    b, c = divmod(year, 100)
     d, e = divmod(b, 4)
     f = (b + 8) // 25
     g = (b - f + 1) // 3
@@ -33,24 +33,24 @@ def easter_sunday(rok):
     i, k = divmod(c, 4)
     ll = (32 + 2 * e + 2 * i - h - k) % 7
     m = (a + 11 * h + 22 * ll) // 451
-    mesic, den = divmod(h + ll - 7 * m + 114, 31)
-    return date(rok, mesic, den + 1)
+    month, day = divmod(h + ll - 7 * m + 114, 31)
+    return date(year, month, day + 1)
 
 
 @lru_cache(maxsize=32)
-def _holidays(rok):
-    out = {date(rok, m, d): nazev for m, d, nazev in FIXED_HOLIDAYS}
-    nedele = easter_sunday(rok)
-    out[nedele - timedelta(days=2)] = "Velký pátek"
-    out[nedele + timedelta(days=1)] = "Velikonoční pondělí"
+def _holidays(year):
+    out = {date(year, m, d): name for m, d, name in FIXED_HOLIDAYS}
+    sunday = easter_sunday(year)
+    out[sunday - timedelta(days=2)] = "Velký pátek"
+    out[sunday + timedelta(days=1)] = "Velikonoční pondělí"
     return out
 
 
-def czech_holidays(rok):
-    """{date: název} všech českých státních (a ostatních) svátků v roce."""
-    return dict(_holidays(rok))
+def czech_holidays(year):
+    """{date: name} of all Czech public (and other) holidays in the year."""
+    return dict(_holidays(year))
 
 
-def holiday_name(den):
-    """Název svátku v daný den, jinak None."""
-    return _holidays(den.year).get(den)
+def holiday_name(day):
+    """Name of the holiday on the given day, otherwise None."""
+    return _holidays(day.year).get(day)

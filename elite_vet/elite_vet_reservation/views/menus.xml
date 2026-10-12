@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Aplikace Rezervace uz existuje v elite_vet_web (nastaveni + FAQ).
-         Nic noveho se nezaklada, jen se do ni vesi dalsi polozky. -->
-    <!-- Kořen patří elite_vet_web a vidí ho jen správce kalendáře; Recepce ho musí vidět taky. -->
+    <!-- The Reservations app already exists in elite_vet_web (settings + FAQ).
+         Nothing new is created here; we only hang more items under it. -->
+    <!-- The root belongs to elite_vet_web and only the calendar manager sees it; Reception must see it too. -->
     <record id="elite_vet_web.menu_rezervace_root" model="ir.ui.menu">
         <field name="groups_id" eval="[(4, ref('elite_vet_reservation.group_reservation_reception'))]"/>
     </record>
@@ -37,10 +37,10 @@
     <menuitem id="menu_reservation_procedure" name="Úkony"
               parent="menu_reservation_config" action="action_procedure" sequence="30"/>
 
-    <!-- Nastavení a časté dotazy patří elite_vet_web; recepce je denně nepotřebuje,
-         proto je přesuneme do Konfigurace (jen datovým záznamem, cizí soubor se nemění).
-         Samostatný -u elite_vet_web je vrátí pod kořen; -u elite_vet_reservation přesun
-         obnoví (tyto záznamy + move_foreign_menus v __init__.py a migraci 18.0.1.3.0). -->
+    <!-- Settings and FAQ belong to elite_vet_web; reception does not need them daily,
+         so we move them under Configuration (data records only, the foreign file is untouched).
+         A standalone -u elite_vet_web moves them back under the root; -u elite_vet_reservation
+         restores the move (these records + move_foreign_menus in __init__.py and migration 18.0.1.3.0). -->
     <record id="elite_vet_web.menu_rezervace_nastaveni" model="ir.ui.menu">
         <field name="name">Nastavení rezervace</field>
         <field name="parent_id" ref="menu_reservation_config"/>

@@ -14,37 +14,37 @@ STATES = [
 ]
 BUSY_STATES = ("confirmed", "done")
 INACTIVE_STATES = ("cancelled", "no_show")
-# Ordinacni cas kliniky; nesmi zalezet na casove zone prave jednajiciho uzivatele (cron, sudo, web).
+# Clinic opening hours timezone; must not depend on the acting user's timezone (cron, sudo, web).
 TZ = pytz.timezone("Europe/Prague")
-# České názvy dnů natvrdo: nesmí záviset na jazyce uživatele ani prohlížeče.
+# Czech day names hard-coded: must not depend on the user or browser language.
 WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"]
-# Recepce objednává i daleko dopředu (očkování za rok); web má vlastní horizont v nastavení.
+# Reception books far ahead (vaccination in a year); the website has its own horizon in settings.
 RECEPTION_HORIZON_DAYS = 400
-# Druh blokace: „jen web“ zavře čas jen pro online objednávky, „úplná“ pro všechny.
+# Block scope: "web" closes the time for online booking only, "full" for everyone.
 BLOCK_SCOPES = [("web", "Jen web"), ("full", "Úplná")]
-# Stabilní barvy lékařek na tabuli (podle id), dobře čitelné s bílým písmem.
+# Stable doctor colors on the board (by id), readable with white text.
 DOCTOR_COLORS = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
 TITLES = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
-def name_initials(jmeno):
-    """„MVDr. Dana Pokorná“ -> „DP“ (tituly a zkratky s tečkou se přeskočí)."""
-    slova = [w for w in (jmeno or "").replace(",", " ").split()
+def name_initials(full_name):
+    """'MVDr. Dana Pokorná' -> 'DP' (titles and dotted abbreviations are skipped)."""
+    words = [w for w in (full_name or "").replace(",", " ").split()
              if w.lower() not in TITLES and not w.endswith(".")]
-    if not slova:
+    if not words:
         return ""
-    vyber = [slova[0], slova[-1]] if len(slova) > 1 else slova[:1]
-    return "".join(w[0].upper() for w in vyber)
+    picked = [words[0], words[-1]] if len(words) > 1 else words[:1]
+    return "".join(w[0].upper() for w in picked)
 
 
-def minutes_label(minuta):
-    return "%d:%02d" % (minuta // 60, minuta % 60)
+def minutes_label(minute):
+    return "%d:%02d" % (minute // 60, minute % 60)
 
 
 def doctor_color(doctor):
-    """Barva lékařky na tabuli: vybraná na její kartě, jinak stálá barva podle id.
+    """Doctor color on the board: the one chosen on her form, otherwise a stable color by id.
 
-    Bere záznam i samotné id (id = automatická barva), aby šla volat odkudkoli."""
+    Accepts a record or a bare id (id = automatic color) so it can be called from anywhere."""
     if hasattr(doctor, "calendar_color"):
         if doctor.calendar_color:
             return doctor.calendar_color
@@ -52,40 +52,40 @@ def doctor_color(doctor):
     return DOCTOR_COLORS[(doctor or 0) % len(DOCTOR_COLORS)]
 
 
-def shift_bands(sluzby):
-    """Služby v jedné ordinaci -> (sluzby s `lane`, počet pruhů, souběhy).
+def shift_bands(shifts):
+    """Shifts in one room -> (shifts with `lane`, number of lanes, overlaps).
 
-    `sluzby` = [{"id", "from", "to", ...}]. Překrývající se služby dostanou
-    různé pruhy (vedle sebe), souběhy = úseky, kdy slouží víc různých lékařek:
-    [{"from", "to", "count", "label": "2 lékařky 10:00–14:00"}].
+    `shifts` = [{"id", "from", "to", ...}]. Overlapping shifts get different
+    lanes (side by side); overlaps = periods when several different doctors
+    are on duty: [{"from", "to", "count", "label": "2 lékařky 10:00–14:00"}].
     """
-    konce = []   # konec poslední služby v každém pruhu
-    for s in sorted(sluzby, key=lambda x: (x["from"], x["to"])):
-        lane = next((i for i, konec in enumerate(konce) if konec <= s["from"]), None)
+    lane_ends = []   # end of the last shift in each lane
+    for s in sorted(shifts, key=lambda x: (x["from"], x["to"])):
+        lane = next((i for i, end in enumerate(lane_ends) if end <= s["from"]), None)
         if lane is None:
-            lane = len(konce)
-            konce.append(0)
-        konce[lane] = s["to"]
+            lane = len(lane_ends)
+            lane_ends.append(0)
+        lane_ends[lane] = s["to"]
         s["lane"] = lane
-    body = sorted({s["from"] for s in sluzby} | {s["to"] for s in sluzby})
-    soubehy = []
-    for f, t in zip(body, body[1:]):
-        pocet = len({s["id"] for s in sluzby if s["from"] <= f and t <= s["to"]})
-        if pocet >= 2:
-            if soubehy and soubehy[-1]["to"] == f and soubehy[-1]["count"] == pocet:
-                soubehy[-1]["to"] = t
+    points = sorted({s["from"] for s in shifts} | {s["to"] for s in shifts})
+    overlaps = []
+    for f, t in zip(points, points[1:]):
+        count = len({s["id"] for s in shifts if s["from"] <= f and t <= s["to"]})
+        if count >= 2:
+            if overlaps and overlaps[-1]["to"] == f and overlaps[-1]["count"] == count:
+                overlaps[-1]["to"] = t
             else:
-                soubehy.append({"from": f, "to": t, "count": pocet})
-    for x in soubehy:
+                overlaps.append({"from": f, "to": t, "count": count})
+    for x in overlaps:
         x["label"] = "%d lékařky %s–%s" % (x["count"], minutes_label(x["from"]), minutes_label(x["to"]))
-    return sluzby, len(konce), soubehy
+    return shifts, len(lane_ends), overlaps
 
 
 class VetReservation(models.Model):
-    """Rezervace i blokace v jedne tabulce, aby tabule cetla jeden zdroj.
+    """Reservations and blocks in one table so the board reads a single source.
 
-    Prekryv se hlida tady, ne jen v enginu dostupnosti: engine radi, co nabidnout,
-    ale posledni slovo ma zapis pod zamkem ordinace.
+    Overlaps are enforced here, not only in the availability engine: the engine
+    suggests what to offer, but the write under the room lock has the final say.
     """
 
     _name = "elite.vet.reservation"
@@ -124,7 +124,7 @@ class VetReservation(models.Model):
     transaction_id = fields.Many2one("payment.transaction", string="Platba", ondelete="set null")
     lang = fields.Char(string="Jazyk klienta", default="cs_CZ")
     color_hex = fields.Char(compute="_compute_color_hex")
-    # Zákrok pro dvě lékařky: kopie rezervace v druhé ordinaci (logika v is_second_room.py).
+    # Two-doctor procedure: a copy of the reservation in a second room (logic in second_room.py).
     linked_reservation_id = fields.Many2one("elite.vet.reservation", string="Společně s", copy=False, readonly=True,
                                  ondelete="set null",
                                  help="Druhá rezervace téhož zákroku v jiné ordinaci. Přesun a zrušení platí pro obě.")
@@ -139,8 +139,8 @@ class VetReservation(models.Model):
     # ---------- compute ----------
     @api.model
     def _clinic_lang(self):
-        """Název rezervace a tabule mluví jazykem kliniky, ne jazykem toho, kdo
-        rezervaci založil (klient z německého webu, správce v angličtině)."""
+        """The reservation name and the board use the clinic language, not the language
+        of whoever created the reservation (a client from the German site, an admin in English)."""
         installed = dict(self.env["res.lang"].get_installed())
         return "cs_CZ" if "cs_CZ" in installed else (self.env.lang or "en_US")
 
@@ -163,7 +163,7 @@ class VetReservation(models.Model):
 
     @api.depends("kind", "procedure_id.color_hex")
     def _compute_color_hex(self):
-        # Karta má barvu úkonu; lékařku ukazuje proužek vlevo (doctor_color na tabuli).
+        # The card has the procedure color; the doctor is shown by the left stripe (doctor_color on the board).
         for rec in self:
             if rec.kind == "block":
                 rec.color_hex = "#64748b"
@@ -175,26 +175,26 @@ class VetReservation(models.Model):
         if self.start and self.procedure_id and self.kind == "reservation":
             self.stop = self.start + timedelta(minutes=self.procedure_id.duration)
 
-    # ---------- prekryvy ----------
+    # ---------- overlaps ----------
     @api.model
     def _busy_domain(self, room_ids, start, stop, exclude_ids=None, scope="internal"):
-        """Záznamy, které v daném čase opravdu blokují ordinace (potvrzené + blokace).
+        """Records that actually occupy rooms at the given time (confirmed + blocks).
 
-        Jediné místo s pravidlem, co je obsazené:
-        - scope="web" (veřejný web): obě blokace, „jen web“ i úplná;
-        - scope="internal" (recepce, kontrola překryvu při zápisu): jen úplná blokace.
+        The single place defining what counts as busy:
+        - scope="web" (public website): both block types, "web only" and full;
+        - scope="internal" (reception, overlap check on write): full blocks only.
         """
         if scope not in ("web", "internal"):
-            raise ValueError("scope musí být 'web' nebo 'internal'")
-        blokace = ["&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES)]
+            raise ValueError("scope must be 'web' or 'internal'")
+        block_domain = ["&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES)]
         if scope == "internal":
-            blokace = ["&"] + blokace + [("block_scope", "=", "full")]
+            block_domain = ["&"] + block_domain + [("block_scope", "=", "full")]
         domain = [
             ("start", "<", stop), ("stop", ">", start),
-            # Blokace blokuje, dokud neni zrusena; rezervace jen potvrzena / proběhla.
-            "|", *blokace,
+            # A block is busy until cancelled; a reservation only when confirmed / done.
+            "|", *block_domain,
             "&", ("kind", "=", "reservation"), ("state", "in", BUSY_STATES),
-            # Bez ordinace blokuje jen blokace (celoklinicka); rezervace bez ordinace nikoho neblokuje.
+            # Without a room only a block is busy (clinic-wide); a reservation without a room blocks nobody.
             "|", "&", ("room_id", "=", False), ("kind", "=", "block"), ("room_id", "in", list(room_ids)),
         ]
         if exclude_ids:
@@ -209,16 +209,16 @@ class VetReservation(models.Model):
 
     @api.model
     def _lock_rooms(self, room_ids):
-        """Zamek ordinaci proti dvojimu zapisu stejneho slotu.
+        """Lock rooms against a double write of the same slot.
 
-        Odoo bezi na REPEATABLE READ: snapshot se zafixuje prvnim dotazem transakce.
-        Samotny SELECT ... FOR UPDATE nestaci: druhy zapis na zamek pocka, po jeho
-        uvolneni ale hleda prekryv ve starem snapshotu a vitezovu rezervaci nevidi.
-        PostgreSQL vyhodi chybu serializace az kdyz byl zamceny radek *zmenen*, proto
-        radky ordinaci po zamceni i fiktivne updatujeme. Porazeny dostane
-        SerializationFailure, request ho zopakuje s novym snapshotem a _check_overlap
-        uz vitezovu rezervaci uvidi. Zamykame vzdy podle id, aby se dva zapisy
-        nezablokovaly navzajem.
+        Odoo runs on REPEATABLE READ: the snapshot is fixed by the first query of the
+        transaction. SELECT ... FOR UPDATE alone is not enough: the second writer waits
+        for the lock, but once it is released it looks for overlaps in its old snapshot
+        and does not see the winner's reservation. PostgreSQL raises a serialization
+        error only if the locked row was *modified*, so after locking we also do a dummy
+        update of the room rows. The loser gets SerializationFailure, the request is
+        retried with a fresh snapshot and _check_overlap then sees the winner's
+        reservation. We always lock in id order so two writers cannot deadlock.
         """
         ids = sorted(set(room_ids)) or self.env["elite.vet.room"].search([]).ids
         if ids:
@@ -227,7 +227,7 @@ class VetReservation(models.Model):
             cr.execute("UPDATE elite_vet_room SET write_date = write_date WHERE id IN %s", (tuple(ids),))
 
     def _after_web_submit(self):
-        """Hacek pro e-maily po prijeti z webu; naplni ho ukol 11."""
+        """Hook for e-mails after a web submission; implemented by task 11."""
         return True
 
     def _check_overlap(self):
@@ -237,9 +237,9 @@ class VetReservation(models.Model):
             all_rooms = self.env["elite.vet.room"].search([]).ids
             rooms = [rec.room_id.id] if rec.room_id else all_rooms
             if not rec.room_id and rec.kind == "reservation":
-                continue   # cekajici z webu bez ordinace se zatim nikam nepise
+                continue   # a pending web request without a room is not placed anywhere yet
             if rec.kind == "block" and rec.block_scope == "web":
-                continue   # blokace jen pro web nikomu nebrání, jde založit kdykoli
+                continue   # a web-only block does not get in anyone's way; it can be created any time
             self._lock_rooms(rooms)
             clash = self.search(self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id]), limit=1)
             if clash:
@@ -258,20 +258,20 @@ class VetReservation(models.Model):
                 minutes = proc.duration if proc else 30
                 vals["stop"] = fields.Datetime.to_datetime(vals["start"]) + timedelta(minutes=minutes)
         records = super().create(vals_list)
-        # Kopie opakovane blokace se zakladaji z puvodniho zadani (vsechny ordinace),
-        # proto pred rozdelenim; kazda kopie se pak rozdeli podle sveho tydne.
+        # Copies of a repeated block are created from the original input (all rooms),
+        # hence before splitting; each copy is then split according to its own week.
         records._repeat_weekly_blocks()
         records._split_all_rooms_block()
         records._check_overlap()
         return records
 
     def _split_all_rooms_block(self):
-        """Úplná blokace „všechny ordinace“ přes už zablokovaný čas.
+        """A full "all rooms" block over time that is already blocked.
 
-        Když některá ordinace má v tom čase vlastní (nebo jinou celoklinickou)
-        úplnou blokaci, nezamítáme celé zadání: blokace se rozpadne po ordinacích
-        a doplní jen ještě volné úseky. Potvrzená rezervace ale dál brání –
-        blokace přes klienta by ho tiše vyřadila z tabule.
+        When some room already has its own (or another clinic-wide) full block at
+        that time, the whole input is not rejected: the block is split per room and
+        fills only the still-free periods. A confirmed reservation still prevents it -
+        a block over a client would silently drop them from the board.
         """
         for rec in self.filtered(lambda r: r.kind == "block" and r.block_scope == "full"
                                  and not r.room_id and r.state not in INACTIVE_STATES):
@@ -279,9 +279,9 @@ class VetReservation(models.Model):
             self._lock_rooms(rooms.ids)
             existing = self.search(self._busy_domain(rooms.ids, rec.start, rec.stop, exclude_ids=[rec.id]))
             if not existing:
-                continue   # nic tam neni, zustane jedna blokace pro celou kliniku
+                continue   # nothing there, keep a single clinic-wide block
             if existing.filtered(lambda r: r.kind == "reservation"):
-                continue   # rezervaci nahlasi _check_overlap jako dosud
+                continue   # the reservation is reported by _check_overlap as before
             pieces = []
             for room in rooms:
                 taken = sorted((max(b.start, rec.start), min(b.stop, rec.stop))
@@ -310,11 +310,11 @@ class VetReservation(models.Model):
         return res
 
     def _repeat_weekly_blocks(self):
-        """Tydenni opakovani blokace = materializovane kopie, zadne rrule."""
+        """Weekly block repetition = materialized copies, no rrule."""
         for rec in self.filtered(lambda r: r.kind == "block" and r.repeat_weekly_until):
             until = rec.repeat_weekly_until
             rec.repeat_weekly_until = False
-            # Posun po tydnech v mistnim case, aby 12:00 zustalo 12:00 i pres zmenu letniho/zimniho casu.
+            # Shift by weeks in local time so 12:00 stays 12:00 across daylight-saving changes.
             tz_start = pytz.utc.localize(rec.start).astimezone(TZ).replace(tzinfo=None)
             tz_stop = pytz.utc.localize(rec.stop).astimezone(TZ).replace(tzinfo=None)
             vals_list = []
@@ -330,7 +330,7 @@ class VetReservation(models.Model):
             if vals_list:
                 self.create(vals_list)
 
-    # ---------- akce ----------
+    # ---------- actions ----------
     def action_confirm(self):
         for rec in self:
             if rec.kind != "reservation":
@@ -363,7 +363,7 @@ class VetReservation(models.Model):
         self.write(vals)
 
     def action_match_client(self):
-        """Najde / zalozi klienta a mazlicka podle toho, co prislo z webu."""
+        """Find / create the client and the pet from the data submitted on the website."""
         Partner = self.env["res.partner"]
         Pet = self.env["elite.vet.pet"]
         for rec in self:
@@ -372,7 +372,7 @@ class VetReservation(models.Model):
             if not rec.pet_id and rec.pet_name:
                 rec.pet_id = Pet.find_or_create(rec.partner_id, rec.pet_name, rec.pet_species)
 
-    # ---------- tabule ----------
+    # ---------- board ----------
     @api.model
     def board_data(self, day_str):
         day = fields.Date.from_string(day_str)
@@ -387,18 +387,18 @@ class VetReservation(models.Model):
             open_iv = A.open_minutes(room, day)
             for f, t in open_iv:
                 axis_from, axis_to = min(axis_from, f), max(axis_to, t)
-            # Služby lékařek = svislé pruhy vlevo ve sloupci; souběh dvou lékařek vedle sebe.
-            sluzby, lanes, soubehy = shift_bands([
+            # Doctor shifts = vertical bands on the left of the column; two concurrent doctors side by side.
+            shifts, lanes, overlaps = shift_bands([
                 {"id": a.id, "doctor_id": a.doctor_id.id, "name": a.doctor_id.name,
                  "initials": name_initials(a.doctor_id.name), "color": doctor_color(a.doctor_id),
                  "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
                 for a in assignments if a.room_id == room])
-            for d in sluzby:
+            for d in shifts:
                 d["time_label"] = "%s–%s" % (minutes_label(d["from"]), minutes_label(d["to"]))
             rooms_out.append({
                 "id": room.id, "name": room.name, "color_hex": room.color_hex, "online": room.online,
                 "open": [[f, t] for f, t in open_iv],
-                "doctors": sluzby, "lanes": lanes, "overlaps": soubehy,
+                "doctors": shifts, "lanes": lanes, "overlaps": overlaps,
             })
         events = []
         for r in self.search([("start", "<", stop), ("stop", ">", start),
@@ -418,12 +418,12 @@ class VetReservation(models.Model):
                 "problem": r.problem or "", "procedure": r.procedure_id.with_context(lang=lang).name or "",
                 "doctor": r.doctor_id.name or "", "doctor_initials": name_initials(r.doctor_id.name),
                 "doctor_color": doctor_color(r.doctor_id) if r.doctor_id else False,
-                "spojena": r._linked_label(),
+                "linked": r._linked_label(),
                 "source": r.source,
             })
         waiting = []
         for w in self.search([("state", "=", "web_new"), ("stop", ">=", fields.Datetime.now())], order="start"):
-            # Mistni cas ordinace (TZ modulu), ne tz prihlaseneho uzivatele - ten nemusi byt nastaven.
+            # Clinic local time (module TZ), not the logged-in user's tz - that may not be set.
             local = pytz.utc.localize(w.start).astimezone(TZ)
             waiting.append({
                 "id": w.id, "name": w.name, "date": local.strftime("%Y-%m-%d"), "time": local.strftime("%H:%M"),
@@ -434,22 +434,22 @@ class VetReservation(models.Model):
                 "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
                 "doctor": w.doctor_id.name or "",
                 "past": w.start <= fields.Datetime.now(),
-                # Navrhy rovnou tady: jeden dotaz na obnovu tabule, ne jeden za kazdou kartu.
+                # Suggestions computed here: one request per board refresh, not one per card.
                 "suggestions": w.board_suggestions(w.id),
             })
         return {"date": day_str, "step": s.booking_slot_step, "axis": {"from": axis_from, "to": axis_to},
                 "rooms": rooms_out, "events": events, "waiting": waiting,
-                # Víkend / státní svátek, kdy web neobjednává (jen štítek; recepce objednává dál).
+                # Weekend / public holiday when the website does not book (label only; reception still books).
                 "day_note": A.web_day_note(day) or ""}
 
     @api.model
     def board_suggestions(self, res_id):
-        """Kam jde čekající žádost potvrdit přesně v požadovaném čase.
+        """Where a pending request can be confirmed at exactly the requested time.
 
-        Ordinace, kde je čas volný a slouží lékařka, která úkon dělá (nebo ta,
-        kterou si klient vybral). Lékařka = vybraná, jinak první sloužící.
-        Úkon, který lékařku nepotřebuje (stejné pravidlo jako ve slots), se
-        nabídne i do ordinace bez služby - bez lékařky.
+        Rooms where the time is free and a doctor who does the procedure is on duty
+        (or the one the client chose). Doctor = the chosen one, otherwise the first on duty.
+        A procedure that does not need a doctor (same rule as in slots) is also
+        offered in a room with no shift - without a doctor.
         """
         rec = self.browse(res_id).exists()
         if not rec or rec.kind != "reservation" or not rec.procedure_id or rec.state != "web_new":
@@ -459,9 +459,9 @@ class VetReservation(models.Model):
         local = pytz.utc.localize(rec.start).astimezone(TZ)
         day, minute = local.date(), local.hour * 60 + local.minute
         doctor = rec.doctor_id or None
-        # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web:
-        # min_hours=0 nechá ve hře vše, co ještě nezačalo.
-        # scope="internal": blokace „jen web“, víkend ani svátek recepci nebrání.
+        # Reception may confirm a request closer than the website's "minimum hours ahead":
+        # min_hours=0 keeps everything that has not started yet.
+        # scope="internal": web-only blocks, weekends and holidays do not restrict reception.
         slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0, max_days=RECEPTION_HORIZON_DAYS,
                                         scope="internal")
                      if x["minute"] == minute), None)
@@ -481,13 +481,13 @@ class VetReservation(models.Model):
         return fields.Datetime.to_string(A.local_to_utc(fields.Date.from_string(day_str), int(minute)))
 
     def _board_doctor_check(self, day_str, minute, room_id, doctor=None, strict=True):
-        """Smí rezervace na tabuli do ordinace `room_id` v čase `minute`?
+        """May the reservation go on the board into room `room_id` at `minute`?
 
-        Stejné pravidlo jako návrhy a průvodce: v ordinaci musí po celou dobu úkonu
-        sloužit lékařka, která úkon dělá (při `strict` přímo `doctor`), pokud úkon
-        lékařku potřebuje; ordinace musí být mezi ordinacemi úkonu pro recepci.
-        Kolize hlídá až zápis (_check_overlap). Vrací id lékařky, kterou zapsat
-        (jediná sloužící), False = vyprázdnit, None = neměnit.
+        Same rule as suggestions and the wizard: a doctor who does the procedure
+        (with `strict`, exactly `doctor`) must be on duty in the room for the whole
+        procedure if the procedure needs a doctor; the room must be one of the
+        procedure's reception rooms. Collisions are checked on write (_check_overlap).
+        Returns the doctor id to set (the only one on duty), False = clear, None = keep.
         """
         self.ensure_one()
         proc = self.procedure_id
@@ -510,13 +510,13 @@ class VetReservation(models.Model):
             return None
         if len(doc_ids) == 1:
             return doc_ids[0]
-        # Původní lékařka v novém čase/ordinaci neslouží: nenechat tam špatné jméno.
+        # The original doctor is not on duty at the new time/room: do not leave a wrong name.
         return False if doctor else None
 
     @api.model
     def board_move(self, res_id, day_str, minute, room_id):
-        """Přesun na tabuli. Rezervace jen tam, kde slouží lékařka, která úkon dělá
-        (když v novém místě nemá službu dosavadní lékařka, přepíše se); blokace kamkoli."""
+        """Move on the board. A reservation only where a doctor who does the procedure is on duty
+        (if the current doctor has no shift at the new place, she is replaced); a block anywhere."""
         rec = self.browse(res_id)
         doctor_id = rec._board_doctor_check(day_str, minute, room_id or rec.room_id.id,
                                             doctor=rec.doctor_id, strict=False)
@@ -526,9 +526,9 @@ class VetReservation(models.Model):
 
     @api.model
     def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None):
-        """doctor_id=None lékařku nemění; číslo ji nastaví (návrh z panelu Čekající).
-        Zkontroluje, že v čase a ordinaci slouží lékařka, která úkon dělá (nebo
-        ta, kterou si klient vybral); slouží-li jediná, zapíše ji."""
+        """doctor_id=None keeps the doctor; a number sets it (suggestion from the Waiting panel).
+        Checks that a doctor who does the procedure (or the one the client chose) is on
+        duty at that time and room; if only one is on duty, she is set."""
         rec = self.browse(res_id)
         doctor = self.env["elite.vet.doctor"].browse(doctor_id) if doctor_id else rec.doctor_id
         found = rec._board_doctor_check(day_str, minute, room_id, doctor=doctor)

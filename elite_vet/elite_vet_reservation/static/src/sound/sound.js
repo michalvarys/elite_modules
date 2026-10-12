@@ -1,59 +1,60 @@
 /** @odoo-module **/
 /**
- * Zvuk při nové žádosti z webu – v celém Odoo, nejen na tabuli, aby ho recepce
- * slyšela i z jiné obrazovky. Zprávu posílá server přes bus (models/live.py).
+ * Sound for a new web request – across all of Odoo, not just the board, so
+ * reception hears it from any screen. The server sends the message over the bus
+ * (models/live.py).
  *
- * Ohlásí se jen žádost, kterou tento panel prohlížeče ještě neohlásil: bus po
- * načtení stránky doručí znovu i zprávy z poslední chvíle a znělka ani zpráva
- * by se jinak opakovaly při každém obnovení.
+ * Only requests this browser tab has not announced yet are announced: after a
+ * page load the bus redelivers recent messages, so the chime and notification
+ * would otherwise repeat on every refresh.
  *
- * Tón se generuje přes Web Audio (žádný zvukový soubor). Prohlížeč pustí zvuk až
- * po prvním kliknutí na stránku, proto se audio „odemkne“ prvním kliknutím.
- * Vypnout jde tlačítkem na tabuli; volba platí pro tento prohlížeč.
+ * The tone is generated with Web Audio (no sound file). Browsers only allow audio
+ * after the first user interaction, so the first click "unlocks" it.
+ * It can be muted with a button on the board; the choice applies to this browser.
  */
 import { registry } from "@web/core/registry";
 
-const KLIC = "elite_vet_reservation.sound";
+const SOUND_KEY = "elite_vet_reservation.sound";
 
 export function isSoundOn() {
     try {
-        return localStorage.getItem(KLIC) !== "0";
+        return localStorage.getItem(SOUND_KEY) !== "0";
     } catch {
         return true;
     }
 }
 
-export function setSoundOn(zapnuto) {
+export function setSoundOn(enabled) {
     try {
-        localStorage.setItem(KLIC, zapnuto ? "1" : "0");
+        localStorage.setItem(SOUND_KEY, enabled ? "1" : "0");
     } catch {
-        // soukromé okno / zakázané úložiště: zvuk zůstane zapnutý
+        // private window / storage disabled: sound stays on
     }
 }
 
 const ANNOUNCED_KEY = "elite_vet_reservation.announced";
 
-/** Ze seznamu id vrátí ta, která tento panel ještě neohlásil, a poznamená si je. */
+/** Return the ids this tab has not announced yet, and remember them. */
 export function takeUnannounced(ids) {
-    let videne = [];
+    let announced = [];
     try {
-        videne = JSON.parse(sessionStorage.getItem(ANNOUNCED_KEY) || "[]");
+        announced = JSON.parse(sessionStorage.getItem(ANNOUNCED_KEY) || "[]");
     } catch {
-        videne = [];
+        announced = [];
     }
-    const nove = (ids || []).filter((id) => !videne.includes(id));
-    if (nove.length) {
+    const fresh = (ids || []).filter((id) => !announced.includes(id));
+    if (fresh.length) {
         try {
-            sessionStorage.setItem(ANNOUNCED_KEY, JSON.stringify([...videne, ...nove].slice(-300)));
+            sessionStorage.setItem(ANNOUNCED_KEY, JSON.stringify([...announced, ...fresh].slice(-300)));
         } catch {
-            // bez úložiště: v nejhorším se po obnovení ohlásí znovu
+            // no storage: worst case it is announced again after a refresh
         }
     }
-    return nove;
+    return fresh;
 }
 
 let ctx = null;
-function kontext() {
+function audioContext() {
     if (!ctx) {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return null;
@@ -62,9 +63,9 @@ function kontext() {
     return ctx;
 }
 
-/** Krátký dvoutónový „ding-dong“ (A5 → E6). */
+/** Short two-tone "ding-dong" (A5 → E6). */
 export function playChime() {
-    const c = kontext();
+    const c = audioContext();
     if (!c) return;
     if (c.state === "suspended") c.resume();
     const t0 = c.currentTime + 0.02;
@@ -85,18 +86,18 @@ export function playChime() {
 export const soundService = {
     dependencies: ["bus_service", "notification"],
     start(env, { bus_service, notification }) {
-        const odemknout = () => {
-            const c = kontext();
+        const unlockAudio = () => {
+            const c = audioContext();
             if (c && c.state === "suspended") c.resume();
         };
-        document.addEventListener("pointerdown", odemknout, { once: true, capture: true });
+        document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
         bus_service.subscribe("elite_vet_reservation/changed", (payload) => {
             if (!payload?.new_web) return;
             const ids = payload.web_ids || [];
-            const nove = takeUnannounced(ids);
-            if (!nove.length) return;
+            const fresh = takeUnannounced(ids);
+            if (!fresh.length) return;
             (payload.web || []).forEach((label, i) => {
-                if (nove.includes(ids[i])) {
+                if (fresh.includes(ids[i])) {
                     notification.add("Nová žádost z webu: " + label, { type: "info", sticky: true });
                 }
             });

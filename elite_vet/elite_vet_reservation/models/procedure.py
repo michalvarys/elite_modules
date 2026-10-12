@@ -4,8 +4,8 @@ from odoo.addons.elite_vet_calendar.models.vet_shift_type import COLORS
 
 from .room import COLOR_SELECTION
 
-# Světlé barvy jen pro úkony (karty na tabuli). Ordinace a typy směn mají dál
-# jen sytou paletu z elite_vet_calendar, kterou tento modul nemění.
+# Light colors for procedures only (cards on the board). Rooms and shift types keep
+# the saturated palette from elite_vet_calendar, which this module does not change.
 LIGHT_COLORS = {
     "light_blue": ("Světle modrá", "#93c5fd"),
     "light_green": ("Světle zelená", "#86efac"),
@@ -20,7 +20,7 @@ PROCEDURE_COLORS = COLOR_SELECTION + [(k, v[0]) for k, v in LIGHT_COLORS.items()
 
 
 class VetProcedure(models.Model):
-    """Úkon = důvod návštěvy, který si klient vybírá. Nese délku a barvu."""
+    """Procedure = the reason for the visit chosen by the client. Carries duration and color."""
 
     _name = "elite.vet.procedure"
     _description = "Úkon"
@@ -51,7 +51,7 @@ class VetProcedure(models.Model):
     deposit_required = fields.Boolean(string="Vyžaduje zálohu")
     deposit_amount = fields.Monetary(string="Záloha", currency_field="currency_id")
     currency_id = fields.Many2one("res.currency", default=lambda self: self.env.company.currency_id)
-    performed_by = fields.Char(compute="_compute_kdo_dela", string="Kdo dělá")
+    performed_by = fields.Char(compute="_compute_performed_by", string="Kdo dělá")
     sequence = fields.Integer(string="Pořadí", default=10)
     active = fields.Boolean(string="Aktivní", default=True)
 
@@ -70,7 +70,7 @@ class VetProcedure(models.Model):
                 rec.color_hex = COLORS.get(rec.color, COLORS["grey"])
 
     @api.depends("specialization_ids")
-    def _compute_kdo_dela(self):
+    def _compute_performed_by(self):
         for rec in self:
             if not rec.specialization_ids:
                 rec.performed_by = _("kterákoli lékařka")
@@ -91,24 +91,25 @@ class VetProcedure(models.Model):
                 raise ValidationError(_("U úkonu se zálohou vyplňte částku zálohy."))
 
     def rooms_for_booking(self):
-        """Ordinace, kam se dá úkon objednat online."""
+        """Rooms where the procedure can be booked online."""
         self.ensure_one()
         rooms = self.room_ids or self.env["elite.vet.room"].search([])
         return rooms.filtered("online")
 
     def rooms_for_reception(self):
-        """Ordinace, kam úkon objedná recepce: všechny aktivní (i ty, které nejsou
-        online, např. Sál), omezené seznamem ordinací úkonu. Ordinační dobu
-        v daný den hlídá až výpočet volných časů (open_minutes)."""
+        """Rooms where reception can book the procedure: all active ones (including
+        those not online, e.g. the operating room), limited by the procedure's room list.
+        Opening hours on a given day are checked later by the free-slot computation
+        (open_minutes)."""
         self.ensure_one()
         return (self.room_ids or self.env["elite.vet.room"].search([])).filtered("active")
 
     def doctors_for_booking(self):
-        """Lékařky, které úkon dělají.
+        """Doctors who perform the procedure.
 
-        Úkon bez specializace zvládne kterákoli lékařka; úkon se specializací jen
-        ta, která má na kartě v Náš tým aspoň jednu z nich. Sestry a recepce
-        (bez příznaku Přijímá rezervace) nikdy.
+        A procedure without specializations can be done by any doctor; one with
+        specializations only by a doctor whose team card has at least one of them.
+        Nurses and reception (without the accepts-bookings flag) never.
         """
         self.ensure_one()
         doctors = self.env["elite.vet.doctor"].search([("accepts_bookings", "=", True)])

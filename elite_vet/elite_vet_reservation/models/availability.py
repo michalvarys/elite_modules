@@ -1,8 +1,9 @@
-"""Vypocet volnych terminu.
+"""Free slot computation.
 
-Vsechno se pocita v minutach od pulnoci mistniho (prazskeho) dne. Do UTC se
-prevadi az na krajich: pri cteni rezervaci z DB a pri vraceni slotu ven.
-Minuty misto floatu, aby 8.25 + 0.25 nedelalo 8.4999.
+Everything is computed in minutes from midnight of the local (Prague) day.
+Conversion to UTC happens only at the edges: when reading reservations from
+the DB and when returning slots. Minutes instead of floats so that
+8.25 + 0.25 does not become 8.4999.
 """
 import calendar
 from datetime import date, datetime, timedelta
@@ -20,7 +21,7 @@ def to_min(hour_float):
 
 
 def intersect(a, b):
-    """Prunik dvou seznamu intervalu (from, to), oba serazene."""
+    """Intersection of two sorted lists of (from, to) intervals."""
     out = []
     for af, at in a:
         for bf, bt in b:
@@ -31,7 +32,7 @@ def intersect(a, b):
 
 
 def subtract(a, busy):
-    """Odecte obsazene intervaly od volnych."""
+    """Subtract busy intervals from free ones."""
     out = list(a)
     for bf, bt in busy:
         nxt = []
@@ -51,7 +52,7 @@ class VetAvailability(models.AbstractModel):
     _name = "elite.vet.availability"
     _description = "Výpočet volných termínů"
 
-    # ---------- cas ----------
+    # ---------- time ----------
     @api.model
     def local_to_utc(self, day, minute):
         local = TZ.localize(datetime(day.year, day.month, day.day) + timedelta(minutes=minute))
@@ -59,15 +60,15 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def utc_to_local_minutes(self, dt, day):
-        """Minuty od pulnoci `day`; hodnoty mimo den se oriznou na 0 / 1440."""
+        """Minutes from midnight of `day`; values outside the day are clamped to 0 / 1440."""
         local = pytz.utc.localize(dt).astimezone(TZ)
-        # Rozdil nastenych hodin (ne skutecne uplynulych minut), aby to bylo
-        # presne inverzni k local_to_utc i v dnech s prechodem letni/zimni cas.
+        # Wall-clock difference (not actually elapsed minutes), so this is the exact
+        # inverse of local_to_utc even on daylight-saving transition days.
         midnight = datetime(day.year, day.month, day.day)
         delta = (local.replace(tzinfo=None) - midnight).total_seconds() / 60
         return max(0, min(1440, int(delta)))
 
-    # ---------- vstupy ----------
+    # ---------- inputs ----------
     @api.model
     def open_minutes(self, room, day):
         exc = self.env["elite.vet.room.exception"].search([("room_id", "=", room.id), ("date", "=", day)], limit=1)
@@ -92,7 +93,7 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def busy_minutes(self, room_ids, day, scope="web"):
-        """Obsazené minuty po ordinacích; scope viz elite.vet.reservation._busy_domain."""
+        """Busy minutes per room; for `scope` see elite.vet.reservation._busy_domain."""
         Res = self.env["elite.vet.reservation"]
         start, stop = self.local_to_utc(day, 0), self.local_to_utc(day, 1440)
         out = {rid: [] for rid in room_ids}
@@ -106,24 +107,24 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def web_day_note(self, day):
-        """Proč web v tento den neobjednává (víkend / státní svátek dle nastavení), jinak None.
+        """Why the website does not book on this day (weekend / public holiday per settings), otherwise None.
 
-        Platí jen pro web; recepce v takový den objednává normálně. Nic se
-        nezakládá - počítá se z data a nastavení.
+        Applies to the website only; reception books normally on such days.
+        Nothing is stored - it is derived from the date and the settings.
         """
         s = self.env["elite.vet.setting"].nastaveni()
-        nazev = holiday_name(day)
-        if nazev and s.booking_block_holidays:
-            return "Státní svátek: %s – web neobjednává" % nazev
+        holiday = holiday_name(day)
+        if holiday and s.booking_block_holidays:
+            return "Státní svátek: %s – web neobjednává" % holiday
         if day.weekday() >= 5 and s.booking_block_weekends:
             return "Víkend – web neobjednává"
         return None
 
-    # ---------- vystup ----------
+    # ---------- output ----------
     @api.model
     def _window(self, now, min_hours=None, max_days=None):
-        """Okno, ve kterém se dá objednat. min_hours / max_days = None bere nastavení
-        pro web; recepce si předá vlastní (např. min_hours=0 = i na dnešek)."""
+        """Booking window. min_hours / max_days = None use the website settings;
+        reception passes its own (e.g. min_hours=0 = bookable for today too)."""
         s = self.env["elite.vet.setting"].nastaveni()
         now = now or fields.Datetime.now()
         hours = s.booking_min_hours_before if min_hours is None else min_hours
@@ -135,15 +136,15 @@ class VetAvailability(models.AbstractModel):
     @api.model
     def slots(self, procedure, day, doctor=None, specialization=None, now=None, min_hours=None, max_days=None,
               rooms=None, scope="web", duration=None):
-        """rooms=None = online ordinace pro web (rooms_for_booking); recepce předá vlastní.
+        """rooms=None = online rooms for the website (rooms_for_booking); reception passes its own.
 
-        scope="web" (výchozí, veřejné API): obsazené jsou obě blokace a víkend /
-        státní svátek (podle nastavení) nenabídne nic. scope="internal" (recepce):
-        brání jen úplná blokace. Výchozí hodnota je schválně ta přísnější, aby
-        veřejné API omylem nepoužilo pravidla recepce.
+        scope="web" (default, public API): both block types count as busy and a
+        weekend / public holiday (per settings) offers nothing. scope="internal"
+        (reception): only full blocks prevent booking. The default is deliberately
+        the stricter one so the public API never uses reception rules by mistake.
 
-        duration (minuty) přebije délku úkonu pro kontrolu, že se návštěva vejde; předává
-        ji jen průvodce recepce, veřejný kontroler ne.
+        duration (minutes) overrides the procedure duration when checking that the
+        visit fits; only the reception wizard passes it, the public controller does not.
         """
         s, earliest, latest_day = self._window(now, min_hours, max_days)
         if day > latest_day:
@@ -156,17 +157,17 @@ class VetAvailability(models.AbstractModel):
             return []
         step, dur = s.booking_slot_step, duration or procedure.duration
         need_doctor = self.need_doctor(procedure, doctor, specialization)
-        # Sluzby se nacitaji vzdy: doctor_ids ve slotu jsou informativni (kdo zrovna slouzi),
-        # k omezeni ordinaci se ale pouziji jen pri aktivnim filtru / povinnem lekari.
+        # Assignments are always loaded: doctor_ids in a slot are informative (who is on duty),
+        # but they restrict rooms only with an active filter / when a doctor is required.
         assignments = self.assignment_minutes(day, procedure, doctor, specialization)
         busy = self.busy_minutes(rooms.ids, day, scope=scope)
         if scope == "web":
-            # Nepotvrzené žádosti z webu drží místo, aby se na stejný čas nepřihlásil
-            # další klient (recepce je vidí v panelu a objednává dál bez omezení).
+            # Unconfirmed web requests hold their spot so another client cannot book the
+            # same time (reception sees them in the panel and books without restriction).
             for room_id, ivs in self.pending_holds(day).items():
                 busy.setdefault(room_id, []).extend(ivs)
-        # utc_to_local_minutes orizne na 0 / 1440, takze den pred earliest dava 1440
-        # (zadny slot) a den po nem 0 - netreba rozlisovat data zvlast.
+        # utc_to_local_minutes clamps to 0 / 1440, so a day before `earliest` yields 1440
+        # (no slot) and a day after it 0 - no need to compare dates separately.
         earliest_min = self.utc_to_local_minutes(earliest, day)
 
         by_minute = {}
@@ -180,7 +181,7 @@ class VetAvailability(models.AbstractModel):
                 while m + dur <= t:
                     if m >= earliest_min:
                         entry = by_minute.setdefault(m, {"minute": m, "room_ids": [], "doctor_ids": []})
-                        # prekryvajici se sluzby dvou lekaru v jedne ordinaci nesmi ordinaci zdvojit
+                        # overlapping assignments of two doctors in one room must not duplicate the room
                         if room.id not in entry["room_ids"]:
                             entry["room_ids"].append(room.id)
                         for af, at, did in assignments.get(room.id, []):
@@ -196,12 +197,13 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def pending_holds(self, day, exclude_ids=()):
-        """Ordinace, které na webu drží nepotvrzené žádosti z webu: {room_id: [(od, do)]}.
+        """Rooms held on the website by unconfirmed web requests: {room_id: [(from, to)]}.
 
-        Žádost ordinaci ještě nemá, proto se jí „v duchu“ přidělí ta, kam by ji šlo
-        potvrdit: první online ordinace úkonu, kde je v tu dobu volno a (je-li
-        potřeba) slouží lékařka, která úkon dělá. Starší žádost má přednost. Žádost,
-        pro kterou místo nezbylo, nedrží nic (recepce ji vyřeší ručně).
+        A request has no room yet, so it is virtually assigned the room where it
+        could be confirmed: the first online room of the procedure that is free at
+        that time and (if required) has a doctor on duty who does the procedure.
+        Older requests take precedence. A request with no room left holds nothing
+        (reception resolves it manually).
         """
         Res = self.env["elite.vet.reservation"].sudo()
         start, stop = self.local_to_utc(day, 0), self.local_to_utc(day, 1440)
@@ -231,15 +233,16 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def need_doctor(self, procedure, doctor=None, specialization=None):
-        """Musí v ordinaci sloužit lékařka? Úkon se specializací jde objednat jen tam,
-        kde slouží lékařka, která ho umí; stejně tak při zvolené lékařce / povinném lékaři."""
+        """Must a doctor be on duty in the room? A procedure with a specialization can only
+        be booked where a doctor who does it is on duty; likewise with a chosen doctor /
+        when a doctor is required by settings."""
         s = self.env["elite.vet.setting"].nastaveni()
         return bool(doctor or specialization or s.booking_require_doctor or procedure.specialization_ids)
 
     @api.model
     def serving_doctors(self, procedure, day, room_id, minute, doctor=None, serving=None, duration=None):
-        """Id lékařek, které v ordinaci po celou dobu úkonu od `minute` slouží a úkon
-        dělají (jen zvolená, je-li `doctor`), seřazené podle začátku služby."""
+        """Ids of doctors on duty in the room for the whole procedure starting at `minute`
+        who do the procedure (only the chosen one if `doctor` is set), ordered by shift start."""
         if serving is None:
             serving = self.assignment_minutes(day, procedure, doctor)
         out = []
@@ -251,9 +254,9 @@ class VetAvailability(models.AbstractModel):
 
     @api.model
     def room_doctors(self, procedure, day, slot, doctor=None, duration=None):
-        """Pro jeden slot ze slots(): [(room_id, doctor_id | False)] – v každé volné
-        ordinaci lékařka, která tam v tu dobu slouží a úkon dělá (zvolená, jinak
-        první podle začátku služby). Úkon bez nutné lékařky může být bez ní."""
+        """For one slot from slots(): [(room_id, doctor_id | False)] - for each free room
+        the doctor on duty there at that time who does the procedure (the chosen one,
+        otherwise the first by shift start). A procedure not requiring a doctor may have none."""
         serving = self.assignment_minutes(day, procedure, doctor)
         out = []
         for room_id in slot["room_ids"]:

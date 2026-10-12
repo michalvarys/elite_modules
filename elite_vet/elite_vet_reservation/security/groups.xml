@@ -18,7 +18,7 @@
             <field name="comment">Navíc spravuje ordinace, úkony, ordinační dobu, rozpis a nastavení.</field>
         </record>
     </data>
-    <!-- Mimo noupdate: spravce systemu ma skupinu dostat i pri upgradu. -->
+    <!-- Outside noupdate: the system administrator must get the group on upgrade too. -->
     <record id="base.group_system" model="res.groups">
         <field name="implied_ids" eval="[(4, ref('group_reservation_manager'))]"/>
     </record>

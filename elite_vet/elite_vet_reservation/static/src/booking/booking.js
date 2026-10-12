@@ -1,5 +1,5 @@
-/* Rezervační průvodce. Žádný framework: stránka už má všechen text v QWeb,
-   tenhle skript jen volá JSON API a přepíná kroky. */
+/* Booking wizard. No framework: the page already has all text in QWeb,
+   this script only calls the JSON API and switches steps. */
 (function () {
     "use strict";
     var root = document.getElementById("ev-booking");
@@ -18,21 +18,21 @@
 
     var state = { options: null, procedure: null, doctor: null, spec: null, date: null, time: null,
                   slot: null, slotDoctor: null, month: null, year: null, daysOk: [], loadingDays: false };
-    // Počítadla požadavků: pomalejší starší odpověď nesmí přepsat novější
+    // Request counters: a slower, older response must not overwrite a newer one
     var seq = { days: 0, slots: 0 };
 
     function q(sel) { return root.querySelector(sel); }
     function qa(sel) { return Array.prototype.slice.call(root.querySelectorAll(sel)); }
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
     function pad(n) { return (n < 10 ? "0" : "") + n; }
-    // Přeložený text ze skrytého prvku data-text; {name} se nahradí hodnotou
+    // Translated text from a hidden data-text element; {name} is replaced with the value
     function T(key, name) {
         var n = q('[data-text="' + key + '"]');
         var t = n ? n.textContent.trim() : "";
         return name != null ? t.replace("{name}", function () { return name; }) : t;
     }
     function loadingEl() { return el("p", "evbk-loading", T("loading")); }
-    // Porovnání bez ohledu na velikost písmen a diakritiku
+    // Case- and diacritics-insensitive comparison
     function norm(s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
 
     function rpc(path, params) {
@@ -43,7 +43,7 @@
             .then(function (b) { if (b.error) throw new Error(b.error.data && b.error.data.message || "rpc"); return b.result; });
     }
 
-    // Posun tak, aby lišta kroků byla vidět pod pevnou hlavičkou webu
+    // Scroll so the step bar is visible below the fixed site header
     function scrollToSteps() {
         var steps = q(".evbk-steps") || root;
         var header = document.querySelector(".ev-topbar, header");
@@ -61,7 +61,7 @@
         scrollToSteps();
     }
 
-    // ---------- krok 1 ----------
+    // ---------- step 1 ----------
     function doctorNames(p) {
         var ds = state.options.doctors;
         return p.doctor_ids.map(function (id) {
@@ -73,7 +73,7 @@
         var b = el("button", "evbk-item"); b.type = "button";
         b.appendChild(el("span", "evbk-item-name", p.name));
         b.appendChild(el("span", "evbk-item-meta", p.duration + " min" + (p.deposit ? " · " + p.deposit + " Kč" : "")));
-        // Specializovaný úkon: kdo ho dělá (jen lékařky, které jsou v nabídce)
+        // Specialized procedure: who performs it (only doctors present in the options)
         if (withDoctors && p.specialization_ids.length) {
             var names = doctorNames(p);
             if (names.length) b.appendChild(el("span", "evbk-item-doctors", T("done-by", names.join(", "))));
@@ -87,7 +87,7 @@
         list.forEach(function (p) { container.appendChild(procButton(p, withDoctors)); });
         container.hidden = false;
     }
-    // Seznam se skupinami: nadpis přes celou šířku mřížky, pod ním úkony
+    // Grouped list: full-width heading across the grid, procedures below it
     function renderGroups(container, groups) {
         container.innerHTML = "";
         groups.forEach(function (g) {
@@ -135,7 +135,7 @@
             c.addEventListener("click", function () {
                 state.doctor = d; state.spec = null;
                 qa('[data-list="doctors"] .evbk-card').forEach(function (x) { x.classList.toggle("is-active", x === c); });
-                // jen úkony, které lékařka dělá
+                // only procedures this doctor performs
                 renderProcedures(q('[data-list="procedures-for-doctor"]'), o.procedures.filter(function (p) { return p.doctor_ids.indexOf(d.id) !== -1; }), false);
             });
             dl.appendChild(c);
@@ -148,8 +148,8 @@
             c.addEventListener("click", function () {
                 state.spec = s; state.doctor = null;
                 qa('[data-list="specializations"] .evbk-card').forEach(function (x) { x.classList.toggle("is-active", x === c); });
-                // úkony daného oboru, pod nimi obecné úkony (dělá je kterákoli lékařka, termíny se pak
-                // omezí na lékařky s touto specializací)
+                // procedures of this specialization, then general ones (any doctor performs them;
+                // slots are then limited to doctors with this specialization)
                 renderGroups(q('[data-list="procedures-for-spec"]'), [
                     { title: T("spec-procedures", s.name), items: o.procedures.filter(function (p) { return p.specialization_ids.indexOf(s.id) !== -1; }) },
                     { title: T("spec-general"), items: o.procedures.filter(function (p) { return p.specialization_ids.length === 0; }) }
@@ -167,14 +167,14 @@
         });
     }
 
-    // ---------- krok 2 ----------
+    // ---------- step 2 ----------
     function filters() {
         var f = { procedure_id: state.procedure.id };
         if (state.doctor) f.doctor_id = state.doctor.id;
         if (state.spec) f.specialization_id = state.spec.id;
         return f;
     }
-    // Poslední den, na který se dá objednat (dnes + max_days_ahead)
+    // Last bookable day (today + max_days_ahead)
     function horizon() {
         var h = new Date(); h.setHours(0, 0, 0, 0);
         h.setDate(h.getDate() + ((state.options.settings || {}).max_days_ahead || 0));
@@ -185,7 +185,7 @@
         return state.year < now.getFullYear() || (state.year === now.getFullYear() && state.month <= now.getMonth() + 1);
     }
     function nextMonthBeyondHorizon() {
-        // První den následujícího měsíce už je za horizontem
+        // The first day of the next month is already past the horizon
         return new Date(state.year, state.month, 1).getTime() > horizon().getTime();
     }
     function updateArrows() {
@@ -201,7 +201,7 @@
         showStep(2);
         loadMonth(true);
     }
-    // auto = první načtení: prázdný měsíc přeskočí na další (nejdál po horizont)
+    // auto = initial load: an empty month skips to the next one (up to the horizon)
     function loadMonth(auto) {
         var start = { year: state.year, month: state.month };
         var my = ++seq.days;
@@ -213,7 +213,7 @@
             state.loadingDays = true; updateArrows();
             var p = filters(); p.year = state.year; p.month = state.month;
             return rpc("/rezervace/api/days", p).then(function (list) {
-                if (my !== seq.days) return;   // mezitím přišel novější požadavek
+                if (my !== seq.days) return;   // a newer request was made meanwhile
                 if (auto && !list.length && !nextMonthBeyondHorizon()) {
                     if (++state.month > 12) { state.month = 1; state.year++; }
                     return attempt();
@@ -222,8 +222,8 @@
                 state.loadingDays = false;
                 state.daysOk = list; grid.classList.remove("is-loading");
                 renderMonth(); updateArrows();
-                // Vybraný den z jiného měsíce se zahodí i s jeho časy; je-li v tomto
-                // měsíci volno, vybere se automaticky první volný den.
+                // A selected day from another month is dropped along with its times; if this
+                // month has availability, the first free day is selected automatically.
                 var prefix = state.year + "-" + pad(state.month) + "-";
                 if (!(state.date && state.date.indexOf(prefix) === 0)) {
                     if (state.date) {
@@ -243,7 +243,7 @@
         var grid = q('[data-cal="grid"]'); grid.innerHTML = "";
         days.forEach(function (d) { grid.appendChild(el("div", "evbk-dow", d)); });
         var first = new Date(state.year, state.month - 1, 1);
-        // Týden začíná pondělím, JS getDay() má neděli = 0, proto posun (getDay()+6)%7
+        // Weeks start on Monday; JS getDay() has Sunday = 0, hence the (getDay()+6)%7 shift
         var offset = (first.getDay() + 6) % 7;
         for (var i = 0; i < offset; i++) grid.appendChild(el("div", "evbk-day is-pad"));
         var count = new Date(state.year, state.month, 0).getDate();
@@ -272,7 +272,7 @@
         resetSlots();
         return loadSlotsInner();
     }
-    // Vrací true, pokud se sloty opravdu vykreslily (odpověď nebyla zastaralá)
+    // Returns true if the slots were actually rendered (the response was not stale)
     function loadSlotsInner() {
         var my = ++seq.slots;
         var p = filters(); p.date = state.date;
@@ -283,7 +283,7 @@
             loading.remove();
             hint.hidden = slots.length > 0;
             slots.forEach(function (s) {
-                // 720 minut = poledne od půlnoci: dopoledne / odpoledne sloupec
+                // 720 minutes after midnight = noon: morning / afternoon column
                 var k = s.minute < 720 ? "am" : "pm";
                 q('[data-slots="' + k + '-title"]').hidden = false;
                 var b = el("button", "evbk-slot", s.time); b.type = "button";
@@ -317,7 +317,7 @@
         gotoForm();
     }
 
-    // ---------- krok 3 ----------
+    // ---------- step 3 ----------
     function humanDate(iso) {
         var p = iso.split("-"); return p[2] + ". " + p[1] + ". " + p[0];
     }
@@ -335,7 +335,7 @@
         var orphan = [];
         Object.keys(fields || {}).forEach(function (name) {
             var input = q('.evbk-form [name="' + name + '"]');
-            // Pole bez vstupu (procedure_id, time...) by se jinak ztratilo: ukážeme ho v obecné chybě
+            // A field without an input (procedure_id, time...) would otherwise be lost: show it in the general error
             if (!input) { orphan.push(fields[name]); return; }
             input.classList.add("is-invalid");
             input.closest("label").appendChild(el("span", "evbk-field-error", fields[name]));
@@ -347,7 +347,7 @@
     q(".evbk-form").addEventListener("submit", function (ev) {
         ev.preventDefault();
         var f = ev.target, data = filters();
-        // hp = honeypot, posílá se na server, kde se vyhodnotí jako spam
+        // hp = honeypot, sent to the server, which treats a filled one as spam
         ["contact_name", "pet_name", "pet_species", "problem", "contact_email", "contact_phone", "hp"].forEach(function (n) { data[n] = f.elements[n].value; });
         data.consent = f.elements.consent.checked;
         data.date = state.date; data.time = state.time;
@@ -357,7 +357,7 @@
             btn.disabled = false;
             if (res.ok) { gotoDone(res); return; }
             if (res.error === "slot_taken") {
-                // Termín mezitím někdo zabral: zpět na výběr, překreslit měsíc (den mohl zaplnit) a sloty
+                // Slot was taken meanwhile: back to selection, redraw the month (the day may be full now) and slots
                 showErrors({}, ""); showStep(2); loadMonth(false);
                 loadSlots().then(function (fresh) { if (fresh) q('[data-slots="taken"]').hidden = false; });
                 return;
@@ -367,7 +367,7 @@
         }).catch(function () { btn.disabled = false; fatal(); });
     });
 
-    // ---------- krok 4 ----------
+    // ---------- step 4 ----------
     function gotoDone(res) {
         q('[data-summary="final"]').textContent = summaryText();
         var note = q('[data-done="note"]'); note.hidden = !state.procedure.client_note; note.textContent = state.procedure.client_note || "";
@@ -375,7 +375,7 @@
         showStep(4);
     }
 
-    // ---------- společné ----------
+    // ---------- shared ----------
     function fatal() { q('[data-error="fatal"]').hidden = false; }
     qa("[data-back]").forEach(function (b) { b.addEventListener("click", function () { showStep(Number(b.dataset.back)); }); });
     q('[data-cal="prev"]').addEventListener("click", function () {
@@ -389,7 +389,7 @@
         loadMonth(false);
     });
 
-    // Načítání nabídky: text „Načítám…“ a záložky neaktivní, dokud nepřijdou data
+    // Loading options: show the loading text and keep tabs disabled until data arrives
     var procList = q('[data-list="procedures"]');
     procList.appendChild(loadingEl());
     qa(".evbk-tabs button").forEach(function (b) { b.disabled = true; });

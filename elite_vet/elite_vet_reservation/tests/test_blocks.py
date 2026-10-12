@@ -1,5 +1,5 @@
-"""Část E: druhy blokací (jen web / úplná), víkendy a svátky jen pro web,
-ruční čas v průvodci a dvě lékařky v jedné ordinaci na tabuli."""
+"""Part E: block kinds (web-only / full), weekends and holidays web-only,
+manual time in the wizard and two doctors in one room on the board."""
 import importlib.util
 import os
 from datetime import date, datetime, timedelta
@@ -12,15 +12,15 @@ from ..models.reservation import doctor_color, shift_bands
 from ..models.holidays import czech_holidays, holiday_name, easter_sunday
 from .common import ReservationCase
 
-WED = date(2026, 10, 14)      # středa
-SAT = date(2026, 10, 17)      # sobota
+WED = date(2026, 10, 14)      # Wednesday
+SAT = date(2026, 10, 17)      # Saturday
 NOW = datetime(2026, 10, 1, 8, 0)
 
 
 @tagged("post_install", "-at_install")
 class TestHolidays(ReservationCase):
 
-    def test_velikonoce_a_svatky(self):
+    def test_easter_and_holidays(self):
         self.assertEqual(easter_sunday(2026), date(2026, 4, 5))
         s26 = czech_holidays(2026)
         self.assertEqual(s26[date(2026, 4, 3)], "Velký pátek")
@@ -33,7 +33,7 @@ class TestHolidays(ReservationCase):
             self.assertIn(date(2027, m, d), s27)
         self.assertEqual(holiday_name(date(2026, 9, 28)), "Den české státnosti")
         self.assertIsNone(holiday_name(WED))
-        # Výsledek je kopie: úprava nesmí rozbít cache.
+        # The result is a copy: modifying it must not break the cache.
         s27.clear()
         self.assertEqual(len(czech_holidays(2027)), 13)
 
@@ -84,7 +84,7 @@ class TestBlockScope(ReservationCase):
         self.assertEqual(self.rooms_at(web, 660), [self.room1.id, self.room2.id])
         internal = self.A.slots(self.vacc, WED, now=NOW, scope="internal")
         self.assertEqual(self.rooms_at(internal, 600), [self.room1.id, self.room2.id])
-        # Výchozí scope je web (veřejné API nesmí omylem dostat pravidla recepce).
+        # The default scope is web (the public API must never get reception rules by mistake).
         self.assertEqual(self.A.slots(self.vacc, WED, now=NOW), web)
 
     def test_full_block_hides_slots_everywhere(self):
@@ -98,7 +98,7 @@ class TestBlockScope(ReservationCase):
         self.assertEqual(self.rooms_at(self.A.slots(self.vacc, WED, now=NOW), 600), [])
         self.assertEqual(self.rooms_at(self.A.slots(self.vacc, WED, now=NOW, scope="internal"), 600),
                          [self.room1.id, self.room2.id])
-        self.reservation(start=self.dt(WED, 10, 0))   # recepce smí
+        self.reservation(start=self.dt(WED, 10, 0))   # reception may
 
     def test_reservation_over_web_block_allowed_over_full_refused(self):
         self.block(WED, 10, 11, "web")
@@ -111,32 +111,32 @@ class TestBlockScope(ReservationCase):
     def test_web_block_anytime_full_block_not_over_reservation(self):
         self.reservation(start=self.dt(WED, 10, 0))
         web = self.block(WED, 9, 12, "web")
-        self.block(WED, 9, 12, "web")   # i přes jinou blokaci jen pro web
+        self.block(WED, 9, 12, "web")   # even over another web-only block
         with self.assertRaises(ValidationError):
             self.block(WED, 9, 12, "full")
         with self.assertRaises(ValidationError):
             web.block_scope = "full"
-        # Úplná blokace přes blokaci jen pro web (bez rezervace) jde.
+        # A full block over a web-only block (without a reservation) is allowed.
         self.block(WED, 13, 14, "web")
         self.block(WED, 13, 14, "full")
 
-    def _bloky(self, reason):
+    def _blocks_by_reason(self, reason):
         return {(b.room_id, b.start, b.stop) for b in self.R.search([("block_reason", "=", reason)])}
 
     def test_all_rooms_full_block_fills_only_free_rooms(self):
         self.block(WED, 10, 11, "full", room=self.room1, block_reason="Školení O1")
         b = self.block(WED, 9, 12, "full", room_id=False, block_reason="Celá klinika")
-        self.assertEqual(self._bloky("Celá klinika"), {
+        self.assertEqual(self._blocks_by_reason("Celá klinika"), {
             (self.room1, self.dt(WED, 9), self.dt(WED, 10)),
             (self.room1, self.dt(WED, 11), self.dt(WED, 12)),
             (self.room2, self.dt(WED, 9), self.dt(WED, 12)),
-            (self.sal, self.dt(WED, 9), self.dt(WED, 12)),
+            (self.surgery, self.dt(WED, 9), self.dt(WED, 12)),
         })
         self.assertTrue(b.exists() and b.room_id)
 
     def test_all_rooms_full_block_stays_single_when_free(self):
         b = self.block(WED, 9, 12, "full", room_id=False, block_reason="Celá klinika")
-        self.assertEqual(self._bloky("Celá klinika"), {(self.env["elite.vet.room"], b.start, b.stop)})
+        self.assertEqual(self._blocks_by_reason("Celá klinika"), {(self.env["elite.vet.room"], b.start, b.stop)})
 
     def test_all_rooms_full_block_over_web_block_stays_single(self):
         self.block(WED, 10, 11, "web", room=self.room1)
@@ -144,7 +144,7 @@ class TestBlockScope(ReservationCase):
         self.assertFalse(b.room_id)
 
     def test_all_rooms_full_block_everything_taken(self):
-        for room in (self.room1, self.room2, self.sal):
+        for room in (self.room1, self.room2, self.surgery):
             self.block(WED, 8, 13, "full", room=room)
         with self.assertRaises(ValidationError):
             self.block(WED, 9, 12, "full", room_id=False)
@@ -159,10 +159,10 @@ class TestBlockScope(ReservationCase):
         self.block(WED + timedelta(days=7), 10, 11, "full", room=self.room1)
         self.block(WED, 9, 12, "full", room_id=False, block_reason="Porada",
                    repeat_weekly_until=WED + timedelta(days=14))
-        bloky = self.R.search([("block_reason", "=", "Porada")])
-        # 1. a 3. týden jedna celoklinická, 2. týden po ordinacích (O1 dva kusy, O2, Sál).
-        self.assertEqual(len(bloky), 2 + 4)
-        self.assertEqual(len(bloky.filtered(lambda b: not b.room_id)), 2)
+        blocks = self.R.search([("block_reason", "=", "Porada")])
+        # Weeks 1 and 3: one clinic-wide block; week 2: per room (O1 two pieces, O2, Sál).
+        self.assertEqual(len(blocks), 2 + 4)
+        self.assertEqual(len(blocks.filtered(lambda b: not b.room_id)), 2)
 
     def test_repeat_weekly_keeps_scope(self):
         self.block(WED, 7, 8, "web", repeat_weekly_until=WED + timedelta(days=14))
@@ -178,10 +178,10 @@ class TestBlockScope(ReservationCase):
         self.block(day, 10, 11, "full", room=self.room2)
         self.assertNotIn(self.room2.id, [s["room_id"] for s in self.R.board_suggestions(w.id)])
         r = self.reservation(start=self.dt(day, 8, 0), room_id=self.room2.id)
-        self.R.board_move(r.id, fields.Date.to_string(day), 615, self.room1.id)   # do blokace jen pro web
+        self.R.board_move(r.id, fields.Date.to_string(day), 615, self.room1.id)   # into a web-only block
         self.assertEqual((r.room_id, r.start), (self.room1, self.dt(day, 10, 15)))
         with self.assertRaises(ValidationError):
-            self.R.board_move(r.id, fields.Date.to_string(day), 615, self.room2.id)   # do úplné ne
+            self.R.board_move(r.id, fields.Date.to_string(day), 615, self.room2.id)   # not into a full one
         self.R.board_confirm(w.id, fields.Date.to_string(day), 600, self.room1.id)
         self.assertEqual((w.state, w.room_id), ("confirmed", self.room1))
 
@@ -196,7 +196,7 @@ class TestBlockScope(ReservationCase):
         b = self.block(WED, 12, 13, "web")
         self.env.cr.execute("UPDATE elite_vet_reservation SET block_scope = NULL WHERE id = %s", (b.id,))
         path = os.path.join(os.path.dirname(__file__), "..", "migrations", "18.0.1.4.0", "post-migrate.py")
-        spec = importlib.util.spec_from_file_location("ev_migrace_1_4", path)
+        spec = importlib.util.spec_from_file_location("ev_migration_1_4", path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         mod.migrate(self.env.cr, "18.0.1.3.0")
@@ -273,14 +273,14 @@ class TestManualTime(ReservationCase):
         cls.W = cls.env["elite.vet.reservation.wizard"]
         cls.R = cls.env["elite.vet.reservation"]
 
-    def z_tabule(self, minute, room, **vals):
-        """Průvodce otevřený klikem do buňky tabule."""
+    def wizard_from_board(self, minute, room, **vals):
+        """Wizard opened by clicking a board cell."""
         base = {"procedure_id": self.vacc.id}
         base.update(vals)
         return self.W.with_context(default_date=fields.Date.to_string(self.day), default_minute=minute,
                                    default_room_id=room.id).create(base)
 
-    def ulozit(self, w):
+    def save_wizard(self, w):
         w.write({"partner_mode": "new", "contact_name": "Ruční Klient", "contact_phone": "+420 606 000 111",
                  "contact_email": "rucni@example.cz", "pet_name": "Bobík", "pet_species": "dog"})
         w.action_step_summary()
@@ -288,7 +288,7 @@ class TestManualTime(ReservationCase):
         return self.R.search([("contact_email", "=", "rucni@example.cz")])
 
     def test_click_outside_hours_prefills_manual_time(self):
-        w = self.z_tabule(19 * 60, self.room1)
+        w = self.wizard_from_board(19 * 60, self.room1)
         w.action_step_time()
         self.assertEqual(w.step, "time")
         self.assertTrue(w.manual)
@@ -296,21 +296,21 @@ class TestManualTime(ReservationCase):
         self.assertTrue(w.warning.startswith("Mimo běžnou ordinační dobu – vkládáte ručně"))
         w.action_use_manual_time()
         self.assertEqual((w.step, w.minute, w.room_id), ("client", 19 * 60, self.room1))
-        r = self.ulozit(w)
+        r = self.save_wizard(w)
         self.assertIn("(zadáno ručně)", w.summary)
         self.assertEqual((r.room_id, r.start, r.state), (self.room1, self.dt(self.day, 19, 0), "confirmed"))
 
     def test_click_into_web_block_is_normal_slot(self):
         self.R.create({"kind": "block", "block_scope": "web", "block_reason": "Jen telefonem",
                        "room_id": self.room1.id, "start": self.dt(self.day, 10), "stop": self.dt(self.day, 11)})
-        w = self.z_tabule(600, self.room1)
+        w = self.wizard_from_board(600, self.room1)
         w.action_step_time()
         self.assertEqual(w.step, "client")
         self.assertFalse(w.manual)
 
     def test_click_on_busy_time_is_not_manual(self):
         self.reservation(start=self.dt(self.day, 10, 0))
-        w = self.z_tabule(600, self.room1)
+        w = self.wizard_from_board(600, self.room1)
         w.action_step_time()
         self.assertEqual(w.step, "time")
         self.assertFalse(w.manual)
@@ -326,23 +326,23 @@ class TestManualTime(ReservationCase):
         w.action_step_time()
         w.write({"manual": True, "manual_room_id": self.room1.id})
         with self.assertRaises(UserError):
-            w.action_use_manual_time()                     # bez času
-        for cas in ("19:00", "20:15"):
-            w.manual_time = cas
+            w.action_use_manual_time()                     # without a time
+        for time_str in ("19:00", "20:15"):
+            w.manual_time = time_str
             with self.assertRaises(UserError):
                 w.action_use_manual_time()
-        w.manual_time = "21:00"                      # blokace jen pro web nebrání
+        w.manual_time = "21:00"                      # a web-only block does not prevent it
         w.action_use_manual_time()
-        self.assertEqual(self.ulozit(w).start, self.dt(self.day, 21, 0))
+        self.assertEqual(self.save_wizard(w).start, self.dt(self.day, 21, 0))
 
     def test_manual_doctor_not_serving_and_closed_room(self):
-        # Sál nemá ordinační dobu vůbec, lékařka tam neslouží: ručně to přesto jde.
+        # The theatre has no opening hours and the doctor is not on duty there: manual entry still works.
         w = self.W.create({"procedure_id": self.vacc.id, "date": self.day, "doctor_id": self.dr_b.id})
         w.action_step_time()
-        w.write({"manual": True, "manual_room_id": self.sal.id, "manual_time": "07:30"})
+        w.write({"manual": True, "manual_room_id": self.surgery.id, "manual_time": "07:30"})
         w.action_use_manual_time()
-        r = self.ulozit(w)
-        self.assertEqual((r.room_id, r.doctor_id, r.start), (self.sal, self.dr_b, self.dt(self.day, 7, 30)))
+        r = self.save_wizard(w)
+        self.assertEqual((r.room_id, r.doctor_id, r.start), (self.surgery, self.dr_b, self.dt(self.day, 7, 30)))
 
     def test_manual_picks_serving_doctor(self):
         self.assign(self.dr_a, self.room2, self.day, 18.0, 20.0)
@@ -357,20 +357,20 @@ class TestManualTime(ReservationCase):
         w.action_step_time()
         w.write({"manual": True, "manual_room_id": self.room1.id, "manual_time": "19:00"})
         w.action_use_manual_time()
-        self.reservation(start=self.dt(self.day, 19, 0))   # mezitím obsadil někdo jiný
+        self.reservation(start=self.dt(self.day, 19, 0))   # someone else took it in the meantime
         with self.assertRaises(ValidationError):
-            self.ulozit(w)
+            self.save_wizard(w)
 
 
 @tagged("post_install", "-at_install")
 class TestTwoDoctorsOneRoom(ReservationCase):
 
-    def test_pruhy_sluzeb(self):
-        sl, lanes, soubehy = shift_bands([
+    def test_shift_bands(self):
+        bands, lanes, overlaps = shift_bands([
             {"id": 1, "from": 480, "to": 840}, {"id": 2, "from": 600, "to": 960}, {"id": 3, "from": 900, "to": 1080}])
-        self.assertEqual([s["lane"] for s in sorted(sl, key=lambda s: s["id"])], [0, 1, 0])
+        self.assertEqual([s["lane"] for s in sorted(bands, key=lambda s: s["id"])], [0, 1, 0])
         self.assertEqual(lanes, 2)
-        self.assertEqual([x["label"] for x in soubehy], ["2 lékařky 10:00–14:00", "2 lékařky 15:00–16:00"])
+        self.assertEqual([x["label"] for x in overlaps], ["2 lékařky 10:00–14:00", "2 lékařky 15:00–16:00"])
         self.assertEqual(shift_bands([]), ([], 0, []))
 
     def test_board_data_two_doctors_in_room(self):
@@ -386,7 +386,7 @@ class TestTwoDoctorsOneRoom(ReservationCase):
         self.assertEqual(by_doc[self.dr_a.id]["color"], doctor_color(self.dr_a))
         self.assertEqual(by_doc[self.dr_a.id]["initials"], "AT")
         self.assertEqual(by_doc[self.dr_b.id]["time_label"], "10:00–16:00")
-        # Kapacita ordinace zůstává jeden pacient naráz.
+        # Room capacity stays one patient at a time.
         self.reservation(start=self.dt(WED, 11, 0), doctor_id=self.dr_a.id)
         with self.assertRaises(ValidationError):
             self.reservation(start=self.dt(WED, 11, 0), doctor_id=self.dr_b.id)

@@ -15,7 +15,7 @@
                 <field name="has_pet" invisible="1"/>
                 <field name="send_email_offered" invisible="1"/>
 
-                <!-- 1. Co a kdy -->
+                <!-- 1. What and when -->
                 <group invisible="step != 'what'">
                     <group>
                         <field name="procedure_id" required="step == 'what'" options="{'no_create': True, 'no_open': True}"/>
@@ -23,9 +23,9 @@
                         <div class="d-flex align-items-center gap-2">
                             <field name="duration" class="oe_inline" style="width: 5em;"/>
                             <button name="action_extend_duration" type="object" string="+15 min" class="btn-secondary btn-sm"
-                                    context="{'minut': 15}" invisible="not procedure_id"/>
+                                    context="{'extend_minutes': 15}" invisible="not procedure_id"/>
                             <button name="action_extend_duration" type="object" string="+30 min" class="btn-secondary btn-sm"
-                                    context="{'minut': 30}" invisible="not procedure_id"/>
+                                    context="{'extend_minutes': 30}" invisible="not procedure_id"/>
                         </div>
                         <field name="serving_doctor_id" widget="radio"
                                invisible="not has_multiple_serving"
@@ -42,7 +42,7 @@
                     </group>
                 </group>
 
-                <!-- 2. Volný čas -->
+                <!-- 2. Free time -->
                 <div invisible="step != 'time'">
                     <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                         <button name="action_previous_day" type="object" string="‹ Předchozí den" class="btn-secondary"/>
@@ -93,7 +93,7 @@
                     </field>
                 </div>
 
-                <!-- 3. Klient -->
+                <!-- 3. Client -->
                 <div invisible="step != 'client'">
                     <field name="partner_mode" widget="radio" options="{'horizontal': true}"/>
                     <group>
@@ -119,7 +119,7 @@
                     </group>
                 </div>
 
-                <!-- 4. Shrnutí -->
+                <!-- 4. Summary -->
                 <div invisible="step != 'summary'">
                     <field name="summary" readonly="1" nolabel="1"/>
                 </div>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Příznak lékařky patří k osobě, proto se ukazuje tam, kde se lidé spravují
-         (Rozpis služeb → Lékařky), a ne v samostatném seznamu rezervací. -->
+    <!-- The doctor flag belongs to the person, so it is shown where people are managed
+         (Shift schedule → Doctors), not in a separate reservations list. -->
     <record id="view_vet_doctor_list_reservation" model="ir.ui.view">
-        <field name="name">elite.vet.doctor.list.rezervace</field>
+        <field name="name">elite.vet.doctor.list.reservation</field>
         <field name="model">elite.vet.doctor</field>
         <field name="inherit_id" ref="elite_vet_calendar.view_vet_doctor_list"/>
         <field name="arch" type="xml">
@@ -14,7 +14,7 @@
         </field>
     </record>
     <record id="view_vet_doctor_form_reservation" model="ir.ui.view">
-        <field name="name">elite.vet.doctor.form.rezervace</field>
+        <field name="name">elite.vet.doctor.form.reservation</field>
         <field name="model">elite.vet.doctor</field>
         <field name="inherit_id" ref="elite_vet_calendar.view_vet_doctor_form"/>
         <field name="arch" type="xml">

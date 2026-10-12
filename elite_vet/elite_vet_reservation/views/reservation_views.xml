@@ -31,8 +31,8 @@
                             invisible="state != 'confirmed' or kind == 'block' or not contact_email"/>
                     <button name="action_done" type="object" string="Proběhla" invisible="state != 'confirmed' or kind == 'block'"/>
                     <button name="action_no_show" type="object" string="Nedorazil" invisible="state != 'confirmed' or kind == 'block'"/>
-                    <!-- Tri varianty zruseni: blokace nema komu psat, rezervace bez e-mailu taky ne.
-                         Varovani o e-mailu jen tam, kde opravdu odejde. -->
+                    <!-- Three cancel variants: a block has nobody to notify, nor does a reservation without e-mail.
+                         The e-mail warning is shown only where an e-mail is actually sent. -->
                     <button name="action_cancel" type="object" string="Zrušit"
                             invisible="kind == 'block' or not contact_email or state in ('cancelled','done','no_show')"
                             confirm="Opravdu zrušit? Klientovi odejde e-mail o zrušení."/>
@@ -159,7 +159,7 @@
         <field name="context">{'search_default_from_today': 1, 'search_default_reservations': 1}</field>
     </record>
 
-    <!-- Čekající přicházejí jen z webu; ručně se tu nic nezakládá (na to je Nová rezervace). -->
+    <!-- Pending requests come only from the website; nothing is created manually here (use New reservation). -->
     <record id="view_reservation_list_waiting" model="ir.ui.view">
         <field name="name">elite.vet.reservation.list.waiting</field>
         <field name="model">elite.vet.reservation</field>

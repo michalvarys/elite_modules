@@ -16,7 +16,7 @@ class TestBoard(ReservationCase):
         self.hours(self.room1, 2, 8.25, 19.5)
         self.assign(self.dr_a, self.room1, WED, 8.0, 14.0)
         self.r = self.reservation(start=self.dt(WED, 9, 0))
-        # Fronta ukazuje jen budouci zadosti, proto relativni datum, ne WED.
+        # The waiting queue shows only future requests, hence a relative date, not WED.
         self.future = date.today() + timedelta(days=30)
         self.w = self.reservation(start=self.dt(self.future, 10, 0), state="web_new", source="web", room_id=False)
         self.R = self.env["elite.vet.reservation"]

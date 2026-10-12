@@ -20,9 +20,9 @@
                     </button>
                 </div>
                 <span class="flex-grow-1"/>
-                <button type="button" class="btn btn-light evb-zvuk" t-on-click="toggleSound"
-                        t-att-title="state.zvuk ? 'Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete' : 'Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete'">
-                    <t t-if="state.zvuk">🔔 Zvuk</t><t t-else="">🔕 Bez zvuku</t>
+                <button type="button" class="btn btn-light evb-sound" t-on-click="toggleSound"
+                        t-att-title="state.soundOn ? 'Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete' : 'Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete'">
+                    <t t-if="state.soundOn">🔔 Zvuk</t><t t-else="">🔕 Bez zvuku</t>
                 </button>
                 <button class="btn btn-primary" t-on-click="() => this.openWizard()">Nová rezervace</button>
                 <button class="btn btn-outline-secondary" t-on-click="newBlock">Nová blokace</button>
@@ -131,11 +131,11 @@
                                  draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openForm(e.id)">
                                 <div class="evb-ev-line">
-                                    <!-- Iniciály lékařky vlevo u jejího proužku, zkratka úkonu vpravo. -->
+                                    <!-- Doctor initials on the left next to her stripe, procedure abbreviation on the right. -->
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
                                     <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
-                                    <span t-if="e.spojena" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.spojena">🔗</span>
+                                    <span t-if="e.linked" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.linked">🔗</span>
                                     <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                 </div>
                                 <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>

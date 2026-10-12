@@ -14,7 +14,7 @@ class TestRoom(ReservationCase):
 
     def test_room_defaults(self):
         self.assertTrue(self.room1.online)
-        self.assertFalse(self.sal.online)
+        self.assertFalse(self.surgery.online)
         self.assertEqual(self.room1.color_hex, "#2b7870")
 
     def test_hours_require_from_before_to(self):
@@ -23,15 +23,15 @@ class TestRoom(ReservationCase):
 
     def test_hours_no_overlap_same_day(self):
         self.hours(self.room1, 0, 8.0, 12.0)
-        self.hours(self.room1, 0, 13.0, 18.0)          # prestavka je v poradku
+        self.hours(self.room1, 0, 13.0, 18.0)          # a break is fine
         with self.assertRaises(ValidationError):
-            self.hours(self.room1, 0, 11.0, 14.0)      # prekryva obe
+            self.hours(self.room1, 0, 11.0, 14.0)      # overlaps both
 
     def test_hours_display(self):
         line = self.hours(self.room1, 2, 8.25, 19.5)
         self.assertEqual(line.display_name, "St 8:15–19:30")
 
-    @mute_logger("odoo.sql_db")  # ocekavana chyba DB, at nezasviti log
+    @mute_logger("odoo.sql_db")  # expected DB error, keep it out of the log
     def test_exception_unique_per_day(self):
         Exc = self.env["elite.vet.room.exception"]
         Exc.create({"room_id": self.room1.id, "date": date(2026, 10, 28), "closed": True})
@@ -45,7 +45,7 @@ class TestRoom(ReservationCase):
             })
 
     def test_hours_overlap_allowed_when_validity_disjoint(self):
-        # Letni a zimni rezim: stejny den i cas, ale platnost se nekryje.
+        # Summer and winter schedule: same day and time, but the validity periods do not overlap.
         self.hours(self.room1, 0, 8.0, 12.0, date_from=date(2026, 4, 1), date_to=date(2026, 9, 30))
         self.hours(self.room1, 0, 9.0, 13.0, date_from=date(2026, 10, 1), date_to=date(2027, 3, 31))
 
@@ -58,7 +58,7 @@ class TestRoom(ReservationCase):
         with self.assertRaises(ValidationError):
             self.hours(self.room1, 0, 8.0, 12.0, date_from=date(2026, 10, 2), date_to=date(2026, 10, 1))
 
-    def test_plati_v_den(self):
+    def test_applies_on_day(self):
         window = self.hours(self.room1, 0, 8.0, 12.0, date_from=date(2026, 4, 1), date_to=date(2026, 9, 30))
         self.assertTrue(window.applies_on(date(2026, 6, 15)))
         self.assertTrue(window.applies_on(date(2026, 4, 1)))

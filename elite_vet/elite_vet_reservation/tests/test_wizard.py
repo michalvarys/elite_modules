@@ -1,4 +1,4 @@
-"""Průvodce „Nová rezervace“ a živá aktualizace tabule (bus)."""
+"""The "New reservation" wizard and live board updates (bus)."""
 import json
 from datetime import timedelta
 
@@ -18,7 +18,7 @@ class TestReservationWizard(ReservationCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Celý den otevřeno, ať test „na dnešek“ projde v kteroukoli hodinu.
+        # Open all day so the "today" test passes at any hour.
         for wd in range(7):
             cls.hours(cls, cls.room1, wd, 0.0, 24.0)
             cls.hours(cls, cls.room2, wd, 0.0, 24.0)
@@ -73,7 +73,7 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.doctor_id, self.dr_b)
         self.assertEqual(r.start, self.dt(self.day, 9, 0))
         self.assertEqual(r.stop, self.dt(self.day, 9, 15))
-        # Nový klient a mazlíček se založí přes párování.
+        # The new client and pet are created via matching.
         self.assertEqual(r.partner_id.name, "Jana Průvodcová")
         self.assertTrue(r.partner_id.is_vet_client)
         self.assertEqual(r.pet_id.name, "Micka")
@@ -82,7 +82,7 @@ class TestReservationWizard(ReservationCase):
 
     def test_custom_duration_limits_slots_and_sets_stop(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
-        # Od 10:15 je obsazeno: 10:00 se vejde na 15 min, na 45 min ne.
+        # Busy from 10:15: 10:00 fits for 15 min, not for 45 min.
         self.reservation(start=self.dt(self.day, 10, 15), room_id=self.room1.id)
         w = self.wizard(doctor_id=self.dr_a.id)
         self.assertEqual(w.duration, 15)
@@ -94,7 +94,7 @@ class TestReservationWizard(ReservationCase):
         self.assertNotIn(585, [m for m, _r, _d in self.lines(w)])
         self.assertNotIn(600, [m for m, _r, _d in self.lines(w)])
         self.assertIn(570, [m for m, _r, _d in self.lines(w)])
-        # Změna lékařky/data nepřepíše zvýšenou délku, změna úkonu ano.
+        # Changing the doctor/date keeps the increased duration, changing the procedure resets it.
         w.doctor_id = False
         self.assertEqual(w.duration, 45)
         w.procedure_id = self.vacc
@@ -143,7 +143,7 @@ class TestReservationWizard(ReservationCase):
         self.assertTrue(all(room == self.room2.id and doc == self.dr_b.id for _m, room, doc in got))
         self.assertNotIn((9 * 60, self.room2.id, self.dr_b.id), got)
         self.assertIn((9 * 60 + 15, self.room2.id, self.dr_b.id), got)
-        # Bez filtru lékařky je v 9:00 volno jen v ordinaci 1.
+        # Without a doctor filter only room 1 is free at 9:00.
         w2 = self.wizard()
         w2.action_step_time()
         at9 = [(room, doc) for m, room, doc in self.lines(w2) if m == 9 * 60]
@@ -152,9 +152,9 @@ class TestReservationWizard(ReservationCase):
     def test_today_is_bookable_for_reception(self):
         now = pytz.utc.localize(fields.Datetime.now()).astimezone(self.TZ)
         if now.hour == 23 and now.minute >= 30:
-            self.skipTest("Těsně před půlnocí už dnes volný čas není.")
+            self.skipTest("Just before midnight there is no free time left today.")
         today = now.date()
-        # Web (minimálně 24 h předem) dnes nic nenabídne, recepce ano.
+        # The web (at least 24 h ahead) offers nothing today, reception does.
         self.assertFalse(self.env["elite.vet.availability"].slots(self.vacc, today))
         w = self.wizard(date=today)
         w.action_step_time()
@@ -169,7 +169,7 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(w.date, self.day + timedelta(days=1))
         w.action_previous_day()
         self.assertEqual(w.date, self.day)
-        # Den bez ordinační doby přeskočí „Další volný den“.
+        # "Next free day" skips a day without opening hours.
         closed = self.day + timedelta(days=1)
         for room in (self.room1, self.room2):
             self.env["elite.vet.room.exception"].create({"room_id": room.id, "date": closed, "closed": True})
@@ -198,25 +198,25 @@ class TestReservationWizard(ReservationCase):
         self.assertFalse(w.warning)
 
     def test_reception_books_non_online_room(self):
-        # Sál není online: web ho nenabízí, recepce (průvodce i klik z tabule) ano.
+        # The theatre is not online: the web does not offer it, reception (wizard and board click) does.
         for wd in range(7):
-            self.hours(self.sal, wd, 0.0, 24.0)
-        self.assertNotIn(self.sal.id, [r for s in self.env["elite.vet.availability"].slots(self.vacc, self.day)
+            self.hours(self.surgery, wd, 0.0, 24.0)
+        self.assertNotIn(self.surgery.id, [r for s in self.env["elite.vet.availability"].slots(self.vacc, self.day)
                                        for r in s["room_ids"]])
         w = self.wizard()
         w.action_step_time()
-        self.assertIn((600, self.sal.id, False), self.lines(w))
-        # Klik do prázdné buňky Sálu: volný čas krok 2 přeskočí.
+        self.assertIn((600, self.surgery.id, False), self.lines(w))
+        # Click into an empty theatre cell: a free time skips step 2.
         w = self.W.with_context(default_date=fields.Date.to_string(self.day), default_minute=600,
-                                default_room_id=self.sal.id).create({"procedure_id": self.vacc.id})
+                                default_room_id=self.surgery.id).create({"procedure_id": self.vacc.id})
         w.action_step_time()
-        self.assertEqual((w.step, w.room_id), ("client", self.sal))
+        self.assertEqual((w.step, w.room_id), ("client", self.surgery))
         self.fill_new_client(w)
         w.action_step_summary()
         w.action_save()
         r = self.env["elite.vet.reservation"].search([("contact_email", "=", "jana.pruvodce@example.cz")])
-        self.assertEqual(r.room_id, self.sal)
-        # Úkon omezený na jiné ordinace Sál nenabídne ani recepci; Sál bez ordinační doby taky ne.
+        self.assertEqual(r.room_id, self.surgery)
+        # A procedure limited to other rooms does not offer the theatre even to reception; nor does a theatre without hours.
         w = self.wizard(procedure_id=self.derm.id)
         w.action_step_time()
         self.assertEqual({room for _m, room, _d in self.lines(w)}, {self.room1.id})
@@ -236,15 +236,15 @@ class TestReservationWizard(ReservationCase):
             self.assertFalse(f.partner_id)
             self.assertFalse(f.pet_id)
             self.assertFalse(f.contact_email)
-            self.assertFalse(f.has_pet)   # jméno a druh mazlíčka jsou vidět
+            self.assertFalse(f.has_pet)   # pet name and species are visible
             f.contact_name = "Nová Klientka"
             f.contact_phone = "+420 606 333 444"
             f.contact_email = "nova.klientka@example.cz"
             self.assertTrue(f.send_email)
             f.send_email = False
             f.contact_email = "nova.k@example.cz"
-            self.assertFalse(f.send_email)   # odškrtnutí recepcí platí
-            # Přepnutí tam a zpět nesmaže, co recepce napsala.
+            self.assertFalse(f.send_email)   # reception's unchecking is kept
+            # Switching back and forth does not erase what reception typed.
             f.partner_mode = "existing"
             f.partner_mode = "new"
             self.assertEqual(f.contact_name, "Nová Klientka")
@@ -262,7 +262,7 @@ class TestReservationWizard(ReservationCase):
         self.assertFalse(self.mails_to("nova.k@example.cz"))
 
     def test_pet_of_other_client_is_ignored_in_summary_and_save(self):
-        # Zápis bez onchange (např. starý stav dialogu): mazlíček jiného klienta se nepoužije.
+        # Write without onchange (e.g. stale dialog state): another client's pet is not used.
         partner = self.env["res.partner"].create({"name": "Eva Majitelka", "is_vet_client": True})
         pet = self.env["elite.vet.pet"].create({"name": "Bobík", "partner_id": partner.id})
         w = self.wizard(minute=600, room_id=self.room1.id)
@@ -313,17 +313,17 @@ class TestReservationWizard(ReservationCase):
         w = self.wizard(minute=600, room_id=self.room1.id)
         w.action_step_time()
         with self.assertRaises(UserError):
-            w.action_step_summary()   # existující klient nevybrán
+            w.action_step_summary()   # no existing client selected
         w.write({"partner_mode": "new", "contact_name": "Bez Kontaktu"})
         with self.assertRaises(UserError):
-            w.action_step_summary()   # chybí telefon i e-mail
+            w.action_step_summary()   # both phone and e-mail missing
 
     def test_overlap_is_refused_on_save(self):
         w = self.wizard(minute=600, room_id=self.room1.id)
         w.action_step_time()
         self.fill_new_client(w)
         w.action_step_summary()
-        # Mezitím termín obsadil někdo jiný.
+        # Someone else took the slot in the meantime.
         self.reservation(start=self.dt(self.day, 10, 0), room_id=self.room1.id)
         with self.assertRaises(ValidationError):
             w.action_save()
@@ -346,7 +346,7 @@ class TestLiveUpdate(ReservationCase):
     def bus_messages(self):
         group = self.env.ref("elite_vet_reservation.group_reservation_reception")
         channel = json_dump(channel_with_db(self.env.cr.dbname, group))
-        self.env.cr.precommit.run()   # zprávy bus.bus vznikají až před commitem
+        self.env.cr.precommit.run()   # bus.bus messages are created only before commit
         msgs = [json.loads(m.message) for m in self.env["bus.bus"].sudo().search([("channel", "=", channel)], order="id")]
         return [m["payload"] for m in msgs if m["type"] == "elite_vet_reservation/changed"]
 
@@ -355,7 +355,7 @@ class TestLiveUpdate(ReservationCase):
             "name": "Recepce Bus", "login": "recepce_bus",
             "groups_id": [(6, 0, [self.env.ref("base.group_user").id,
                                   self.env.ref("elite_vet_reservation.group_reservation_manager").id])]})
-        # Odoo odebírá kanály všech skupin uživatele; Správce implikuje Recepci.
+        # Odoo subscribes to channels of all the user's groups; Manager implies Reception.
         self.assertIn(self.env.ref("elite_vet_reservation.group_reservation_reception"), user.groups_id)
 
     def test_create_sends_one_message_per_transaction(self):

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Nahrazuje iframe WinVetu vlastnim pruvodcem. Texty jsou anglicky (zdroj),
-         cestina/nemcina/rustina v i18n. JavaScript jen plni data do techto bloku. -->
+    <!-- Replaces the WinVet iframe with our own wizard. Texts are in English (source),
+         Czech/German/Russian live in i18n. JavaScript only fills data into these blocks. -->
     <template id="booking_widget" inherit_id="elite_vet_web.rezervace" name="Elite Vet - Rezervace: vlastní průvodce">
         <xpath expr="//div[hasclass('evrez')]" position="replace">
-            <t t-set="ev_rez" t-value="request.env['elite.vet.setting'].sudo().nastaveni()"/>
+            <t t-set="ev_settings" t-value="request.env['elite.vet.setting'].sudo().nastaveni()"/>
             <section id="ev-booking" class="evbk o_colored_level" t-att-data-lang="request.env.lang">
                 <div class="ev-container evbk-inner">
-                    <div t-if="ev_rez.booking_intro" class="evbk-intro" t-out="ev_rez.booking_intro"/>
+                    <div t-if="ev_settings.booking_intro" class="evbk-intro" t-out="ev_settings.booking_intro"/>
 
                     <ol class="evbk-steps" aria-label="Steps">
                         <li data-step="1" class="is-active">1 · What do you need</li>
@@ -16,7 +16,7 @@
                         <li data-step="4">4 · Done</li>
                     </ol>
 
-                    <!-- KROK 1 -->
+                    <!-- STEP 1 -->
                     <div class="evbk-step" data-step="1">
                         <div class="evbk-tabs" role="tablist">
                             <button type="button" class="is-active" data-tab="procedure">By problem</button>
@@ -45,7 +45,7 @@
                         </div>
                     </div>
 
-                    <!-- KROK 2 -->
+                    <!-- STEP 2 -->
                     <div class="evbk-step" data-step="2" hidden="hidden">
                         <div class="evbk-summary evbk-summary-row">
                             <div data-summary="choice"></div>
@@ -81,7 +81,7 @@
                         <button type="button" class="evbk-back" data-back="1">‹ Back</button>
                     </div>
 
-                    <!-- KROK 3 -->
+                    <!-- STEP 3 -->
                     <div class="evbk-step" data-step="3" hidden="hidden">
                         <div class="evbk-summary" data-summary="slot"></div>
                         <form class="evbk-form" novalidate="novalidate">
@@ -99,10 +99,10 @@
                             <label>E-mail for confirmation <input name="contact_email" type="email" autocomplete="email" required="required"/></label>
                             <label>Phone <input name="contact_phone" type="tel" autocomplete="tel" required="required"/></label>
                             <label class="evbk-consent"><input name="consent" type="checkbox"/>
-                                <span t-if="ev_rez.booking_consent_text" t-out="ev_rez.booking_consent_text"/>
+                                <span t-if="ev_settings.booking_consent_text" t-out="ev_settings.booking_consent_text"/>
                                 <span t-else="">I agree to the processing of my personal data for the purpose of this appointment.</span>
                             </label>
-                            <!-- Honeypot: skryte pole, ktere clovek nevyplni; boti ano a server je zahodi -->
+                            <!-- Honeypot: hidden field a human leaves empty; bots fill it and the server discards them -->
                             <input name="hp" type="text" tabindex="-1" autocomplete="off" class="evbk-hp"/>
                             <p class="evbk-error" data-error="form" hidden="hidden"></p>
                             <button type="submit" class="evbk-submit">Send the request</button>
@@ -110,7 +110,7 @@
                         <button type="button" class="evbk-back" data-back="2">‹ Back</button>
                     </div>
 
-                    <!-- KROK 4 -->
+                    <!-- STEP 4 -->
                     <div class="evbk-step" data-step="4" hidden="hidden">
                         <div class="evbk-done">
                             <div class="evbk-done-icon">✓</div>
@@ -122,8 +122,8 @@
                         </div>
                     </div>
 
-                    <!-- Texty pro JavaScript (překládají se v i18n jako ostatní QWeb texty).
-                         {name} nahradí skript skutečným názvem. -->
+                    <!-- Texts for JavaScript (translated in i18n like other QWeb texts).
+                         The script replaces {name} with the actual name. -->
                     <div class="evbk-texts" hidden="hidden">
                         <div data-text="loading">Loading…</div>
                         <div data-text="spec-procedures">Examinations in {name}</div>
@@ -147,17 +147,17 @@
                     <div class="ev-container evbk-inner" style="max-width:560px">
                         <h1 style="font-size:28px;margin:24px 0 12px">Cancel appointment</h1>
                         <div class="evbk-summary">
-                            <t t-out="rez.name"/><br/><t t-out="rez.start_display"/>
-                            <t t-if="rez.room_id"> · <t t-out="rez.room_id.name"/></t>
+                            <t t-out="reservation.name"/><br/><t t-out="reservation.start_display"/>
+                            <t t-if="reservation.room_id"> · <t t-out="reservation.room_id.name"/></t>
                         </div>
-                        <t t-if="stav == 'zruseno'">
+                        <t t-if="status == 'cancelled'">
                             <p class="evbk-note">The appointment has been cancelled. You can book a new one on the reservation page.</p>
                         </t>
-                        <t t-elif="stav == 'uz_zruseno'">
+                        <t t-elif="status == 'already_cancelled'">
                             <p>This appointment is already cancelled.</p>
                         </t>
-                        <t t-elif="stav == 'pozde'">
-                            <p>It is too late to cancel online. Please call the reception: <b t-out="telefon"/>.</p>
+                        <t t-elif="status == 'too_late'">
+                            <p>It is too late to cancel online. Please call the reception: <b t-out="phone"/>.</p>
                         </t>
                         <t t-else="">
                             <form method="post">
@@ -184,9 +184,9 @@
                 <section class="evbk o_colored_level">
                     <div class="ev-container evbk-inner" style="max-width:560px">
                         <h1 style="font-size:28px;margin:24px 0 12px">Deposit</h1>
-                        <div class="evbk-summary"><t t-out="rez.name"/><br/><t t-out="rez.start_display"/></div>
-                        <p t-if="rez.deposit_state == 'paid'">The deposit has been paid. Thank you.</p>
-                        <p t-elif="rez.deposit_state == 'pending'">Deposit of <b t-out="rez.procedure_id.deposit_amount"/> Kč is pending.
+                        <div class="evbk-summary"><t t-out="reservation.name"/><br/><t t-out="reservation.start_display"/></div>
+                        <p t-if="reservation.deposit_state == 'paid'">The deposit has been paid. Thank you.</p>
+                        <p t-elif="reservation.deposit_state == 'pending'">Deposit of <b t-out="reservation.procedure_id.deposit_amount"/> Kč is pending.
                            Online payment will be available soon; until then the reception will send you the payment details.</p>
                         <p t-else="">No deposit is required for this appointment.</p>
                         <p><a t-att-href="url_for('/rezervacni-system')">‹ Back to reservations</a></p>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_setting_reservation_form_booking" model="ir.ui.view">
-        <field name="name">elite.vet.setting.rezervace.form.booking</field>
+        <field name="name">elite.vet.setting.reservation.form.booking</field>
         <field name="model">elite.vet.setting</field>
         <field name="inherit_id" ref="elite_vet_web.view_setting_rezervace_form"/>
         <field name="arch" type="xml">
@@ -25,7 +25,7 @@
                         <field name="booking_deposits_enabled"/>
                     </group>
                 </group>
-                <!-- Html pole přes celou šířku mimo group by bylo bez popisku; label dáme výslovně. -->
+                <!-- A full-width Html field outside a group would have no label; add it explicitly. -->
                 <div class="mb-3">
                     <label for="booking_intro" string="Text nad rezervací" class="o_form_label d-block"/>
                     <field name="booking_intro" placeholder="Text nad rezervačním průvodcem"/>
@@ -35,8 +35,8 @@
                     <field name="booking_consent_text" placeholder="Souhlasím se zpracováním údajů…"/>
                 </div>
             </xpath>
-            <!-- Starý WinVet (odkaz na cizí rezervaci a hláška při načítání) stránka už nepoužívá.
-                 Skrýváme jen tyto skupiny; telefon a odkaz na rozpis služeb zůstávají. -->
+            <!-- The page no longer uses the old WinVet (external booking link and loading notice).
+                 Only these groups are hidden; the phone and shift schedule link stay. -->
             <xpath expr="//field[@name='booking_url']/parent::group" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>

@@ -15,7 +15,7 @@ class TestDoctorAssignment(ReservationCase):
 
     def test_doctor_cannot_overlap_herself(self):
         self.assign(self.dr_a, self.room1, date(2026, 10, 14), 8.0, 14.0)
-        self.assign(self.dr_a, self.room2, date(2026, 10, 14), 14.0, 18.0)   # navazuje, ok
+        self.assign(self.dr_a, self.room2, date(2026, 10, 14), 14.0, 18.0)   # adjacent, ok
         with self.assertRaises(ValidationError):
             self.assign(self.dr_a, self.room2, date(2026, 10, 14), 13.0, 15.0)
 

@@ -1,7 +1,7 @@
-"""18.0.1.3.0: Nastavení rezervace a Časté dotazy (menu z elite_vet_web) znovu pod Konfigurace.
+"""18.0.1.3.0: booking settings and FAQ menus (from elite_vet_web) back under Configuration.
 
-Samostatný upgrade elite_vet_web je vracel pod kořen Rezervace. Po dalším
-samostatném `-u elite_vet_web` je obnoví `-u elite_vet_reservation`.
+A standalone upgrade of elite_vet_web moved them back under the Reservations root.
+After another standalone `-u elite_vet_web`, `-u elite_vet_reservation` restores them.
 """
 from odoo import SUPERUSER_ID, api
 from odoo.addons.elite_vet_reservation import move_foreign_menus

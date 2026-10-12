@@ -8,10 +8,10 @@ from .common import ReservationCase
 class TestProcedure(ReservationCase):
 
     def test_rooms_for_booking_defaults_to_all_online_rooms(self):
-        self.assertEqual(self.vacc.rooms_for_booking(), self.room1 | self.room2)  # Sal neni online
+        self.assertEqual(self.vacc.rooms_for_booking(), self.room1 | self.room2)  # the theatre is not online
 
     def test_rooms_for_booking_respects_room_ids_and_online(self):
-        self.derm.room_ids = [(6, 0, [self.room1.id, self.sal.id])]
+        self.derm.room_ids = [(6, 0, [self.room1.id, self.surgery.id])]
         self.assertEqual(self.derm.rooms_for_booking(), self.room1)
 
     def test_duration_must_be_positive_multiple_of_five(self):

@@ -23,7 +23,7 @@
 .evb-symbol { display: inline-block; flex-shrink: 0; min-width: 16px; margin-left: 4px; text-align: center; padding: 0 3px; border-radius: 3px; background: rgba(255,255,255,.3); font-weight: 700; }
 .evb-web { float: right; }
 
-// ---------- hlavička: nadpis dne a dny v týdnu ----------
+// ---------- header: day title and weekdays ----------
 .evb-toolbar { flex-wrap: wrap; }
 .evb-day-title { margin: 0 8px 0 4px; font-size: 1.35rem; font-weight: 700; white-space: nowrap; }
 .evb-week { display: flex; gap: 4px; }
@@ -41,7 +41,7 @@
     .evb-weekday-short, .evb-weekday-date { color: #fff; }
 }
 
-// ---------- události ----------
+// ---------- events ----------
 .evb-event { line-height: 16px; }
 .evb-ev-line { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .evb-ev-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
@@ -53,29 +53,29 @@
     background: rgba(255,255,255,.3); font-size: 11px; font-weight: 700; letter-spacing: .02em;
 }
 
-// ---------- čára „teď“ ----------
+// ---------- "now" line ----------
 .evb-now { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid #dc2626; z-index: 3; pointer-events: none; }
 .evb-now-axis span {
     position: absolute; right: 2px; top: -9px; padding: 0 3px; border-radius: 3px;
     background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px;
 }
 
-// ---------- panel Čekající ----------
+// ---------- waiting panel ----------
 .evb-card-when { font-weight: 700; color: #2b7870; }
 .evb-suggestions { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .evb-suggestion { text-align: left; white-space: normal; }
 .evb-no-suggestion { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 6px; }
 
-// ---------- víkend / svátek v hlavičce ----------
+// ---------- weekend / holiday in the header ----------
 .evb-day-note {
     padding: 2px 8px; border-radius: 12px; border: 1px solid #fcd34d; background: #fffbeb;
     color: #92400e; font-size: 12px; font-weight: 600; white-space: nowrap;
     max-width: 32ch; overflow: hidden; text-overflow: ellipsis;
 }
 
-// ---------- služby lékařek ----------
-// Všechny hlavičky musí mít stejnou výšku, jinak by se časová osa sloupců rozjela;
-// proto pevná výška, ale s posuvníkem místo oříznutí.
+// ---------- doctor shifts ----------
+// All headers must share one height or the column time axes would drift apart;
+// hence a fixed height, with a scrollbar instead of clipping.
 .evb-head { height: 100px; overflow-y: auto; }
 .evb-doctor-chip { color: #fff; font-weight: 600; }
 .evb-overlap { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-weight: 600; }
@@ -89,7 +89,7 @@
 }
 .evb-event { z-index: 2; }
 
-// ---------- blokace jen pro web: světlé čárkované, kliky propouští do sloupce ----------
+// ---------- web-only blocks: light and dashed, clicks pass through to the column ----------
 .evb-event.evb-block.evb-block-web {
     background: repeating-linear-gradient(135deg, rgba(148,163,184,.18) 0 6px, rgba(255,255,255,0) 6px 12px) !important;
     border: 1px dashed #94a3b8; box-shadow: none; color: #475569; pointer-events: none; z-index: 1;
@@ -100,7 +100,7 @@
     cursor: pointer; max-width: calc(100% - 4px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-// ---------- náhled čekající žádosti (najetí myší v panelu) ----------
+// ---------- waiting request preview (hover in the panel) ----------
 .evb-card-active { outline: 2px solid #16a34a; outline-offset: -1px; }
 .evb-preview {
     position: absolute; right: 4px; z-index: 3; pointer-events: none; overflow: hidden;
@@ -114,7 +114,7 @@
 .evb-preview.evb-preview-dim { opacity: .35; animation: none; }
 @keyframes evb-preview-pulse { from { box-shadow: 0 0 0 0 rgba(22, 163, 74, .0); } to { box-shadow: 0 0 0 4px rgba(22, 163, 74, .25); } }
 
-// ---------- táhlo šířky panelu čekajících ----------
+// ---------- waiting panel resize handle ----------
 .evb-resizer {
     flex: 0 0 6px; margin-left: -3px; margin-right: -3px; position: relative; z-index: 5;
     cursor: col-resize; touch-action: none; background: transparent;

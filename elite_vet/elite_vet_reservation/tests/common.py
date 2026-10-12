@@ -6,37 +6,37 @@ from odoo.tests import TransactionCase
 
 
 class ReservationCase(TransactionCase):
-    """Spolecna data: tri ordinace jako na klinice a par pomocnych metod."""
+    """Shared data: three rooms as at the clinic, plus a few helper methods."""
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Vychozi data z post_init_hook (ordinace, hodiny, ukony) i cokoliv, co v DB
-        # uz je, by testum podsouvalo cizi ordinace a sloty. Archivujeme to;
-        # search([]) pak vraci jen fixtures z teto tridy.
+        # Default data from post_init_hook (rooms, hours, procedures) and anything
+        # already in the DB would feed foreign rooms and slots into the tests. Archive it;
+        # search([]) then returns only this class's fixtures.
         for model in ("elite.vet.room", "elite.vet.procedure"):
             cls.env[model].search([]).write({"active": False})
         cls.env["elite.vet.doctor.assignment"].search([]).unlink()
-        # Rezervace a e-maily z rucniho zkouseni v teze databazi by testum
-        # obsazovaly sloty a pricitaly zpravy; vse se na konci tridy vrati zpet.
+        # Reservations and e-mails from manual testing in the same database would
+        # occupy slots and add messages; everything is rolled back at the end of the class.
         cls.env["elite.vet.reservation"].search([]).unlink()
         cls.env["mail.mail"].search([]).unlink()
         Room = cls.env["elite.vet.room"]
         cls.room1 = Room.create({"name": "Ordinace 1", "sequence": 10, "color": "teal"})
         cls.room2 = Room.create({"name": "Ordinace 2", "sequence": 20, "color": "blue"})
-        cls.sal = Room.create({"name": "Sál", "sequence": 30, "color": "purple", "online": False})
+        cls.surgery = Room.create({"name": "Sál", "sequence": 30, "color": "purple", "online": False})
         Proc = cls.env["elite.vet.procedure"]
         cls.vacc = Proc.create({"name": "Vaccination", "duration": 15, "symbol": "V", "color": "green"})
         cls.derm = Proc.create({"name": "Dermatological problem", "duration": 30, "symbol": "D",
                                 "color": "blue", "room_ids": [(6, 0, [cls.room1.id])]})
         Doctor = cls.env["elite.vet.doctor"]
-        # Skutečné lékařky z ukázkových dat by se testům míchaly do „kdo úkon dělá“.
+        # Real doctors from the demo data would leak into the tests' "who performs the procedure".
         Doctor.search([]).write({"accepts_bookings": False})
         cls.dr_a = Doctor.create({"name": "MVDr. Alena Testová", "accepts_bookings": True})
         cls.dr_b = Doctor.create({"name": "MVDr. Bára Testová", "accepts_bookings": True})
-        # Víkendy a svátky jen ručně (výchozí ano) by starším testům s pevnými daty
-        # (28. 10.) a „dnes + N dní“ měnily výsledek podle kalendáře. Vypnuto;
-        # testy víkendů a svátků (test_blocks) si je zapínají samy.
+        # Weekends and holidays reception-only (default on) would make older tests with
+        # fixed dates (Oct 28) and "today + N days" depend on the calendar. Disabled;
+        # the weekend and holiday tests (test_blocks) enable them themselves.
         cls.env["elite.vet.setting"].nastaveni().write({
             "booking_block_weekends": False, "booking_block_holidays": False})
 
@@ -55,7 +55,7 @@ class ReservationCase(TransactionCase):
     TZ = pytz.timezone("Europe/Prague")
 
     def dt(self, day, h, m=0):
-        """Prazsky cas -> naivni UTC, jak ho Odoo uklada."""
+        """Prague time -> naive UTC, as Odoo stores it."""
         local = self.TZ.localize(datetime(day.year, day.month, day.day, h, m))
         return local.astimezone(pytz.utc).replace(tzinfo=None)
 

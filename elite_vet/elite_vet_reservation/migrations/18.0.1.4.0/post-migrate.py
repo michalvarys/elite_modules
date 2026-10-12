@@ -1,4 +1,4 @@
-"""18.0.1.4.0: druh blokace. Všechny dosavadní blokace byly úplné (nikdo tam nic nevytvoří)."""
+"""18.0.1.4.0: block scope. All existing blocks were full blocks (nothing can be booked into them)."""
 
 
 def migrate(cr, version):

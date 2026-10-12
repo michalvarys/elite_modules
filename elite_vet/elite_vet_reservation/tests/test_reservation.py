@@ -10,8 +10,8 @@ D = date(2026, 10, 14)
 
 @tagged("post_install", "-at_install")
 class TestReservation(ReservationCase):
-    # Pozn.: soubeh dvou transakci (zamek ordinace pod REPEATABLE READ) tu testovat nejde,
-    # testy sdili jeden kurzor pod savepointem a druhy skutecny kurzor by se o zamek zablokoval.
+    # Note: two concurrent transactions (room lock under REPEATABLE READ) cannot be tested here;
+    # tests share one cursor under a savepoint and a second real cursor would block on the lock.
 
     def test_stop_defaults_to_start_plus_duration(self):
         r = self.reservation(start=self.dt(D, 9, 0))
@@ -86,8 +86,8 @@ class TestReservation(ReservationCase):
             "start": self.dt(D, 12, 0), "stop": self.dt(D, 13, 0),
             "repeat_weekly_until": date(2026, 11, 4)})
         copies = self.env["elite.vet.reservation"].search([("block_reason", "=", "Oběd"), ("kind", "=", "block")])
-        self.assertEqual(len(copies), 4)   # 14.10, 21.10, 28.10, 4.11
-        # 25.10.2026 se meni cas: kopie musi zustat ve 12:00 mistniho casu
+        self.assertEqual(len(copies), 4)   # Oct 14, Oct 21, Oct 28, Nov 4
+        # DST changes on 2026-10-25: the copies must stay at 12:00 local time
         self.assertEqual(copies.sorted("start")[-1].start, self.dt(date(2026, 11, 4), 12, 0))
 
     def test_cancel_and_reschedule(self):
@@ -96,11 +96,11 @@ class TestReservation(ReservationCase):
         self.assertEqual((r.start, r.room_id), (self.dt(D, 10, 0), self.room2))
         r.action_cancel("client")
         self.assertEqual((r.state, r.cancel_reason), ("cancelled", "client"))
-        self.reservation(start=self.dt(D, 10, 0), room_id=self.room2.id)   # zrusena uz neblokuje
+        self.reservation(start=self.dt(D, 10, 0), room_id=self.room2.id)   # a cancelled one no longer blocks
 
-    def test_sparovat_creates_partner_and_pet(self):
-        # Vlastní telefon: výchozí z common.py může v DB už mít klient z ručního zkoušení
-        # a párování podle telefonu by našlo jeho.
+    def test_match_client_creates_partner_and_pet(self):
+        # Own phone number: the default from common.py may already belong to a client from
+        # manual testing in the DB, and matching by phone would find that client.
         r = self.reservation(start=self.dt(D, 9, 0), contact_email="novy@example.cz", contact_phone="+420 603 918 274",
                              pet_name="Fík", pet_species="cat")
         r.action_match_client()

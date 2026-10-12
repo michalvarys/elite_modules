@@ -52,6 +52,11 @@ def migrate(cr, version):
     for old, new in XMLIDS:
         cr.execute("UPDATE ir_model_data SET name = %s WHERE module = 'elite_vet_reservation' AND name = %s",
                    (new, old))
+        # Website views are matched by key; website-specific copies (created for the
+        # website-specific page) must keep the same key as the generic view, otherwise
+        # both get applied and the second xpath fails.
+        cr.execute("UPDATE ir_ui_view SET key = %s WHERE key = %s",
+                   ("elite_vet_reservation." + new, "elite_vet_reservation." + old))
     for table, column, old, new in CODE:
         cr.execute('UPDATE "%s" SET "%s" = replace("%s", %%s, %%s) WHERE "%s" LIKE %%s'
                    % (table, column, column, column), (old, new, "%" + old + "%"))

@@ -1,8 +1,8 @@
-"""18.0.1.2.0: přepočet názvů rezervací.
+"""18.0.1.2.0: recompute reservation names.
 
-Před verzí 18.0.1.2.0 se název počítal v jazyce toho, kdo rezervaci založil
-(web v němčině, správce v angličtině). Teď se počítá v jazyce kliniky;
-staré rezervace přepočítáme, ať tabule i seznamy mluví česky.
+Before 18.0.1.2.0 the name was computed in the language of whoever created the
+reservation (website in German, admin in English). Now it is computed in the
+clinic's language; old reservations are recomputed so the board and lists are in Czech.
 """
 import logging
 

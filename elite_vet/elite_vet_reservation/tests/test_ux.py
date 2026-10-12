@@ -1,5 +1,5 @@
-"""UX tabule a administrace: české názvy, návrhy v panelu Čekající,
-popisky událostí, kopírování rozpisu, summary ordinační doby, „Kdo dělá“."""
+"""Board and admin UX: Czech names, suggestions in the Waiting panel,
+event labels, copying the schedule, opening hours summary, "Who performs it"."""
 from datetime import date, timedelta
 
 from odoo.exceptions import UserError
@@ -15,7 +15,7 @@ WED = date(2026, 10, 14)
 
 @tagged("post_install", "-at_install")
 class TestBoardSuggestions(ReservationCase):
-    """board_suggestions: kam jde čekající žádost potvrdit v požadovaném čase."""
+    """board_suggestions: where a waiting request can be confirmed at the requested time."""
 
     @classmethod
     def setUpClass(cls):
@@ -23,24 +23,24 @@ class TestBoardSuggestions(ReservationCase):
         icon = cls.env["elite.vet.team.icon"].search([], limit=1)
         section = cls.env["elite.vet.team.section"].create({"name": "Lékařky UX test"})
         Spec = cls.env["elite.vet.team.specialization"]
-        cls.stomatologie = Spec.create({"name": "UX stomatologie", "icon_id": icon.id})
-        cls.ocni = Spec.create({"name": "UX oftalmologie", "icon_id": icon.id})
+        cls.dentistry = Spec.create({"name": "UX stomatologie", "icon_id": icon.id})
+        cls.ophthalmology = Spec.create({"name": "UX oftalmologie", "icon_id": icon.id})
         Member = cls.env["elite.vet.team.member"]
         cls.dr_a.member_id = Member.create({"name": cls.dr_a.name, "section_id": section.id,
-                                            "specialization_ids": [(6, 0, cls.stomatologie.ids)]})
+                                            "specialization_ids": [(6, 0, cls.dentistry.ids)]})
         cls.dr_b.member_id = Member.create({"name": cls.dr_b.name, "section_id": section.id,
-                                            "specialization_ids": [(6, 0, cls.ocni.ids)]})
-        cls.zuby = cls.env["elite.vet.procedure"].create({
+                                            "specialization_ids": [(6, 0, cls.ophthalmology.ids)]})
+        cls.dental = cls.env["elite.vet.procedure"].create({
             "name": "Dental examination UX", "duration": 30,
-            "specialization_ids": [(6, 0, cls.stomatologie.ids)]})
+            "specialization_ids": [(6, 0, cls.dentistry.ids)]})
         for wd in range(7):
             cls.hours(cls, cls.room1, wd, 8.0, 18.0)
             cls.hours(cls, cls.room2, wd, 8.0, 18.0)
-        # Nastavení v DB mohl kdokoli změnit; testy počítají s výchozím chováním.
+        # Anyone may have changed the settings in the DB; the tests expect the default behaviour.
         cls.env["elite.vet.setting"].nastaveni().write({
             "booking_require_doctor": False, "booking_max_days_ahead": 60,
             "booking_min_hours_before": 24, "booking_slot_step": 15})
-        # Budoucí den uvnitř horizontu webu (výchozí 60 dní), ať platí kdykoli se testy pustí.
+        # A future day within the web horizon (default 60 days), valid whenever the tests run.
         cls.day = date.today() + timedelta(days=10)
         cls.R = cls.env["elite.vet.reservation"]
 
@@ -71,9 +71,9 @@ class TestBoardSuggestions(ReservationCase):
         self.assertEqual(self.pairs(self.waiting()), [(self.room2.id, self.dr_b.id)])
 
     def test_specialised_procedure_only_with_qualified_doctor(self):
-        self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)   # oční, zuby nedělá
-        self.assign(self.dr_a, self.room2, self.day, 8.0, 12.0)   # stomatoložka
-        self.assertEqual(self.pairs(self.waiting(self.zuby)), [(self.room2.id, self.dr_a.id)])
+        self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)   # ophthalmologist, does not do dental
+        self.assign(self.dr_a, self.room2, self.day, 8.0, 12.0)   # dentist
+        self.assertEqual(self.pairs(self.waiting(self.dental)), [(self.room2.id, self.dr_a.id)])
 
     def test_requested_doctor_is_respected(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
@@ -81,7 +81,7 @@ class TestBoardSuggestions(ReservationCase):
         self.assertEqual(self.pairs(self.waiting(doctor=self.dr_b)), [(self.room2.id, self.dr_b.id)])
 
     def test_room_without_duty_offered_without_doctor_when_not_required(self):
-        # Obecný úkon a bez povinného lékaře: ordinace bez služby se nabídne, jen bez lékařky.
+        # General procedure and no required doctor: a room without duty is offered, just without a doctor.
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         self.assertEqual(self.pairs(self.waiting()), [(self.room1.id, self.dr_a.id), (self.room2.id, False)])
 
@@ -100,8 +100,8 @@ class TestBoardSuggestions(ReservationCase):
         w = self.waiting()
         row = next(x for x in self.R.board_data(self.day.isoformat())["waiting"] if x["id"] == w.id)
         self.assertEqual(row["minute"], 540)
-        dny = ["po", "út", "st", "čt", "pá", "so", "ne"]
-        self.assertEqual(row["date_label"], "%s %d. %d. 09:00" % (dny[self.day.weekday()], self.day.day, self.day.month))
+        weekdays = ["po", "út", "st", "čt", "pá", "so", "ne"]
+        self.assertEqual(row["date_label"], "%s %d. %d. 09:00" % (weekdays[self.day.weekday()], self.day.day, self.day.month))
         self.R.board_confirm(w.id, row["date"], row["minute"], self.room2.id, self.dr_b.id)
         self.assertEqual((w.state, w.room_id, w.doctor_id, w.start),
                          ("confirmed", self.room2, self.dr_b, self.dt(self.day, 9, 0)))
@@ -112,7 +112,7 @@ class TestBoardSuggestions(ReservationCase):
         self.assertFalse(row["past"])
         today = date.today()
         old = self.reservation(start=self.dt(today, 0, 0), state="web_new", source="web", room_id=False)
-        old.stop = self.dt(today + timedelta(days=1), 23, 0)   # ještě v seznamu čekajících
+        old.stop = self.dt(today + timedelta(days=1), 23, 0)   # still in the waiting list
         row = next(x for x in self.R.board_data(today.isoformat())["waiting"] if x["id"] == old.id)
         self.assertTrue(row["past"])
         self.assertEqual(row["suggestions"], [])
@@ -120,10 +120,10 @@ class TestBoardSuggestions(ReservationCase):
     def test_confirmed_reservation_has_no_suggestions(self):
         self.assertEqual(self.R.board_suggestions(self.reservation(start=self.dt(self.day, 9, 0)).id), [])
 
-    # ---------- tažení na tabuli hlídá lékařku ----------
+    # ---------- dragging on the board checks the doctor ----------
     def test_drag_confirm_without_qualified_doctor_fails(self):
-        self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)   # oční, zuby nedělá
-        w = self.waiting(self.zuby)
+        self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)   # ophthalmologist, does not do dental
+        w = self.waiting(self.dental)
         with self.assertRaisesRegex(UserError, "V 9:00 v Ordinace 1 neslouží lékařka, která dělá Dental examination UX"):
             self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room1.id)
         self.assertEqual(w.state, "web_new")
@@ -131,7 +131,7 @@ class TestBoardSuggestions(ReservationCase):
     def test_drag_confirm_sets_single_qualified_doctor(self):
         self.assign(self.dr_b, self.room1, self.day, 8.0, 12.0)
         self.assign(self.dr_a, self.room2, self.day, 8.0, 12.0)
-        w = self.waiting(self.zuby)
+        w = self.waiting(self.dental)
         self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room2.id)
         self.assertEqual((w.state, w.room_id, w.doctor_id), ("confirmed", self.room2, self.dr_a))
 
@@ -146,12 +146,12 @@ class TestBoardSuggestions(ReservationCase):
 
     def test_drag_confirm_outside_duty_fails(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
-        w = self.waiting(self.zuby, h=11, m=45)   # 30 min úkon přesahuje konec služby
+        w = self.waiting(self.dental, h=11, m=45)   # 30 min procedure exceeds the end of the shift
         with self.assertRaises(UserError):
             self.R.board_confirm(w.id, self.day.isoformat(), 705, self.room1.id)
 
     def test_drag_confirm_general_procedure_without_duty_allowed(self):
-        # Obecný úkon bez povinného lékaře jde i do ordinace bez služby (jako v návrzích).
+        # A general procedure without a required doctor may go to a room without duty (as in the suggestions).
         w = self.waiting()
         self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room2.id)
         self.assertEqual((w.state, w.doctor_id.id), ("confirmed", False))
@@ -160,13 +160,13 @@ class TestBoardSuggestions(ReservationCase):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)
         self.assign(self.dr_a, self.room2, self.day, 13.0, 17.0)
-        r = self.reservation(start=self.dt(self.day, 9, 0), procedure_id=self.zuby.id, doctor_id=self.dr_a.id)
+        r = self.reservation(start=self.dt(self.day, 9, 0), procedure_id=self.dental.id, doctor_id=self.dr_a.id)
         with self.assertRaisesRegex(UserError, "neslouží lékařka, která dělá"):
-            self.R.board_move(r.id, self.day.isoformat(), 540, self.room2.id)   # jen oční dr. B
+            self.R.board_move(r.id, self.day.isoformat(), 540, self.room2.id)   # only ophthalmologist dr. B
         self.assertEqual(r.room_id, self.room1)
         self.R.board_move(r.id, self.day.isoformat(), 840, self.room2.id)
         self.assertEqual((r.room_id, r.start, r.doctor_id), (self.room2, self.dt(self.day, 14, 0), self.dr_a))
-        # Obecný úkon u lékařky, která v nové ordinaci neslouží: přepíše se na tu, která tam je.
+        # General procedure with a doctor not on duty in the new room: reassigned to the one who is there.
         v = self.reservation(start=self.dt(self.day, 10, 0), doctor_id=self.dr_a.id)
         self.R.board_move(v.id, self.day.isoformat(), 600, self.room2.id)
         self.assertEqual((v.room_id, v.doctor_id), (self.room2, self.dr_b))
@@ -181,7 +181,7 @@ class TestBoardSuggestions(ReservationCase):
 
 @tagged("post_install", "-at_install")
 class TestBoardEvents(ReservationCase):
-    """Popisky událostí na tabuli a čeština v názvech."""
+    """Event labels on the board and Czech in names."""
 
     def test_event_labels(self):
         self.hours(self.room1, 2, 8.0, 18.0)
@@ -199,7 +199,7 @@ class TestBoardEvents(ReservationCase):
 
     def test_name_in_clinic_language(self):
         if "cs_CZ" not in dict(self.env["res.lang"].get_installed()):
-            self.skipTest("cs_CZ není nainstalovaná")
+            self.skipTest("cs_CZ is not installed")
         self.vacc.update_field_translations("name", {"cs_CZ": "Vakcinace UX"})
         for lang in ("en_US", "de_DE"):
             vals = {"kind": "reservation", "state": "confirmed", "procedure_id": self.vacc.id,
@@ -214,13 +214,13 @@ class TestBoardEvents(ReservationCase):
 
 @tagged("post_install", "-at_install")
 class TestAdminUx(ReservationCase):
-    """Rozpis lékařů, ordinace a úkony v administraci."""
+    """Doctor schedule, rooms and procedures in the admin."""
 
     def test_copy_week_skips_overlaps(self):
         A = self.env["elite.vet.doctor.assignment"]
         a1 = self.assign(self.dr_a, self.room1, WED, 8.0, 12.0)
         a2 = self.assign(self.dr_b, self.room2, WED, 13.0, 18.0)
-        # Lékařka B už má za týden službu, která by se s kopií překrývala.
+        # Doctor B already has a shift next week that would overlap with the copy.
         self.assign(self.dr_b, self.room1, WED + timedelta(days=7), 16.0, 19.0)
         res = (a1 | a2).action_copy_week()
         self.assertEqual(res["tag"], "display_notification")
@@ -250,7 +250,7 @@ class TestAdminUx(ReservationCase):
         for wd in range(5):
             self.hours(self.room1, wd, 8.25, 19.5)
         self.hours(self.room1, 5, 9.0, 12.0)
-        # Řádek, jehož platnost skončila, se do souhrnu nepočítá.
+        # A line whose validity has ended is not counted in the summary.
         self.hours(self.room1, 6, 9.0, 12.0, date_to=date.today() - timedelta(days=1))
         self.assertEqual(self.room1.hours_summary, "Po–Pá 8:15–19:30 · So 9:00–12:00")
 

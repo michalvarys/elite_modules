@@ -2,9 +2,9 @@ from odoo import fields, models
 
 
 class VetDoctor(models.Model):
-    """Seznam v Rozpisu služeb obsahuje celý tým (i sestry a recepci), protože
-    se z něj skládá veřejný rozpis. Rezervace ale smí dostat jen lékařka -
-    proto vlastní příznak, ne nový seznam lidí.
+    """The shift roster list contains the whole team (nurses and reception too),
+    because the public roster is built from it. Only a doctor may get reservations,
+    hence a dedicated flag rather than a new list of people.
     """
 
     _inherit = "elite.vet.doctor"
@@ -21,8 +21,8 @@ class VetDoctor(models.Model):
              "přidělí se automaticky – každá lékařka má jinou.")
 
     def fill_calendar_colors(self):
-        """Lékařkám bez vybrané barvy zapíše tu automatickou, aby ji bylo vidět
-        ve výběru barvy a šla jen upravit."""
+        """Store the automatic color on doctors without a chosen one, so it shows
+        in the color picker and can simply be adjusted."""
         from .reservation import doctor_color
         for rec in self.filtered(lambda d: d.accepts_bookings and not d.calendar_color):
             rec.calendar_color = doctor_color(rec.id)

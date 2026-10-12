@@ -7,8 +7,9 @@ from .room import format_hour
 
 
 class VetDoctorAssignment(models.Model):
-    """Kdo kde kdy slouzi. Zamerne zvlast od rozpisu sluzeb (elite.vet.shift):
-    ten je pro web a zna jen typ smeny, tady je potreba ordinace a presny cas.
+    """Who works where and when. Deliberately separate from the shift roster
+    (elite.vet.shift): that one is for the website and only knows the shift type;
+    here we need the room and the exact time.
     """
 
     _name = "elite.vet.doctor.assignment"
@@ -19,7 +20,7 @@ class VetDoctorAssignment(models.Model):
                                 domain=[("accepts_bookings", "=", True)])
     room_id = fields.Many2one("elite.vet.room", string="Ordinace", required=True, ondelete="restrict")
     date = fields.Date(string="Datum", required=True, default=fields.Date.context_today)
-    # Součet hodin ve skupině (např. „Od 32:00“ za den) nedává smysl.
+    # Summing hours in a group (e.g. "From 32:00" per day) makes no sense.
     hour_from = fields.Float(string="Od", required=True, default=8.0, aggregator=None)
     hour_to = fields.Float(string="Do", required=True, default=14.0, aggregator=None)
     procedure_ids = fields.Many2many(
@@ -57,38 +58,38 @@ class VetDoctorAssignment(models.Model):
                 ) % rec.doctor_id.name)
 
     def serves(self, procedure):
-        """Smí lékařka v této službě udělat úkon? Musí ho umět (specializace)
-        a služba ho nesmí vylučovat seznamem „Jen tyto úkony“."""
+        """May the doctor perform the procedure in this assignment? She must be able
+        to (specialization) and the assignment must not exclude it via "Only these procedures"."""
         self.ensure_one()
         if self.doctor_id not in procedure.doctors_for_booking():
             return False
         return not self.procedure_ids or procedure in self.procedure_ids
 
     def action_copy_week(self):
-        """Zkopíruje vybrané služby o týden dál. Kopie, která by se překrývala
-        s jinou službou téže lékařky, se přeskočí (a nepadá celé kopírování). Stejně
-        tak služba lékařky, která už nepřijímá rezervace."""
-        zkopirovano, preskoceno = 0, 0
+        """Copy the selected assignments one week ahead. A copy that would overlap
+        another assignment of the same doctor is skipped (instead of failing the whole
+        copy). The same goes for a doctor who no longer accepts bookings."""
+        copied, skipped = 0, 0
         for rec in self.sorted(lambda r: (r.date, r.hour_from)):
             if not rec.doctor_id.accepts_bookings:
-                preskoceno += 1
+                skipped += 1
                 continue
-            novy_den = rec.date + timedelta(days=7)
+            new_date = rec.date + timedelta(days=7)
             clash = self.search_count([
-                ("doctor_id", "=", rec.doctor_id.id), ("date", "=", novy_den),
+                ("doctor_id", "=", rec.doctor_id.id), ("date", "=", new_date),
                 ("hour_from", "<", rec.hour_to), ("hour_to", ">", rec.hour_from),
             ])
             if clash:
-                preskoceno += 1
+                skipped += 1
                 continue
-            rec.copy({"date": novy_den})
-            zkopirovano += 1
+            rec.copy({"date": new_date})
+            copied += 1
         return {
             "type": "ir.actions.client", "tag": "display_notification",
             "params": {
                 "title": _("Kopírování na další týden"),
-                "message": _("Zkopírováno %(ok)s, přeskočeno %(skip)s.", ok=zkopirovano, skip=preskoceno),
-                "type": "success" if not preskoceno else "warning",
+                "message": _("Zkopírováno %(ok)s, přeskočeno %(skip)s.", ok=copied, skip=skipped),
+                "type": "success" if not skipped else "warning",
                 "next": {"type": "ir.actions.client", "tag": "soft_reload"},
             },
         }

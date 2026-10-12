@@ -32,8 +32,8 @@ class TestPetPartner(ReservationCase):
         self.assertEqual(other.species, "cat")
 
     def test_normalize_phone(self):
-        from odoo.addons.elite_vet_reservation.models.pet import normalizuj_telefon
-        self.assertEqual(normalizuj_telefon("+420 722-599 699"), "420722599699")
+        from odoo.addons.elite_vet_reservation.models.pet import normalize_phone
+        self.assertEqual(normalize_phone("+420 722-599 699"), "420722599699")
 
     def test_wildcard_email_does_not_match_existing_partner(self):
         existing = self.env["res.partner"].create({"name": "Cizí", "email": "a@example.cz"})

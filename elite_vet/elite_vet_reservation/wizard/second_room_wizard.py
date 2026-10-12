@@ -7,7 +7,7 @@ from ..models.reservation import TZ
 
 
 class SecondRoomWizard(models.TransientModel):
-    """Zduplikuje rezervaci do druhé ordinace pro zákrok, který potřebuje dvě lékařky."""
+    """Duplicate a reservation into a second room for a procedure that needs two doctors."""
 
     _name = "elite.vet.reservation.second.room.wizard"
     _description = "Přidat druhou ordinaci"
@@ -31,27 +31,27 @@ class SecondRoomWizard(models.TransientModel):
             w.serving_doctor_ids = w._serving_doctors()
 
     def _serving_doctors(self):
-        """Lékařky se službou v druhé ordinaci po celou dobu zákroku (kromě té původní)."""
+        """Doctors on duty in the second room for the whole procedure (except the original one)."""
         Doctor = self.env["elite.vet.doctor"]
         r = self.reservation_id
         if not (self.room_id and r):
             return Doctor
         A = self.env["elite.vet.availability"]
         day = pytz.utc.localize(r.start).astimezone(TZ).date()
-        od, do = A.utc_to_local_minutes(r.start, day), A.utc_to_local_minutes(r.stop, day)
+        start_min, stop_min = A.utc_to_local_minutes(r.start, day), A.utc_to_local_minutes(r.stop, day)
         out = Doctor
         for a in self.env["elite.vet.doctor.assignment"].search(
                 [("date", "=", day), ("room_id", "=", self.room_id.id),
                  ("doctor_id.accepts_bookings", "=", True)], order="hour_from, id"):
-            if a.hour_from * 60 <= od and do <= a.hour_to * 60 and a.doctor_id != r.doctor_id:
+            if a.hour_from * 60 <= start_min and stop_min <= a.hour_to * 60 and a.doctor_id != r.doctor_id:
                 out |= a.doctor_id
         return out
 
     @api.onchange("room_id")
     def _onchange_room(self):
-        ve_sluzbe = self._serving_doctors()
-        if ve_sluzbe and self.doctor_id not in ve_sluzbe:
-            self.doctor_id = ve_sluzbe[:1]
+        serving = self._serving_doctors()
+        if serving and self.doctor_id not in serving:
+            self.doctor_id = serving[:1]
 
     def action_add(self):
         self.ensure_one()

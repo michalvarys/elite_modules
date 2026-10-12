@@ -11,7 +11,7 @@ class TestControllers(HttpCase):
         super().setUp()
         from odoo.addons.elite_vet_reservation.controllers import booking
         booking._SUBMITS.clear()
-        # rezervace z rucniho zkouseni by obsazovaly testovane sloty (vrati se rollbackem)
+        # reservations from manual testing would occupy the tested slots (restored by rollback)
         self.env["elite.vet.reservation"].search([]).unlink()
         Room = self.env["elite.vet.room"]
         self.room = Room.create({"name": "Ordinace T", "color": "teal"})
@@ -19,7 +19,7 @@ class TestControllers(HttpCase):
             self.env["elite.vet.room.hours"].create({"room_id": self.room.id, "weekday": str(wd), "hour_from": 8.0, "hour_to": 18.0})
         self.proc = self.env["elite.vet.procedure"].create({"name": "Vaccination T", "duration": 15, "symbol": "V"})
         self.day = (date.today() + timedelta(days=3)).isoformat()
-        # „Dnes + 3“ může padnout na víkend/svátek; ty má vlastní test níže.
+        # "Today + 3" may fall on a weekend/holiday; those have their own test below.
         self.setting = self.env["elite.vet.setting"].nastaveni()
         self.setting.write({"booking_block_weekends": False, "booking_block_holidays": False})
 
@@ -53,17 +53,17 @@ class TestControllers(HttpCase):
         self.assertIn("10:00", [s["time"] for s in slots])
 
     def test_public_slots_skip_non_online_room(self):
-        # Sál s ordinační dobou objedná recepce v průvodci, web ne.
-        sal = self.env["elite.vet.room"].create({"name": "Sál T", "color": "purple", "online": False})
+        # The theatre with opening hours is bookable by reception in the wizard, not by the web.
+        surgery = self.env["elite.vet.room"].create({"name": "Sál T", "color": "purple", "online": False})
         for wd in range(7):
-            self.env["elite.vet.room.hours"].create({"room_id": sal.id, "weekday": str(wd), "hour_from": 8.0, "hour_to": 18.0})
+            self.env["elite.vet.room.hours"].create({"room_id": surgery.id, "weekday": str(wd), "hour_from": 8.0, "hour_to": 18.0})
         proc = self.env["elite.vet.procedure"].create({"name": "Sál úkon T", "duration": 15, "symbol": "S",
-                                                       "room_ids": [(6, 0, sal.ids)]})
+                                                       "room_ids": [(6, 0, surgery.ids)]})
         self.assertEqual(self.rpc("/rezervace/api/slots", {"procedure_id": proc.id, "date": self.day}), [])
         w = self.env["elite.vet.reservation.wizard"].create({"procedure_id": proc.id,
                                                              "date": date.fromisoformat(self.day)})
         w.action_step_time()
-        self.assertIn(sal, w.slot_ids.room_id)
+        self.assertIn(surgery, w.slot_ids.room_id)
 
     def test_submit_creates_waiting_reservation(self):
         res = self.rpc("/rezervace/api/submit", self.good_submit())
@@ -94,7 +94,7 @@ class TestControllers(HttpCase):
     def test_submit_slot_taken_when_confirmed(self):
         A = self.env["elite.vet.availability"]
         start = A.local_to_utc(date.fromisoformat(self.day), 600)
-        # Obsadit je treba vsechny online ordinace (v DB jsou i osazene), jinak by slot zustal volny.
+        # All online rooms must be taken (the DB holds seeded ones too), otherwise the slot would stay free.
         for room in self.proc.rooms_for_booking():
             self.env["elite.vet.reservation"].create({"procedure_id": self.proc.id, "room_id": room.id,
                                                       "state": "confirmed", "start": start, "contact_name": "X"})
@@ -108,13 +108,13 @@ class TestControllers(HttpCase):
         self.assertEqual(clean["contact_phone"], "+420777111222")
 
     def test_web_api_skips_weekend_and_web_block(self):
-        """Veřejné API počítá s pravidly webu: víkend nic, blokace jen pro web obsazuje."""
+        """The public API applies web rules: nothing on weekends, a web-only block takes the slot."""
         d = date.today() + timedelta(days=3)
         A = self.env["elite.vet.availability"]
         self.env["elite.vet.reservation"].create({
             "kind": "block", "block_scope": "web", "block_reason": "Jen telefonem", "room_id": self.room.id,
             "start": A.local_to_utc(d, 600), "stop": A.local_to_utc(d, 660)})
-        # Jiné ordinace z ukázkových dat můžou mít volno; sleduje se jen Ordinace T.
+        # Other rooms from demo data may be free; only Ordinace T is checked.
         res = self.rpc("/rezervace/api/slots", {"procedure_id": self.proc.id, "date": self.day})
         times = [s["time"] for s in res if self.room.id in s["room_ids"]]
         self.assertIn("09:45", times)
@@ -125,7 +125,7 @@ class TestControllers(HttpCase):
         self.assertEqual(self.rpc("/rezervace/api/slots", {"procedure_id": self.proc.id, "date": sat.isoformat()}), [])
 
     def test_pending_request_holds_slot(self):
-        """Druhá žádost z webu na čas, který drží nepotvrzená žádost, neprojde."""
+        """A second web request for a time held by an unconfirmed request is rejected."""
         proc = self.env["elite.vet.procedure"].create({"name": "Jen T", "duration": 15, "symbol": "J",
                                                       "room_ids": [(6, 0, self.room.ids)]})
         first = self.rpc("/rezervace/api/submit", self.good_submit(procedure_id=proc.id))

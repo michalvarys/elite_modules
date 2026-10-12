@@ -3,8 +3,8 @@ from odoo.exceptions import ValidationError
 
 
 class EliteVetSetting(models.Model):
-    """Nastavení rezervací visí na stejném záznamu jako zbytek webu,
-    aby klinika nehledala dvě různá nastavení."""
+    """Booking settings live on the same record as the rest of the website
+    settings, so the clinic does not have to look in two places."""
 
     _inherit = "elite.vet.setting"
 

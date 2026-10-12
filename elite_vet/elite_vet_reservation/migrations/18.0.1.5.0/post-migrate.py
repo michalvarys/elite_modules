@@ -1,4 +1,4 @@
-"""18.0.1.5.0: lékařky dostanou uloženou barvu v kalendáři (dřív se počítala jen z id)."""
+"""18.0.1.5.0: doctors get a stored calendar color (previously computed from the id only)."""
 from odoo import SUPERUSER_ID, api
 
 

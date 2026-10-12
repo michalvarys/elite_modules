@@ -1,4 +1,4 @@
-/* Skryvani kroku nesmi zalezet na reboot pravidle Bootstrapu */
+/* Hiding steps must not depend on the Bootstrap reboot rule */
 .evbk [hidden]{display:none !important}
 .evbk{padding:24px 0 48px;background:#fff}
 .evbk-inner{max-width:860px}
@@ -56,7 +56,7 @@
 .evbk-done{text-align:center;padding:24px 0}
 .evbk-done-icon{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;background:var(--ev-accent-light,#e0f2f0);color:var(--ev-accent,#2b7870);font-size:32px;line-height:64px}
 .evbk-note{color:#2b7870;font-weight:600}
-/* Hledání úkonu, skupiny úkonů, lékařky v kartě úkonu */
+/* Procedure search, procedure groups, doctors on a procedure card */
 .evbk-search{margin-bottom:12px}
 .evbk-search input{width:100%;max-width:420px;border:1.5px solid #e2e8f0;border-radius:9999px;padding:9px 16px;font:inherit}
 .evbk-search input:focus{outline:none;border-color:var(--ev-accent,#2b7870)}
@@ -69,10 +69,10 @@
 .evbk-spec-chip{font-size:11px;font-weight:600;background:#f1f5f9;color:#475569;border-radius:9999px;padding:2px 8px}
 .evbk-loading{color:#64748b;font-style:italic;margin:6px 0;grid-column:1/-1}
 .evbk-tabs button:disabled{opacity:.5;cursor:default}
-/* Shrnutí v kroku 2 s odkazem Změnit */
+/* Step 2 summary with the Change link */
 .evbk-summary-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .evbk-change{background:none;border:0;padding:0;color:var(--ev-accent,#2b7870);font-weight:700;text-decoration:underline;cursor:pointer}
-/* Šipky měsíce a legenda kalendáře */
+/* Month arrows and calendar legend */
 .evbk-cal-head button:disabled{opacity:.35;cursor:default}
 .evbk-cal-grid.is-loading .evbk-loading{text-align:center}
 .evbk-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px;color:#64748b}

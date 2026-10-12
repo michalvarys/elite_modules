@@ -1,5 +1,5 @@
-"""Zákrok pro dvě lékařky (druhá ordinace), lékařka ve službě v průvodci
-a světlé / vlastní barvy úkonů."""
+"""Procedure for two doctors (second room), the doctor on duty in the wizard
+and light / custom procedure colours."""
 from datetime import timedelta
 
 from odoo import fields
@@ -19,89 +19,89 @@ class TestSecondRoom(ReservationCase):
         cls.R = cls.env["elite.vet.reservation"]
         cls.day = fields.Date.today() + timedelta(days=10)
 
-    def hlavni(self, **vals):
+    def main_reservation(self, **vals):
         return self.reservation(start=self.dt(self.day, 9, 0), doctor_id=self.dr_a.id, **vals)
 
-    def mails(self):
+    def client_mails(self):
         return self.env["mail.mail"].search([("email_to", "ilike", "klient@example.cz")])
 
-    def test_pridat_kopiruje_a_propoji(self):
-        r = self.hlavni()
-        pocet = len(self.mails())
+    def test_add_copies_and_links(self):
+        r = self.main_reservation()
+        mail_count = len(self.client_mails())
         d = r.add_second_room(self.room2, self.dr_b)
         self.assertEqual((d.room_id, d.doctor_id, d.start, d.stop), (self.room2, self.dr_b, r.start, r.stop))
         self.assertEqual((d.partner_id, d.pet_name, d.procedure_id), (r.partner_id, r.pet_name, r.procedure_id))
         self.assertEqual((r.linked_reservation_id, d.linked_reservation_id), (d, r))
         self.assertTrue(d.is_second_room and not r.is_second_room)
-        self.assertEqual(len(self.mails()), pocet, "klientovi nic dalšího nepřijde")
+        self.assertEqual(len(self.client_mails()), mail_count, "the client receives nothing more")
 
-    def test_obsazena_druha_ordinace(self):
+    def test_second_room_busy(self):
         self.reservation(start=self.dt(self.day, 9, 0), room_id=self.room2.id)
-        r = self.hlavni()
+        r = self.main_reservation()
         with self.assertRaises(ValidationError):
             r.add_second_room(self.room2, self.dr_b)
 
-    def test_nejde_dvakrat_ani_do_stejne(self):
-        r = self.hlavni()
+    def test_not_twice_nor_same_room(self):
+        r = self.main_reservation()
         with self.assertRaises(UserError):
             r.add_second_room(self.room1)
         d = r.add_second_room(self.room2)
         with self.assertRaises(UserError):
-            r.add_second_room(self.sal)
+            r.add_second_room(self.surgery)
         with self.assertRaises(UserError):
-            d.add_second_room(self.sal)
+            d.add_second_room(self.surgery)
 
-    def test_presun_posune_obe(self):
-        r = self.hlavni()
+    def test_reschedule_moves_both(self):
+        r = self.main_reservation()
         d = r.add_second_room(self.room2, self.dr_b)
         r.action_reschedule(self.dt(self.day, 11, 0))
         self.assertEqual((d.start, d.stop, d.room_id), (r.start, r.stop, self.room2))
         d.action_reschedule(self.dt(self.day, 13, 0))
         self.assertEqual(r.start, self.dt(self.day, 13, 0))
 
-    def test_presun_do_obsazene_druhe_ordinace_selze(self):
-        r = self.hlavni()
+    def test_reschedule_into_busy_second_room_fails(self):
+        r = self.main_reservation()
         r.add_second_room(self.room2, self.dr_b)
         self.reservation(start=self.dt(self.day, 11, 0), room_id=self.room2.id)
         with self.assertRaises(ValidationError):
             r.action_reschedule(self.dt(self.day, 11, 0))
 
-    def test_zruseni_hlavni_zrusi_obe_jeden_email(self):
-        r = self.hlavni()
+    def test_cancel_main_cancels_both_one_email(self):
+        r = self.main_reservation()
         d = r.add_second_room(self.room2, self.dr_b)
-        pocet = len(self.mails())
+        mail_count = len(self.client_mails())
         r.action_cancel()
         self.assertEqual((r.state, d.state), ("cancelled", "cancelled"))
-        self.assertEqual(len(self.mails()), pocet + 1)
+        self.assertEqual(len(self.client_mails()), mail_count + 1)
 
-    def test_zruseni_jen_druhe(self):
-        r = self.hlavni()
+    def test_cancel_second_only(self):
+        r = self.main_reservation()
         d = r.add_second_room(self.room2, self.dr_b)
-        pocet = len(self.mails())
+        mail_count = len(self.client_mails())
         d.action_cancel()
         self.assertEqual((r.state, d.state), ("confirmed", "cancelled"))
         self.assertFalse(r.linked_reservation_id)
-        self.assertEqual(len(self.mails()), pocet)
-        r.add_second_room(self.sal)   # jde znovu
+        self.assertEqual(len(self.client_mails()), mail_count)
+        r.add_second_room(self.surgery)   # possible again
 
-    def test_probehla_a_presun_druhe_bez_emailu(self):
-        r = self.hlavni()
+    def test_done_and_reschedule_second_without_email(self):
+        r = self.main_reservation()
         d = r.add_second_room(self.room2, self.dr_b)
-        pocet = len(self.mails())
+        mail_count = len(self.client_mails())
         r.action_reschedule(self.dt(self.day, 10, 0))
-        self.assertEqual(len(self.mails()), pocet + 1, "jen jeden e-mail o přesunu")
+        self.assertEqual(len(self.client_mails()), mail_count + 1, "only one e-mail about the reschedule")
         r.action_done()
         self.assertEqual(d.state, "done")
 
-    def test_tabule_ukaze_spojeni(self):
-        r = self.hlavni()
+    def test_board_shows_link(self):
+        r = self.main_reservation()
         r.add_second_room(self.room2, self.dr_b)
         ev = {e["id"]: e for e in self.R.board_data(fields.Date.to_string(self.day))["events"]}
-        self.assertEqual(ev[r.id]["spojena"], "Ordinace 2 · " + self.dr_b.name)
-        self.assertEqual(ev[r.linked_reservation_id.id]["spojena"], "Ordinace 1 · " + self.dr_a.name)
+        self.assertEqual(ev[r.id]["linked"], "Ordinace 2 · " + self.dr_b.name)
+        self.assertEqual(ev[r.linked_reservation_id.id]["linked"], "Ordinace 1 · " + self.dr_a.name)
 
-    def test_pruvodce_predvyplni_lekarku_ve_sluzbe(self):
-        r = self.hlavni()
+    def test_wizard_prefills_doctor_on_duty(self):
+        r = self.main_reservation()
         self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)
         w = Form(self.env["elite.vet.reservation.second.room.wizard"].with_context(default_reservation_id=r.id))
         w.room_id = self.room2
@@ -130,13 +130,13 @@ class TestServingDoctor(ReservationCase):
         f.procedure_id = self.vacc
         return f
 
-    def test_jedna_ve_sluzbe_vybere_se_sama(self):
+    def test_single_doctor_on_duty_is_selected(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 14.0)
         self.assign(self.dr_b, self.room1, self.day, 14.0, 19.0)
         self.assertEqual(self.form(9 * 60).doctor_id, self.dr_a)
         self.assertEqual(self.form(15 * 60).doctor_id, self.dr_b)
 
-    def test_prekryv_nabidne_vyber(self):
+    def test_overlap_offers_choice(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 14.0)
         self.assign(self.dr_b, self.room1, self.day, 12.0, 19.0)
         f = self.form(13 * 60)
@@ -148,7 +148,7 @@ class TestServingDoctor(ReservationCase):
         w.action_step_time()
         self.assertEqual((w.step, w.slot_doctor_id), ("client", self.dr_b))
 
-    def test_bez_kliku_z_tabule_nic(self):
+    def test_no_board_click_no_doctor(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 14.0)
         f = Form(self.W.with_context(default_date=fields.Date.to_string(self.day)))
         f.procedure_id = self.vacc
@@ -158,7 +158,7 @@ class TestServingDoctor(ReservationCase):
 @tagged("post_install", "-at_install")
 class TestProcedureColors(ReservationCase):
 
-    def test_svetla_a_vlastni_barva(self):
+    def test_light_and_custom_colour(self):
         self.vacc.color = "light_yellow"
         self.assertEqual(self.vacc.color_hex, LIGHT_COLORS["light_yellow"][1])
         self.vacc.custom_color = "#ffeedd"

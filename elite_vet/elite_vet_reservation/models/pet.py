@@ -9,8 +9,8 @@ SPECIES = [
 ]
 
 
-def normalizuj_telefon(text):
-    """'+420 722-599 699' -> '420722599699'. Porovnava se posledních 9 cislic."""
+def normalize_phone(text):
+    """'+420 722-599 699' -> '420722599699'. The last 9 digits are compared."""
     return re.sub(r"\D", "", text or "")
 
 
@@ -29,7 +29,7 @@ class VetPet(models.Model):
 
     @api.model
     def find_or_create(self, partner, name, species=None):
-        """Mazlicek stejneho majitele se stejnym jmenem (bez ohledu na velikost pismen)."""
+        """Pet of the same owner with the same name (case-insensitive), or a new one."""
         name = (name or "").strip()
         if not name:
             return self.browse()
@@ -44,16 +44,16 @@ class ResPartner(models.Model):
 
     is_vet_client = fields.Boolean(string="Klient kliniky", index=True)
     pet_ids = fields.One2many("elite.vet.pet", "partner_id", string="Mazlíčci")
-    # Misto pro budouci export z WinVetu. Ted se nikde nevyplnuje.
+    # Placeholder for a future WinVet export. Not filled anywhere yet.
     winvet_ref = fields.Char(string="ID ve WinVetu", index=True)
     reservation_ids = fields.One2many("elite.vet.reservation", "partner_id", string="Rezervace")
 
     @api.model
     def _search_display_name(self, operator, value):
-        """V průvodci rezervací (kontext ev_search_phone) se klient hledá i podle
-        telefonu - jen podle číslic, telefony jsou v bázi zapsané různě."""
+        """In the reservation wizard (context ev_search_phone) the client is also
+        searched by phone - digits only, since phones are stored in various formats."""
         domain = super()._search_display_name(operator, value)
-        digits = normalizuj_telefon(value) if isinstance(value, str) else ""
+        digits = normalize_phone(value) if isinstance(value, str) else ""
         if self.env.context.get("ev_search_phone") and operator == "ilike" and len(digits) >= 4:
             self.flush_model(["phone", "mobile", "active"])
             self.env.cr.execute(
@@ -68,19 +68,19 @@ class ResPartner(models.Model):
 
     @api.model
     def find_or_create_client(self, name, email, phone):
-        """Parovani z webu: e-mail, pak telefon, jinak novy klient."""
+        """Matching from the website: e-mail, then phone, otherwise a new client."""
         email = (email or "").strip()
-        digits = normalizuj_telefon(phone)
+        digits = normalize_phone(phone)
         partner = self.browse()
         if email:
-            # email_normalized (male pismena) misto =ilike: ten bere % a _ jako zastupne
-            # znaky a verejny formular by tak mohl "trefit" cizi kontakt.
+            # email_normalized (lowercase) instead of =ilike: that treats % and _ as
+            # wildcards, so the public form could "hit" someone else's contact.
             partner = self.search([("email_normalized", "=", email.lower())], limit=1)
         if not partner and len(digits) >= 9:
             tail = digits[-9:]
-            # Telefony jsou v bazi zapsane ruzne ("+420 722 599 699"), proto se
-            # porovnava jen cislice; ilike na cast cisla by mezery rozbily.
-            # Raw SQL nevidi necommitnute ORM zapisy, proto je predtim flushneme.
+            # Phones are stored in various formats ("+420 722 599 699"), so only
+            # digits are compared; ilike on part of the number would break on spaces.
+            # Raw SQL does not see pending ORM writes, so flush them first.
             self.flush_model(["phone", "active"])
             self.env.cr.execute(
                 "SELECT id FROM res_partner WHERE active"

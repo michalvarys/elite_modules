@@ -9,8 +9,8 @@ from odoo.http import request
 from ..models.pet import SPECIES
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
-# Jednoduchy limit na proces: 5 odeslani za 10 minut z jedne IP. Pri vic workerech
-# je volnejsi, ale honeypot a validace drzi spam venku i tak.
+# Simple per-process limit: 5 submissions per 10 minutes from one IP. With more workers
+# it is looser, but the honeypot and validation keep spam out anyway.
 _SUBMITS = {}
 RATE_LIMIT, RATE_WINDOW = 5, 600
 
@@ -26,7 +26,7 @@ def _rate_ok(ip):
 
 
 def validate_submit(data):
-    """Vrati (chyby, ocistena data). Chyby jsou {pole: hlaska} pro formular."""
+    """Return (errors, cleaned data). Errors are {field: message} for the form."""
     errors, clean = {}, {}
     name = (data.get("contact_name") or "").strip()
     if len(name) < 3 or " " not in name:
@@ -81,8 +81,8 @@ class BookingController(http.Controller):
         horizon = fields.Date.add(today, days=s.booking_max_days_ahead)
         assignments = env["elite.vet.doctor.assignment"].sudo().search([("date", ">=", today), ("date", "<=", horizon)])
         doctors = assignments.mapped("doctor_id").filtered("accepts_bookings").sorted("name")
-        # Nabízí se jen specializace, kterou má aspoň jedna lékařka - jinak by
-        # klient vybral obor, ke kterému se nedá objednat.
+        # Offer only specializations that at least one doctor has - otherwise the
+        # client could pick a field nobody can be booked for.
         all_doctors = env["elite.vet.doctor"].sudo().search([("accepts_bookings", "=", True)])
         specs = all_doctors.mapped("specialization_ids").sorted(lambda s: (s.sequence, s.name))
         procs = env["elite.vet.procedure"].sudo().search([("online", "=", True)])
@@ -122,7 +122,7 @@ class BookingController(http.Controller):
     @http.route("/rezervace/api/submit", type="json", auth="public", website=True, methods=["POST"], csrf=False)
     def submit(self, **data):
         if data.get("hp"):
-            return {"ok": True, "token": "", "deposit": False}   # robot: tvarime se, ze proslo
+            return {"ok": True, "token": "", "deposit": False}   # bot: pretend it went through
         ip = request.httprequest.remote_addr or "?"
         proc = self._procedure(data.get("procedure_id"))
         if not proc:
@@ -139,13 +139,13 @@ class BookingController(http.Controller):
             return {"ok": False, "error": "validation", "fields": errors}
         doctor, spec = self._filters(data)
         A = request.env["elite.vet.availability"].sudo()
-        # Zámek ordinací: dvě odeslání na stejný čas ve stejné chvíli se seřadí a druhé
-        # už uvidí první žádost (ta drží místo, viz availability.pending_holds).
+        # Room lock: two simultaneous submissions for the same time are serialized and the
+        # second one already sees the first request (it holds the slot, see availability.pending_holds).
         request.env["elite.vet.reservation"].sudo()._lock_rooms(proc.rooms_for_booking().ids)
         slot = next((sl for sl in A.slots(proc, day, doctor, spec, scope="web") if sl["minute"] == minute), None)
         if not slot:
             return {"ok": False, "error": "slot_taken", "fields": {}}
-        # Limit se počítá až u odeslání, které opravdu založí záznam (chybné pokusy se nepočítají).
+        # The limit counts only submissions that actually create a record (failed attempts do not count).
         if not _rate_ok(ip):
             return {"ok": False, "error": "rate_limit", "fields": {}}
         s = self._setting()
@@ -159,29 +159,29 @@ class BookingController(http.Controller):
         rec._after_web_submit()
         return {"ok": True, "token": rec.cancel_token, "deposit": rec.deposit_state == "pending"}
 
-    # csrf=False: akci autorizuje nahodny token v URL (odkaz z e-mailu), klient nema session s CSRF tokenem.
+    # csrf=False: the action is authorized by the random token in the URL (link from the e-mail); the client has no session with a CSRF token.
     @http.route("/rezervace/zruseni/<string:token>", type="http", auth="public", website=True,
                 methods=["GET", "POST"], sitemap=False, csrf=False)
     def cancel_booking(self, token, **post):
-        rez = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
-        if not rez or rez.kind != "reservation":
+        reservation = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
+        if not reservation or reservation.kind != "reservation":
             raise NotFound()
         s = self._setting()
-        stav = "dotaz"
-        if rez.state in ("cancelled", "no_show", "done"):
-            stav = "uz_zruseno"
-        elif not rez.client_can_cancel():
-            stav = "pozde"
+        status = "ask"
+        if reservation.state in ("cancelled", "no_show", "done"):
+            status = "already_cancelled"
+        elif not reservation.client_can_cancel():
+            status = "too_late"
         elif request.httprequest.method == "POST" and post.get("confirm"):
-            rez.action_cancel("client")
-            stav = "zruseno"
+            reservation.action_cancel("client")
+            status = "cancelled"
         return request.render("elite_vet_reservation.cancel_page", {
-            "rez": rez, "stav": stav, "telefon": s.phone_display or s.phone or "",
+            "reservation": reservation, "status": status, "phone": s.phone_display or s.phone or "",
         })
 
     @http.route("/rezervace/platba/<string:token>", type="http", auth="public", website=True, methods=["GET"], sitemap=False)
     def deposit_payment(self, token, **kw):
-        rez = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
-        if not rez or rez.kind != "reservation":
+        reservation = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
+        if not reservation or reservation.kind != "reservation":
             raise NotFound()
-        return request.render("elite_vet_reservation.deposit_page", {"rez": rez})
+        return request.render("elite_vet_reservation.deposit_page", {"reservation": reservation})

@@ -11,7 +11,7 @@ TZ = pytz.timezone("Europe/Prague")
 
 
 class VetReservationMailing(models.Model):
-    """E-maily a vse kolem nich drzime stranou od stavu a prekryvu, at je reservation.py citelny."""
+    """E-mails and everything around them, kept apart from states and overlaps so reservation.py stays readable."""
 
     _inherit = "elite.vet.reservation"
 
@@ -34,13 +34,13 @@ class VetReservationMailing(models.Model):
             rec.cancel_url = "%s/rezervace/zruseni/%s" % (rec.get_base_url(), rec.cancel_token)
 
     def _mail_sender(self):
-        """Odesílatel e-mailů k rezervacím: z nastavení rezervací, jinak e-mail firmy."""
+        """Sender of reservation e-mails: from the booking settings, otherwise the company e-mail."""
         s = self.env["elite.vet.setting"].sudo().nastaveni()
-        adresa = (s.booking_email_from or "").strip()
-        if adresa:
-            if "<" in adresa:
-                return adresa
-            return formataddr((SENDER_NAME, adresa))
+        address = (s.booking_email_from or "").strip()
+        if address:
+            if "<" in address:
+                return address
+            return formataddr((SENDER_NAME, address))
         return self.env.company.email_formatted or ""
 
     def _mail_reply_to(self):
@@ -66,7 +66,7 @@ class VetReservationMailing(models.Model):
             return False
         return self.start - timedelta(hours=hours) > fields.Datetime.now()
 
-    # ---------- napojeni na akce ----------
+    # ---------- hooks into actions ----------
     def _after_web_submit(self):
         self._send_template("mail_web_received")
         notify = self.env["elite.vet.setting"].nastaveni().booking_notify_email
@@ -101,7 +101,7 @@ class VetReservationMailing(models.Model):
         return records
 
     def write(self, vals):
-        # Klienta zajímá jen čas; přesun do jiné ordinace ve stejný čas e-mail nepošle.
+        # The client only cares about the time; moving to another room at the same time sends no e-mail.
         if self.env.context.get("ev_skip_mail") or "start" not in vals:
             return super().write(vals)
         before = {r.id: r.start for r in self if r.kind == "reservation" and r.state == "confirmed"}

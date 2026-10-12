@@ -6,7 +6,7 @@ from . import models
 from . import controllers
 from . import wizard
 
-# (název EN, český překlad, délka, zkratka, barva)
+# (English name, Czech translation, duration, symbol, color)
 PROCEDURES = [
     ("Vaccination", "Vakcinace", 15, "V", "green"),
     ("Clinical examination – check-up", "Klinické vyšetření – kontrola", 30, "k", "teal"),
@@ -32,8 +32,9 @@ PROCEDURES = [
 ]
 
 
-# Německé a ruské názvy výchozích úkonů (čeština je ve PROCEDURES). Záznamy nejsou
-# v XML, proto je .po soubory nepokryjí; překládají se při seedu, pokud je jazyk nainstalovaný.
+# German and Russian names of the default procedures (Czech is in PROCEDURES). The records
+# are not in XML, so .po files do not cover them; they are translated during seeding if the
+# language is installed.
 PROCEDURES_I18N = {
     "Vaccination": {"de_DE": "Impfung", "ru_RU": "Вакцинация"},
     "Clinical examination – check-up": {"de_DE": "Klinische Untersuchung – Kontrolle", "ru_RU": "Клинический осмотр – контроль"},
@@ -59,8 +60,8 @@ PROCEDURES_I18N = {
 }
 
 
-# Úkony, které dělá jen lékařka s danou specializací (xml id z elite_vet_team).
-# Ostatní úkony zvládne kterákoli lékařka.
+# Procedures done only by a doctor with the given specialization (xml ids from elite_vet_team).
+# Any doctor can do the other procedures.
 PROCEDURE_SPECS = {
     "Dental examination": ["elite_vet_team.spec_stomatologie"],
     "Eye problem": ["elite_vet_team.spec_oftalmologie"],
@@ -71,7 +72,7 @@ PROCEDURE_SPECS = {
 
 
 def _post_init(env):
-    """Propojí lékařky s kartami týmu; výchozí ordinace, úkony a hodiny jen při prázdném modulu."""
+    """Link doctors to team cards; seed default rooms, procedures and hours only into an empty module."""
     _link_doctors(env)
     env["elite.vet.doctor"].with_context(active_test=False).search([]).fill_calendar_colors()
     move_foreign_menus(env)
@@ -82,7 +83,7 @@ def _post_init(env):
     _seed_settings(env)
 
 
-# Menu elite_vet_web, která patří pod Konfigurace: (xml id, pořadí).
+# elite_vet_web menus that belong under Configuration: (xml id, sequence).
 FOREIGN_MENUS_TO_CONFIG = [
     ("elite_vet_web.menu_rezervace_nastaveni", 40),
     ("elite_vet_web.menu_rezervace_faq", 50),
@@ -90,12 +91,12 @@ FOREIGN_MENUS_TO_CONFIG = [
 
 
 def move_foreign_menus(env):
-    """Přesune Nastavení rezervace a Časté dotazy (menu z elite_vet_web) pod Konfigurace.
+    """Move the booking settings and FAQ menus (from elite_vet_web) under Configuration.
 
-    Totéž dělají datové záznamy ve views/menus.xml; samostatný upgrade
-    `-u elite_vet_web` ale menu vrátí pod kořen Rezervace. Po upgradu samotného
-    elite_vet_web proto stačí `-u elite_vet_reservation`, který přesun obnoví
-    (data i tahle funkce z post_init_hook a migrace 18.0.1.3.0).
+    The data records in views/menus.xml do the same, but a standalone
+    `-u elite_vet_web` puts the menus back under the Reservations root. After upgrading
+    elite_vet_web alone, `-u elite_vet_reservation` restores the move (both the data
+    and this function, called from post_init_hook and migration 18.0.1.3.0).
     """
     config = env.ref("elite_vet_reservation.menu_reservation_config", raise_if_not_found=False)
     if not config:
@@ -107,11 +108,11 @@ def move_foreign_menus(env):
 
 
 def _link_doctors(env):
-    """Lékařky z Rozpisu služeb dostanou kartu z Náš tým (podle shodného jména),
-    aby se k nim dostaly specializace, a příznak „přijímá rezervace“.
+    """Doctors from the shift roster get their team card (matched by name), so their
+    specializations become available, and the "accepts bookings" flag.
 
-    Za lékařku se při instalaci považuje člověk s titulem MVDr. - v týmu kliniky
-    ho mají právě a jen veterinární lékařky. Dál si to klinika upravuje sama.
+    At install time, anyone with the MVDr. title counts as a doctor - in the clinic's
+    team exactly the veterinarians have it. The clinic adjusts it manually afterwards.
     """
     Doctor = env["elite.vet.doctor"].with_context(active_test=False)
     Member = env["elite.vet.team.member"].with_context(active_test=False)
@@ -131,7 +132,7 @@ def _seed_rooms_and_hours(env):
         {"name": "Ordinace 2", "sequence": 20, "color": "blue"},
         {"name": "Sál", "sequence": 30, "color": "purple", "online": False},
     ])
-    # Okna z dnešního widgetu WinVetu: Po-Pá 8:15-19:30, Ne 10:15-17:45, So zavřeno.
+    # Hours from the current WinVet widget: Mon-Fri 8:15-19:30, Sun 10:15-17:45, Sat closed.
     for room in rooms[:2]:
         for wd in range(5):
             Hours.create({"room_id": room.id, "weekday": str(wd), "hour_from": 8.25, "hour_to": 19.5})
@@ -144,14 +145,14 @@ def _installed_langs(env):
 
 def _seed_procedures(env):
     Proc = env["elite.vet.procedure"]
-    jazyky = _installed_langs(env)
+    langs = _installed_langs(env)
     for i, (en, cs, minutes, symbol, color) in enumerate(PROCEDURES):
         rec = Proc.create({"name": en, "duration": minutes, "symbol": symbol, "color": color,
                            "sequence": (i + 1) * 10})
-        if "cs_CZ" in jazyky:
+        if "cs_CZ" in langs:
             rec.with_context(lang="cs_CZ").name = cs
         for lang, name in PROCEDURES_I18N.get(en, {}).items():
-            if lang in jazyky:
+            if lang in langs:
                 rec.with_context(lang=lang).name = name
         specs = [env.ref(x, raise_if_not_found=False) for x in PROCEDURE_SPECS.get(en, [])]
         specs = [s for s in specs if s]

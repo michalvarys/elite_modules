@@ -16,7 +16,7 @@ COLOR_SELECTION = [
 
 
 def format_hour(value):
-    """8.25 -> '8:15'. Stejne jako u typu smen, aby cisla vypadala vsude stejne."""
+    """8.25 -> '8:15'. Same as for shift types, so times look the same everywhere."""
     hours = int(value)
     minutes = int(round((value - hours) * 60))
     if minutes == 60:
@@ -25,15 +25,15 @@ def format_hour(value):
 
 
 def format_hours_summary(lines):
-    """[(den, od, do), …] -> „Po–Pá 8:15–19:30 · Ne 10:15–17:45“.
+    """[(weekday, from, to), …] -> "Po–Pá 8:15–19:30 · Ne 10:15–17:45".
 
-    Po sobě jdoucí dny se stejnými hodinami se sloučí; přestávka = dva časy
-    za sebou („Po 8:00–12:00, 13:00–18:00“). Bez řádků prázdný text.
+    Consecutive days with the same hours are merged; a break = two time ranges
+    in a row ("Po 8:00–12:00, 13:00–18:00"). No lines -> empty text.
     """
     per_day = {}
     for wd, h_from, h_to in sorted(lines):
         per_day.setdefault(wd, []).append("%s–%s" % (format_hour(h_from), format_hour(h_to)))
-    groups = []   # [[první den, poslední den, text]]
+    groups = []   # [[first day, last day, text]]
     for wd in range(7):
         if wd not in per_day:
             continue
@@ -50,7 +50,7 @@ def format_hours_summary(lines):
 
 
 class VetRoom(models.Model):
-    """Ordinace = sloupec v kalendari. Sal je taky ordinace, jen ne online."""
+    """Room = a column in the calendar. The operating room is a room too, just not online."""
 
     _name = "elite.vet.room"
     _description = "Ordinace"
@@ -86,10 +86,10 @@ class VetRoom(models.Model):
 
 
 class VetRoomHours(models.Model):
-    """Jeden radek tydenni sablony: den v tydnu, od, do.
+    """One line of the weekly template: weekday, from, to.
 
-    Vic radku na stejny den = prestavka (8-12 a 13-18). Platnost od/do slouzi
-    na letni a zimni rezim bez mazani radku.
+    Several lines on the same day = a break (8-12 and 13-18). Valid from/to is
+    used for summer and winter schedules without deleting lines.
     """
 
     _name = "elite.vet.room.hours"
@@ -120,7 +120,7 @@ class VetRoomHours(models.Model):
                 ("id", "!=", rec.id), ("room_id", "=", rec.room_id.id), ("weekday", "=", rec.weekday),
             ])
             for other in others:
-                if not rec._platnost_se_kryje(other):
+                if not rec._validity_overlaps(other):
                     continue
                 if rec.hour_from < other.hour_to and other.hour_from < rec.hour_to:
                     raise ValidationError(_(
@@ -128,11 +128,11 @@ class VetRoomHours(models.Model):
                         "jako dva řádky, které na sebe nenavazují přes stejný čas."
                     ) % (rec.display_name, other.display_name))
 
-    def _platnost_se_kryje(self, other):
-        """Dva radky si vadi jen kdyz plati ve stejnou dobu."""
-        a_od, a_do = self.date_from or fields.Date.from_string("1900-01-01"), self.date_to or fields.Date.from_string("2999-12-31")
-        b_od, b_do = other.date_from or fields.Date.from_string("1900-01-01"), other.date_to or fields.Date.from_string("2999-12-31")
-        return a_od <= b_do and b_od <= a_do
+    def _validity_overlaps(self, other):
+        """Two lines only conflict when they are valid at the same time."""
+        a_from, a_to = self.date_from or fields.Date.from_string("1900-01-01"), self.date_to or fields.Date.from_string("2999-12-31")
+        b_from, b_to = other.date_from or fields.Date.from_string("1900-01-01"), other.date_to or fields.Date.from_string("2999-12-31")
+        return a_from <= b_to and b_from <= a_to
 
     def applies_on(self, day):
         self.ensure_one()
@@ -144,7 +144,7 @@ class VetRoomHours(models.Model):
 
 
 class VetRoomException(models.Model):
-    """Jeden den jinak: zavreno, nebo jine hodiny (i tam, kde sablona nic nema)."""
+    """One day different: closed, or other hours (even where the template has none)."""
 
     _name = "elite.vet.room.exception"
     _description = "Výjimka ordinační doby"
