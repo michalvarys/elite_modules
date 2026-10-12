@@ -8,8 +8,8 @@ from odoo import fields
 from odoo.exceptions import UserError, ValidationError
 from odoo.tests import tagged
 
-from ..models.reservation import barva_lekarky, pruhy_sluzeb
-from ..models.svatky import cz_svatky, svatek, velikonocni_nedele
+from ..models.reservation import doctor_color, shift_bands
+from ..models.holidays import czech_holidays, holiday_name, easter_sunday
 from .common import ReservationCase
 
 WED = date(2026, 10, 14)      # středa
@@ -18,28 +18,28 @@ NOW = datetime(2026, 10, 1, 8, 0)
 
 
 @tagged("post_install", "-at_install")
-class TestSvatky(ReservationCase):
+class TestHolidays(ReservationCase):
 
     def test_velikonoce_a_svatky(self):
-        self.assertEqual(velikonocni_nedele(2026), date(2026, 4, 5))
-        s26 = cz_svatky(2026)
+        self.assertEqual(easter_sunday(2026), date(2026, 4, 5))
+        s26 = czech_holidays(2026)
         self.assertEqual(s26[date(2026, 4, 3)], "Velký pátek")
         self.assertEqual(s26[date(2026, 4, 6)], "Velikonoční pondělí")
-        s27 = cz_svatky(2027)
+        s27 = czech_holidays(2027)
         self.assertEqual(s27[date(2027, 3, 26)], "Velký pátek")
         self.assertEqual(s27[date(2027, 3, 29)], "Velikonoční pondělí")
         self.assertEqual(len(s27), 13)
         for m, d in ((1, 1), (5, 1), (5, 8), (7, 5), (7, 6), (9, 28), (10, 28), (11, 17), (12, 24), (12, 25), (12, 26)):
             self.assertIn(date(2027, m, d), s27)
-        self.assertEqual(svatek(date(2026, 9, 28)), "Den české státnosti")
-        self.assertIsNone(svatek(WED))
+        self.assertEqual(holiday_name(date(2026, 9, 28)), "Den české státnosti")
+        self.assertIsNone(holiday_name(WED))
         # Výsledek je kopie: úprava nesmí rozbít cache.
         s27.clear()
-        self.assertEqual(len(cz_svatky(2027)), 13)
+        self.assertEqual(len(czech_holidays(2027)), 13)
 
 
 @tagged("post_install", "-at_install")
-class TestDruhBlokace(ReservationCase):
+class TestBlockScope(ReservationCase):
 
     @classmethod
     def setUpClass(cls):
@@ -205,7 +205,7 @@ class TestDruhBlokace(ReservationCase):
 
 
 @tagged("post_install", "-at_install")
-class TestVikendySvatky(ReservationCase):
+class TestWeekendsHolidays(ReservationCase):
 
     @classmethod
     def setUpClass(cls):
@@ -260,7 +260,7 @@ class TestVikendySvatky(ReservationCase):
 
 
 @tagged("post_install", "-at_install")
-class TestRucniCas(ReservationCase):
+class TestManualTime(ReservationCase):
 
     @classmethod
     def setUpClass(cls):
@@ -283,38 +283,38 @@ class TestRucniCas(ReservationCase):
     def ulozit(self, w):
         w.write({"partner_mode": "new", "contact_name": "Ruční Klient", "contact_phone": "+420 606 000 111",
                  "contact_email": "rucni@example.cz", "pet_name": "Bobík", "pet_species": "dog"})
-        w.action_krok_souhrn()
-        w.action_ulozit()
+        w.action_step_summary()
+        w.action_save()
         return self.R.search([("contact_email", "=", "rucni@example.cz")])
 
     def test_click_outside_hours_prefills_manual_time(self):
         w = self.z_tabule(19 * 60, self.room1)
-        w.action_krok_cas()
-        self.assertEqual(w.step, "cas")
+        w.action_step_time()
+        self.assertEqual(w.step, "time")
         self.assertTrue(w.manual)
         self.assertEqual((w.manual_room_id, w.manual_time), (self.room1, "19:00"))
-        self.assertTrue(w.upozorneni.startswith("Mimo běžnou ordinační dobu – vkládáte ručně"))
-        w.action_rucni_cas()
-        self.assertEqual((w.step, w.minute, w.room_id), ("klient", 19 * 60, self.room1))
+        self.assertTrue(w.warning.startswith("Mimo běžnou ordinační dobu – vkládáte ručně"))
+        w.action_use_manual_time()
+        self.assertEqual((w.step, w.minute, w.room_id), ("client", 19 * 60, self.room1))
         r = self.ulozit(w)
-        self.assertIn("(zadáno ručně)", w.souhrn)
+        self.assertIn("(zadáno ručně)", w.summary)
         self.assertEqual((r.room_id, r.start, r.state), (self.room1, self.dt(self.day, 19, 0), "confirmed"))
 
     def test_click_into_web_block_is_normal_slot(self):
         self.R.create({"kind": "block", "block_scope": "web", "block_reason": "Jen telefonem",
                        "room_id": self.room1.id, "start": self.dt(self.day, 10), "stop": self.dt(self.day, 11)})
         w = self.z_tabule(600, self.room1)
-        w.action_krok_cas()
-        self.assertEqual(w.step, "klient")
+        w.action_step_time()
+        self.assertEqual(w.step, "client")
         self.assertFalse(w.manual)
 
     def test_click_on_busy_time_is_not_manual(self):
         self.reservation(start=self.dt(self.day, 10, 0))
         w = self.z_tabule(600, self.room1)
-        w.action_krok_cas()
-        self.assertEqual(w.step, "cas")
+        w.action_step_time()
+        self.assertEqual(w.step, "time")
         self.assertFalse(w.manual)
-        self.assertIn("není pro tento úkon volný", w.upozorneni)
+        self.assertIn("není pro tento úkon volný", w.warning)
 
     def test_manual_collisions(self):
         self.reservation(start=self.dt(self.day, 19, 0))
@@ -323,55 +323,55 @@ class TestRucniCas(ReservationCase):
         self.R.create({"kind": "block", "block_scope": "web", "block_reason": "Jen telefonem",
                        "room_id": self.room1.id, "start": self.dt(self.day, 21), "stop": self.dt(self.day, 22)})
         w = self.W.create({"procedure_id": self.vacc.id, "date": self.day})
-        w.action_krok_cas()
+        w.action_step_time()
         w.write({"manual": True, "manual_room_id": self.room1.id})
         with self.assertRaises(UserError):
-            w.action_rucni_cas()                     # bez času
+            w.action_use_manual_time()                     # bez času
         for cas in ("19:00", "20:15"):
             w.manual_time = cas
             with self.assertRaises(UserError):
-                w.action_rucni_cas()
+                w.action_use_manual_time()
         w.manual_time = "21:00"                      # blokace jen pro web nebrání
-        w.action_rucni_cas()
+        w.action_use_manual_time()
         self.assertEqual(self.ulozit(w).start, self.dt(self.day, 21, 0))
 
     def test_manual_doctor_not_serving_and_closed_room(self):
         # Sál nemá ordinační dobu vůbec, lékařka tam neslouží: ručně to přesto jde.
         w = self.W.create({"procedure_id": self.vacc.id, "date": self.day, "doctor_id": self.dr_b.id})
-        w.action_krok_cas()
+        w.action_step_time()
         w.write({"manual": True, "manual_room_id": self.sal.id, "manual_time": "07:30"})
-        w.action_rucni_cas()
+        w.action_use_manual_time()
         r = self.ulozit(w)
         self.assertEqual((r.room_id, r.doctor_id, r.start), (self.sal, self.dr_b, self.dt(self.day, 7, 30)))
 
     def test_manual_picks_serving_doctor(self):
         self.assign(self.dr_a, self.room2, self.day, 18.0, 20.0)
         w = self.W.create({"procedure_id": self.vacc.id, "date": self.day})
-        w.action_krok_cas()
+        w.action_step_time()
         w.write({"manual": True, "manual_room_id": self.room2.id, "manual_time": "18:30"})
-        w.action_rucni_cas()
+        w.action_use_manual_time()
         self.assertEqual(w.slot_doctor_id, self.dr_a)
 
     def test_save_still_checks_overlap(self):
         w = self.W.create({"procedure_id": self.vacc.id, "date": self.day})
-        w.action_krok_cas()
+        w.action_step_time()
         w.write({"manual": True, "manual_room_id": self.room1.id, "manual_time": "19:00"})
-        w.action_rucni_cas()
+        w.action_use_manual_time()
         self.reservation(start=self.dt(self.day, 19, 0))   # mezitím obsadil někdo jiný
         with self.assertRaises(ValidationError):
             self.ulozit(w)
 
 
 @tagged("post_install", "-at_install")
-class TestDveLekarky(ReservationCase):
+class TestTwoDoctorsOneRoom(ReservationCase):
 
     def test_pruhy_sluzeb(self):
-        sl, lanes, soubehy = pruhy_sluzeb([
+        sl, lanes, soubehy = shift_bands([
             {"id": 1, "from": 480, "to": 840}, {"id": 2, "from": 600, "to": 960}, {"id": 3, "from": 900, "to": 1080}])
         self.assertEqual([s["lane"] for s in sorted(sl, key=lambda s: s["id"])], [0, 1, 0])
         self.assertEqual(lanes, 2)
         self.assertEqual([x["label"] for x in soubehy], ["2 lékařky 10:00–14:00", "2 lékařky 15:00–16:00"])
-        self.assertEqual(pruhy_sluzeb([]), ([], 0, []))
+        self.assertEqual(shift_bands([]), ([], 0, []))
 
     def test_board_data_two_doctors_in_room(self):
         self.hours(self.room1, 2, 8.0, 18.0)
@@ -383,7 +383,7 @@ class TestDveLekarky(ReservationCase):
         self.assertEqual([o["label"] for o in room["overlaps"]], ["2 lékařky 10:00–14:00"])
         by_doc = {d["doctor_id"]: d for d in room["doctors"]}
         self.assertEqual({by_doc[self.dr_a.id]["lane"], by_doc[self.dr_b.id]["lane"]}, {0, 1})
-        self.assertEqual(by_doc[self.dr_a.id]["color"], barva_lekarky(self.dr_a))
+        self.assertEqual(by_doc[self.dr_a.id]["color"], doctor_color(self.dr_a))
         self.assertEqual(by_doc[self.dr_a.id]["initials"], "AT")
         self.assertEqual(by_doc[self.dr_b.id]["time_label"], "10:00–16:00")
         # Kapacita ordinace zůstává jeden pacient naráz.

@@ -9,10 +9,10 @@ from . import test_board
 from . import test_controllers
 from . import test_mail
 from . import test_access
-from . import test_lekarky
+from . import test_doctors
 from . import test_ux
 from . import test_wizard
-from . import test_blokace
-from . import test_barvy
-from . import test_druha_ordinace
-from . import test_cekajici
+from . import test_blocks
+from . import test_colors
+from . import test_second_room
+from . import test_pending_requests

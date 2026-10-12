@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rezervace",
-    "version": "18.0.1.6.0",
+    "version": "18.0.2.0.0",
     "category": "Website",
     "summary": "Rezervacni kalendar kliniky: ordinace, ukony, rozpis lekaru, online rezervace.",
     "description": """
@@ -29,7 +29,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/setting_views.xml",
         "views/board_action.xml",
         "wizard/reservation_wizard_views.xml",
-        "wizard/druha_ordinace_wizard_views.xml",
+        "wizard/second_room_wizard_views.xml",
         "views/menus.xml",
         "views/booking_page.xml",
         "data/mail_templates.xml",
@@ -38,14 +38,14 @@ bezi vlastni rezervacni pruvodce misto iframu.
     "assets": {
         "web.assets_backend": [
             "elite_vet_reservation/static/src/board/**/*",
-            "elite_vet_reservation/static/src/zvuk/zvuk.js",
+            "elite_vet_reservation/static/src/sound/sound.js",
         ],
         "web.assets_frontend": [
             "elite_vet_reservation/static/src/booking/booking.css",
             "elite_vet_reservation/static/src/booking/booking.js",
         ],
     },
-    "post_init_hook": "_pri_instalaci",
+    "post_init_hook": "_post_init",
     "installable": True,
     "application": True,
     "auto_install": False,

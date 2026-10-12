@@ -80,10 +80,10 @@ class BookingController(http.Controller):
         today = fields.Date.context_today(env["elite.vet.setting"].sudo())
         horizon = fields.Date.add(today, days=s.booking_max_days_ahead)
         assignments = env["elite.vet.doctor.assignment"].sudo().search([("date", ">=", today), ("date", "<=", horizon)])
-        doctors = assignments.mapped("doctor_id").filtered("prijima_rezervace").sorted("name")
+        doctors = assignments.mapped("doctor_id").filtered("accepts_bookings").sorted("name")
         # Nabízí se jen specializace, kterou má aspoň jedna lékařka - jinak by
         # klient vybral obor, ke kterému se nedá objednat.
-        all_doctors = env["elite.vet.doctor"].sudo().search([("prijima_rezervace", "=", True)])
+        all_doctors = env["elite.vet.doctor"].sudo().search([("accepts_bookings", "=", True)])
         specs = all_doctors.mapped("specialization_ids").sorted(lambda s: (s.sequence, s.name))
         procs = env["elite.vet.procedure"].sudo().search([("online", "=", True)])
         return {
@@ -156,13 +156,13 @@ class BookingController(http.Controller):
             "deposit_state": "pending" if (s.booking_deposits_enabled and proc.deposit_required) else "none",
         })
         rec = request.env["elite.vet.reservation"].sudo().create(vals)
-        rec._po_prijeti_z_webu()
+        rec._after_web_submit()
         return {"ok": True, "token": rec.cancel_token, "deposit": rec.deposit_state == "pending"}
 
     # csrf=False: akci autorizuje nahodny token v URL (odkaz z e-mailu), klient nema session s CSRF tokenem.
     @http.route("/rezervace/zruseni/<string:token>", type="http", auth="public", website=True,
                 methods=["GET", "POST"], sitemap=False, csrf=False)
-    def zruseni(self, token, **post):
+    def cancel_booking(self, token, **post):
         rez = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
         if not rez or rez.kind != "reservation":
             raise NotFound()
@@ -170,9 +170,9 @@ class BookingController(http.Controller):
         stav = "dotaz"
         if rez.state in ("cancelled", "no_show", "done"):
             stav = "uz_zruseno"
-        elif not rez.muze_zrusit_klient():
+        elif not rez.client_can_cancel():
             stav = "pozde"
-        elif request.httprequest.method == "POST" and post.get("potvrdit"):
+        elif request.httprequest.method == "POST" and post.get("confirm"):
             rez.action_cancel("client")
             stav = "zruseno"
         return request.render("elite_vet_reservation.cancel_page", {
@@ -180,7 +180,7 @@ class BookingController(http.Controller):
         })
 
     @http.route("/rezervace/platba/<string:token>", type="http", auth="public", website=True, methods=["GET"], sitemap=False)
-    def platba(self, token, **kw):
+    def deposit_payment(self, token, **kw):
         rez = request.env["elite.vet.reservation"].sudo().search([("cancel_token", "=", token)], limit=1)
         if not rez or rez.kind != "reservation":
             raise NotFound()

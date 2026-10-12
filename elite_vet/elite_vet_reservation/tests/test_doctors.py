@@ -10,7 +10,7 @@ NOW = datetime(2026, 10, 1, 8, 0)
 
 
 @tagged("post_install", "-at_install")
-class TestLekarky(ReservationCase):
+class TestDoctors(ReservationCase):
     """Kdo smí dostat rezervaci a které lékařky dělají který úkon."""
 
     @classmethod
@@ -71,13 +71,13 @@ class TestLekarky(ReservationCase):
         self.assertEqual({tuple(s["room_ids"]) for s in slots}, {(self.room2.id,)})
 
     def test_install_hook_links_doctors_to_team_cards(self):
-        from odoo.addons.elite_vet_reservation import _propojit_lekarky
+        from odoo.addons.elite_vet_reservation import _link_doctors
         Doctor = self.env["elite.vet.doctor"]
-        Doctor.search([]).write({"prijima_rezervace": False})
+        Doctor.search([]).write({"accepts_bookings": False})
         section = self.env["elite.vet.team.section"].create({"name": "Sekce hook"})
         member = self.env["elite.vet.team.member"].create({"name": "MVDr. Nová Lékařka", "section_id": section.id})
         nova = Doctor.create({"name": "MVDr. Nová Lékařka"})
-        _propojit_lekarky(self.env)
+        _link_doctors(self.env)
         self.assertEqual(nova.member_id, member)
-        self.assertTrue(nova.prijima_rezervace)
-        self.assertFalse(self.sestra.prijima_rezervace)
+        self.assertTrue(nova.accepts_bookings)
+        self.assertFalse(self.sestra.accepts_bookings)

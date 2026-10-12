@@ -12,7 +12,7 @@ import pytz
 from odoo import api, fields, models
 
 from .reservation import TZ
-from .svatky import svatek
+from .holidays import holiday_name
 
 
 def to_min(hour_float):
@@ -73,7 +73,7 @@ class VetAvailability(models.AbstractModel):
         exc = self.env["elite.vet.room.exception"].search([("room_id", "=", room.id), ("date", "=", day)], limit=1)
         if exc:
             return [] if exc.closed else [(to_min(exc.hour_from), to_min(exc.hour_to))]
-        lines = room.hours_ids.filtered(lambda h: int(h.weekday) == day.weekday() and h.plati_v_den(day))
+        lines = room.hours_ids.filtered(lambda h: int(h.weekday) == day.weekday() and h.applies_on(day))
         return sorted((to_min(h.hour_from), to_min(h.hour_to)) for h in lines)
 
     @api.model
@@ -112,7 +112,7 @@ class VetAvailability(models.AbstractModel):
         nezakládá - počítá se z data a nastavení.
         """
         s = self.env["elite.vet.setting"].nastaveni()
-        nazev = svatek(day)
+        nazev = holiday_name(day)
         if nazev and s.booking_block_holidays:
             return "Státní svátek: %s – web neobjednává" % nazev
         if day.weekday() >= 5 and s.booking_block_weekends:

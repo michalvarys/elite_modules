@@ -16,19 +16,19 @@ class TestSetting(ReservationCase):
         self.assertFalse(s.booking_deposits_enabled)
 
     def test_seed_is_idempotent_and_skips_when_rooms_exist(self):
-        from odoo.addons.elite_vet_reservation import _pri_instalaci
+        from odoo.addons.elite_vet_reservation import _post_init
         before = self.env["elite.vet.procedure"].search_count([])
-        _pri_instalaci(self.env)          # ordinace z common.py uz existuji -> nic se nezaklada
+        _post_init(self.env)          # ordinace z common.py uz existuji -> nic se nezaklada
         self.assertEqual(self.env["elite.vet.procedure"].search_count([]), before)
 
     def test_seed_on_empty_db(self):
-        from odoo.addons.elite_vet_reservation import _pri_instalaci, PROCEDURES
+        from odoo.addons.elite_vet_reservation import _post_init, PROCEDURES
         self.env["elite.vet.reservation"].search([]).unlink()
         self.env["elite.vet.doctor.assignment"].search([]).unlink()
         # Vcetne archivovanych (common.py archivuje vychozi data), jinak by guard seed preskocil.
         self.env["elite.vet.procedure"].with_context(active_test=False).search([]).unlink()
         self.env["elite.vet.room"].with_context(active_test=False).search([]).unlink()
-        _pri_instalaci(self.env)
+        _post_init(self.env)
         rooms = self.env["elite.vet.room"].search([], order="sequence")
         self.assertEqual(rooms.mapped("name"), ["Ordinace 1", "Ordinace 2", "Sál"])
         self.assertFalse(rooms[2].online)

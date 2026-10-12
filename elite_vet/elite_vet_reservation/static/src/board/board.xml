@@ -20,7 +20,7 @@
                     </button>
                 </div>
                 <span class="flex-grow-1"/>
-                <button type="button" class="btn btn-light evb-zvuk" t-on-click="prepnoutZvuk"
+                <button type="button" class="btn btn-light evb-zvuk" t-on-click="toggleSound"
                         t-att-title="state.zvuk ? 'Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete' : 'Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete'">
                     <t t-if="state.zvuk">🔔 Zvuk</t><t t-else="">🔕 Bez zvuku</t>
                 </button>
@@ -68,7 +68,7 @@
                 <div class="evb-resizer" role="separator" aria-orientation="vertical" tabindex="0"
                      aria-label="Šířka panelu čekajících žádostí"
                      title="Táhnutím změníte šířku panelu · dvojklik = výchozí šířka"
-                     t-on-pointerdown="onResizeStart" t-on-dblclick="resetSirky" t-on-keydown="onResizeKey"/>
+                     t-on-pointerdown="onResizeStart" t-on-dblclick="resetPanelWidth" t-on-keydown="onResizeKey"/>
                 <div class="evb-grid" t-ref="grid">
                     <div class="evb-axis">
                         <div class="evb-head"/>

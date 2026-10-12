@@ -2,25 +2,25 @@
 <odoo>
     <!-- Příznak lékařky patří k osobě, proto se ukazuje tam, kde se lidé spravují
          (Rozpis služeb → Lékařky), a ne v samostatném seznamu rezervací. -->
-    <record id="view_vet_doctor_list_rezervace" model="ir.ui.view">
+    <record id="view_vet_doctor_list_reservation" model="ir.ui.view">
         <field name="name">elite.vet.doctor.list.rezervace</field>
         <field name="model">elite.vet.doctor</field>
         <field name="inherit_id" ref="elite_vet_calendar.view_vet_doctor_list"/>
         <field name="arch" type="xml">
             <field name="member_id" position="after">
-                <field name="prijima_rezervace" string="Lékařka (rezervace)"/>
-                <field name="barva" widget="color" optional="show"/>
+                <field name="accepts_bookings" string="Lékařka (rezervace)"/>
+                <field name="calendar_color" widget="color" optional="show"/>
             </field>
         </field>
     </record>
-    <record id="view_vet_doctor_form_rezervace" model="ir.ui.view">
+    <record id="view_vet_doctor_form_reservation" model="ir.ui.view">
         <field name="name">elite.vet.doctor.form.rezervace</field>
         <field name="model">elite.vet.doctor</field>
         <field name="inherit_id" ref="elite_vet_calendar.view_vet_doctor_form"/>
         <field name="arch" type="xml">
             <field name="member_id" position="after">
-                <field name="prijima_rezervace"/>
-                <field name="barva" widget="color" invisible="not prijima_rezervace"/>
+                <field name="accepts_bookings"/>
+                <field name="calendar_color" widget="color" invisible="not accepts_bookings"/>
             </field>
         </field>
     </record>

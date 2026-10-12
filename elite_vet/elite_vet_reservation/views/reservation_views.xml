@@ -41,9 +41,9 @@
                             confirm="Opravdu zrušit tuto rezervaci?"/>
                     <button name="action_cancel" type="object" string="Zrušit blokaci"
                             invisible="kind != 'block' or state in ('cancelled','done','no_show')"/>
-                    <button name="action_druha_ordinace" type="object" string="Přidat druhou ordinaci"
-                            invisible="kind == 'block' or state != 'confirmed' or spojena_id or druha_ordinace"/>
-                    <button name="action_sparovat" type="object" string="Spárovat klienta"
+                    <button name="action_add_second_room" type="object" string="Přidat druhou ordinaci"
+                            invisible="kind == 'block' or state != 'confirmed' or linked_reservation_id or is_second_room"/>
+                    <button name="action_match_client" type="object" string="Spárovat klienta"
                             invisible="partner_id or kind == 'block'"/>
                     <field name="state" widget="statusbar" statusbar_visible="web_new,confirmed,done" invisible="kind == 'block'"/>
                 </header>
@@ -59,8 +59,8 @@
                             <field name="block_scope" widget="radio" invisible="kind != 'block'" required="kind == 'block'"/>
                             <field name="room_id" required="kind == 'reservation' and state in ('confirmed', 'done')"/>
                             <field name="doctor_id" invisible="kind == 'block'"/>
-                            <field name="spojena_id" invisible="not spojena_id"/>
-                            <field name="druha_ordinace" invisible="not druha_ordinace"/>
+                            <field name="linked_reservation_id" invisible="not linked_reservation_id"/>
+                            <field name="is_second_room" invisible="not is_second_room"/>
                             <field name="start"/>
                             <field name="stop"/>
                             <field name="repeat_weekly_until" invisible="kind == 'reservation' or id"/>
@@ -142,7 +142,7 @@
                 <filter name="reservations" string="Jen rezervace" domain="[('kind', '=', 'reservation')]"/>
                 <filter name="blocks" string="Jen blokace" domain="[('kind', '=', 'block')]"/>
                 <filter name="blocks_web" string="Blokace jen pro web" domain="[('kind', '=', 'block'), ('block_scope', '=', 'web')]"/>
-                <filter name="od_dneska" string="Od dneška" domain="[('stop', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="from_today" string="Od dneška" domain="[('stop', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Seskupit podle">
                     <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
                     <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
@@ -156,7 +156,7 @@
         <field name="name">Rezervace</field>
         <field name="res_model">elite.vet.reservation</field>
         <field name="view_mode">list,calendar,form</field>
-        <field name="context">{'search_default_od_dneska': 1, 'search_default_reservations': 1}</field>
+        <field name="context">{'search_default_from_today': 1, 'search_default_reservations': 1}</field>
     </record>
 
     <!-- Čekající přicházejí jen z webu; ručně se tu nic nezakládá (na to je Nová rezervace). -->

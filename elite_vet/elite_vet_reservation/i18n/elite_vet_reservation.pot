@@ -27,22 +27,22 @@ msgid "0 = klient nemůže rušit odkazem z e-mailu."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "1 · What do you need"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "2 · Date and time"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "3 · Your details"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "4 · Done"
 msgstr ""
 
@@ -128,7 +128,7 @@ msgid ""
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "<span data-text=\"any-doctor\" hidden=\"hidden\">Any doctor</span>"
 msgstr ""
 
@@ -158,7 +158,7 @@ msgid "Activity Type Icon"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Afternoon"
 msgstr ""
 
@@ -225,17 +225,17 @@ msgid "Blokace"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "By doctor"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "By problem"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "By specialization"
 msgstr ""
 
@@ -260,17 +260,17 @@ msgid "Cancel appointment | Elite Vet"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Choose a doctor, then the reason for your visit."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Choose a specialization, then the reason for your visit."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Choose the reason for your visit."
 msgstr ""
 
@@ -354,7 +354,7 @@ msgid "Deposit | Elite Vet"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Describe the problem"
 msgstr ""
 
@@ -429,7 +429,7 @@ msgid "E-mail"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "E-mail for confirmation"
 msgstr ""
 
@@ -476,7 +476,7 @@ msgid "Hlodavec"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
 "I agree to the processing of my personal data for the purpose of this "
 "appointment."
@@ -628,7 +628,7 @@ msgid "Kind"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
 "Kind of animal\n"
 "                                <select name=\"pet_species\">\n"
@@ -781,7 +781,7 @@ msgid "Modrá"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Morning"
 msgstr ""
 
@@ -861,7 +861,7 @@ msgid "Next Activity Type"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Next month"
 msgstr ""
 
@@ -882,19 +882,19 @@ msgid "No deposit is required for this appointment."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
 "No doctor has online appointments in the coming weeks. Choose by problem or "
 "call us."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "No free appointments in this month. Try the next one."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "No specializations are set up yet. Choose by problem."
 msgstr ""
 
@@ -1026,17 +1026,17 @@ msgid "Pes"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Pet's name"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Phone"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Pick a day first."
 msgstr ""
 
@@ -1150,7 +1150,7 @@ msgid "Pořadí"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Previous month"
 msgstr ""
 
@@ -1301,7 +1301,7 @@ msgid "Sem padají rezervace z webu. Otevřete je, vyberte ordinaci a potvrďte.
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Send the request"
 msgstr ""
 
@@ -1322,7 +1322,7 @@ msgid "Sobota"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_rezervace_form_booking
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
 msgid "Souhlasím se zpracováním údajů…"
 msgstr ""
 
@@ -1363,7 +1363,7 @@ msgid "Stav"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Steps"
 msgstr ""
 
@@ -1400,7 +1400,7 @@ msgid "Text nad rezervací"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_rezervace_form_booking
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
 msgid "Text nad rezervačním průvodcem"
 msgstr ""
 
@@ -1410,7 +1410,7 @@ msgid "Text souhlasu pod formulářem"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
 "The appointment becomes valid after the deposit is paid. We will send the "
 "payment instructions by e-mail."
@@ -1424,7 +1424,7 @@ msgid ""
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
 "The booking system is temporarily unavailable. Please call the reception."
 msgstr ""
@@ -1440,7 +1440,7 @@ msgid "This appointment is already cancelled."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "This time has just been taken. Please choose another."
 msgstr ""
 
@@ -1492,7 +1492,7 @@ msgid "Vidí tabuli, potvrzuje a zakládá rezervace, spravuje klienty."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_rezervace_form_booking
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
 msgid "Vlastní rezervační systém"
 msgstr ""
 
@@ -1560,12 +1560,12 @@ msgid "Výpočet volných termínů"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "We have received your request"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
 "We will confirm the appointment by e-mail. If anything is unclear, we will "
 "call you."
@@ -1587,7 +1587,7 @@ msgid "Website communication history"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Which doctor?"
 msgstr ""
 
@@ -1597,7 +1597,7 @@ msgid "Yes, cancel it"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Your full name"
 msgstr ""
 
@@ -1794,7 +1794,7 @@ msgid "Šedá"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "‹ Back"
 msgstr ""
 
@@ -1805,56 +1805,56 @@ msgid "‹ Back to reservations"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Search…"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Search for the reason for your visit"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Nothing matches your search. Try another word or choose by doctor."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Change"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Free day"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Selected"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Today"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Loading…"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Examinations in {name}"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Other examinations with doctors of this specialization"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rezervace_widget
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Done by: {name}"
 msgstr ""

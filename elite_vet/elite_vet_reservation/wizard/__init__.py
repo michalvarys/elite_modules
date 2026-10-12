@@ -1,2 +1,2 @@
 from . import reservation_wizard
-from . import druha_ordinace_wizard
+from . import second_room_wizard

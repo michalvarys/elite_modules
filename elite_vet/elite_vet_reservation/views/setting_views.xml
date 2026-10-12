@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_setting_rezervace_form_booking" model="ir.ui.view">
+    <record id="view_setting_reservation_form_booking" model="ir.ui.view">
         <field name="name">elite.vet.setting.rezervace.form.booking</field>
         <field name="model">elite.vet.setting</field>
         <field name="inherit_id" ref="elite_vet_web.view_setting_rezervace_form"/>

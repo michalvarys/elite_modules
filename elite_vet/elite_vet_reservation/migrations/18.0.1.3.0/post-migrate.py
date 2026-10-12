@@ -4,8 +4,8 @@ Samostatný upgrade elite_vet_web je vracel pod kořen Rezervace. Po dalším
 samostatném `-u elite_vet_web` je obnoví `-u elite_vet_reservation`.
 """
 from odoo import SUPERUSER_ID, api
-from odoo.addons.elite_vet_reservation import presunout_cizi_menu
+from odoo.addons.elite_vet_reservation import move_foreign_menus
 
 
 def migrate(cr, version):
-    presunout_cizi_menu(api.Environment(cr, SUPERUSER_ID, {}))
+    move_foreign_menus(api.Environment(cr, SUPERUSER_ID, {}))

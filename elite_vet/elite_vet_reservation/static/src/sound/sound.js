@@ -13,9 +13,9 @@
  */
 import { registry } from "@web/core/registry";
 
-const KLIC = "elite_vet_reservation.zvuk";
+const KLIC = "elite_vet_reservation.sound";
 
-export function zvukZapnuty() {
+export function isSoundOn() {
     try {
         return localStorage.getItem(KLIC) !== "0";
     } catch {
@@ -23,7 +23,7 @@ export function zvukZapnuty() {
     }
 }
 
-export function nastavitZvuk(zapnuto) {
+export function setSoundOn(zapnuto) {
     try {
         localStorage.setItem(KLIC, zapnuto ? "1" : "0");
     } catch {
@@ -31,20 +31,20 @@ export function nastavitZvuk(zapnuto) {
     }
 }
 
-const OHLASENE = "elite_vet_reservation.ohlasene";
+const ANNOUNCED_KEY = "elite_vet_reservation.announced";
 
 /** Ze seznamu id vrátí ta, která tento panel ještě neohlásil, a poznamená si je. */
-export function noveNeohlasene(ids) {
+export function takeUnannounced(ids) {
     let videne = [];
     try {
-        videne = JSON.parse(sessionStorage.getItem(OHLASENE) || "[]");
+        videne = JSON.parse(sessionStorage.getItem(ANNOUNCED_KEY) || "[]");
     } catch {
         videne = [];
     }
     const nove = (ids || []).filter((id) => !videne.includes(id));
     if (nove.length) {
         try {
-            sessionStorage.setItem(OHLASENE, JSON.stringify([...videne, ...nove].slice(-300)));
+            sessionStorage.setItem(ANNOUNCED_KEY, JSON.stringify([...videne, ...nove].slice(-300)));
         } catch {
             // bez úložiště: v nejhorším se po obnovení ohlásí znovu
         }
@@ -63,7 +63,7 @@ function kontext() {
 }
 
 /** Krátký dvoutónový „ding-dong“ (A5 → E6). */
-export function zahrat() {
+export function playChime() {
     const c = kontext();
     if (!c) return;
     if (c.state === "suspended") c.resume();
@@ -82,7 +82,7 @@ export function zahrat() {
     }
 }
 
-export const zvukService = {
+export const soundService = {
     dependencies: ["bus_service", "notification"],
     start(env, { bus_service, notification }) {
         const odemknout = () => {
@@ -93,17 +93,17 @@ export const zvukService = {
         bus_service.subscribe("elite_vet_reservation/changed", (payload) => {
             if (!payload?.new_web) return;
             const ids = payload.web_ids || [];
-            const nove = noveNeohlasene(ids);
+            const nove = takeUnannounced(ids);
             if (!nove.length) return;
             (payload.web || []).forEach((label, i) => {
                 if (nove.includes(ids[i])) {
                     notification.add("Nová žádost z webu: " + label, { type: "info", sticky: true });
                 }
             });
-            if (zvukZapnuty()) zahrat();
+            if (isSoundOn()) playChime();
         });
         bus_service.start();
     },
 };
 
-registry.category("services").add("elite_vet_reservation_zvuk", zvukService);
+registry.category("services").add("elite_vet_reservation_sound", soundService);

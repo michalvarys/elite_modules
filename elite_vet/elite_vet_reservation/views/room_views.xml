@@ -100,7 +100,7 @@
             <search string="Výjimky ordinační doby">
                 <field name="room_id"/>
                 <field name="date"/>
-                <filter name="od_dneska" string="Od dneška"
+                <filter name="from_today" string="Od dneška"
                         domain="[('date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Seskupit podle">
                     <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
@@ -114,6 +114,6 @@
         <field name="res_model">elite.vet.room.exception</field>
         <field name="view_mode">list</field>
         <field name="search_view_id" ref="view_room_exception_search"/>
-        <field name="context">{'search_default_od_dneska': 1}</field>
+        <field name="context">{'search_default_from_today': 1}</field>
     </record>
 </odoo>

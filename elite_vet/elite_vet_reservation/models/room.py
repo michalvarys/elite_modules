@@ -82,7 +82,7 @@ class VetRoom(models.Model):
         for rec in self:
             rec.hours_summary = format_hours_summary(
                 (int(h.weekday), h.hour_from, h.hour_to)
-                for h in rec.hours_ids if h.plati_v_den(today))
+                for h in rec.hours_ids if h.applies_on(today))
 
 
 class VetRoomHours(models.Model):
@@ -134,7 +134,7 @@ class VetRoomHours(models.Model):
         b_od, b_do = other.date_from or fields.Date.from_string("1900-01-01"), other.date_to or fields.Date.from_string("2999-12-31")
         return a_od <= b_do and b_od <= a_do
 
-    def plati_v_den(self, day):
+    def applies_on(self, day):
         self.ensure_one()
         if self.date_from and day < self.date_from:
             return False

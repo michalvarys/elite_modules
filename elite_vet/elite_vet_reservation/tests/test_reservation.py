@@ -103,7 +103,7 @@ class TestReservation(ReservationCase):
         # a párování podle telefonu by našlo jeho.
         r = self.reservation(start=self.dt(D, 9, 0), contact_email="novy@example.cz", contact_phone="+420 603 918 274",
                              pet_name="Fík", pet_species="cat")
-        r.action_sparovat()
+        r.action_match_client()
         self.assertTrue(r.partner_id.is_vet_client)
         self.assertEqual(r.partner_id.email, "novy@example.cz")
         self.assertEqual((r.pet_id.name, r.pet_id.species), ("Fík", "cat"))

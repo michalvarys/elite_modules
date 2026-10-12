@@ -40,7 +40,7 @@
     <!-- Nastavení a časté dotazy patří elite_vet_web; recepce je denně nepotřebuje,
          proto je přesuneme do Konfigurace (jen datovým záznamem, cizí soubor se nemění).
          Samostatný -u elite_vet_web je vrátí pod kořen; -u elite_vet_reservation přesun
-         obnoví (tyto záznamy + presunout_cizi_menu v __init__.py a migraci 18.0.1.3.0). -->
+         obnoví (tyto záznamy + move_foreign_menus v __init__.py a migraci 18.0.1.3.0). -->
     <record id="elite_vet_web.menu_rezervace_nastaveni" model="ir.ui.menu">
         <field name="name">Nastavení rezervace</field>
         <field name="parent_id" ref="menu_reservation_config"/>

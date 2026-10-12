@@ -1,11 +1,11 @@
 """UX tabule a administrace: české názvy, návrhy v panelu Čekající,
-popisky událostí, kopírování rozpisu, souhrn ordinační doby, „Kdo dělá“."""
+popisky událostí, kopírování rozpisu, summary ordinační doby, „Kdo dělá“."""
 from datetime import date, timedelta
 
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
-from odoo.addons.elite_vet_reservation.models.reservation import inicialy
+from odoo.addons.elite_vet_reservation.models.reservation import name_initials
 from odoo.addons.elite_vet_reservation.models.room import format_hours_summary
 
 from .common import ReservationCase
@@ -192,10 +192,10 @@ class TestBoardEvents(ReservationCase):
         self.assertEqual(ev["doctor_initials"], "AT")
 
     def test_initials(self):
-        self.assertEqual(inicialy("MVDr. Dana Pokorná"), "DP")
-        self.assertEqual(inicialy("MVDr. Ioana Chihaia, Ph.D."), "IC")
-        self.assertEqual(inicialy("Eva"), "E")
-        self.assertEqual(inicialy(False), "")
+        self.assertEqual(name_initials("MVDr. Dana Pokorná"), "DP")
+        self.assertEqual(name_initials("MVDr. Ioana Chihaia, Ph.D."), "IC")
+        self.assertEqual(name_initials("Eva"), "E")
+        self.assertEqual(name_initials(False), "")
 
     def test_name_in_clinic_language(self):
         if "cs_CZ" not in dict(self.env["res.lang"].get_installed()):
@@ -222,7 +222,7 @@ class TestAdminUx(ReservationCase):
         a2 = self.assign(self.dr_b, self.room2, WED, 13.0, 18.0)
         # Lékařka B už má za týden službu, která by se s kopií překrývala.
         self.assign(self.dr_b, self.room1, WED + timedelta(days=7), 16.0, 19.0)
-        res = (a1 | a2).action_kopirovat_tyden()
+        res = (a1 | a2).action_copy_week()
         self.assertEqual(res["tag"], "display_notification")
         self.assertIn("Zkopírováno 1, přeskočeno 1", res["params"]["message"])
         copy = A.search([("doctor_id", "=", self.dr_a.id), ("date", "=", WED + timedelta(days=7))])
@@ -233,8 +233,8 @@ class TestAdminUx(ReservationCase):
         A = self.env["elite.vet.doctor.assignment"]
         a1 = self.assign(self.dr_a, self.room1, WED, 8.0, 12.0)
         a2 = self.assign(self.dr_b, self.room2, WED, 13.0, 18.0)
-        self.dr_b.prijima_rezervace = False
-        res = (a1 | a2).action_kopirovat_tyden()
+        self.dr_b.accepts_bookings = False
+        res = (a1 | a2).action_copy_week()
         self.assertIn("Zkopírováno 1, přeskočeno 1", res["params"]["message"])
         self.assertEqual(A.search_count([("doctor_id", "=", self.dr_a.id), ("date", "=", WED + timedelta(days=7))]), 1)
         self.assertFalse(A.search_count([("doctor_id", "=", self.dr_b.id), ("date", "=", WED + timedelta(days=7))]))
@@ -255,11 +255,11 @@ class TestAdminUx(ReservationCase):
         self.assertEqual(self.room1.hours_summary, "Po–Pá 8:15–19:30 · So 9:00–12:00")
 
     def test_procedure_who_does_it(self):
-        self.assertEqual(self.vacc.kdo_dela, "kterákoli lékařka")
+        self.assertEqual(self.vacc.performed_by, "kterákoli lékařka")
         icon = self.env["elite.vet.team.icon"].search([], limit=1)
         section = self.env["elite.vet.team.section"].create({"name": "Sekce UX"})
         spec = self.env["elite.vet.team.specialization"].create({"name": "UX dermatologie", "icon_id": icon.id})
         self.dr_b.member_id = self.env["elite.vet.team.member"].create(
             {"name": self.dr_b.name, "section_id": section.id, "specialization_ids": [(6, 0, spec.ids)]})
         self.derm.specialization_ids = spec
-        self.assertEqual(self.derm.kdo_dela, "MVDr. Bára Testová")
+        self.assertEqual(self.derm.performed_by, "MVDr. Bára Testová")

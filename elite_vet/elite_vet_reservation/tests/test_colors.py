@@ -3,17 +3,17 @@ from datetime import date
 from odoo.tests import tagged
 
 from .common import ReservationCase
-from ..models.reservation import BARVY_LEKAREK, barva_lekarky
+from ..models.reservation import DOCTOR_COLORS, doctor_color
 
 D = date(2026, 10, 14)
 
 
 @tagged("post_install", "-at_install")
-class TestBarvy(ReservationCase):
+class TestColors(ReservationCase):
     """Karta má barvu úkonu, proužek vlevo barvu lékařky."""
 
     def test_card_keeps_procedure_colour_with_doctor(self):
-        self.dr_a.barva = "#123456"
+        self.dr_a.calendar_color = "#123456"
         r = self.reservation(start=self.dt(D, 9, 0), doctor_id=self.dr_a.id)
         self.assertEqual(r.color_hex, self.vacc.color_hex)
 
@@ -22,19 +22,19 @@ class TestBarvy(ReservationCase):
         self.assertEqual(r.color_hex, self.vacc.color_hex)
 
     def test_automatic_colour_when_none_chosen(self):
-        self.dr_b.barva = False
-        self.assertEqual(barva_lekarky(self.dr_b), BARVY_LEKAREK[self.dr_b.id % len(BARVY_LEKAREK)])
+        self.dr_b.calendar_color = False
+        self.assertEqual(doctor_color(self.dr_b), DOCTOR_COLORS[self.dr_b.id % len(DOCTOR_COLORS)])
 
     def test_new_doctor_gets_colour_when_flagged(self):
         d = self.env["elite.vet.doctor"].create({"name": "MVDr. Nová Barva"})
-        self.assertFalse(d.barva)
-        d.prijima_rezervace = True
-        self.assertTrue(d.barva)
+        self.assertFalse(d.calendar_color)
+        d.accepts_bookings = True
+        self.assertTrue(d.calendar_color)
 
     def test_board_doctor_stripe_colour(self):
         self.hours(self.room1, 2, 8.0, 18.0)
         self.assign(self.dr_a, self.room1, D, 8.0, 12.0)
-        self.dr_a.barva = "#abcdef"
+        self.dr_a.calendar_color = "#abcdef"
         r = self.reservation(start=self.dt(D, 9, 0), doctor_id=self.dr_a.id)
         data = self.env["elite.vet.reservation"].board_data("2026-10-14")
         ev = next(e for e in data["events"] if e["id"] == r.id)

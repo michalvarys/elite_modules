@@ -7,7 +7,7 @@ algoritmu (Meeus/Jones/Butcher).
 from datetime import date, timedelta
 from functools import lru_cache
 
-PEVNE = [
+FIXED_HOLIDAYS = [
     (1, 1, "Den obnovy samostatného českého státu, Nový rok"),
     (5, 1, "Svátek práce"),
     (5, 8, "Den vítězství"),
@@ -22,7 +22,7 @@ PEVNE = [
 ]
 
 
-def velikonocni_nedele(rok):
+def easter_sunday(rok):
     """Velikonoční neděle (gregoriánský kalendář)."""
     a = rok % 19
     b, c = divmod(rok, 100)
@@ -38,19 +38,19 @@ def velikonocni_nedele(rok):
 
 
 @lru_cache(maxsize=32)
-def _svatky(rok):
-    out = {date(rok, m, d): nazev for m, d, nazev in PEVNE}
-    nedele = velikonocni_nedele(rok)
+def _holidays(rok):
+    out = {date(rok, m, d): nazev for m, d, nazev in FIXED_HOLIDAYS}
+    nedele = easter_sunday(rok)
     out[nedele - timedelta(days=2)] = "Velký pátek"
     out[nedele + timedelta(days=1)] = "Velikonoční pondělí"
     return out
 
 
-def cz_svatky(rok):
+def czech_holidays(rok):
     """{date: název} všech českých státních (a ostatních) svátků v roce."""
-    return dict(_svatky(rok))
+    return dict(_holidays(rok))
 
 
-def svatek(den):
+def holiday_name(den):
     """Název svátku v daný den, jinak None."""
-    return _svatky(den.year).get(den)
+    return _holidays(den.year).get(den)

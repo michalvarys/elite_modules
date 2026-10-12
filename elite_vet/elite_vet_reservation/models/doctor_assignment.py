@@ -16,7 +16,7 @@ class VetDoctorAssignment(models.Model):
     _order = "date, room_id, hour_from"
 
     doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka", required=True, ondelete="restrict",
-                                domain=[("prijima_rezervace", "=", True)])
+                                domain=[("accepts_bookings", "=", True)])
     room_id = fields.Many2one("elite.vet.room", string="Ordinace", required=True, ondelete="restrict")
     date = fields.Date(string="Datum", required=True, default=fields.Date.context_today)
     # Součet hodin ve skupině (např. „Od 32:00“ za den) nedává smysl.
@@ -48,9 +48,9 @@ class VetDoctorAssignment(models.Model):
                 raise ValidationError(_("%s už v tu dobu slouží: %s.") % (rec.doctor_id.name, clash.display_name))
 
     @api.constrains("doctor_id")
-    def _check_lekarka(self):
+    def _check_doctor_accepts_bookings(self):
         for rec in self:
-            if not rec.doctor_id.prijima_rezervace:
+            if not rec.doctor_id.accepts_bookings:
                 raise ValidationError(_(
                     "%s nemá zaškrtnuto „Lékařka – přijímá rezervace“. Do rozpisu lékařů "
                     "patří jen lékařky; nastavuje se v Rozpis služeb → Lékařky."
@@ -64,13 +64,13 @@ class VetDoctorAssignment(models.Model):
             return False
         return not self.procedure_ids or procedure in self.procedure_ids
 
-    def action_kopirovat_tyden(self):
+    def action_copy_week(self):
         """Zkopíruje vybrané služby o týden dál. Kopie, která by se překrývala
         s jinou službou téže lékařky, se přeskočí (a nepadá celé kopírování). Stejně
         tak služba lékařky, která už nepřijímá rezervace."""
         zkopirovano, preskoceno = 0, 0
         for rec in self.sorted(lambda r: (r.date, r.hour_from)):
-            if not rec.doctor_id.prijima_rezervace:
+            if not rec.doctor_id.accepts_bookings:
                 preskoceno += 1
                 continue
             novy_den = rec.date + timedelta(days=7)

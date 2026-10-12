@@ -70,11 +70,11 @@ PROCEDURE_SPECS = {
 }
 
 
-def _pri_instalaci(env):
+def _post_init(env):
     """Propojí lékařky s kartami týmu; výchozí ordinace, úkony a hodiny jen při prázdném modulu."""
-    _propojit_lekarky(env)
-    env["elite.vet.doctor"].with_context(active_test=False).search([]).vyplnit_barvy()
-    presunout_cizi_menu(env)
+    _link_doctors(env)
+    env["elite.vet.doctor"].with_context(active_test=False).search([]).fill_calendar_colors()
+    move_foreign_menus(env)
     if env["elite.vet.room"].search_count([]):
         return
     _seed_rooms_and_hours(env)
@@ -83,13 +83,13 @@ def _pri_instalaci(env):
 
 
 # Menu elite_vet_web, která patří pod Konfigurace: (xml id, pořadí).
-CIZI_MENU_DO_KONFIGURACE = [
+FOREIGN_MENUS_TO_CONFIG = [
     ("elite_vet_web.menu_rezervace_nastaveni", 40),
     ("elite_vet_web.menu_rezervace_faq", 50),
 ]
 
 
-def presunout_cizi_menu(env):
+def move_foreign_menus(env):
     """Přesune Nastavení rezervace a Časté dotazy (menu z elite_vet_web) pod Konfigurace.
 
     Totéž dělají datové záznamy ve views/menus.xml; samostatný upgrade
@@ -100,13 +100,13 @@ def presunout_cizi_menu(env):
     config = env.ref("elite_vet_reservation.menu_reservation_config", raise_if_not_found=False)
     if not config:
         return
-    for xmlid, sequence in CIZI_MENU_DO_KONFIGURACE:
+    for xmlid, sequence in FOREIGN_MENUS_TO_CONFIG:
         menu = env.ref(xmlid, raise_if_not_found=False)
         if menu and (menu.parent_id != config or menu.sequence != sequence):
             menu.write({"parent_id": config.id, "sequence": sequence})
 
 
-def _propojit_lekarky(env):
+def _link_doctors(env):
     """Lékařky z Rozpisu služeb dostanou kartu z Náš tým (podle shodného jména),
     aby se k nim dostaly specializace, a příznak „přijímá rezervace“.
 
@@ -119,8 +119,8 @@ def _propojit_lekarky(env):
         member = Member.search([("name", "=", doctor.name)], limit=1)
         if member:
             doctor.member_id = member
-    if not Doctor.search_count([("prijima_rezervace", "=", True)]):
-        Doctor.search([("name", "=like", "MVDr.%")]).write({"prijima_rezervace": True})
+    if not Doctor.search_count([("accepts_bookings", "=", True)]):
+        Doctor.search([("name", "=like", "MVDr.%")]).write({"accepts_bookings": True})
 
 
 def _seed_rooms_and_hours(env):
@@ -138,13 +138,13 @@ def _seed_rooms_and_hours(env):
         Hours.create({"room_id": room.id, "weekday": "6", "hour_from": 10.25, "hour_to": 17.75})
 
 
-def _nainstalovane_jazyky(env):
+def _installed_langs(env):
     return set(env["res.lang"].search([("active", "=", True)]).mapped("code"))
 
 
 def _seed_procedures(env):
     Proc = env["elite.vet.procedure"]
-    jazyky = _nainstalovane_jazyky(env)
+    jazyky = _installed_langs(env)
     for i, (en, cs, minutes, symbol, color) in enumerate(PROCEDURES):
         rec = Proc.create({"name": en, "duration": minutes, "symbol": symbol, "color": color,
                            "sequence": (i + 1) * 10})

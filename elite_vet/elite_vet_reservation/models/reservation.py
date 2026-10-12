@@ -17,42 +17,42 @@ INACTIVE_STATES = ("cancelled", "no_show")
 # Ordinacni cas kliniky; nesmi zalezet na casove zone prave jednajiciho uzivatele (cron, sudo, web).
 TZ = pytz.timezone("Europe/Prague")
 # České názvy dnů natvrdo: nesmí záviset na jazyce uživatele ani prohlížeče.
-DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"]
+WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"]
 # Recepce objednává i daleko dopředu (očkování za rok); web má vlastní horizont v nastavení.
-HORIZONT_RECEPCE = 400
+RECEPTION_HORIZON_DAYS = 400
 # Druh blokace: „jen web“ zavře čas jen pro online objednávky, „úplná“ pro všechny.
 BLOCK_SCOPES = [("web", "Jen web"), ("full", "Úplná")]
 # Stabilní barvy lékařek na tabuli (podle id), dobře čitelné s bílým písmem.
-BARVY_LEKAREK = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
-TITULY = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
+DOCTOR_COLORS = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
+TITLES = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
-def inicialy(jmeno):
+def name_initials(jmeno):
     """„MVDr. Dana Pokorná“ -> „DP“ (tituly a zkratky s tečkou se přeskočí)."""
     slova = [w for w in (jmeno or "").replace(",", " ").split()
-             if w.lower() not in TITULY and not w.endswith(".")]
+             if w.lower() not in TITLES and not w.endswith(".")]
     if not slova:
         return ""
     vyber = [slova[0], slova[-1]] if len(slova) > 1 else slova[:1]
     return "".join(w[0].upper() for w in vyber)
 
 
-def cas_label(minuta):
+def minutes_label(minuta):
     return "%d:%02d" % (minuta // 60, minuta % 60)
 
 
-def barva_lekarky(doctor):
+def doctor_color(doctor):
     """Barva lékařky na tabuli: vybraná na její kartě, jinak stálá barva podle id.
 
     Bere záznam i samotné id (id = automatická barva), aby šla volat odkudkoli."""
-    if hasattr(doctor, "barva"):
-        if doctor.barva:
-            return doctor.barva
+    if hasattr(doctor, "calendar_color"):
+        if doctor.calendar_color:
+            return doctor.calendar_color
         doctor = doctor.id
-    return BARVY_LEKAREK[(doctor or 0) % len(BARVY_LEKAREK)]
+    return DOCTOR_COLORS[(doctor or 0) % len(DOCTOR_COLORS)]
 
 
-def pruhy_sluzeb(sluzby):
+def shift_bands(sluzby):
     """Služby v jedné ordinaci -> (sluzby s `lane`, počet pruhů, souběhy).
 
     `sluzby` = [{"id", "from", "to", ...}]. Překrývající se služby dostanou
@@ -77,7 +77,7 @@ def pruhy_sluzeb(sluzby):
             else:
                 soubehy.append({"from": f, "to": t, "count": pocet})
     for x in soubehy:
-        x["label"] = "%d lékařky %s–%s" % (x["count"], cas_label(x["from"]), cas_label(x["to"]))
+        x["label"] = "%d lékařky %s–%s" % (x["count"], minutes_label(x["from"]), minutes_label(x["to"]))
     return sluzby, len(konce), soubehy
 
 
@@ -124,11 +124,11 @@ class VetReservation(models.Model):
     transaction_id = fields.Many2one("payment.transaction", string="Platba", ondelete="set null")
     lang = fields.Char(string="Jazyk klienta", default="cs_CZ")
     color_hex = fields.Char(compute="_compute_color_hex")
-    # Zákrok pro dvě lékařky: kopie rezervace v druhé ordinaci (logika v druha_ordinace.py).
-    spojena_id = fields.Many2one("elite.vet.reservation", string="Společně s", copy=False, readonly=True,
+    # Zákrok pro dvě lékařky: kopie rezervace v druhé ordinaci (logika v is_second_room.py).
+    linked_reservation_id = fields.Many2one("elite.vet.reservation", string="Společně s", copy=False, readonly=True,
                                  ondelete="set null",
                                  help="Druhá rezervace téhož zákroku v jiné ordinaci. Přesun a zrušení platí pro obě.")
-    druha_ordinace = fields.Boolean(string="Druhá ordinace", copy=False, readonly=True,
+    is_second_room = fields.Boolean(string="Druhá ordinace", copy=False, readonly=True,
                                     help="Kopie pro druhou lékařku. Klientovi se z ní neposílají e-maily.")
 
     _sql_constraints = [
@@ -138,7 +138,7 @@ class VetReservation(models.Model):
 
     # ---------- compute ----------
     @api.model
-    def _jazyk_kliniky(self):
+    def _clinic_lang(self):
         """Název rezervace a tabule mluví jazykem kliniky, ne jazykem toho, kdo
         rezervaci založil (klient z německého webu, správce v angličtině)."""
         installed = dict(self.env["res.lang"].get_installed())
@@ -146,7 +146,7 @@ class VetReservation(models.Model):
 
     @api.depends("kind", "contact_name", "partner_id.name", "pet_name", "pet_id.name", "procedure_id.name", "block_reason")
     def _compute_name(self):
-        lang = self._jazyk_kliniky()
+        lang = self._clinic_lang()
         for rec in self:
             loc = rec.with_context(lang=lang)
             if rec.kind == "block":
@@ -226,7 +226,7 @@ class VetReservation(models.Model):
             cr.execute("SELECT id FROM elite_vet_room WHERE id IN %s ORDER BY id FOR UPDATE", (tuple(ids),))
             cr.execute("UPDATE elite_vet_room SET write_date = write_date WHERE id IN %s", (tuple(ids),))
 
-    def _po_prijeti_z_webu(self):
+    def _after_web_submit(self):
         """Hacek pro e-maily po prijeti z webu; naplni ho ukol 11."""
         return True
 
@@ -260,12 +260,12 @@ class VetReservation(models.Model):
         records = super().create(vals_list)
         # Kopie opakovane blokace se zakladaji z puvodniho zadani (vsechny ordinace),
         # proto pred rozdelenim; kazda kopie se pak rozdeli podle sveho tydne.
-        records._rozkopirovat_blokace()
-        records._rozdelit_blokaci_vsech_ordinaci()
+        records._repeat_weekly_blocks()
+        records._split_all_rooms_block()
         records._check_overlap()
         return records
 
-    def _rozdelit_blokaci_vsech_ordinaci(self):
+    def _split_all_rooms_block(self):
         """Úplná blokace „všechny ordinace“ přes už zablokovaný čas.
 
         Když některá ordinace má v tom čase vlastní (nebo jinou celoklinickou)
@@ -309,7 +309,7 @@ class VetReservation(models.Model):
             self._check_overlap()
         return res
 
-    def _rozkopirovat_blokace(self):
+    def _repeat_weekly_blocks(self):
         """Tydenni opakovani blokace = materializovane kopie, zadne rrule."""
         for rec in self.filtered(lambda r: r.kind == "block" and r.repeat_weekly_until):
             until = rec.repeat_weekly_until
@@ -340,7 +340,7 @@ class VetReservation(models.Model):
             if rec.state not in ("web_new", "confirmed"):
                 raise UserError(_("Potvrdit jde jen čekající rezervaci."))
             if not rec.partner_id:
-                rec.action_sparovat()
+                rec.action_match_client()
             rec.write({"state": "confirmed"})
 
     def action_cancel(self, reason="clinic"):
@@ -362,15 +362,15 @@ class VetReservation(models.Model):
             vals["doctor_id"] = doctor_id or False
         self.write(vals)
 
-    def action_sparovat(self):
+    def action_match_client(self):
         """Najde / zalozi klienta a mazlicka podle toho, co prislo z webu."""
         Partner = self.env["res.partner"]
         Pet = self.env["elite.vet.pet"]
         for rec in self:
             if not rec.partner_id:
-                rec.partner_id = Partner.najit_nebo_zalozit_klienta(rec.contact_name, rec.contact_email, rec.contact_phone)
+                rec.partner_id = Partner.find_or_create_client(rec.contact_name, rec.contact_email, rec.contact_phone)
             if not rec.pet_id and rec.pet_name:
-                rec.pet_id = Pet.najit_nebo_zalozit(rec.partner_id, rec.pet_name, rec.pet_species)
+                rec.pet_id = Pet.find_or_create(rec.partner_id, rec.pet_name, rec.pet_species)
 
     # ---------- tabule ----------
     @api.model
@@ -378,7 +378,7 @@ class VetReservation(models.Model):
         day = fields.Date.from_string(day_str)
         A = self.env["elite.vet.availability"]
         s = self.env["elite.vet.setting"].nastaveni()
-        lang = self._jazyk_kliniky()
+        lang = self._clinic_lang()
         rooms = self.env["elite.vet.room"].search([])
         start, stop = A.local_to_utc(day, 0), A.local_to_utc(day, 1440)
         assignments = self.env["elite.vet.doctor.assignment"].search([("date", "=", day)])
@@ -388,13 +388,13 @@ class VetReservation(models.Model):
             for f, t in open_iv:
                 axis_from, axis_to = min(axis_from, f), max(axis_to, t)
             # Služby lékařek = svislé pruhy vlevo ve sloupci; souběh dvou lékařek vedle sebe.
-            sluzby, lanes, soubehy = pruhy_sluzeb([
+            sluzby, lanes, soubehy = shift_bands([
                 {"id": a.id, "doctor_id": a.doctor_id.id, "name": a.doctor_id.name,
-                 "initials": inicialy(a.doctor_id.name), "color": barva_lekarky(a.doctor_id),
+                 "initials": name_initials(a.doctor_id.name), "color": doctor_color(a.doctor_id),
                  "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
                 for a in assignments if a.room_id == room])
             for d in sluzby:
-                d["time_label"] = "%s–%s" % (cas_label(d["from"]), cas_label(d["to"]))
+                d["time_label"] = "%s–%s" % (minutes_label(d["from"]), minutes_label(d["to"]))
             rooms_out.append({
                 "id": room.id, "name": room.name, "color_hex": room.color_hex, "online": room.online,
                 "open": [[f, t] for f, t in open_iv],
@@ -410,15 +410,15 @@ class VetReservation(models.Model):
                 "block_scope": r.block_scope if r.kind == "block" else False,
                 "room_id": r.room_id.id or False,
                 "start": ev_start, "end": ev_end,
-                "time_label": "%s–%s" % (cas_label(ev_start), cas_label(ev_end)),
+                "time_label": "%s–%s" % (minutes_label(ev_start), minutes_label(ev_end)),
                 "pet": r.pet_id.name or r.pet_name or "",
                 "owner": r.partner_id.name or r.contact_name or "",
                 "color_hex": r.color_hex, "symbol": r.procedure_id.symbol or "",
                 "phone": r.contact_phone or r.partner_id.phone or "", "email": r.contact_email or r.partner_id.email or "",
                 "problem": r.problem or "", "procedure": r.procedure_id.with_context(lang=lang).name or "",
-                "doctor": r.doctor_id.name or "", "doctor_initials": inicialy(r.doctor_id.name),
-                "doctor_color": barva_lekarky(r.doctor_id) if r.doctor_id else False,
-                "spojena": r._popisek_spojene(),
+                "doctor": r.doctor_id.name or "", "doctor_initials": name_initials(r.doctor_id.name),
+                "doctor_color": doctor_color(r.doctor_id) if r.doctor_id else False,
+                "spojena": r._linked_label(),
                 "source": r.source,
             })
         waiting = []
@@ -428,7 +428,7 @@ class VetReservation(models.Model):
             waiting.append({
                 "id": w.id, "name": w.name, "date": local.strftime("%Y-%m-%d"), "time": local.strftime("%H:%M"),
                 "minute": local.hour * 60 + local.minute,
-                "date_label": "%s %d. %d. %s" % (DNY_KRATCE[local.weekday()], local.day, local.month,
+                "date_label": "%s %d. %d. %s" % (WEEKDAY_ABBR[local.weekday()], local.day, local.month,
                                                  local.strftime("%H:%M")),
                 "procedure": w.procedure_id.with_context(lang=lang).name or "", "duration": w.duration_minutes,
                 "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
@@ -462,7 +462,7 @@ class VetReservation(models.Model):
         # Recepce smí potvrdit i žádost, která už je blíž než „minimálně hodin předem“ pro web:
         # min_hours=0 nechá ve hře vše, co ještě nezačalo.
         # scope="internal": blokace „jen web“, víkend ani svátek recepci nebrání.
-        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0, max_days=HORIZONT_RECEPCE,
+        slot = next((x for x in A.slots(proc, day, doctor=doctor, min_hours=0, max_days=RECEPTION_HORIZON_DAYS,
                                         scope="internal")
                      if x["minute"] == minute), None)
         if not slot:
@@ -496,16 +496,16 @@ class VetReservation(models.Model):
         A = self.env["elite.vet.availability"]
         day, minute = fields.Date.from_string(day_str), int(minute)
         room = self.env["elite.vet.room"].browse(room_id)
-        proc_name = proc.with_context(lang=self._jazyk_kliniky()).name
+        proc_name = proc.with_context(lang=self._clinic_lang()).name
         if room not in proc.rooms_for_reception():
             raise UserError(_("Úkon %s se v %s nedělá.") % (proc_name, room.name))
         wanted = doctor if strict else None
         doc_ids = A.serving_doctors(proc, day, room.id, minute, wanted or None)
         if not doc_ids and A.need_doctor(proc, wanted or None):
             if wanted:
-                raise UserError(_("V %s v %s neslouží %s.") % (cas_label(minute), room.name, wanted.name))
+                raise UserError(_("V %s v %s neslouží %s.") % (minutes_label(minute), room.name, wanted.name))
             raise UserError(_("V %s v %s neslouží lékařka, která dělá %s.")
-                            % (cas_label(minute), room.name, proc_name))
+                            % (minutes_label(minute), room.name, proc_name))
         if doctor and doctor.id in doc_ids:
             return None
         if len(doc_ids) == 1:

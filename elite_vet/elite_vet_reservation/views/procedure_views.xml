@@ -14,7 +14,7 @@
                 <field name="online"/>
                 <field name="room_ids" widget="many2many_tags" optional="show"/>
                 <field name="specialization_ids" widget="many2many_tags" optional="show"/>
-                <field name="kdo_dela" optional="show"/>
+                <field name="performed_by" optional="show"/>
                 <field name="deposit_required" optional="hide"/>
                 <field name="deposit_amount" optional="hide"/>
                 <field name="currency_id" column_invisible="1"/>
@@ -34,7 +34,7 @@
                             <field name="duration"/>
                             <field name="symbol"/>
                             <field name="color"/>
-                            <field name="barva_vlastni" widget="color"/>
+                            <field name="custom_color" widget="color"/>
                             <field name="color_hex" widget="color" string="Na tabuli" readonly="1"/>
                         </group>
                         <group>

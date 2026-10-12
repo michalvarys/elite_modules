@@ -2,7 +2,7 @@
 <odoo>
     <!-- Nahrazuje iframe WinVetu vlastnim pruvodcem. Texty jsou anglicky (zdroj),
          cestina/nemcina/rustina v i18n. JavaScript jen plni data do techto bloku. -->
-    <template id="rezervace_widget" inherit_id="elite_vet_web.rezervace" name="Elite Vet - Rezervace: vlastní průvodce">
+    <template id="booking_widget" inherit_id="elite_vet_web.rezervace" name="Elite Vet - Rezervace: vlastní průvodce">
         <xpath expr="//div[hasclass('evrez')]" position="replace">
             <t t-set="ev_rez" t-value="request.env['elite.vet.setting'].sudo().nastaveni()"/>
             <section id="ev-booking" class="evbk o_colored_level" t-att-data-lang="request.env.lang">
@@ -161,7 +161,7 @@
                         </t>
                         <t t-else="">
                             <form method="post">
-                                <input type="hidden" name="potvrdit" value="1"/>
+                                <input type="hidden" name="confirm" value="1"/>
                                 <p>Do you really want to cancel this appointment?</p>
                                 <button type="submit" class="evbk-submit">Yes, cancel it</button>
                             </form>

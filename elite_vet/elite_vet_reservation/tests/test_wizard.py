@@ -54,18 +54,18 @@ class TestReservationWizard(ReservationCase):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)
         w = self.W.with_user(self.reception).create({"procedure_id": self.vacc.id, "date": self.day})
-        w.action_krok_cas()
-        self.assertEqual(w.step, "cas")
+        w.action_step_time()
+        self.assertEqual(w.step, "time")
         line = w.slot_ids.filtered(lambda ln: ln.minute == 9 * 60 and ln.room_id == self.room2)
         self.assertEqual(line.doctor_id, self.dr_b)
         self.assertEqual(line.time_label, "9:00")
-        line.action_vybrat()
-        self.assertEqual(w.step, "klient")
+        line.action_select()
+        self.assertEqual(w.step, "client")
         self.fill_new_client(w)
-        w.action_krok_souhrn()
-        self.assertEqual(w.step, "souhrn")
-        self.assertIn("Ordinace 2", w.souhrn)
-        w.action_ulozit()
+        w.action_step_summary()
+        self.assertEqual(w.step, "summary")
+        self.assertIn("Ordinace 2", w.summary)
+        w.action_save()
         r = self.env["elite.vet.reservation"].search([("contact_email", "=", "jana.pruvodce@example.cz")])
         self.assertEqual(len(r), 1)
         self.assertEqual((r.state, r.source, r.kind), ("confirmed", "internal", "reservation"))
@@ -86,11 +86,11 @@ class TestReservationWizard(ReservationCase):
         self.reservation(start=self.dt(self.day, 10, 15), room_id=self.room1.id)
         w = self.wizard(doctor_id=self.dr_a.id)
         self.assertEqual(w.duration, 15)
-        w.action_krok_cas()
+        w.action_step_time()
         self.assertIn((600, self.room1.id, self.dr_a.id), self.lines(w))
         w.duration = 45
-        w.action_zpet_co()
-        w.action_krok_cas()
+        w.action_back_to_what()
+        w.action_step_time()
         self.assertNotIn(585, [m for m, _r, _d in self.lines(w)])
         self.assertNotIn(600, [m for m, _r, _d in self.lines(w)])
         self.assertIn(570, [m for m, _r, _d in self.lines(w)])
@@ -100,13 +100,13 @@ class TestReservationWizard(ReservationCase):
         w.procedure_id = self.vacc
         self.assertEqual(w.duration, 15)
         w.duration = 45
-        w.action_zpet_co()
-        w.action_krok_cas()
-        w.slot_ids.filtered(lambda ln: ln.minute == 11 * 60)[:1].action_vybrat()
+        w.action_back_to_what()
+        w.action_step_time()
+        w.slot_ids.filtered(lambda ln: ln.minute == 11 * 60)[:1].action_select()
         self.fill_new_client(w)
-        w.action_krok_souhrn()
-        self.assertIn("11:00–11:45 (45 min)", w.souhrn)
-        w.action_ulozit()
+        w.action_step_summary()
+        self.assertIn("11:00–11:45 (45 min)", w.summary)
+        w.action_save()
         r = self.env["elite.vet.reservation"].search([("contact_email", "=", "jana.pruvodce@example.cz")])
         self.assertEqual(r.stop - r.start, timedelta(minutes=45))
 
@@ -120,10 +120,10 @@ class TestReservationWizard(ReservationCase):
         self.reservation(start=self.dt(self.day, 10, 30), room_id=self.room1.id)
         w = self.wizard(duration=45, manual=True, manual_room_id=self.room1.id, manual_time="10:00")
         with self.assertRaises(UserError):
-            w.action_rucni_cas()
+            w.action_use_manual_time()
         w.duration = 30
-        w.action_rucni_cas()
-        self.assertEqual(w.step, "klient")
+        w.action_use_manual_time()
+        self.assertEqual(w.step, "client")
 
     def test_public_slots_ignore_wizard_duration(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
@@ -137,7 +137,7 @@ class TestReservationWizard(ReservationCase):
         self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)
         self.reservation(start=self.dt(self.day, 9, 0), room_id=self.room2.id)
         w = self.wizard(doctor_id=self.dr_b.id)
-        w.action_krok_cas()
+        w.action_step_time()
         got = self.lines(w)
         self.assertTrue(got)
         self.assertTrue(all(room == self.room2.id and doc == self.dr_b.id for _m, room, doc in got))
@@ -145,7 +145,7 @@ class TestReservationWizard(ReservationCase):
         self.assertIn((9 * 60 + 15, self.room2.id, self.dr_b.id), got)
         # Bez filtru lékařky je v 9:00 volno jen v ordinaci 1.
         w2 = self.wizard()
-        w2.action_krok_cas()
+        w2.action_step_time()
         at9 = [(room, doc) for m, room, doc in self.lines(w2) if m == 9 * 60]
         self.assertEqual(at9, [(self.room1.id, self.dr_a.id)])
 
@@ -157,23 +157,23 @@ class TestReservationWizard(ReservationCase):
         # Web (minimálně 24 h předem) dnes nic nenabídne, recepce ano.
         self.assertFalse(self.env["elite.vet.availability"].slots(self.vacc, today))
         w = self.wizard(date=today)
-        w.action_krok_cas()
+        w.action_step_time()
         self.assertTrue(w.slot_ids)
         now_min = now.hour * 60 + now.minute
         self.assertTrue(all(ln.minute >= now_min for ln in w.slot_ids))
 
     def test_day_navigation_and_next_free_day(self):
         w = self.wizard()
-        w.action_krok_cas()
-        w.action_den_dalsi()
+        w.action_step_time()
+        w.action_next_day()
         self.assertEqual(w.date, self.day + timedelta(days=1))
-        w.action_den_predchozi()
+        w.action_previous_day()
         self.assertEqual(w.date, self.day)
         # Den bez ordinační doby přeskočí „Další volný den“.
         closed = self.day + timedelta(days=1)
         for room in (self.room1, self.room2):
             self.env["elite.vet.room.exception"].create({"room_id": room.id, "date": closed, "closed": True})
-        w.action_dalsi_volny_den()
+        w.action_next_free_day()
         self.assertEqual(w.date, self.day + timedelta(days=2))
         self.assertTrue(w.slot_ids)
 
@@ -181,21 +181,21 @@ class TestReservationWizard(ReservationCase):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         w = self.W.with_context(default_date=fields.Date.to_string(self.day), default_minute=600,
                                 default_room_id=self.room1.id).create({"procedure_id": self.vacc.id})
-        w.action_krok_cas()
-        self.assertEqual(w.step, "klient")
+        w.action_step_time()
+        self.assertEqual(w.step, "client")
         self.assertEqual((w.minute, w.room_id, w.slot_doctor_id), (600, self.room1, self.dr_a))
 
     def test_prefilled_busy_time_shows_slots(self):
         self.reservation(start=self.dt(self.day, 10, 0), room_id=self.room1.id)
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
-        self.assertEqual(w.step, "cas")
+        w.action_step_time()
+        self.assertEqual(w.step, "time")
         self.assertFalse(w.room_id)
         self.assertTrue(w.slot_ids)
-        self.assertEqual(w.upozorneni, "10:00 v Ordinace 1 není pro tento úkon volný – vyberte jiný čas.")
-        w.slot_ids[0].action_vybrat()
-        w.action_zpet_cas()
-        self.assertFalse(w.upozorneni)
+        self.assertEqual(w.warning, "10:00 v Ordinace 1 není pro tento úkon volný – vyberte jiný čas.")
+        w.slot_ids[0].action_select()
+        w.action_back_to_time()
+        self.assertFalse(w.warning)
 
     def test_reception_books_non_online_room(self):
         # Sál není online: web ho nenabízí, recepce (průvodce i klik z tabule) ano.
@@ -204,21 +204,21 @@ class TestReservationWizard(ReservationCase):
         self.assertNotIn(self.sal.id, [r for s in self.env["elite.vet.availability"].slots(self.vacc, self.day)
                                        for r in s["room_ids"]])
         w = self.wizard()
-        w.action_krok_cas()
+        w.action_step_time()
         self.assertIn((600, self.sal.id, False), self.lines(w))
         # Klik do prázdné buňky Sálu: volný čas krok 2 přeskočí.
         w = self.W.with_context(default_date=fields.Date.to_string(self.day), default_minute=600,
                                 default_room_id=self.sal.id).create({"procedure_id": self.vacc.id})
-        w.action_krok_cas()
-        self.assertEqual((w.step, w.room_id), ("klient", self.sal))
+        w.action_step_time()
+        self.assertEqual((w.step, w.room_id), ("client", self.sal))
         self.fill_new_client(w)
-        w.action_krok_souhrn()
-        w.action_ulozit()
+        w.action_step_summary()
+        w.action_save()
         r = self.env["elite.vet.reservation"].search([("contact_email", "=", "jana.pruvodce@example.cz")])
         self.assertEqual(r.room_id, self.sal)
         # Úkon omezený na jiné ordinace Sál nenabídne ani recepci; Sál bez ordinační doby taky ne.
         w = self.wizard(procedure_id=self.derm.id)
-        w.action_krok_cas()
+        w.action_step_time()
         self.assertEqual({room for _m, room, _d in self.lines(w)}, {self.room1.id})
 
     def test_switch_to_new_client_drops_other_clients_pet(self):
@@ -226,17 +226,17 @@ class TestReservationWizard(ReservationCase):
                                                   "is_vet_client": True})
         pet = self.env["elite.vet.pet"].create({"name": "Brok", "partner_id": partner.id, "species": "dog"})
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         with Form(w) as f:
             f.partner_mode = "existing"
             f.partner_id = partner
             self.assertEqual(f.pet_id, pet)
-            self.assertTrue(f.ma_mazlicka)
+            self.assertTrue(f.has_pet)
             f.partner_mode = "new"
             self.assertFalse(f.partner_id)
             self.assertFalse(f.pet_id)
             self.assertFalse(f.contact_email)
-            self.assertFalse(f.ma_mazlicka)   # jméno a druh mazlíčka jsou vidět
+            self.assertFalse(f.has_pet)   # jméno a druh mazlíčka jsou vidět
             f.contact_name = "Nová Klientka"
             f.contact_phone = "+420 606 333 444"
             f.contact_email = "nova.klientka@example.cz"
@@ -250,11 +250,11 @@ class TestReservationWizard(ReservationCase):
             self.assertEqual(f.contact_name, "Nová Klientka")
             f.pet_name = "Micka"
             f.pet_species = "cat"
-        w.action_krok_souhrn()
-        self.assertIn("Micka", w.souhrn)
-        self.assertNotIn("Brok", w.souhrn)
-        self.assertIn("nový klient", w.souhrn)
-        w.action_ulozit()
+        w.action_step_summary()
+        self.assertIn("Micka", w.summary)
+        self.assertNotIn("Brok", w.summary)
+        self.assertIn("nový klient", w.summary)
+        w.action_save()
         r = self.env["elite.vet.reservation"].search([("contact_email", "=", "nova.k@example.cz")])
         self.assertEqual(r.pet_id.name, "Micka")
         self.assertNotEqual(r.partner_id, partner)
@@ -266,13 +266,13 @@ class TestReservationWizard(ReservationCase):
         partner = self.env["res.partner"].create({"name": "Eva Majitelka", "is_vet_client": True})
         pet = self.env["elite.vet.pet"].create({"name": "Bobík", "partner_id": partner.id})
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         self.fill_new_client(w, pet_id=pet.id, partner_id=partner.id, pet_name="Líza")
-        self.assertFalse(w.ma_mazlicka)
-        w.action_krok_souhrn()
-        self.assertIn("Líza", w.souhrn)
-        self.assertNotIn("Bobík", w.souhrn)
-        w.action_ulozit()
+        self.assertFalse(w.has_pet)
+        w.action_step_summary()
+        self.assertIn("Líza", w.summary)
+        self.assertNotIn("Bobík", w.summary)
+        w.action_save()
         r = self.env["elite.vet.reservation"].search([("pet_name", "=", "Líza")])
         self.assertNotEqual(r.partner_id, partner)
         self.assertEqual(r.pet_id.name, "Líza")
@@ -282,60 +282,60 @@ class TestReservationWizard(ReservationCase):
                                                   "email": "petr.staly@example.cz", "is_vet_client": True})
         pet = self.env["elite.vet.pet"].create({"name": "Brok", "partner_id": partner.id, "species": "dog"})
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         w.write({"partner_mode": "existing", "partner_id": partner.id, "pet_id": pet.id})
         self.assertEqual(w.contact_email, "petr.staly@example.cz")
         self.assertTrue(w.send_email)
-        w.action_krok_souhrn()
+        w.action_step_summary()
         n_partners = self.env["res.partner"].search_count([])
-        w.action_ulozit()
+        w.action_save()
         r = self.env["elite.vet.reservation"].search([("partner_id", "=", partner.id)])
         self.assertEqual(r.pet_id, pet)
         self.assertEqual(self.env["res.partner"].search_count([]), n_partners)
 
     def test_email_only_when_checked(self):
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         self.fill_new_client(w, contact_email="bez.mailu@example.cz", send_email=False)
-        w.action_krok_souhrn()
-        w.action_ulozit()
+        w.action_step_summary()
+        w.action_save()
         self.assertFalse(self.mails_to("bez.mailu@example.cz"))
 
         w = self.wizard(minute=660, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         self.fill_new_client(w, contact_email="s.mailem@example.cz")
         self.assertTrue(w.send_email)
-        w.action_krok_souhrn()
-        w.action_ulozit()
+        w.action_step_summary()
+        w.action_save()
         self.assertEqual(len(self.mails_to("s.mailem@example.cz")), 1)
 
     def test_client_step_validation(self):
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         with self.assertRaises(UserError):
-            w.action_krok_souhrn()   # existující klient nevybrán
+            w.action_step_summary()   # existující klient nevybrán
         w.write({"partner_mode": "new", "contact_name": "Bez Kontaktu"})
         with self.assertRaises(UserError):
-            w.action_krok_souhrn()   # chybí telefon i e-mail
+            w.action_step_summary()   # chybí telefon i e-mail
 
     def test_overlap_is_refused_on_save(self):
         w = self.wizard(minute=600, room_id=self.room1.id)
-        w.action_krok_cas()
+        w.action_step_time()
         self.fill_new_client(w)
-        w.action_krok_souhrn()
+        w.action_step_summary()
         # Mezitím termín obsadil někdo jiný.
         self.reservation(start=self.dt(self.day, 10, 0), room_id=self.room1.id)
         with self.assertRaises(ValidationError):
-            w.action_ulozit()
+            w.action_save()
 
     def test_procedure_required(self):
         w = self.W.create({"date": self.day})
         with self.assertRaises(UserError):
-            w.action_krok_cas()
+            w.action_step_time()
 
     def test_client_search_by_phone_digits(self):
         partner = self.env["res.partner"].create({"name": "Telefonní Klient", "phone": "+420 731 222 333"})
-        P = self.env["res.partner"].with_context(ev_hledat_telefon=True)
+        P = self.env["res.partner"].with_context(ev_search_phone=True)
         self.assertIn(partner.id, [i for i, _n in P.name_search("731222333")])
         self.assertNotIn(partner.id, [i for i, _n in self.env["res.partner"].name_search("731222333")])
 

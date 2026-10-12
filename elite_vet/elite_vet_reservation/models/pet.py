@@ -28,7 +28,7 @@ class VetPet(models.Model):
     active = fields.Boolean(string="Aktivní", default=True)
 
     @api.model
-    def najit_nebo_zalozit(self, partner, name, species=None):
+    def find_or_create(self, partner, name, species=None):
         """Mazlicek stejneho majitele se stejnym jmenem (bez ohledu na velikost pismen)."""
         name = (name or "").strip()
         if not name:
@@ -50,11 +50,11 @@ class ResPartner(models.Model):
 
     @api.model
     def _search_display_name(self, operator, value):
-        """V průvodci rezervací (kontext ev_hledat_telefon) se klient hledá i podle
+        """V průvodci rezervací (kontext ev_search_phone) se klient hledá i podle
         telefonu - jen podle číslic, telefony jsou v bázi zapsané různě."""
         domain = super()._search_display_name(operator, value)
         digits = normalizuj_telefon(value) if isinstance(value, str) else ""
-        if self.env.context.get("ev_hledat_telefon") and operator == "ilike" and len(digits) >= 4:
+        if self.env.context.get("ev_search_phone") and operator == "ilike" and len(digits) >= 4:
             self.flush_model(["phone", "mobile", "active"])
             self.env.cr.execute(
                 "SELECT id FROM res_partner WHERE regexp_replace(coalesce(phone, ''), '\\D', '', 'g') LIKE %s"
@@ -67,7 +67,7 @@ class ResPartner(models.Model):
         return domain
 
     @api.model
-    def najit_nebo_zalozit_klienta(self, name, email, phone):
+    def find_or_create_client(self, name, email, phone):
         """Parovani z webu: e-mail, pak telefon, jinak novy klient."""
         email = (email or "").strip()
         digits = normalizuj_telefon(phone)

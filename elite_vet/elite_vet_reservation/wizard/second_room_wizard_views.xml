@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_druha_ordinace_wizard_form" model="ir.ui.view">
-        <field name="name">elite.vet.reservation.druha.wizard.form</field>
-        <field name="model">elite.vet.reservation.druha.wizard</field>
+    <record id="view_second_room_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.second.room.wizard.form</field>
+        <field name="model">elite.vet.reservation.second.room.wizard</field>
         <field name="arch" type="xml">
             <form string="Přidat druhou ordinaci">
                 <field name="reservation_id" invisible="1"/>
-                <field name="puvodni_doctor_id" invisible="1"/>
+                <field name="original_doctor_id" invisible="1"/>
                 <p class="text-muted">
                     Pro zákrok, který potřebuje dvě lékařky. Rezervace se zkopíruje do druhé ordinace
                     ve stejném čase. Obě zůstanou propojené: přesun i zrušení hlavní rezervace platí pro obě.
@@ -14,19 +14,19 @@
                 </p>
                 <group>
                     <group>
-                        <field name="puvodni_room_id" readonly="1" options="{'no_open': True}"/>
+                        <field name="original_room_id" readonly="1" options="{'no_open': True}"/>
                         <field name="start" readonly="1"/>
                         <field name="stop" readonly="1"/>
                     </group>
                     <group>
                         <field name="room_id" options="{'no_create': True, 'no_open': True}"/>
-                        <field name="lekarky_ve_sluzbe_ids" widget="many2many_tags" readonly="1"
+                        <field name="serving_doctor_ids" widget="many2many_tags" readonly="1"
                                invisible="not room_id"/>
                         <field name="doctor_id" options="{'no_create': True, 'no_open': True}"/>
                     </group>
                 </group>
                 <footer>
-                    <button name="action_pridat" type="object" string="Přidat" class="btn-primary"/>
+                    <button name="action_add" type="object" string="Přidat" class="btn-primary"/>
                     <button special="cancel" string="Zavřít" class="btn-link"/>
                 </footer>
             </form>

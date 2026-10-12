@@ -5,7 +5,7 @@ import pytz
 from odoo import api, fields, models
 from odoo.tools import formataddr
 
-JMENO_ODESILATELE = "Elite Vet Karlovy Vary"
+SENDER_NAME = "Elite Vet Karlovy Vary"
 
 TZ = pytz.timezone("Europe/Prague")
 
@@ -33,21 +33,21 @@ class VetReservationMailing(models.Model):
         for rec in self:
             rec.cancel_url = "%s/rezervace/zruseni/%s" % (rec.get_base_url(), rec.cancel_token)
 
-    def _odesilatel(self):
+    def _mail_sender(self):
         """Odesílatel e-mailů k rezervacím: z nastavení rezervací, jinak e-mail firmy."""
         s = self.env["elite.vet.setting"].sudo().nastaveni()
         adresa = (s.booking_email_from or "").strip()
         if adresa:
             if "<" in adresa:
                 return adresa
-            return formataddr((JMENO_ODESILATELE, adresa))
+            return formataddr((SENDER_NAME, adresa))
         return self.env.company.email_formatted or ""
 
-    def _odpovedi_na(self):
+    def _mail_reply_to(self):
         s = self.env["elite.vet.setting"].sudo().nastaveni()
-        return (s.booking_email_reply_to or "").strip() or self._odesilatel()
+        return (s.booking_email_reply_to or "").strip() or self._mail_sender()
 
-    def _poslat(self, xmlid, email_to=None):
+    def _send_template(self, xmlid, email_to=None):
         template = self.env.ref("elite_vet_reservation." + xmlid, raise_if_not_found=False)
         if not template:
             return
@@ -57,9 +57,9 @@ class VetReservationMailing(models.Model):
                 continue
             template.with_context(lang=rec.lang or "cs_CZ").sudo().send_mail(
                 rec.id, force_send=False,
-                email_values={"email_to": to, "email_from": rec._odesilatel(), "reply_to": rec._odpovedi_na()})
+                email_values={"email_to": to, "email_from": rec._mail_sender(), "reply_to": rec._mail_reply_to()})
 
-    def muze_zrusit_klient(self):
+    def client_can_cancel(self):
         self.ensure_one()
         hours = self.env["elite.vet.setting"].nastaveni().booking_cancel_hours_before
         if hours <= 0 or self.state not in ("web_new", "confirmed"):
@@ -67,35 +67,35 @@ class VetReservationMailing(models.Model):
         return self.start - timedelta(hours=hours) > fields.Datetime.now()
 
     # ---------- napojeni na akce ----------
-    def _po_prijeti_z_webu(self):
-        self._poslat("mail_web_received")
+    def _after_web_submit(self):
+        self._send_template("mail_web_received")
         notify = self.env["elite.vet.setting"].nastaveni().booking_notify_email
         if notify:
-            self._poslat("mail_new_for_clinic", email_to=notify)
+            self._send_template("mail_new_for_clinic", email_to=notify)
         return True
 
     def action_confirm(self):
         res = super().action_confirm()
-        self.filtered(lambda r: r.kind == "reservation" and not self.env.context.get("ev_bez_mailu"))._poslat("mail_confirmed")
+        self.filtered(lambda r: r.kind == "reservation" and not self.env.context.get("ev_no_mail"))._send_template("mail_confirmed")
         return res
 
     def action_cancel(self, reason="clinic"):
         res = super().action_cancel(reason)
-        self.filtered(lambda r: r.kind == "reservation")._poslat("mail_cancelled")
+        self.filtered(lambda r: r.kind == "reservation")._send_template("mail_cancelled")
         if reason == "client":
             notify = self.env["elite.vet.setting"].nastaveni().booking_notify_email
             if notify:
-                self._poslat("mail_cancelled", email_to=notify)
+                self._send_template("mail_cancelled", email_to=notify)
         return res
 
     def action_send_confirmation(self):
-        self.filtered(lambda r: r.kind == "reservation" and r.state == "confirmed" and r.contact_email)._poslat("mail_confirmed")
+        self.filtered(lambda r: r.kind == "reservation" and r.state == "confirmed" and r.contact_email)._send_template("mail_confirmed")
         return True
 
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        if not self.env.context.get("ev_bez_mailu"):
+        if not self.env.context.get("ev_no_mail"):
             records.filtered(lambda r: r.kind == "reservation" and r.source == "internal"
                              and r.state == "confirmed" and r.contact_email).action_send_confirmation()
         return records
@@ -109,16 +109,16 @@ class VetReservationMailing(models.Model):
         moved = self.filtered(lambda r: r.id in before and r.state == "confirmed" and before[r.id] != r.start)
         if moved:
             moved.with_context(ev_skip_mail=True).write({"reminder_sent": False})
-            moved._poslat("mail_rescheduled")
+            moved._send_template("mail_rescheduled")
         return res
 
     @api.model
-    def _cron_pripominky(self):
+    def _cron_send_reminders(self):
         s = self.env["elite.vet.setting"].nastaveni()
         if not s.booking_reminder_enabled:
             return
         now = fields.Datetime.now()
         due = self.search([("kind", "=", "reservation"), ("state", "=", "confirmed"), ("reminder_sent", "=", False),
                            ("start", ">", now), ("start", "<=", now + timedelta(hours=s.booking_reminder_hours_before))])
-        due._poslat("mail_reminder")
+        due._send_template("mail_reminder")
         due.write({"reminder_sent": True})

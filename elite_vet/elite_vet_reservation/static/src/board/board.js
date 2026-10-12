@@ -1,7 +1,7 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { nastavitZvuk, zahrat, zvukZapnuty } from "@elite_vet_reservation/zvuk/zvuk";
+import { setSoundOn, playChime, isSoundOn } from "@elite_vet_reservation/sound/sound";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
 const PX_PER_MIN = 1.6;   // 15 min = 24 px
@@ -16,7 +16,7 @@ function parseIso(iso) { return new Date(iso + "T12:00:00"); }
 function nowMinute() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 // Ceske nazvy natvrdo: nesmi zalezet na jazyce prohlizece ani uzivatele.
 const DNY = ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle"];
-const DNY_KRATCE = ["po", "út", "st", "čt", "pá", "so", "ne"];
+const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
 function weekdayIndex(d) { return (d.getDay() + 6) % 7; }   // 0 = pondělí
 
 // Na světlé barvě (lékařka si může vybrat třeba žlutou) by bílý text nebyl čitelný.
@@ -29,15 +29,15 @@ function textOn(hex) {
 }
 
 // Šířka panelu „Čekající z webu“: táhlo mezi panelem a tabulí, pamatuje si ji prohlížeč.
-const PANEL_KLIC = "elite_vet_reservation.panel_sirka";
-const PANEL_VYCHOZI = 280, PANEL_MIN = 200, PANEL_MAX = 720;
+const PANEL_KEY = "elite_vet_reservation.panel_width";
+const PANEL_DEFAULT = 280, PANEL_MIN = 200, PANEL_MAX = 720;
 
-function nactiSirkuPanelu() {
+function loadPanelWidth() {
     try {
-        const w = parseInt(localStorage.getItem(PANEL_KLIC), 10);
-        return Number.isFinite(w) ? w : PANEL_VYCHOZI;
+        const w = parseInt(localStorage.getItem(PANEL_KEY), 10);
+        return Number.isFinite(w) ? w : PANEL_DEFAULT;
     } catch {
-        return PANEL_VYCHOZI;
+        return PANEL_DEFAULT;
     }
 }
 
@@ -53,8 +53,8 @@ export class ReservationBoard extends Component {
             date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
             data: null, loading: true, drag: null, busy: false,
             preview: null,   // náhled čekající žádosti při najetí myší (viz hoverWaiting)
-            zvuk: zvukZapnuty(),
-            panelSirka: nactiSirkuPanelu(),
+            zvuk: isSoundOn(),
+            panelWidth: loadPanelWidth(),
         });
         this.gridRef = useRef("grid");
         onWillStart(() => this.load());
@@ -119,7 +119,7 @@ export class ReservationBoard extends Component {
             d.setDate(monday.getDate() + i);
             const iso = isoDate(d);
             out.push({
-                iso, short: DNY_KRATCE[i], label: d.getDate() + ". " + (d.getMonth() + 1) + ".",
+                iso, short: WEEKDAY_ABBR[i], label: d.getDate() + ". " + (d.getMonth() + 1) + ".",
                 selected: iso === this.state.date, today: iso === this.state.today,
             });
         }
@@ -260,22 +260,22 @@ export class ReservationBoard extends Component {
         await this.load(true);
     }
     // Zvuk nové žádosti hraje služba ../zvuk (v celém Odoo); tady jen vypínač.
-    prepnoutZvuk() {
+    toggleSound() {
         this.state.zvuk = !this.state.zvuk;
-        nastavitZvuk(this.state.zvuk);
-        if (this.state.zvuk) zahrat();   // ukázka, jak zní
+        setSoundOn(this.state.zvuk);
+        if (this.state.zvuk) playChime();   // ukázka, jak zní
     }
 
     // ---------- šířka panelu čekajících ----------
-    omezSirku(w) {
+    clampPanelWidth(w) {
         // Tabuli nechat aspoň 400 px, ať se panel nedá roztáhnout přes celou obrazovku.
         const max = Math.max(PANEL_MIN, Math.min(PANEL_MAX, window.innerWidth - 400));
         return Math.round(Math.min(max, Math.max(PANEL_MIN, w)));
     }
-    get panelStyle() { return "width:" + this.omezSirku(this.state.panelSirka) + "px"; }
-    ulozSirku() {
+    get panelStyle() { return "width:" + this.clampPanelWidth(this.state.panelWidth) + "px"; }
+    savePanelWidth() {
         try {
-            localStorage.setItem(PANEL_KLIC, String(this.state.panelSirka));
+            localStorage.setItem(PANEL_KEY, String(this.state.panelWidth));
         } catch {
             // bez úložiště platí šířka jen do obnovení stránky
         }
@@ -284,15 +284,15 @@ export class ReservationBoard extends Component {
         ev.preventDefault();
         const handle = ev.currentTarget;
         handle.setPointerCapture(ev.pointerId);
-        const startX = ev.clientX, startW = this.omezSirku(this.state.panelSirka);
+        const startX = ev.clientX, startW = this.clampPanelWidth(this.state.panelWidth);
         document.body.classList.add("evb-resizing");
-        const move = (e) => { this.state.panelSirka = this.omezSirku(startW + e.clientX - startX); };
+        const move = (e) => { this.state.panelWidth = this.clampPanelWidth(startW + e.clientX - startX); };
         const up = () => {
             handle.removeEventListener("pointermove", move);
             handle.removeEventListener("pointerup", up);
             handle.removeEventListener("pointercancel", up);
             document.body.classList.remove("evb-resizing");
-            this.ulozSirku();
+            this.savePanelWidth();
         };
         handle.addEventListener("pointermove", move);
         handle.addEventListener("pointerup", up);
@@ -302,14 +302,14 @@ export class ReservationBoard extends Component {
         const krok = ev.shiftKey ? 60 : 20;
         if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
             ev.preventDefault();
-            const w = this.omezSirku(this.state.panelSirka);
-            this.state.panelSirka = this.omezSirku(w + (ev.key === "ArrowRight" ? krok : -krok));
-            this.ulozSirku();
+            const w = this.clampPanelWidth(this.state.panelWidth);
+            this.state.panelWidth = this.clampPanelWidth(w + (ev.key === "ArrowRight" ? krok : -krok));
+            this.savePanelWidth();
         }
     }
-    resetSirky() {
-        this.state.panelSirka = PANEL_VYCHOZI;
-        this.ulozSirku();
+    resetPanelWidth() {
+        this.state.panelWidth = PANEL_DEFAULT;
+        this.savePanelWidth();
     }
 
     // ---------- náhled čekající žádosti ----------

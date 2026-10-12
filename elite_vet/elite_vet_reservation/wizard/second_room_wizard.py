@@ -6,31 +6,31 @@ from odoo.exceptions import UserError
 from ..models.reservation import TZ
 
 
-class DruhaOrdinaceWizard(models.TransientModel):
+class SecondRoomWizard(models.TransientModel):
     """Zduplikuje rezervaci do druhé ordinace pro zákrok, který potřebuje dvě lékařky."""
 
-    _name = "elite.vet.reservation.druha.wizard"
+    _name = "elite.vet.reservation.second.room.wizard"
     _description = "Přidat druhou ordinaci"
 
     reservation_id = fields.Many2one("elite.vet.reservation", required=True, readonly=True, ondelete="cascade")
-    puvodni_room_id = fields.Many2one(related="reservation_id.room_id", string="Původní ordinace")
-    puvodni_doctor_id = fields.Many2one(related="reservation_id.doctor_id", string="Původní lékařka")
+    original_room_id = fields.Many2one(related="reservation_id.room_id", string="Původní ordinace")
+    original_doctor_id = fields.Many2one(related="reservation_id.doctor_id", string="Původní lékařka")
     start = fields.Datetime(related="reservation_id.start", string="Začátek")
     stop = fields.Datetime(related="reservation_id.stop", string="Konec")
     room_id = fields.Many2one("elite.vet.room", string="Druhá ordinace", required=True,
-                              domain="[('id', '!=', puvodni_room_id)]")
-    lekarky_ve_sluzbe_ids = fields.Many2many("elite.vet.doctor", compute="_compute_lekarky_ve_sluzbe",
+                              domain="[('id', '!=', original_room_id)]")
+    serving_doctor_ids = fields.Many2many("elite.vet.doctor", compute="_compute_serving_doctors",
                                              string="Ve službě")
     doctor_id = fields.Many2one("elite.vet.doctor", string="Druhá lékařka",
-                                domain="[('prijima_rezervace', '=', True), ('id', '!=', puvodni_doctor_id)]",
+                                domain="[('accepts_bookings', '=', True), ('id', '!=', original_doctor_id)]",
                                 help="Předvyplní se lékařka, která má v druhé ordinaci v tu dobu službu.")
 
     @api.depends("room_id", "reservation_id")
-    def _compute_lekarky_ve_sluzbe(self):
+    def _compute_serving_doctors(self):
         for w in self:
-            w.lekarky_ve_sluzbe_ids = w._lekarky_ve_sluzbe()
+            w.serving_doctor_ids = w._serving_doctors()
 
-    def _lekarky_ve_sluzbe(self):
+    def _serving_doctors(self):
         """Lékařky se službou v druhé ordinaci po celou dobu zákroku (kromě té původní)."""
         Doctor = self.env["elite.vet.doctor"]
         r = self.reservation_id
@@ -42,22 +42,22 @@ class DruhaOrdinaceWizard(models.TransientModel):
         out = Doctor
         for a in self.env["elite.vet.doctor.assignment"].search(
                 [("date", "=", day), ("room_id", "=", self.room_id.id),
-                 ("doctor_id.prijima_rezervace", "=", True)], order="hour_from, id"):
+                 ("doctor_id.accepts_bookings", "=", True)], order="hour_from, id"):
             if a.hour_from * 60 <= od and do <= a.hour_to * 60 and a.doctor_id != r.doctor_id:
                 out |= a.doctor_id
         return out
 
     @api.onchange("room_id")
     def _onchange_room(self):
-        ve_sluzbe = self._lekarky_ve_sluzbe()
+        ve_sluzbe = self._serving_doctors()
         if ve_sluzbe and self.doctor_id not in ve_sluzbe:
             self.doctor_id = ve_sluzbe[:1]
 
-    def action_pridat(self):
+    def action_add(self):
         self.ensure_one()
         if not self.room_id:
             raise UserError(_("Vyberte druhou ordinaci."))
-        self.reservation_id.pridat_druhou_ordinaci(self.room_id, self.doctor_id)
+        self.reservation_id.add_second_room(self.room_id, self.doctor_id)
         return {
             "type": "ir.actions.client", "tag": "display_notification",
             "params": {"type": "success",

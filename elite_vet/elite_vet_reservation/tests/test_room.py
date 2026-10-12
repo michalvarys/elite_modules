@@ -60,10 +60,10 @@ class TestRoom(ReservationCase):
 
     def test_plati_v_den(self):
         window = self.hours(self.room1, 0, 8.0, 12.0, date_from=date(2026, 4, 1), date_to=date(2026, 9, 30))
-        self.assertTrue(window.plati_v_den(date(2026, 6, 15)))
-        self.assertTrue(window.plati_v_den(date(2026, 4, 1)))
-        self.assertTrue(window.plati_v_den(date(2026, 9, 30)))
-        self.assertFalse(window.plati_v_den(date(2026, 3, 31)))
-        self.assertFalse(window.plati_v_den(date(2026, 10, 1)))
+        self.assertTrue(window.applies_on(date(2026, 6, 15)))
+        self.assertTrue(window.applies_on(date(2026, 4, 1)))
+        self.assertTrue(window.applies_on(date(2026, 9, 30)))
+        self.assertFalse(window.applies_on(date(2026, 3, 31)))
+        self.assertFalse(window.applies_on(date(2026, 10, 1)))
         open_ended = self.hours(self.room2, 1, 8.0, 12.0)
-        self.assertTrue(open_ended.plati_v_den(date(2030, 1, 1)))
+        self.assertTrue(open_ended.applies_on(date(2030, 1, 1)))

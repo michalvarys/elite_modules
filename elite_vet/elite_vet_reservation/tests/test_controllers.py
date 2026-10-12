@@ -62,7 +62,7 @@ class TestControllers(HttpCase):
         self.assertEqual(self.rpc("/rezervace/api/slots", {"procedure_id": proc.id, "date": self.day}), [])
         w = self.env["elite.vet.reservation.wizard"].create({"procedure_id": proc.id,
                                                              "date": date.fromisoformat(self.day)})
-        w.action_krok_cas()
+        w.action_step_time()
         self.assertIn(sal, w.slot_ids.room_id)
 
     def test_submit_creates_waiting_reservation(self):

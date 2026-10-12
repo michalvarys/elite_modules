@@ -16,7 +16,7 @@ class TestMail(ReservationCase):
 
     def test_web_received_sends_two_mails(self):
         r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web", room_id=False)
-        r._po_prijeti_z_webu()
+        r._after_web_submit()
         self.assertEqual(len(self.mails_to("klient@example.cz")), 1)
         self.assertEqual(len(self.mails_to("info@elite-vet.cz")), 1)
         self.assertIn("Vaccination", self.mails_to("klient@example.cz").subject)
@@ -54,10 +54,10 @@ class TestMail(ReservationCase):
         self.env["mail.mail"].search([]).unlink()
         s = self.env["elite.vet.setting"].nastaveni()
         s.write({"booking_reminder_enabled": True, "booking_reminder_hours_before": 24})
-        self.env["elite.vet.reservation"]._cron_pripominky()
+        self.env["elite.vet.reservation"]._cron_send_reminders()
         self.assertTrue(r.reminder_sent)
         self.assertEqual(len(self.mails_to("klient@example.cz")), 1)
-        self.env["elite.vet.reservation"]._cron_pripominky()
+        self.env["elite.vet.reservation"]._cron_send_reminders()
         self.assertEqual(len(self.mails_to("klient@example.cz")), 1)
 
     def test_start_display_in_prague_time(self):
@@ -96,7 +96,7 @@ class TestMail(ReservationCase):
         r = self.reservation(start=self.dt(WED, 9, 0))
         self.assertEqual(len(self.mails_to("klient@example.cz")), 1)
         n = len(self.mails_to("jiny@example.cz"))
-        self.env["elite.vet.reservation"].with_context(ev_bez_mailu=True).create({
+        self.env["elite.vet.reservation"].with_context(ev_no_mail=True).create({
             "kind": "reservation", "state": "confirmed", "source": "internal", "room_id": self.room1.id,
             "start": self.dt(WED, 10, 0), "procedure_id": self.vacc.id, "contact_email": "jiny@example.cz"})
         self.assertEqual(len(self.mails_to("jiny@example.cz")), n)
@@ -126,20 +126,20 @@ class TestCancelPage(HttpCase):
         resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token)
         self.assertEqual(resp.status_code, 200)
         self.assertIn("A B", resp.text)
-        resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token, data={"potvrdit": "1"})
+        resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token, data={"confirm": "1"})
         self.assertEqual(resp.status_code, 200)
         self.far.invalidate_recordset()
         self.assertEqual((self.far.state, self.far.cancel_reason), ("cancelled", "client"))
 
     def test_cancel_page_after_deadline(self):
-        resp = self.url_open("/rezervace/zruseni/" + self.near.cancel_token, data={"potvrdit": "1"})
+        resp = self.url_open("/rezervace/zruseni/" + self.near.cancel_token, data={"confirm": "1"})
         self.assertEqual(resp.status_code, 200)
         self.near.invalidate_recordset()
         self.assertEqual(self.near.state, "confirmed")
 
     def test_cancel_twice(self):
         self.far.action_cancel("client")
-        resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token, data={"potvrdit": "1"})
+        resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token, data={"confirm": "1"})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(self.far.state, "cancelled")
 

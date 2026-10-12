@@ -9,7 +9,7 @@ from .common import ReservationCase
 
 
 @tagged("post_install", "-at_install")
-class TestCekajiciDrziMisto(ReservationCase):
+class TestPendingRequestHoldsSlot(ReservationCase):
 
     @classmethod
     def setUpClass(cls):

@@ -5,7 +5,7 @@ ručně neupravil (pořád původní e-mail firmy)."""
 from odoo import SUPERUSER_ID, api
 
 PUVODNI = "{{ user.company_id.email_formatted }}"
-NOVY = "{{ object._odesilatel() }}"
+NOVY = "{{ object._mail_sender() }}"
 SABLONY = ("mail_web_received", "mail_new_for_clinic", "mail_confirmed", "mail_rescheduled",
            "mail_cancelled", "mail_reminder")
 

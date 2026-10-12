@@ -31,12 +31,12 @@ class ReservationCase(TransactionCase):
                                 "color": "blue", "room_ids": [(6, 0, [cls.room1.id])]})
         Doctor = cls.env["elite.vet.doctor"]
         # Skutečné lékařky z ukázkových dat by se testům míchaly do „kdo úkon dělá“.
-        Doctor.search([]).write({"prijima_rezervace": False})
-        cls.dr_a = Doctor.create({"name": "MVDr. Alena Testová", "prijima_rezervace": True})
-        cls.dr_b = Doctor.create({"name": "MVDr. Bára Testová", "prijima_rezervace": True})
+        Doctor.search([]).write({"accepts_bookings": False})
+        cls.dr_a = Doctor.create({"name": "MVDr. Alena Testová", "accepts_bookings": True})
+        cls.dr_b = Doctor.create({"name": "MVDr. Bára Testová", "accepts_bookings": True})
         # Víkendy a svátky jen ručně (výchozí ano) by starším testům s pevnými daty
         # (28. 10.) a „dnes + N dní“ měnily výsledek podle kalendáře. Vypnuto;
-        # testy víkendů a svátků (test_blokace) si je zapínají samy.
+        # testy víkendů a svátků (test_blocks) si je zapínají samy.
         cls.env["elite.vet.setting"].nastaveni().write({
             "booking_block_weekends": False, "booking_block_holidays": False})
 

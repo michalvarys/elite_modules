@@ -6,7 +6,7 @@ from .room import COLOR_SELECTION
 
 # Světlé barvy jen pro úkony (karty na tabuli). Ordinace a typy směn mají dál
 # jen sytou paletu z elite_vet_calendar, kterou tento modul nemění.
-SVETLE_BARVY = {
+LIGHT_COLORS = {
     "light_blue": ("Světle modrá", "#93c5fd"),
     "light_green": ("Světle zelená", "#86efac"),
     "light_yellow": ("Žlutá", "#fde047"),
@@ -16,7 +16,7 @@ SVETLE_BARVY = {
     "light_teal": ("Mátová", "#5eead4"),
     "light_grey": ("Světle šedá", "#cbd5e1"),
 }
-BARVY_UKONU = COLOR_SELECTION + [(k, v[0]) for k, v in SVETLE_BARVY.items()]
+PROCEDURE_COLORS = COLOR_SELECTION + [(k, v[0]) for k, v in LIGHT_COLORS.items()]
 
 
 class VetProcedure(models.Model):
@@ -29,8 +29,8 @@ class VetProcedure(models.Model):
     name = fields.Char(string="Název", required=True, translate=True)
     duration = fields.Integer(string="Délka (min)", required=True, default=30)
     symbol = fields.Char(string="Zkratka", size=3, help="Písmeno na tabuli, např. V = vakcinace.")
-    color = fields.Selection(BARVY_UKONU, string="Barva", required=True, default="green")
-    barva_vlastni = fields.Char(
+    color = fields.Selection(PROCEDURE_COLORS, string="Barva", required=True, default="green")
+    custom_color = fields.Char(
         string="Vlastní barva",
         help="Jakákoli barva podle přání. Když je vybraná, má přednost před barvou ze seznamu; "
              "výběr barvy ze seznamu ji zase smaže.")
@@ -51,21 +51,21 @@ class VetProcedure(models.Model):
     deposit_required = fields.Boolean(string="Vyžaduje zálohu")
     deposit_amount = fields.Monetary(string="Záloha", currency_field="currency_id")
     currency_id = fields.Many2one("res.currency", default=lambda self: self.env.company.currency_id)
-    kdo_dela = fields.Char(compute="_compute_kdo_dela", string="Kdo dělá")
+    performed_by = fields.Char(compute="_compute_kdo_dela", string="Kdo dělá")
     sequence = fields.Integer(string="Pořadí", default=10)
     active = fields.Boolean(string="Aktivní", default=True)
 
     @api.onchange("color")
     def _onchange_color(self):
-        self.barva_vlastni = False
+        self.custom_color = False
 
-    @api.depends("color", "barva_vlastni")
+    @api.depends("color", "custom_color")
     def _compute_color_hex(self):
         for rec in self:
-            if rec.barva_vlastni:
-                rec.color_hex = rec.barva_vlastni
-            elif rec.color in SVETLE_BARVY:
-                rec.color_hex = SVETLE_BARVY[rec.color][1]
+            if rec.custom_color:
+                rec.color_hex = rec.custom_color
+            elif rec.color in LIGHT_COLORS:
+                rec.color_hex = LIGHT_COLORS[rec.color][1]
             else:
                 rec.color_hex = COLORS.get(rec.color, COLORS["grey"])
 
@@ -73,10 +73,10 @@ class VetProcedure(models.Model):
     def _compute_kdo_dela(self):
         for rec in self:
             if not rec.specialization_ids:
-                rec.kdo_dela = _("kterákoli lékařka")
+                rec.performed_by = _("kterákoli lékařka")
                 continue
             names = rec.doctors_for_booking().mapped("name")
-            rec.kdo_dela = ", ".join(names) or _("žádná lékařka – zkontrolujte specializace")
+            rec.performed_by = ", ".join(names) or _("žádná lékařka – zkontrolujte specializace")
 
     @api.constrains("duration")
     def _check_duration(self):
@@ -111,7 +111,7 @@ class VetProcedure(models.Model):
         (bez příznaku Přijímá rezervace) nikdy.
         """
         self.ensure_one()
-        doctors = self.env["elite.vet.doctor"].search([("prijima_rezervace", "=", True)])
+        doctors = self.env["elite.vet.doctor"].search([("accepts_bookings", "=", True)])
         if self.specialization_ids:
             doctors = doctors.filtered(lambda d: d.specialization_ids & self.specialization_ids)
         return doctors

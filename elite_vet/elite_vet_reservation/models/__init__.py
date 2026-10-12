@@ -5,7 +5,7 @@ from . import doctor_assignment
 from . import pet
 from . import reservation
 from . import mailing
-from . import druha_ordinace
+from . import second_room
 from . import availability
 from . import setting
 from . import live
