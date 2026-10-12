@@ -33,6 +33,15 @@ services:
       - db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # Jen pro vývoj: zachytí všechny e-maily z Odoo a ukáže je na http://localhost:8025.
+  # Nic neposílá dál. V lokální databázi je k němu odchozí server „Mailpit (vývoj)“.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: odoo-mailpit
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
 volumes:
   odoo-data:
   db-data:
