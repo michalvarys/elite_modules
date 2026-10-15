@@ -4,7 +4,8 @@
 }
 .evd-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .evd-title { margin: 0 8px 0 0; font-weight: 700; }
-.evd-presets .btn { white-space: nowrap; }
+.evd-presets .btn, .evd-modes .btn { white-space: nowrap; }
+.evd-empty { padding: 24px 0; }
 .evd-range { display: flex; align-items: center; gap: 6px; }
 .evd-range input { width: 9.5rem; }
 .evd-subtitle { margin: 8px 0 16px; }
@@ -25,6 +26,7 @@
 .evd-wide { grid-column: 1 / -1; }
 .evd-chart { position: relative; height: 300px; }
 .evd-chart-sm { height: 170px; }
+.evd-chart-md { height: 230px; }
 
 .evd-top { margin: 0; }
 .evd-top tr { cursor: pointer; }

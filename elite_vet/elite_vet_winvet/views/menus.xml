@@ -15,6 +15,9 @@
               action="action_sale_line_services" sequence="20"/>
     <menuitem id="menu_winvet_sale_line_products" name="Léky a zboží" parent="menu_winvet_sales"
               action="action_sale_line_products" sequence="30"/>
+    <menuitem id="menu_winvet_expense" name="Výdaje" parent="menu_winvet_root"
+              action="action_expense" sequence="15"
+              groups="elite_vet_reservation.group_reservation_manager"/>
     <menuitem id="menu_winvet_sale_document" name="Doklady" parent="menu_winvet_root"
               action="action_sale_document" sequence="20"
               groups="elite_vet_reservation.group_reservation_manager"/>
@@ -44,4 +47,6 @@
               groups="elite_vet_reservation.group_reservation_manager"/>
     <menuitem id="menu_winvet_api_key" name="API klíč" parent="menu_winvet_config"
               action="action_winvet_config" sequence="10"/>
+    <menuitem id="menu_winvet_expense_category" name="Kategorie výdajů" parent="menu_winvet_config"
+              action="action_expense_category" sequence="20"/>
 </odoo>

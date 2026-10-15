@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_expense_list" model="ir.ui.view">
+        <field name="name">elite.vet.expense.list</field>
+        <field name="model">elite.vet.expense</field>
+        <field name="arch" type="xml">
+            <list string="Výdaje">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="supplier_id" optional="show"/>
+                <field name="document_number" optional="hide"/>
+                <field name="payment_method" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="amount" sum="Celkem"/>
+                <field name="message_attachment_count" string="Přílohy" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_expense_form" model="ir.ui.view">
+        <field name="name">elite.vet.expense.form</field>
+        <field name="model">elite.vet.expense</field>
+        <field name="arch" type="xml">
+            <form string="Výdaj">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="např. Nájem říjen, Faktura Covetrus"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="category_id" options="{'no_create': True}"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount"/>
+                            <field name="payment_method"/>
+                        </group>
+                        <group>
+                            <field name="supplier_id" placeholder="Komu se platilo"/>
+                            <field name="document_number"/>
+                            <field name="repeat_monthly_until" invisible="id"/>
+                            <field name="recurring_origin_id" invisible="not recurring_origin_id"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Poznámka"/>
+                    <div class="text-muted small mt-2">
+                        Fotku nebo PDF dokladu přiložte sponkou v pravém panelu.
+                    </div>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_expense_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.expense.pivot</field>
+        <field name="model">elite.vet.expense</field>
+        <field name="arch" type="xml">
+            <pivot string="Výdaje" sample="1">
+                <field name="category_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_expense_graph" model="ir.ui.view">
+        <field name="name">elite.vet.expense.graph</field>
+        <field name="model">elite.vet.expense</field>
+        <field name="arch" type="xml">
+            <graph string="Výdaje" type="bar" stacked="1" sample="1">
+                <field name="date" interval="month"/>
+                <field name="category_id"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_expense_search" model="ir.ui.view">
+        <field name="name">elite.vet.expense.search</field>
+        <field name="model">elite.vet.expense</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="supplier_id"/>
+                <field name="document_number"/>
+                <filter name="this_month" string="Tento měsíc"
+                        domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter name="date" string="Datum" date="date"/>
+                <separator/>
+                <filter name="no_attachment" string="Bez přiloženého dokladu" domain="[('has_attachment', '=', False)]"/>
+                <group expand="0" string="Seskupit podle">
+                    <filter name="group_category" string="Kategorie" context="{'group_by': 'category_id'}"/>
+                    <filter name="group_supplier" string="Dodavatel" context="{'group_by': 'supplier_id'}"/>
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_expense" model="ir.actions.act_window">
+        <field name="name">Výdaje</field>
+        <field name="res_model">elite.vet.expense</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Zapište první výdaj</p>
+            <p>Nájem, mzdy, nákup léků… Výdaje se pak ukážou v Přehledu vedle tržeb a vyjde z nich zisk.
+               Pravidelné platby (nájem) založte jednou s „Opakovat měsíčně do“.</p>
+        </field>
+    </record>
+
+    <record id="view_expense_category_list" model="ir.ui.view">
+        <field name="name">elite.vet.expense.category.list</field>
+        <field name="model">elite.vet.expense.category</field>
+        <field name="arch" type="xml">
+            <list string="Kategorie výdajů" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="color" widget="color"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_expense_category" model="ir.actions.act_window">
+        <field name="name">Kategorie výdajů</field>
+        <field name="res_model">elite.vet.expense.category</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'active_test': False}</field>
+    </record>
+</odoo>

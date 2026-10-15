@@ -1,8 +1,8 @@
 {
     "name": "Elite Vet - WinVet data",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "category": "Services",
-    "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby a jejich analýzy.",
+    "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby a jejich analýzy; ruční výdaje a zisk.",
     "description": """
 Elite Vet - WinVet data
 =======================
@@ -20,6 +20,7 @@ Rozhraní je popsané v elite_vet/winvet_bridge/CONTRACT.md.
     "data": [
         "security/ir.model.access.csv",
         "data/data.xml",
+        "data/expense_data.xml",
         "views/config_views.xml",
         "views/status_views.xml",
         "views/schema_change_views.xml",
@@ -31,6 +32,7 @@ Rozhraní je popsané v elite_vet/winvet_bridge/CONTRACT.md.
         "views/vaccination_views.xml",
         "views/sale_views.xml",
         "views/payment_views.xml",
+        "views/expense_views.xml",
         "views/dashboard_views.xml",
         "views/menus.xml",
         "data/filters.xml",

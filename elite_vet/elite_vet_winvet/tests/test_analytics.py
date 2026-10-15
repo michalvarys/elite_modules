@@ -120,7 +120,8 @@ class TestDashboard(WinvetCase):
         self.assertEqual((data["kpi"]["services"], data["kpi"]["products"]), (1000, 250))
         self.assertEqual(data["kpi_previous"]["revenue"], 400)
         self.assertEqual(len(data["daily"]), 7)
-        self.assertEqual(data["daily"][0], {"date": "2031-05-10", "service": 1000, "product": 0, "other": 0})
+        self.assertEqual(data["daily"][0], {"date": "2031-05-10", "service": 1000, "product": 0, "other": 0,
+                                            "expense": 0, "by_category": {}})
         self.assertEqual(data["top_services"][0]["name"], "Test úkon")
         self.assertEqual(data["top_products"][0]["quantity"], 2)
         no_cmp = self.env["elite.vet.winvet.dashboard"].get_data("2031-05-10", "2031-05-16", compare=False)

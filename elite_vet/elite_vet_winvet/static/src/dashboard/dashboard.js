@@ -1,17 +1,34 @@
 /** @odoo-module **/
 /**
- * Revenue dashboard over the WinVet data (client action "elite_vet_winvet.dashboard").
+ * Revenue and expense dashboard (client action "elite_vet_winvet.dashboard").
+ * Revenue comes from WinVet, expenses are entered by hand; the mode switch shows
+ * both (with profit), revenue only or expenses only.
  * Figures come from elite.vet.winvet.dashboard.get_data(); charts use Odoo's Chart.js bundle.
  * Every card, bar and row opens the matching records (pivot/list) for details and export.
  */
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { loadBundle } from "@web/core/assets";
-import { Component, onMounted, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 
 const COLORS = { service: "#2b7870", product: "#ea580c", other: "#94a3b8" };
 const PALETTE = ["#2b7870", "#ea580c", "#2563eb", "#db2777", "#7c3aed", "#4d7c0f", "#b45309", "#0891b2", "#64748b"];
 const KIND_LABELS = { service: "Úkony", product: "Léky a zboží", other: "Jiné" };
+const EXPENSE_COLOR = "#dc2626";
+const PROFIT_COLOR = "#0f172a";
+const MODES = [
+    { key: "both", label: "Tržby i výdaje" },
+    { key: "revenue", label: "Jen tržby" },
+    { key: "expenses", label: "Jen výdaje" },
+];
+const MODE_STORAGE_KEY = "elite_vet_winvet.dashboard.mode";
+
+function readMode() {
+    try { return window.localStorage.getItem(MODE_STORAGE_KEY); } catch { return null; }
+}
+function storeMode(mode) {
+    try { window.localStorage.setItem(MODE_STORAGE_KEY, mode); } catch { /* private window: ignore */ }
+}
 
 const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
 const number = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 1 });
@@ -53,16 +70,21 @@ export class WinvetDashboard extends Component {
         this.action = useService("action");
         this.today = new Date(); this.today.setHours(12, 0, 0, 0);
         this.presets = presets(this.today);
-        this.state = useState({ preset: "month", from: "", to: "", data: null, loading: true });
+        this.state = useState({ preset: "month", from: "", to: "", data: null, loading: true, mode: readMode() });
         this.refs = {
             daily: useRef("daily"), users: useRef("users"), payments: useRef("payments"), species: useRef("species"),
+            expenseCategories: useRef("expenseCategories"),
         };
         this.charts = [];
+        // Panels appear and disappear with the mode, so charts are drawn after the DOM is patched.
+        this.chartsDirty = true;
+        const drawIfDirty = () => { if (this.chartsDirty && !this.state.loading) { this.chartsDirty = false; this.renderCharts(); } };
         onWillStart(async () => {
             await loadBundle("web.chartjs_lib");
             await this.load();
         });
-        onMounted(() => this.renderCharts());
+        onMounted(drawIfDirty);
+        onPatched(drawIfDirty);
         onWillUnmount(() => this.destroyCharts());
     }
 
@@ -81,6 +103,9 @@ export class WinvetDashboard extends Component {
                     this.state.preset !== "all"];
         }
         const data = await this.orm.call("elite.vet.winvet.dashboard", "get_data", args);
+        // Without any expense yet, start on revenue only; afterwards remember the viewer's choice.
+        if (!this.state.mode) this.state.mode = data.has_expenses ? "both" : "revenue";
+        this.chartsDirty = true;
         this.state.data = data;
         this.state.from = data.period.from;
         this.state.to = data.period.to;
@@ -89,33 +114,78 @@ export class WinvetDashboard extends Component {
     async setPreset(key) {
         this.state.preset = key;
         await this.load();
-        this.renderCharts();
     }
     async onDateChange(field, ev) {
         this.state[field] = ev.target.value;
         this.state.preset = "custom";
         await this.load();
-        this.renderCharts();
+    }
+    get modes() { return MODES; }
+    setMode(mode) {
+        storeMode(mode);
+        this.chartsDirty = true;
+        this.state.mode = mode;
+    }
+    get showRevenue() { return this.state.mode !== "expenses"; }
+    get showExpenses() { return this.state.mode !== "revenue"; }
+    get timeTitle() {
+        return { both: "Tržby, výdaje a zisk v čase", revenue: "Tržby v čase", expenses: "Výdaje v čase" }[this.state.mode];
+    }
+    newExpense() {
+        this.action.doAction({
+            type: "ir.actions.act_window", name: "Nový výdaj", res_model: "elite.vet.expense",
+            views: [[false, "form"]], target: "new",
+        }, { onClose: () => this.load() });
     }
 
     // ---------- formatting ----------
     money(v) { return money.format(v || 0); }
     number(v) { return number.format(v || 0); }
     periodLabel(p) { return p.from === p.to ? czDate(p.from) : czDate(p.from) + " – " + czDate(p.to); }
-    delta(key) {
+    /** Change against the comparison period. `costly`: growth is bad (expenses) - red instead of green. */
+    delta(key, costly = false) {
         const d = this.state.data;
         if (!d.kpi_previous) return { text: "", cls: "" };
+        const good = costly ? "text-danger" : "text-success", bad = costly ? "text-success" : "text-danger";
         const now = d.kpi[key] || 0, prev = d.kpi_previous[key] || 0;
-        if (!prev) return now ? { text: "nové", cls: "text-success" } : { text: "", cls: "" };
+        if (!prev) return now ? { text: "nové", cls: good } : { text: "", cls: "" };
+        if (prev < 0 || now < 0) {  // profit can be negative: show the plain difference
+            const diff = now - prev;
+            return { text: (diff >= 0 ? "▲ " : "▼ ") + money.format(Math.abs(diff)), cls: diff >= 0 ? good : bad };
+        }
         const ratio = now / prev;
-        if (ratio > 10) return { text: "▲ víc než 10×", cls: "text-success" };
+        if (ratio > 10) return { text: "▲ víc než 10×", cls: good };
         const pct = (ratio - 1) * 100;
-        return { text: (pct >= 0 ? "▲ " : "▼ ") + Math.abs(pct).toFixed(0) + " %", cls: pct >= 0 ? "text-success" : "text-danger" };
+        return { text: (pct >= 0 ? "▲ " : "▼ ") + Math.abs(pct).toFixed(0) + " %", cls: pct >= 0 ? good : bad };
     }
     get cards() {
         const k = this.state.data.kpi;
+        const revenue = { key: "revenue", label: "Tržby (položky)", value: this.money(k.revenue), open: () => this.openLines() };
+        const expenses = { key: "expenses", label: "Výdaje", value: this.money(k.expenses), costly: true,
+                           open: () => this.openExpenses() };
+        const profit = { key: "profit", label: "Zisk (tržby − výdaje)", value: this.money(k.profit),
+                         cls: k.profit < 0 ? "text-danger" : "", open: () => this.openExpenses() };
+        if (this.state.mode === "expenses") {
+            const days = this.state.data.period.days || 1;
+            return [
+                expenses,
+                { key: "expense_count", label: "Počet výdajů", value: this.number(k.expense_count), costly: true,
+                  open: () => this.openExpenses() },
+                { key: "expenses_per_day", label: "Průměrně za den", value: this.money(k.expenses / days),
+                  open: () => this.openExpenses() },
+                profit,
+            ];
+        }
+        if (this.state.mode === "both") {
+            return [
+                revenue, expenses, profit,
+                { key: "services", label: "Úkony", value: this.money(k.services), open: () => this.openLines([["kind", "=", "service"]], "Úkony") },
+                { key: "products", label: "Léky a zboží", value: this.money(k.products), open: () => this.openLines([["kind", "=", "product"]], "Léky a zboží") },
+                { key: "payments", label: "Přijaté platby", value: this.money(k.payments), open: () => this.openPayments() },
+            ];
+        }
         return [
-            { key: "revenue", label: "Tržby (položky)", value: this.money(k.revenue), open: () => this.openLines() },
+            revenue,
             { key: "services", label: "Úkony", value: this.money(k.services), open: () => this.openLines([["kind", "=", "service"]], "Úkony") },
             { key: "products", label: "Léky a zboží", value: this.money(k.products), open: () => this.openLines([["kind", "=", "product"]], "Léky a zboží") },
             { key: "visits", label: "Návštěvy s účtem", value: this.number(k.visits), open: () => this.openVisits() },
@@ -148,6 +218,19 @@ export class WinvetDashboard extends Component {
         });
     }
     openItem(row, kind) { this.openLines([["item_name", "=", row.name], ["kind", "=", kind]], row.name); }
+    openExpenses(extra = [], title = "Výdaje") {
+        this.action.doAction({
+            type: "ir.actions.act_window", name: title + " · " + this.periodLabel(this.state.data.period),
+            res_model: "elite.vet.expense", views: [[false, "list"], [false, "pivot"], [false, "graph"], [false, "form"]],
+            domain: [...this.dateDomain(), ...extra],
+        }, { onClose: () => this.load() });
+    }
+    openExpense(row) {
+        this.action.doAction({
+            type: "ir.actions.act_window", res_model: "elite.vet.expense", res_id: row.id,
+            views: [[false, "form"]], target: "new",
+        }, { onClose: () => this.load() });
+    }
 
     // ---------- charts ----------
     destroyCharts() { this.charts.forEach((c) => c.destroy()); this.charts = []; }
@@ -165,8 +248,11 @@ export class WinvetDashboard extends Component {
             const months = {};
             for (const r of rows) {
                 const key = r.date.slice(0, 7);
-                months[key] = months[key] || { date: key, service: 0, product: 0, other: 0 };
-                for (const k of ["service", "product", "other"]) months[key][k] += r[k];
+                months[key] = months[key] || { date: key, service: 0, product: 0, other: 0, expense: 0, by_category: {} };
+                for (const k of ["service", "product", "other", "expense"]) months[key][k] += r[k];
+                for (const [cat, v] of Object.entries(r.by_category)) {
+                    months[key].by_category[cat] = (months[key].by_category[cat] || 0) + v;
+                }
             }
             rows = Object.values(months);
             labels = rows.map((r) => r.date.slice(5, 7) + "/" + r.date.slice(0, 4));
@@ -174,10 +260,26 @@ export class WinvetDashboard extends Component {
             labels = rows.map((r) => { const x = parseIso(r.date); return x.getDate() + ". " + (x.getMonth() + 1) + "."; });
         }
         if (this.refs.daily.el) {
+            const revenueSets = ["service", "product", "other"].map((k) => ({
+                label: KIND_LABELS[k], data: rows.map((r) => r[k]), backgroundColor: COLORS[k], stack: "revenue", order: 2 }));
+            let datasets;
+            if (this.state.mode === "expenses") {
+                datasets = d.expense_categories.map((c) => ({
+                    label: c.label, data: rows.map((r) => r.by_category[String(c.id)] || 0),
+                    backgroundColor: c.color, stack: "expense" }));
+            } else if (this.state.mode === "both") {
+                datasets = [
+                    ...revenueSets,
+                    { label: "Výdaje", data: rows.map((r) => r.expense), backgroundColor: EXPENSE_COLOR, stack: "expense", order: 2 },
+                    { type: "line", label: "Zisk", data: rows.map((r) => r.service + r.product + r.other - r.expense),
+                      borderColor: PROFIT_COLOR, backgroundColor: PROFIT_COLOR, borderWidth: 2, pointRadius: 2, tension: 0.25, order: 1 },
+                ];
+            } else {
+                datasets = revenueSets;
+            }
             this.charts.push(new Chart(this.refs.daily.el, {
                 type: "bar",
-                data: { labels, datasets: ["service", "product", "other"].map((k) => ({
-                    label: KIND_LABELS[k], data: rows.map((r) => r[k]), backgroundColor: COLORS[k], stack: "s" })) },
+                data: { labels, datasets },
                 options: { maintainAspectRatio: false, plugins: { tooltip: tooltipMoney, legend: { position: "bottom" } },
                            scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: moneyTick } } } },
             }));
@@ -205,6 +307,16 @@ export class WinvetDashboard extends Component {
             }));
         };
         doughnut(this.refs.payments, d.payment_methods, (r) => this.openPayments([["method", "=", r.method]]));
+        if (this.refs.expenseCategories.el && d.expense_categories.length) {
+            const rowsCat = d.expense_categories;
+            this.charts.push(new Chart(this.refs.expenseCategories.el, {
+                type: "doughnut",
+                data: { labels: rowsCat.map((r) => r.label), datasets: [{ data: rowsCat.map((r) => r.amount), backgroundColor: rowsCat.map((r) => r.color) }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: "right" },
+                           tooltip: { callbacks: { label: (ctx) => ctx.label + ": " + money.format(ctx.parsed) } } },
+                           onClick: (_e, els) => { if (els.length) { const r = rowsCat[els[0].index]; this.openExpenses([["category_id", "=", r.id]], r.label); } } },
+            }));
+        }
         doughnut(this.refs.species, d.species, (r) => this.openLines([["species", "=", r.species]], r.label));
     }
 }

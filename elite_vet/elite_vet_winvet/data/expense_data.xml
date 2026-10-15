@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="expense_category_rent" model="elite.vet.expense.category">
+        <field name="name">Nájem a energie</field><field name="sequence">10</field><field name="color">#2563eb</field>
+    </record>
+    <record id="expense_category_salaries" model="elite.vet.expense.category">
+        <field name="name">Mzdy a odvody</field><field name="sequence">20</field><field name="color">#7c3aed</field>
+    </record>
+    <record id="expense_category_drugs" model="elite.vet.expense.category">
+        <field name="name">Léky a zdravotnický materiál</field><field name="sequence">30</field><field name="color">#ea580c</field>
+    </record>
+    <record id="expense_category_lab" model="elite.vet.expense.category">
+        <field name="name">Externí laboratoř</field><field name="sequence">40</field><field name="color">#0891b2</field>
+    </record>
+    <record id="expense_category_equipment" model="elite.vet.expense.category">
+        <field name="name">Přístroje a vybavení</field><field name="sequence">50</field><field name="color">#4d7c0f</field>
+    </record>
+    <record id="expense_category_services" model="elite.vet.expense.category">
+        <field name="name">Software a služby</field><field name="sequence">60</field><field name="color">#db2777</field>
+    </record>
+    <record id="expense_category_marketing" model="elite.vet.expense.category">
+        <field name="name">Marketing</field><field name="sequence">70</field><field name="color">#b45309</field>
+    </record>
+    <record id="expense_category_other" model="elite.vet.expense.category">
+        <field name="name">Ostatní</field><field name="sequence">90</field><field name="color">#64748b</field>
+    </record>
+</odoo>

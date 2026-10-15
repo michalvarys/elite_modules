@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_winvet_dashboard" model="ir.actions.client">
-        <field name="name">Přehled tržeb</field>
+        <field name="name">Přehled tržeb a výdajů</field>
         <field name="tag">elite_vet_winvet.dashboard</field>
     </record>
 </odoo>

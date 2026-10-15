@@ -3,7 +3,12 @@
     <t t-name="elite_vet_winvet.Dashboard">
         <div class="o_action evd">
             <div class="evd-toolbar">
-                <h3 class="evd-title">Přehled tržeb</h3>
+                <h3 class="evd-title">Přehled tržeb a výdajů</h3>
+                <div class="btn-group evd-modes" role="group" aria-label="Co zobrazit">
+                    <button t-foreach="modes" t-as="m" t-key="m.key" type="button" class="btn btn-sm"
+                            t-att-class="state.mode === m.key ? 'btn-dark' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setMode(m.key)" t-esc="m.label"/>
+                </div>
                 <div class="btn-group evd-presets" role="group" aria-label="Období">
                     <button t-foreach="presetList" t-as="p" t-key="p.key" type="button" class="btn btn-sm"
                             t-att-class="state.preset === p.key ? 'btn-primary' : 'btn-light'"
@@ -16,6 +21,9 @@
                     <input type="date" class="form-control form-control-sm" t-att-value="state.to"
                            t-on-change="(ev) => this.onDateChange('to', ev)" aria-label="Do"/>
                 </div>
+                <button type="button" class="btn btn-sm btn-primary ms-auto" t-on-click="newExpense">
+                    <i class="fa fa-plus me-1"/>Zapsat výdaj
+                </button>
             </div>
 
             <t t-if="state.data">
@@ -23,7 +31,7 @@
                 <div class="evd-subtitle text-muted">
                     <t t-esc="periodLabel(d.period)"/>
                     <span t-if="d.kpi_previous" class="ms-2">· srovnání s <t t-esc="periodLabel(d.previous)"/></span>
-                    <span t-if="d.bounds.last" class="ms-2">· data z WinVetu do <t t-esc="periodLabel({from: d.bounds.last, to: d.bounds.last})"/></span>
+                    <span t-if="d.bounds.winvet_last" class="ms-2">· data z WinVetu do <t t-esc="periodLabel({from: d.bounds.winvet_last, to: d.bounds.winvet_last})"/></span>
                     <span t-if="state.loading" class="ms-2"><i class="fa fa-spinner fa-spin"/></span>
                 </div>
 
@@ -31,8 +39,8 @@
                     <button t-foreach="cards" t-as="c" t-key="c.key" type="button" class="evd-card" t-on-click="c.open"
                             title="Otevřít detail">
                         <div class="evd-card-label" t-esc="c.label"/>
-                        <div class="evd-card-value" t-esc="c.value"/>
-                        <t t-set="dl" t-value="delta(c.key)"/>
+                        <div class="evd-card-value" t-att-class="c.cls" t-esc="c.value"/>
+                        <t t-set="dl" t-value="delta(c.key, c.costly)"/>
                         <div class="evd-card-delta" t-att-class="dl.cls">
                             <t t-esc="dl.text"/><span t-if="dl.text" class="text-muted"> oproti srovnání</span>
                         </div>
@@ -41,9 +49,37 @@
 
                 <div class="evd-grid">
                     <section class="evd-panel evd-wide">
-                        <h5>Tržby v čase</h5>
+                        <h5 t-esc="timeTitle"/>
                         <div class="evd-chart"><canvas t-ref="daily"/></div>
                     </section>
+                    <t t-if="showExpenses">
+                        <section class="evd-panel">
+                            <h5>Výdaje podle kategorií</h5>
+                            <div t-if="d.expense_categories.length" class="evd-chart evd-chart-md"><canvas t-ref="expenseCategories"/></div>
+                            <div t-else="" class="evd-empty text-muted">
+                                V tomto období žádné výdaje.
+                                <button type="button" class="btn btn-link p-0" t-on-click="newExpense">Zapsat výdaj</button>
+                            </div>
+                        </section>
+                        <section class="evd-panel">
+                            <h5>Největší výdaje</h5>
+                            <t t-set="maxExpense" t-value="d.top_expenses.length ? d.top_expenses[0].amount : 0"/>
+                            <table class="table table-sm evd-top">
+                                <tbody>
+                                    <tr t-foreach="d.top_expenses" t-as="row" t-key="row.id" t-on-click="() => this.openExpense(row)">
+                                        <td class="evd-top-name">
+                                            <div t-esc="row.name"/>
+                                            <div class="small text-muted"><t t-esc="row.category"/> · <t t-esc="periodLabel({from: row.date, to: row.date})"/></div>
+                                            <div class="evd-bar"><span t-att-style="'width:' + sharePct(row.amount, maxExpense) + '%;background:' + row.color"/></div>
+                                        </td>
+                                        <td class="text-end fw-bold" t-esc="money(row.amount)"/>
+                                    </tr>
+                                    <tr t-if="!d.top_expenses.length"><td class="text-muted">V tomto období nic.</td></tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </t>
+                    <t t-if="showRevenue">
                     <section class="evd-panel">
                         <h5>Podle toho, kdo zapsal</h5>
                         <div class="evd-chart"><canvas t-ref="users"/></div>
@@ -73,6 +109,7 @@
                                 </tbody>
                             </table>
                         </section>
+                    </t>
                     </t>
                 </div>
             </t>
