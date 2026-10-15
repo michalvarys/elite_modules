@@ -12,7 +12,7 @@ import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from winvet_bridge.config import FirebirdConfig
 
@@ -78,6 +78,8 @@ class FakeOdoo:
         self.calls: List[dict] = []  # {"path", "auth", "body"}
         self.fail_push_at: Optional[int] = None  # 1-based index of push call answered ok:false
         self.http_errors: List[int] = []  # status codes to answer before succeeding
+        #: entities answered like an Odoo without the receiving module (contract v2)
+        self.unknown_entities: Set[str] = set()
         fake = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -99,6 +101,8 @@ class FakeOdoo:
                     index = sum(1 for c in fake.calls if c["path"].endswith("/push"))
                     if fake.fail_push_at is not None and index == fake.fail_push_at:
                         result = {"ok": False, "error": "boom"}
+                    elif params.get("entity") in fake.unknown_entities:
+                        result = {"ok": False, "error": "unknown entity"}
                     else:
                         result = {"ok": True, "created": len(params.get("records", [])), "updated": 0,
                                   "deleted": len(params.get("deleted", [])), "skipped": 0}

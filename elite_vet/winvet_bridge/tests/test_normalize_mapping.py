@@ -17,7 +17,8 @@ from winvet_bridge.normalize import combine_datetime, flag_equals, flag_not_equa
 
 CONTRACT_KEYS = {
     "users": {"id", "name", "code", "active"},
-    "items": {"id", "code", "name", "classification", "stock_tracked", "tracked_drug", "unit", "barcode", "active"},
+    "items": {"id", "code", "name", "classification", "stock_tracked", "tracked_drug", "unit", "barcode", "active",
+              "price", "price_untaxed", "vat_rate"},
     "owners": {"id", "kind", "name", "first_name", "last_name", "title", "street", "zip", "city", "country",
                "company_reg", "vat", "note", "important_note", "active", "created", "modified"},
     "contacts": {"id", "owner_id", "type", "value", "label"},
@@ -26,13 +27,18 @@ CONTRACT_KEYS = {
                  "next_vaccination", "next_deworming", "important", "note", "created", "modified"},
     "vaccinations": {"id", "patient_id", "date", "next_date", "item_id", "item_name", "quantity", "unit", "kind"},
     "visits": {"id", "patient_id", "date", "time", "case_name", "diagnosis_code", "diagnosis_name", "entered_by",
-               "document_id"},
+               "document_id", "notes"},
+    "vitals": {"id", "visit_id", "time", "temperature", "heart_rate", "respiratory_rate", "weight", "bp_systolic",
+               "bp_diastolic"},
     "sale_documents": {"id", "type", "number", "parent_id", "owner_id", "date", "total", "paid", "from_deposit",
                        "state", "entered_by"},
     "sale_lines": {"id", "document_id", "visit_id", "item_id", "item_code", "item_name", "quantity", "unit",
                    "unit_price", "amount", "vat_rate", "date", "entered_by"},
     "payments": {"id", "document_id", "owner_id", "date", "time", "method", "amount", "from_deposit", "state",
                  "refunded_date"},
+    "bundles": {"id", "code", "name", "description"},
+    "bundle_lines": {"id", "bundle_id", "item_id", "item_name", "quantity", "unit", "sequence"},
+    "phrases": {"id", "name", "group", "text"},
 }
 
 
@@ -151,6 +157,55 @@ class MappingTest(unittest.TestCase):
         self.assertIsNone(rec["visit_id"])
         self.assertIsNone(rec["item_id"])
         self.assertEqual(rec["date"], "2026-03-01")
+
+    def test_item_price_mapping_and_sql(self):
+        spec = SPECS["items"]
+        row = {col: None for col in select_columns(spec.sql)}
+        row.update(ID_VARIANTA=4, PRICE=Decimal("121.00"), PRICE_UNTAXED=Decimal("100.00"), DPH_PRODEJ=Decimal("21"))
+        rec = spec.mapper(row)
+        self.assertEqual((rec["price"], rec["price_untaxed"], rec["vat_rate"]), (121.0, 100.0, 21.0))
+        row.update(PRICE=None, PRICE_UNTAXED=None)  # no row in price list 1
+        rec = spec.mapper(row)
+        self.assertEqual((rec["price"], rec["price_untaxed"]), (None, None))
+        self.assertIn("left join VARIANTA_CENIK c", spec.sql)
+        self.assertIn("min(c1.ID_VARIANTA_CENIK)", spec.sql)
+        self.assertIn("c1.ID_CENIK = 1", spec.sql)
+        self.assertEqual(spec.tables, ("VARIANTA", "VARIANTA_CENIK"))
+
+    def test_visit_notes_from_rvf_bytes(self):
+        spec = SPECS["visits"]
+        row = {col: None for col in select_columns(spec.sql)}
+        rvf = "-8 1 3 1\r\n-9 0 0 0 0 0 7\r\n0 2 0 0 0 0\r\nKašel 3 dny\r\nBez horečky\r\n"
+        row.update(ID_DENNI_ZAZNAM=1, DEKURS=rvf.encode("cp1250"))
+        self.assertEqual(spec.mapper(row)["notes"], "Kašel 3 dny\nBez horečky")
+        row.update(DEKURS=None)
+        self.assertIsNone(spec.mapper(row)["notes"])
+        row.update(DEKURS=b"\x00\xff\x10garbage")
+        self.assertIsNone(spec.mapper(row)["notes"])
+
+    def test_vitals_bundles_phrases_mapping(self):
+        row = {col: None for col in select_columns(SPECS["vitals"].sql)}
+        row.update(ID_DENNI_ZAZNAM_HODNOTA=3, ID_DENNI_ZAZNAM=0, CAS=dt.time(9, 5, 0), TEPLOTA=Decimal("38.5"),
+                   TEP=120, HMOTNOST=Decimal("12.40"))
+        rec = SPECS["vitals"].mapper(row)
+        self.assertEqual(rec, {"id": 3, "visit_id": None, "time": "09:05:00", "temperature": 38.5, "heart_rate": 120,
+                               "respiratory_rate": None, "weight": 12.4, "bp_systolic": None, "bp_diastolic": None})
+        row = {col: None for col in select_columns(SPECS["bundle_lines"].sql)}
+        row.update(ID_SABLONA_VYKONU_POLOZKA=8, ID_SABLONA_VYKONU=2, ID_VARIANTA=-1, VARIANTA_NAZEV=" Vakcína ",
+                   MNOZSTVI=Decimal("1.000"), MERNA_JEDNOTKA="ks", PORADI=3)
+        rec = SPECS["bundle_lines"].mapper(row)
+        self.assertEqual((rec["bundle_id"], rec["item_id"], rec["item_name"], rec["quantity"], rec["sequence"]),
+                         (2, None, "Vakcína", 1.0, 3))
+        row = {col: None for col in select_columns(SPECS["bundles"].sql)}
+        row.update(ID_SABLONA_VYKONU=2, SABLONA_VYKONU="KAST", POPIS=FakeBlob(" Plain description\r\nline 2 "))
+        self.assertEqual(SPECS["bundles"].mapper(row)["description"], "Plain description\nline 2")
+        row = {col: None for col in select_columns(SPECS["phrases"].sql)}
+        row.update(ID_FRAZE=1, FRAZE="Odčervení", PREDEK="Texty",
+                   TEXT="-8 1 3 1\r\n-9 0 0 0 0 0 7\r\n11 1 0 0 0 0\r\nDávka:\r\n0 1 -1 1 0 0\r\n 1 tbl/10 kg\r\n")
+        rec = SPECS["phrases"].mapper(row)
+        self.assertEqual(rec, {"id": 1, "name": "Odčervení", "group": "Texty", "text": "Dávka: 1 tbl/10 kg"})
+        row.update(TEXT="Vážený zákazníku,\r\nplain text")
+        self.assertEqual(SPECS["phrases"].mapper(row)["text"], "Vážený zákazníku,\nplain text")
 
     def test_build_sql(self):
         sql = build_sql(SPECS["sale_documents"], 3)

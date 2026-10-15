@@ -12,8 +12,9 @@ Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje
   INSERT/UPDATE/DELETE – ověřeno testem). Transakce se nikdy necommitují, vždy končí ROLLBACK.
 - Program navíc pustí jen obyčejné `SELECT` dotazy z tabulek (žádné pohledy, žádné uložené
   procedury – WinVet používá UDF knihovny, které nemusí být k dispozici).
-- Nikdy se nečtou: licenční klíč `VERZE.REGISTRACE`, rodná čísla, hesla (`HASH`), `KOD_CVK`
-  a klinické zápisy `DEKURS`.
+- Nikdy se nečtou: licenční klíč `VERZE.REGISTRACE`, rodná čísla, hesla (`HASH`) a `KOD_CVK`.
+  Klinické zápisy `DENNI_ZAZNAM.DEKURS` se od verze 2.0.0 (kontrakt v2) čtou a posílají jako
+  `visits.notes` – jsou to **zdravotní údaje**, přenos jen přes HTTPS.
 - Transakce jsou krátké (jedna na entitu, izolace SNAPSHOT, čtení po dávkách).
 - WinVet při každém připojení zapíše řádek do své tabulky `DBLOG` (jeho vlastní trigger) – to je
   normální a program to nijak neovlivňuje.
@@ -45,6 +46,27 @@ Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje
    ```
    `check` vypíše verzi WinVetu, otisky schématu a blokované entity (Odoo nekontaktuje).
    `--dry-run` data jen načte a spočítá dávky, nic neodesílá a neukládá stav.
+
+## Co se přenáší (kontrakt v2, most 2.0.0)
+
+Pořadí entit: `users, items, owners, contacts, patients, vaccinations, visits, vitals,
+sale_documents, sale_lines, payments, bundles, bundle_lines, phrases` (podrobně v `CONTRACT.md`).
+
+Novinky v2:
+
+- `items` + `price`, `price_untaxed`, `vat_rate` – cena z ceníku 1 „Ordinace“ (`VARIANTA_CENIK`,
+  při více řádcích první podle `ID_VARIANTA_CENIK`), sazba DPH z `VARIANTA.DPH_PRODEJ`.
+- `visits` + `notes` – text dekurzu. WinVet ho ukládá jako dokument TRichView (RVF); most z něj
+  vytáhne jen textové odstavce (tabulky, obrázky a binární části zahodí), viz
+  `winvet_bridge/rvf.py`. Nečitelný dekurz → `null`, běh se nikdy nezastaví.
+- `vitals` – měření během návštěvy (`DENNI_ZAZNAM_HODNOTA`: teplota, tep, dech, hmotnost, tlak).
+- `bundles`, `bundle_lines` – šablony výkonů (`SABLONA_VYKONU`, `SABLONA_VYKONU_POLOZKA`), nejsou
+  v žurnálu → posílají se při každém běhu celé (jako `users` a `contacts`).
+- `phrases` – textové fráze (`FRAZE`, text převeden z RVF stejně jako dekurz).
+- Změna ceny (`VARIANTA_CENIK` v žurnálu) znovu pošle dotčenou položku; smazání řádku ceníku
+  položku nemaže.
+- Když Odoo odpoví `unknown entity` (např. chybí modul kliniky pro `bundles`/`phrases`), most
+  entitu v tomto běhu přeskočí s varováním a pokračuje dál.
 
 ## Spouštění
 
@@ -93,11 +115,12 @@ neblokuje. Žádná data v otisku nejsou.
 
 | skupina | tabulky | entity, které na ní závisí |
 |---|---|---|
-| catalog | VARIANTA, VARIANTA_CENIK, KLASIFIKACE_VYROBKU, VARIANTA_TYP, UZIVATEL_NEW | users, items |
+| catalog | VARIANTA, VARIANTA_CENIK, KLASIFIKACE_VYROBKU, VARIANTA_TYP, UZIVATEL_NEW | users, items (vč. cen) |
 | owners | PARTNER, PARTNER_KONTAKT, TYP_KONTAKTU | owners, contacts |
 | patients | PACIENT, VAKCINACE_ODCERVENI | patients, vaccinations |
-| clinical | PRIPAD, DENNI_ZAZNAM | visits, sale_lines (datum řádku) |
+| clinical | PRIPAD, DENNI_ZAZNAM, DENNI_ZAZNAM_HODNOTA | visits, vitals, sale_lines (datum řádku) |
 | sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments |
+| templates | SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA, FRAZE | bundles, bundle_lines, phrases |
 | journal | ZURNAL, VERZE | přírůstková synchronizace |
 
 Ověřené verze a jejich otisky jsou v `verified.json`.
@@ -140,7 +163,7 @@ přečtená ze změněné struktury.
 ## Logy a osobní údaje
 
 Log (`log_file`, rotuje 5 × 5 MB) a výstup na stderr obsahují jen počty záznamů, čísla dávek a
-chyby, **nikdy obsah záznamů**. Osobní údaje obsahuje jen ladicí `export` a samozřejmě přenos do
+chyby, **nikdy obsah záznamů** (ani text dekurzů). Osobní údaje obsahuje jen ladicí `export` a samozřejmě přenos do
 Odoo (používejte HTTPS URL).
 
 ## Stavový soubor

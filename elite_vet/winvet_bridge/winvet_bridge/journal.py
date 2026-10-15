@@ -20,16 +20,26 @@ JOURNAL_TABLES: Dict[str, str] = {
     "PACIENT": "patients",
     "VAKCINACE_ODCERVENI": "vaccinations",
     "DENNI_ZAZNAM": "visits",
+    "DENNI_ZAZNAM_HODNOTA": "vitals",
     "DOKLAD": "sale_documents",
     "DOKLAD_POLOZKA": "sale_lines",
     "PLATBA": "payments",
     "VARIANTA": "items",
+    "VARIANTA_CENIK": "items",
+    "FRAZE": "phrases",
 }
+
+#: Journaled child tables whose change re-reads the *parent* record of the entity: the entity id is
+#: taken from ZURNAL.IDKEY (KEYFIELD = 'ID_VARIANTA' for VARIANTA_CENIK; the WinVet triggers write
+#: NEW/OLD.ID_VARIANTA there, also for deletes - verified on the analysis copy: 100 % of the rows).
+#: Every action (I/U/D) of such a row only marks the parent as changed, it never deletes it. A row
+#: without IDKEY makes the whole entity fall back to a full push in that run.
+PARENT_KEY_TABLES = ("VARIANTA_CENIK",)
 
 _TABLES_IN = ", ".join(f"'{t}'" for t in JOURNAL_TABLES)
 MAX_SQL = "select max(ID_ZURNAL) from ZURNAL"
 CHANGES_SQL = (
-    "select ID_ZURNAL, TABULKA, ID_ZAZNAM, AKCE from ZURNAL "
+    "select ID_ZURNAL, TABULKA, ID_ZAZNAM, AKCE, IDKEY from ZURNAL "
     f"where ID_ZURNAL > ? and ID_ZURNAL <= ? and trim(TABULKA) in ({_TABLES_IN}) order by ID_ZURNAL"
 )
 
@@ -41,6 +51,8 @@ class JournalChanges:
     entries: int = 0
     changed: Dict[str, Set[int]] = field(default_factory=dict)
     deleted: Dict[str, Set[int]] = field(default_factory=dict)
+    #: entities whose changes could not be resolved to ids -> pushed in full in this run
+    full: Set[str] = field(default_factory=set)
 
     def changed_ids(self, entity: str) -> List[int]:
         return sorted(self.changed.get(entity, ()))
@@ -50,21 +62,33 @@ class JournalChanges:
 
 
 def collect_changes(rows: Iterable[Tuple], after: int, upto: int) -> JournalChanges:
-    """Fold journal rows ``(ID_ZURNAL, TABULKA, ID_ZAZNAM, AKCE)`` into changed/deleted ids.
+    """Fold journal rows ``(ID_ZURNAL, TABULKA, ID_ZAZNAM, AKCE[, IDKEY])`` into changed/deleted ids.
 
     Rows are processed in ID_ZURNAL order; the last action of an id wins (I/U -> changed,
-    D -> deleted). Unknown tables and rows without an id are ignored.
+    D -> deleted). Rows of :data:`PARENT_KEY_TABLES` mark their parent (IDKEY) as changed unless
+    the parent itself is deleted. Unknown tables and rows without an id are ignored.
     """
     result = JournalChanges(after=after, upto=upto)
-    for id_zurnal, table, record_id, action in sorted(rows, key=lambda r: r[0]):
+    for row in sorted(rows, key=lambda r: r[0]):
+        id_zurnal, table, record_id, action = row[:4]
+        parent_key = row[4] if len(row) > 4 else None
         result.entries += 1
-        entity = JOURNAL_TABLES.get((table or "").strip().upper())
-        if entity is None or record_id is None:
+        table = (table or "").strip().upper()
+        entity = JOURNAL_TABLES.get(table)
+        if entity is None:
+            continue
+        changed = result.changed.setdefault(entity, set())
+        deleted = result.deleted.setdefault(entity, set())
+        if table in PARENT_KEY_TABLES:
+            if parent_key is None:
+                result.full.add(entity)
+            elif int(parent_key) not in deleted:
+                changed.add(int(parent_key))
+            continue
+        if record_id is None:
             continue
         record_id = int(record_id)
         action = (action or "").strip().upper()
-        changed = result.changed.setdefault(entity, set())
-        deleted = result.deleted.setdefault(entity, set())
         if action == "D":
             deleted.add(record_id)
             changed.discard(record_id)

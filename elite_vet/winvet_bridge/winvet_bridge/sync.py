@@ -13,12 +13,13 @@ from . import ENTITY_ORDER, __version__
 from .entities import ENTITY_TABLES, all_readers
 from .guard import GuardResult, SchemaInfo, evaluate, read_schema_info, used_column_map
 from .journal import JOURNAL_TABLES, BridgeState, JournalChanges, StateStore, read_changes, read_max_cursor
+from .odoo_client import OdooUnknownEntityError
 from .schema_watch import SchemaReport, compare, read_snapshot
 
 log = logging.getLogger(__name__)
 
 #: Entities that are not in the change journal (or are small) and are pushed in full every run.
-ALWAYS_FULL = ("users", "contacts")
+ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines")
 
 
 class WinVetSource:
@@ -56,6 +57,8 @@ class EntityResult:
     deleted: int = 0
     batches: int = 0
     blocked: bool = False
+    #: Odoo answered "unknown entity" (receiving module not installed) - skipped for this run
+    unsupported: bool = False
 
 
 @dataclass
@@ -224,7 +227,10 @@ class SyncRunner:
                 report.entities.append(EntityResult(entity, None, blocked=True))
                 log.warning("Entity %s blocked by the schema guard - not read", entity)
                 continue
-            entity_full = mode == "full" or entity in ALWAYS_FULL or entity in pending or changes is None
+            entity_full = (
+                mode == "full" or entity in ALWAYS_FULL or entity in pending or changes is None
+                or entity in changes.full
+            )
             if entity_full:
                 entity_mode, records, deleted = "full", self.source.read_all(entity), []
             else:
@@ -233,9 +239,16 @@ class SyncRunner:
                 records = self.source.read_ids(entity, ids) if ids else []
                 deleted = changes.deleted_ids(entity)
             batches = build_batches(entity, entity_mode, records, deleted, self.batch_size, run_id)
-            for payload in batches:
-                if not dry_run:
-                    self.client.push(payload)
+            try:
+                for payload in batches:
+                    if not dry_run:
+                        self.client.push(payload)
+            except OdooUnknownEntityError:
+                # Forward compatibility (contract v2): the Odoo side does not handle this entity.
+                log.warning("Odoo does not know entity %s (module not installed?) - skipped in this run", entity)
+                pending.discard(entity)
+                report.entities.append(EntityResult(entity, entity_mode, unsupported=True))
+                continue
             if entity_full:
                 pending.discard(entity)
             report.entities.append(EntityResult(entity, entity_mode, len(records), len(deleted), len(batches)))

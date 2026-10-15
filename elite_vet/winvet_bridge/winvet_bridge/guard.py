@@ -29,20 +29,23 @@ from . import ENTITY_ORDER
 log = logging.getLogger(__name__)
 
 #: Fingerprint group -> tables (structure-only hash). Based on the analysis prototype; UZIVATEL_NEW
-#: was added to ``catalog`` because the ``users`` entity reads it.
+#: was added to ``catalog`` because the ``users`` entity reads it. Contract v2 added
+#: DENNI_ZAZNAM_HODNOTA (vitals) to ``clinical`` and the new group ``templates`` (bundles,
+#: bundle_lines, phrases). Every table an entity reads must be in a group (see entity_groups).
 GROUP_TABLES: Dict[str, Sequence[str]] = {
     "owners": ("PARTNER", "PARTNER_KONTAKT", "TYP_KONTAKTU"),
     "patients": ("PACIENT", "VAKCINACE_ODCERVENI"),
-    "clinical": ("PRIPAD", "DENNI_ZAZNAM"),
+    "clinical": ("PRIPAD", "DENNI_ZAZNAM", "DENNI_ZAZNAM_HODNOTA"),
     "sales": ("DOKLAD", "DOKLAD_POLOZKA_UM", "PLATBA", "TYP_DOKLADU", "DRUH_DOKLADU"),
     "catalog": ("VARIANTA", "VARIANTA_CENIK", "KLASIFIKACE_VYROBKU", "VARIANTA_TYP", "UZIVATEL_NEW"),
+    "templates": ("SABLONA_VYKONU", "SABLONA_VYKONU_POLOZKA", "FRAZE"),
     "journal": ("ZURNAL", "VERZE"),
 }
 GROUPS = tuple(GROUP_TABLES)
 
 #: Columns read outside the entity readers (change journal, version check).
 EXTRA_USED_COLUMNS: Dict[str, Sequence[str]] = {
-    "ZURNAL": ("ID_ZURNAL", "TABULKA", "ID_ZAZNAM", "AKCE"),
+    "ZURNAL": ("ID_ZURNAL", "TABULKA", "ID_ZAZNAM", "AKCE", "IDKEY"),
     "VERZE": ("VERZE",),
 }
 

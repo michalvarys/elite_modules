@@ -14,7 +14,8 @@ from winvet_bridge.config import ConfigError, load_config
 from winvet_bridge.db import FORBIDDEN_COLUMNS, UnsafeSqlError, check_select_sql
 from winvet_bridge.entities import ENTITY_TABLES, SPECS
 from winvet_bridge.guard import GROUP_TABLES, GROUPS, SchemaInfo, approve, entity_groups, evaluate, load_verified
-from winvet_bridge.journal import JOURNAL_TABLES, BridgeState, StateStore, collect_changes
+from winvet_bridge.journal import CHANGES_SQL, JOURNAL_TABLES, BridgeState, StateStore, collect_changes
+from winvet_bridge.sync import ALWAYS_FULL
 from winvet_bridge.sync import build_batches
 
 PACKAGE_DIR = Path(__file__).resolve().parents[1] / "winvet_bridge"
@@ -57,7 +58,12 @@ class GuardTest(unittest.TestCase):
 
     def test_clinical_change_blocks_dependent_sale_lines(self):
         result = evaluate(schema(clinical="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
-        self.assertEqual(result.blocked_entities, ["visits", "sale_lines"])
+        self.assertEqual(result.blocked_entities, ["visits", "vitals", "sale_lines"])
+
+    def test_templates_change_blocks_only_template_entities(self):
+        result = evaluate(schema(templates="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
+        self.assertEqual(result.mismatched_groups, ["templates"])
+        self.assertEqual(result.blocked_entities, ["bundles", "bundle_lines", "phrases"])
 
     def test_catalog_change_blocks_users_and_items(self):
         result = evaluate(schema(catalog="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
@@ -73,6 +79,14 @@ class GuardTest(unittest.TestCase):
         groups = entity_groups(ENTITY_TABLES)
         self.assertEqual(groups["sale_lines"], ["sales", "clinical"])
         self.assertEqual(groups["users"], ["catalog"])
+        self.assertEqual(groups["items"], ["catalog"])
+        self.assertEqual(groups["vitals"], ["clinical"])
+        for name in ("bundles", "bundle_lines", "phrases"):
+            self.assertEqual(groups[name], ["templates"], name)
+        self.assertEqual(set(groups), set(ENTITY_ORDER))
+        grouped = {t for tables in GROUP_TABLES.values() for t in tables}
+        for name, tables in ENTITY_TABLES.items():
+            self.assertTrue(set(tables) <= grouped, name)
         with self.assertRaises(ValueError):
             entity_groups({"x": ["UNKNOWN_TABLE"]})
 
@@ -120,6 +134,38 @@ class JournalTest(unittest.TestCase):
         self.assertEqual(ch.deleted_ids("sale_lines"), [51])
         self.assertEqual(ch.changed_ids("items"), [])
 
+    def test_collect_changes_price_rows_reread_the_item(self):
+        rows = [
+            (1, "VARIANTA_CENIK", 900, "I", 10),   # 5-tuple: IDKEY = ID_VARIANTA
+            (2, "VARIANTA_CENIK", 901, "D", 11),   # deleted price row -> item re-read, not deleted
+            (3, "VARIANTA", 12, "D"),
+            (4, "VARIANTA_CENIK", 902, "D", 12),   # item itself deleted -> stays deleted
+            (5, "VARIANTA_CENIK", 903, "U", 13),
+            (6, "VARIANTA", 13, "U"),
+            (7, "DENNI_ZAZNAM_HODNOTA", 70, "I"),
+            (8, "DENNI_ZAZNAM_HODNOTA", 71, "D"),
+            (9, "FRAZE", 5, "U"),
+        ]
+        ch = collect_changes(rows, 0, 9)
+        self.assertEqual(ch.changed_ids("items"), [10, 11, 13])
+        self.assertEqual(ch.deleted_ids("items"), [12])
+        self.assertEqual(ch.full, set())
+        self.assertEqual(ch.changed_ids("vitals"), [70])
+        self.assertEqual(ch.deleted_ids("vitals"), [71])
+        self.assertEqual(ch.changed_ids("phrases"), [5])
+        # a price row without IDKEY (or an old 4-tuple row) cannot be resolved -> items in full
+        self.assertEqual(collect_changes([(1, "VARIANTA_CENIK", 900, "U", None)], 0, 1).full, {"items"})
+        self.assertEqual(collect_changes([(1, "VARIANTA_CENIK", 900, "U")], 0, 1).full, {"items"})
+
+    def test_journal_mapping_v2(self):
+        self.assertEqual(JOURNAL_TABLES["DENNI_ZAZNAM_HODNOTA"], "vitals")
+        self.assertEqual(JOURNAL_TABLES["FRAZE"], "phrases")
+        self.assertEqual(JOURNAL_TABLES["VARIANTA_CENIK"], "items")
+        for name in ("bundles", "bundle_lines", "users", "contacts"):
+            self.assertNotIn(name, JOURNAL_TABLES.values())
+            self.assertIn(name, ALWAYS_FULL)
+        self.assertIn("IDKEY", CHANGES_SQL)
+
     def test_journal_tables_match_contract(self):
         self.assertEqual(set(JOURNAL_TABLES.values()) - set(ENTITY_ORDER), set())
         self.assertNotIn("users", JOURNAL_TABLES.values())
@@ -161,10 +207,13 @@ class SqlSafetyTest(unittest.TestCase):
         for bad in ("update VERZE set TEMP = TEMP", "insert into X values (1)", "delete from X",
                     "select 1 from rdb$database; delete from X", "execute procedure P",
                     "select REGISTRACE from VERZE", "select v.registrace from VERZE v",
-                    "select HASH from UZIVATEL_NEW", "select DEKURS from DENNI_ZAZNAM",
+                    "select HASH from UZIVATEL_NEW", "select u.KOD_CVK from UZIVATEL_NEW u",
                     "select gen_id(G, 1) from rdb$database", "/* x */ merge into X using Y on 1=1"):
             with self.assertRaises(UnsafeSqlError, msg=bad):
                 check_select_sql(bad)
+        # contract v2: clinical notes are allowed (visits.notes), the rest stays forbidden
+        check_select_sql("select z.DEKURS from DENNI_ZAZNAM z")
+        self.assertEqual(set(FORBIDDEN_COLUMNS), {"REGISTRACE", "RODNE_CISLO", "HASH", "KOD_CVK"})
 
     def test_source_never_mentions_forbidden_columns_in_sql(self):
         """Grep every SQL string literal in the package for forbidden columns / select * / procedures."""

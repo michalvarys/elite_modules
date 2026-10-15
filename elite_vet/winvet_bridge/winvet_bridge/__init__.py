@@ -4,9 +4,9 @@ Reads the WinVet veterinary database (Firebird) strictly read-only and pushes th
 Odoo module ``elite_vet_winvet`` as described in ``CONTRACT.md``.
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
-#: Push order required by the contract (dependencies first).
+#: Push order required by the contract v2 (dependencies first).
 ENTITY_ORDER = (
     "users",
     "items",
@@ -15,7 +15,11 @@ ENTITY_ORDER = (
     "patients",
     "vaccinations",
     "visits",
+    "vitals",
     "sale_documents",
     "sale_lines",
     "payments",
+    "bundles",
+    "bundle_lines",
+    "phrases",
 )

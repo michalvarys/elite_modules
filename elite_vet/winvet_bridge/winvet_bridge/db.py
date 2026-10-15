@@ -8,7 +8,8 @@ Safety layers:
 2. Transactions are never committed: they always end with ROLLBACK (nothing to commit anyway).
 3. :meth:`ReadOnlyTransaction.query` only accepts a single plain SELECT statement (no ``;``, no
    ``EXECUTE``, no ``INSERT/UPDATE/DELETE/MERGE``) and refuses the forbidden columns
-   (licence key, personal identifiers, password hashes, clinical notes).
+   (licence key, personal identifiers, password hashes). Clinical notes (``DENNI_ZAZNAM.DEKURS``)
+   are allowed since contract v2 (``visits.notes``).
 4. Callers select from base tables only - never from views and never from stored procedures,
    because WinVet relies on 11 UDF libraries that may not be installed.
 
@@ -32,7 +33,7 @@ from .config import FirebirdConfig
 log = logging.getLogger(__name__)
 
 #: Columns that must never be selected by the bridge.
-FORBIDDEN_COLUMNS = ("REGISTRACE", "RODNE_CISLO", "HASH", "KOD_CVK", "DEKURS")
+FORBIDDEN_COLUMNS = ("REGISTRACE", "RODNE_CISLO", "HASH", "KOD_CVK")
 
 _FORBIDDEN_RE = re.compile(r"\b(" + "|".join(FORBIDDEN_COLUMNS) + r")\b", re.IGNORECASE)
 _WRITE_RE = re.compile(

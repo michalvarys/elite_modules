@@ -138,13 +138,16 @@ class UsedColumnsTest(unittest.TestCase):
 
     def test_sensitive_columns_are_never_used(self):
         flat = {c for cols in used_column_map().values() for c in cols}
-        for forbidden in ("REGISTRACE", "RODNE_CISLO", "HASH", "KOD_CVK", "DEKURS"):
+        for forbidden in ("REGISTRACE", "RODNE_CISLO", "HASH", "KOD_CVK"):
             self.assertNotIn(forbidden, flat)
+        self.assertIn("DEKURS", used_column_map()["DENNI_ZAZNAM"])  # allowed since contract v2
 
     def test_journal_and_version_columns_are_guarded(self):
         used = used_column_map()
         self.assertEqual(used["VERZE"], {"VERZE"})
         self.assertIn("ID_ZAZNAM", used["ZURNAL"])
+        self.assertIn("IDKEY", used["ZURNAL"])
+        self.assertTrue({"ID_VARIANTA", "ID_CENIK", "CENA", "CENA_S_DPH"} <= used["VARIANTA_CENIK"])
 
 
 class SchemaWatchIntegrationTest(unittest.TestCase):

@@ -115,6 +115,8 @@ def _print_report(report) -> None:
     for e in report.entities:
         if e.blocked:
             print(f"  {e.entity:<15} BLOCKED")
+        elif e.unsupported:
+            print(f"  {e.entity:<15} SKIPPED (Odoo: unknown entity)")
         else:
             print(f"  {e.entity:<15} {e.mode:<12} records={e.records:<6} deleted={e.deleted:<5} batches={e.batches}")
     if report.message:

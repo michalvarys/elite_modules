@@ -11,15 +11,19 @@ reads, see :data:`ENTITY_TABLES` and :func:`winvet_bridge.guard.entity_groups`):
 entity          group     tables read
 =============== ========= ==========================================
 users           catalog   UZIVATEL_NEW
-items           catalog   VARIANTA
+items           catalog   VARIANTA, VARIANTA_CENIK (price list 1)
 owners          owners    PARTNER
 contacts        owners    PARTNER_KONTAKT
 patients        patients  PACIENT
 vaccinations    patients  VAKCINACE_ODCERVENI
-visits          clinical  DENNI_ZAZNAM
+visits          clinical  DENNI_ZAZNAM (incl. DEKURS -> notes, see :mod:`winvet_bridge.rvf`)
+vitals          clinical  DENNI_ZAZNAM_HODNOTA
 sale_documents  sales     DOKLAD
 sale_lines      sales     DOKLAD_POLOZKA_UM, DOKLAD (sales), DENNI_ZAZNAM (clinical)
 payments        sales     PLATBA
+bundles         templates SABLONA_VYKONU
+bundle_lines    templates SABLONA_VYKONU_POLOZKA
+phrases         templates FRAZE
 =============== ========= ==========================================
 
 Foreign keys (``*_id``, ``entered_by``) with WinVet's "no reference" values 0 / negative are sent as
@@ -42,6 +46,7 @@ from .normalize import (
     to_int,
     to_ref,
 )
+from .rvf import rvf_or_plain, rvf_to_text
 
 ID_CHUNK = 250  # ids per "IN (...)" (Firebird allows at most 1500 list elements)
 
@@ -49,6 +54,8 @@ CLASSIFICATION = {0: "group", 1: "product", 2: "set", 3: "kit", 4: "service", 5:
 OWNER_KIND = {0: "company", 1: "person", 2: "group"}
 CONTACT_TYPE = {-1: "mobile", -2: "phone", -3: "fax", -4: "email", -5: "web"}
 PAYMENT_METHOD = {"HOT": "cash", "PLATK": "card", "PREV": "transfer"}
+#: VARIANTA_CENIK.ID_CENIK of the price list whose prices are sent with items ("Ordinace").
+ITEM_PRICE_LIST = 1
 SALE_DOCUMENT_TYPES = ("UM", "PODP", "FAV", "VRAT")
 
 
@@ -101,6 +108,9 @@ def _items(r: dict) -> dict:
         "unit": norm_value(r["MERNA_JEDNOTKA_VY"]),
         "barcode": norm_value(r["CAROVY_KOD"]),
         "active": flag_not_equals(r["AKTIVNI"], "N"),
+        "price": to_float(r["PRICE"]),
+        "price_untaxed": to_float(r["PRICE_UNTAXED"]),
+        "vat_rate": to_float(r["DPH_PRODEJ"]),
     }
 
 
@@ -189,6 +199,21 @@ def _visits(r: dict) -> dict:
         "diagnosis_name": norm_value(r["DIAGNOZA_NAZEV"]),
         "entered_by": to_ref(r["ID_ZALOZIL"]),
         "document_id": to_ref(r["ID_DOKLAD"]),
+        "notes": rvf_to_text(r["DEKURS"]),
+    }
+
+
+def _vitals(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_DENNI_ZAZNAM_HODNOTA"]),
+        "visit_id": to_ref(r["ID_DENNI_ZAZNAM"]),
+        "time": norm_value(r["CAS"]),
+        "temperature": to_float(r["TEPLOTA"]),
+        "heart_rate": to_int(r["TEP"]),
+        "respiratory_rate": to_int(r["DECH"]),
+        "weight": to_float(r["HMOTNOST"]),
+        "bp_systolic": to_int(r["TLAK_SYS"]),
+        "bp_diastolic": to_int(r["TLAK_DIA"]),
     }
 
 
@@ -241,6 +266,36 @@ def _payments(r: dict) -> dict:
     }
 
 
+def _bundles(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_SABLONA_VYKONU"]),
+        "code": norm_value(r["SABLONA_VYKONU"]),
+        "name": norm_value(r["SABLONA_VYKONU_NAZEV"]),
+        "description": rvf_or_plain(r["POPIS"]),
+    }
+
+
+def _bundle_lines(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_SABLONA_VYKONU_POLOZKA"]),
+        "bundle_id": to_ref(r["ID_SABLONA_VYKONU"]),
+        "item_id": to_ref(r["ID_VARIANTA"]),
+        "item_name": norm_value(r["VARIANTA_NAZEV"]),
+        "quantity": to_float(r["MNOZSTVI"]),
+        "unit": norm_value(r["MERNA_JEDNOTKA"]),
+        "sequence": to_int(r["PORADI"]),
+    }
+
+
+def _phrases(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_FRAZE"]),
+        "name": norm_value(r["FRAZE"]),
+        "group": norm_value(r["PREDEK"]),
+        "text": rvf_or_plain(r["TEXT"]),
+    }
+
+
 # --------------------------------------------------------------------------- specs
 
 
@@ -278,14 +333,23 @@ _spec(
 _spec(
     name="items",
     group="catalog",
-    tables=("VARIANTA",),
+    tables=("VARIANTA", "VARIANTA_CENIK"),
+    # price: the first row (lowest ID_VARIANTA_CENIK) of price list ITEM_PRICE_LIST - one row per stock
     sql=(
         "select v.ID_VARIANTA, v.VARIANTA, v.VARIANTA_NAZEV, v.ID_KLASIFIKACE_VYROBKU, v.USE_SKLAD, "
-        "v.SLEDOVANE_LECIVO, v.MERNA_JEDNOTKA_VY, v.CAROVY_KOD, v.AKTIVNI from VARIANTA v"
+        "v.SLEDOVANE_LECIVO, v.MERNA_JEDNOTKA_VY, v.CAROVY_KOD, v.AKTIVNI, v.DPH_PRODEJ, "
+        "c.CENA_S_DPH as PRICE, c.CENA as PRICE_UNTAXED "
+        "from VARIANTA v "
+        "left join VARIANTA_CENIK c on c.ID_VARIANTA_CENIK = ("
+        "select min(c1.ID_VARIANTA_CENIK) from VARIANTA_CENIK c1 "
+        f"where c1.ID_VARIANTA = v.ID_VARIANTA and c1.ID_CENIK = {ITEM_PRICE_LIST})"
     ),
     id_expr="v.ID_VARIANTA",
     mapper=_items,
-    keys=("id", "code", "name", "classification", "stock_tracked", "tracked_drug", "unit", "barcode", "active"),
+    keys=(
+        "id", "code", "name", "classification", "stock_tracked", "tracked_drug", "unit", "barcode", "active",
+        "price", "price_untaxed", "vat_rate",
+    ),
 )
 _spec(
     name="owners",
@@ -351,13 +415,28 @@ _spec(
     tables=("DENNI_ZAZNAM",),
     sql=(
         "select z.ID_DENNI_ZAZNAM, z.ID_PACIENT, z.DATUM, z.CAS, z.PRIPAD, z.DIAGNOZA, z.DIAGNOZA_NAZEV, "
-        "z.ID_ZALOZIL, z.ID_DOKLAD from DENNI_ZAZNAM z"
+        "z.ID_ZALOZIL, z.ID_DOKLAD, z.DEKURS from DENNI_ZAZNAM z"
     ),
     id_expr="z.ID_DENNI_ZAZNAM",
     mapper=_visits,
     keys=(
         "id", "patient_id", "date", "time", "case_name", "diagnosis_code", "diagnosis_name",
-        "entered_by", "document_id",
+        "entered_by", "document_id", "notes",
+    ),
+)
+_spec(
+    name="vitals",
+    group="clinical",
+    tables=("DENNI_ZAZNAM_HODNOTA",),
+    sql=(
+        "select h.ID_DENNI_ZAZNAM_HODNOTA, h.ID_DENNI_ZAZNAM, h.CAS, h.TEPLOTA, h.TEP, h.DECH, h.HMOTNOST, "
+        "h.TLAK_SYS, h.TLAK_DIA from DENNI_ZAZNAM_HODNOTA h"
+    ),
+    id_expr="h.ID_DENNI_ZAZNAM_HODNOTA",
+    mapper=_vitals,
+    keys=(
+        "id", "visit_id", "time", "temperature", "heart_rate", "respiratory_rate", "weight", "bp_systolic",
+        "bp_diastolic",
     ),
 )
 _spec(
@@ -409,6 +488,39 @@ _spec(
         "id", "document_id", "owner_id", "date", "time", "method", "amount", "from_deposit", "state",
         "refunded_date",
     ),
+)
+_spec(
+    name="bundles",
+    group="templates",
+    tables=("SABLONA_VYKONU",),
+    sql=(
+        "select s.ID_SABLONA_VYKONU, s.SABLONA_VYKONU, s.SABLONA_VYKONU_NAZEV, s.POPIS "
+        "from SABLONA_VYKONU s"
+    ),
+    id_expr="s.ID_SABLONA_VYKONU",
+    mapper=_bundles,
+    keys=("id", "code", "name", "description"),
+)
+_spec(
+    name="bundle_lines",
+    group="templates",
+    tables=("SABLONA_VYKONU_POLOZKA",),
+    sql=(
+        "select b.ID_SABLONA_VYKONU_POLOZKA, b.ID_SABLONA_VYKONU, b.ID_VARIANTA, b.VARIANTA_NAZEV, "
+        "b.MNOZSTVI, b.MERNA_JEDNOTKA, b.PORADI from SABLONA_VYKONU_POLOZKA b"
+    ),
+    id_expr="b.ID_SABLONA_VYKONU_POLOZKA",
+    mapper=_bundle_lines,
+    keys=("id", "bundle_id", "item_id", "item_name", "quantity", "unit", "sequence"),
+)
+_spec(
+    name="phrases",
+    group="templates",
+    tables=("FRAZE",),
+    sql="select f.ID_FRAZE, f.FRAZE, f.PREDEK, f.TEXT from FRAZE f",
+    id_expr="f.ID_FRAZE",
+    mapper=_phrases,
+    keys=("id", "name", "group", "text"),
 )
 
 assert tuple(SPECS) == ENTITY_ORDER

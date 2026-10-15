@@ -9,8 +9,8 @@ from winvet_bridge import ENTITY_ORDER
 from winvet_bridge.cli import should_run_full
 from winvet_bridge.guard import GROUPS, SchemaInfo
 from winvet_bridge.journal import BridgeState, StateStore, collect_changes
-from winvet_bridge.odoo_client import OdooClient, OdooError, OdooTransportError
-from winvet_bridge.sync import SyncRunner
+from winvet_bridge.odoo_client import OdooClient, OdooError, OdooTransportError, OdooUnknownEntityError
+from winvet_bridge.sync import ALWAYS_FULL, SyncRunner
 
 from _support import FakeOdoo
 
@@ -140,14 +140,72 @@ class SyncRunnerTest(unittest.TestCase):
         by_entity = {}
         for p in pushes:
             by_entity.setdefault(p["entity"], []).append(p)
-        # users and contacts always full, others only when changed
-        self.assertEqual(set(by_entity), {"users", "contacts", "owners", "sale_lines"})
-        self.assertTrue(all(p["mode"] == "full" for p in by_entity["users"] + by_entity["contacts"]))
+        # users, contacts, bundles, bundle_lines always full, others only when changed
+        self.assertEqual(set(by_entity), {"users", "contacts", "bundles", "bundle_lines", "owners", "sale_lines"})
+        self.assertTrue(all(p["mode"] == "full" for e in ALWAYS_FULL for p in by_entity[e]))
         owners = by_entity["owners"][0]
         self.assertEqual((owners["mode"], owners["records"], owners["deleted"]), ("incremental", [{"id": 2}], [3]))
         # id 99 is not in DOKLAD_POLOZKA_UM -> ignored
         self.assertEqual(by_entity["sale_lines"][0]["records"], [{"id": 1}])
         self.assertEqual(self.store.load().journal_cursor, 104)
+
+    def test_price_row_change_rereads_item_and_never_deletes(self):
+        source = FakeSource()
+        self.store.save(BridgeState(journal_cursor=100))
+        source.journal += [
+            (101, "VARIANTA_CENIK", 5000, "U", 1),   # price row 5000 of item 1 changed
+            (102, "VARIANTA_CENIK", 5001, "D", 2),   # price row of item 2 deleted -> item 2 re-read
+            (103, "VARIANTA", 3, "D", None),          # item 3 deleted ...
+            (104, "VARIANTA_CENIK", 5002, "D", 3),   # ... with its price row -> stays deleted
+            (105, "DENNI_ZAZNAM_HODNOTA", 2, "U", None),
+            (106, "FRAZE", 1, "D", None),
+        ]
+        with FakeOdoo() as odoo:
+            self.runner(source, odoo, batch_size=500).run()
+            by_entity = {p["entity"]: p for p in odoo.pushes()}
+        items = by_entity["items"]
+        self.assertEqual(items["mode"], "incremental")
+        self.assertEqual(items["records"], [{"id": 1}, {"id": 2}])
+        self.assertEqual(items["deleted"], [3])
+        self.assertEqual((by_entity["vitals"]["mode"], by_entity["vitals"]["records"]), ("incremental", [{"id": 2}]))
+        self.assertEqual((by_entity["phrases"]["records"], by_entity["phrases"]["deleted"]), ([], [1]))
+
+    def test_price_row_without_parent_key_pushes_items_in_full(self):
+        source = FakeSource()
+        self.store.save(BridgeState(journal_cursor=100))
+        source.journal.append((101, "VARIANTA_CENIK", 5000, "U", None))
+        with FakeOdoo() as odoo:
+            self.runner(source, odoo, batch_size=500).run()
+            items = [p for p in odoo.pushes() if p["entity"] == "items"]
+        self.assertEqual([(p["mode"], len(p["records"])) for p in items], [("full", 3)])
+
+    def test_unknown_entity_is_skipped_and_run_continues(self):
+        source = FakeSource(journal=[(100, "PARTNER", 1, "U")])
+        self.store.save(BridgeState(journal_cursor=50, pending_full=["phrases"]))
+        with FakeOdoo() as odoo:
+            odoo.unknown_entities = {"bundles", "bundle_lines", "phrases"}
+            report = self.runner(source, odoo).run()
+            entities = [p["entity"] for p in odoo.pushes()]
+        # one refused batch per unknown entity, nothing more; later entities are still pushed
+        for name in ("bundles", "bundle_lines", "phrases"):
+            self.assertEqual(entities.count(name), 1, name)
+        self.assertIn("owners", entities)
+        unsupported = [e.entity for e in report.entities if e.unsupported]
+        self.assertEqual(unsupported, ["bundles", "bundle_lines", "phrases"])
+        state = self.store.load()
+        self.assertEqual(state.journal_cursor, 100)
+        self.assertEqual(state.pending_full, [])
+
+    def test_other_ok_false_still_stops_the_run(self):
+        with FakeOdoo() as odoo:
+            client = OdooClient(odoo.url, odoo.api_key, timeout=5, retries=0)
+            odoo.unknown_entities = {"phrases"}
+            with self.assertRaises(OdooUnknownEntityError):
+                client.push({"entity": "phrases"})
+            odoo.fail_push_at = 2
+            with self.assertRaises(OdooError) as ctx:
+                client.push({"entity": "owners"})
+            self.assertNotIsInstance(ctx.exception, OdooUnknownEntityError)
 
     def test_cursor_not_advanced_on_failure(self):
         source = FakeSource(journal=[(100, "PARTNER", 1, "U")])

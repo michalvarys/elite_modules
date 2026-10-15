@@ -27,6 +27,14 @@ class OdooTransportError(OdooError):
     """Odoo could not be reached (after all retries)."""
 
 
+#: ``ok: false`` error of a push for an entity the Odoo side does not handle (contract v2).
+UNKNOWN_ENTITY = "unknown entity"
+
+
+class OdooUnknownEntityError(OdooError):
+    """Odoo answered ``{"ok": false, "error": "unknown entity"}`` (module for the entity missing)."""
+
+
 class OdooClient:
     def __init__(
         self,
@@ -102,6 +110,8 @@ class OdooClient:
         result = answer.get("result")
         if not isinstance(result, dict) or not result.get("ok"):
             error = result.get("error") if isinstance(result, dict) else None
+            if error == UNKNOWN_ENTITY:
+                raise OdooUnknownEntityError(f"{route}: refused: {error}")
             raise OdooError(f"{route}: refused: {error or 'ok is not true'}")
         return result
 

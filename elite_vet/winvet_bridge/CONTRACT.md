@@ -183,3 +183,99 @@ Changed ids are re-read and pushed (`mode=incremental`); `D` ids go to `deleted`
   (the whole push call is rolled back; details in the Odoo log and the sync status).
 - A patient whose owner is unknown is stored with the archived placeholder owner "WinVet – neznámý
   majitel" (the Odoo pet model requires an owner) and relinked automatically when the owner arrives.
+
+
+## v2 additions (phase 1 – patient card, 2026-10-15)
+
+Bridge version 2.0.0. All additions are new keys or new entities; v1 receivers ignore nothing
+mandatory. Push order v2: `users, items, owners, contacts, patients, vaccinations, visits, vitals,
+sale_documents, sale_lines, payments, bundles, bundle_lines, phrases`.
+
+**Forward compatibility:** if Odoo answers a push with `{"ok": false, "error": "unknown entity"}`,
+the bridge logs a warning, skips that entity for the run (does not stop, does not count it as a
+failure, keeps it out of `pending_full`) and continues. This lets a bridge v2 talk to an Odoo
+without the clinic module.
+
+### items (+3 keys)
+`price` (VARIANTA_CENIK.CENA_S_DPH of the price list ID_CENIK = 1 "Ordinace", price incl. VAT per
+sales unit), `price_untaxed` (VARIANTA_CENIK.CENA, same row), `vat_rate` (VARIANTA.DPH_PRODEJ).
+Null when the item has no row in price list 1. If several rows exist (per stock), the first by
+ID_VARIANTA_CENIK.
+
+### visits (+1 key)
+`notes`: plain text of DENNI_ZAZNAM.DEKURS. DEKURS is a TRichView RVF document (WIN1250 text):
+lines `<type> <count> …` start a record; for type `0` (text) the next `<count>` lines are text
+paragraphs; all other records (negative types: tables, controls, `TPF0` binary blobs) are skipped.
+Paragraphs are joined with `\n`, runs of empty lines collapsed to one, trimmed. Null when empty.
+
+### vitals  [DENNI_ZAZNAM_HODNOTA] – measurements during a visit (journaled table)
+`id, visit_id (ID_DENNI_ZAZNAM), time (CAS "HH:MM:SS"), temperature (TEPLOTA), heart_rate (TEP),
+respiratory_rate (DECH), weight (HMOTNOST), bp_systolic (TLAK_SYS), bp_diastolic (TLAK_DIA)`
+
+### bundles  [SABLONA_VYKONU] – procedure templates (not journaled → always full)
+`id, code (SABLONA_VYKONU), name (SABLONA_VYKONU_NAZEV), description (POPIS text)`
+
+### bundle_lines  [SABLONA_VYKONU_POLOZKA] (not journaled → always full)
+`id, bundle_id (ID_SABLONA_VYKONU), item_id (ID_VARIANTA), item_name (VARIANTA_NAZEV),
+quantity (MNOZSTVI), unit (MERNA_JEDNOTKA), sequence (PORADI)`
+
+### phrases  [FRAZE] – text templates (journaled table FRAZE → incremental)
+`id, name (FRAZE), group (PREDEK), text (TEXT converted from RVF like visits.notes, plain TEXT
+blobs passed through)`
+
+### Journal mapping additions
+| ZURNAL.TABULKA | entity |
+|---|---|
+| DENNI_ZAZNAM_HODNOTA | vitals |
+| FRAZE | phrases |
+| VARIANTA_CENIK | items (the changed price row's ID_VARIANTA is re-read; `D` of a price row re-reads the item, never deletes it) |
+
+`bundles` and `bundle_lines` are added to the always-full set (with users, contacts).
+
+### Odoo side
+- `elite_vet_winvet` handles `items` prices, `visits.notes`, `vitals`.
+- `elite_vet_clinic` (phase 1) handles `bundles`, `bundle_lines`, `phrases` by extending the sync
+  model; without it Odoo answers `unknown entity` for them (see forward compatibility).
+- Owners/patients: synced fields are written only when the incoming `modified` differs from the
+  stored `winvet_modified` (record changed in WinVet) or the record is new – edits made in Odoo
+  survive until WinVet changes the same record. Full reconciliation (archiving missing ids) is
+  unchanged.
+
+### v2 clarifications (bridge side, binding)
+
+1. `status.fingerprints` has a new group `templates` (SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA,
+   FRAZE); `DENNI_ZAZNAM_HODNOTA` belongs to `clinical`, `VARIANTA_CENIK` to `catalog`. A change of
+   `clinical` therefore blocks `visits, vitals, sale_lines`; of `templates` `bundles, bundle_lines,
+   phrases`. `status.blocked` stays a list of entity names.
+2. `items.price` / `price_untaxed` come from the row of price list `ID_CENIK = 1` with the lowest
+   `ID_VARIANTA_CENIK`; both are `null` when the item has no such row (30 of 715 items on the
+   analysis copy). `vat_rate` (DPH_PRODEJ, e.g. `21.0`, `12.0`) is independent and may be `null`.
+   All three are JSON numbers (floats).
+3. VARIANTA_CENIK journal rows: the item id is `ZURNAL.IDKEY` (the WinVet triggers write
+   `KEYFIELD = 'ID_VARIANTA'`, `IDKEY = NEW/OLD.ID_VARIANTA`, also for `D`; verified on 100 % of the
+   rows). Any action marks the item as changed (incremental re-read) unless the item itself is
+   deleted in the same journal window – then it stays in `deleted`. A VARIANTA_CENIK row without
+   IDKEY makes the bridge push `items` with `mode=full` in that run.
+4. `visits.notes`: only text items (style ≥ 0, save type 0) are taken, at any nesting depth – the text
+   of table cells (e.g. the "Čas / Hmotnost / Teplota" header table WinVet puts at the top) is part
+   of the notes, in document order. Styled runs that continue a paragraph (ParaNo `-1` / option
+   `rvioSameAsPrev`) are appended to the previous line without a line break. Control characters and
+   bytes undefined in WIN1250 are removed, tabs become spaces, trailing spaces of every line are
+   cut. Lines that look like binary (contain `TPF0`/RVF class names, or ≥ 10 % control characters)
+   are dropped. Conversion failures give `null`, never an error. `notes` can be long (up to ~15 000
+   characters on the analysis copy) – Odoo must store it as `Text`.
+5. `phrases.text` and `bundles.description`: values starting with the RVF header (`-8 <n> <n>`) are
+   converted like `visits.notes`, anything else is passed through as plain text (CRLF → `\n`,
+   trimmed). `phrases.group` is the raw text of FRAZE.PREDEK (a group label, not an id) or `null`.
+6. `vitals`: values are passed as stored (WinVet uses `null`, not `0`, for "not measured");
+   `temperature` and `weight` are floats, `heart_rate`, `respiratory_rate`, `bp_systolic`,
+   `bp_diastolic` integers; `visit_id` 0/negative → `null`. A vitals row may reference a visit that
+   does not exist (1 orphan on the analysis copy) – keep it with an empty link.
+7. `bundle_lines.item_id` 0/negative → `null`; `sequence` (PORADI) is often `null`.
+8. Unknown entity: only the exact answer `{"ok": false, "error": "unknown entity"}` triggers the skip;
+   the first refused batch ends that entity for the run (remaining batches are not sent), the
+   journal cursor still advances. Journal changes of a skipped incremental entity (`phrases`) are
+   therefore not replayed later – the next full run (daily) sends the complete entity. Every other
+   `ok: false` still stops the run (v1 clarification 11).
+9. Real dataset sizes v2 (analysis copy): items 715 (685 with price), visits 968 (922 with notes),
+   vitals 365, bundles 12, bundle_lines 138, phrases 10.

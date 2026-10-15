@@ -101,6 +101,25 @@ class EntityIntegrationTest(IntegrationBase):
             ids = [r["id"] for r in records]
             self.assertEqual(len(ids), len(set(ids)), f"{name}: duplicate ids")
 
+    def test_v2_values(self):
+        visits = self.records["visits"]
+        notes = [r for r in visits if r["notes"]]
+        self.assertGreater(len(notes), len(visits) * 0.8)
+        bad = re.compile("[\\x00-\\x09\\x0b-\\x1f\\x7f-\\x9f\\ufffd]|TPF0|TRV[A-Z][a-z]|TableTrias|unremovable=")
+        texts = [("visits", r["id"], r["notes"]) for r in notes]
+        texts += [("phrases", r["id"], r["text"]) for r in self.records["phrases"] if r["text"]]
+        for entity, record_id, text in texts:  # never print the text itself
+            self.assertFalse(bad.search(text), f"{entity} {record_id}: control characters / RVF leftovers")
+        items = self.records["items"]
+        priced = [r for r in items if r["price"] is not None]
+        self.assertGreater(len(priced), len(items) // 2)
+        self.assertTrue(all(r["price_untaxed"] is not None for r in priced))
+        visit_ids = {r["id"] for r in visits}
+        linked = [r for r in self.records["vitals"] if r["visit_id"] in visit_ids]
+        self.assertGreater(len(linked), len(self.records["vitals"]) * 0.9)
+        bundle_ids = {r["id"] for r in self.records["bundles"]}
+        self.assertTrue(all(r["bundle_id"] in bundle_ids for r in self.records["bundle_lines"]))
+
     def test_value_types(self):
         allowed = (str, int, float, bool, type(None))
         date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -144,7 +163,7 @@ class EntityIntegrationTest(IntegrationBase):
         self.assertTrue(statements)
         for sql in statements:
             self.assertNotRegex(sql.upper(), r"\bREGISTRACE\b")
-            self.assertNotRegex(sql.upper(), r"\b(RODNE_CISLO|HASH|KOD_CVK|DEKURS)\b")
+            self.assertNotRegex(sql.upper(), r"\b(RODNE_CISLO|HASH|KOD_CVK)\b")
             self.assertNotRegex(sql.upper(), r"SELECT\s+\*|EXECUTE|PROCEDURE")
         # reader tables are real tables (not views / selectable procedures)
         rows = self.db.query_all(
