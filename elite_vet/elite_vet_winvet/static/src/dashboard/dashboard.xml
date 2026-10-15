@@ -2,6 +2,7 @@
 <templates xml:space="preserve">
     <t t-name="elite_vet_winvet.Dashboard">
         <div class="o_action evd">
+          <div class="o_content evd-body">
             <div class="evd-toolbar">
                 <h3 class="evd-title">Přehled tržeb a výdajů</h3>
                 <div class="btn-group evd-modes" role="group" aria-label="Co zobrazit">
@@ -114,6 +115,7 @@
                 </div>
             </t>
             <div t-else="" class="p-4 text-muted">Načítám…</div>
+          </div>
         </div>
     </t>
 </templates>

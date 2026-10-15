@@ -1,7 +1,8 @@
 // Revenue dashboard (client action elite_vet_winvet.dashboard)
-.evd {
-    height: 100%; overflow: auto; padding: 16px 20px 32px; background: #f6f8fa;
-}
+// Odoo's .o_action does not scroll; like the standard views, the inner .o_content does
+// (Odoo gives it overflow: auto and height: 100%).
+.evd { background: #f6f8fa; }
+.evd-body { padding: 16px 20px 32px; }
 .evd-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .evd-title { margin: 0 8px 0 0; font-weight: 700; }
 .evd-presets .btn, .evd-modes .btn { white-space: nowrap; }
