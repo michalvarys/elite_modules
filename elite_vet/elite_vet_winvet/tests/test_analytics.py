@@ -96,3 +96,41 @@ class TestAnalytics(WinvetCase):
         self.assertTrue(self.env["elite.vet.visit"].with_user(reception).search([("winvet_ref", "=", self.ref(40))]))
         with self.assertRaises(AccessError):
             self.env["elite.vet.sale.line"].with_user(manager).search([], limit=1).write({"amount": 1})
+
+
+@tagged("post_install", "-at_install")
+class TestDashboard(WinvetCase):
+
+    def test_dashboard_figures(self):
+        Line, Doc = self.env["elite.vet.sale.line"], self.env["elite.vet.sale.document"]
+        Item = self.env["elite.vet.winvet.item"]
+        service = Item.create({"winvet_ref": 9100001, "name": "Test úkon", "classification": "service"})
+        product = Item.create({"winvet_ref": 9100002, "name": "Test lék", "classification": "product"})
+        doc = Doc.create({"winvet_ref": 9100003, "doc_type": "UM", "date": "2031-05-10"})
+        Line.create([
+            {"winvet_ref": 9100004, "document_id": doc.id, "item_id": service.id, "item_name": "Test úkon",
+             "amount": 1000, "quantity": 1, "date": "2031-05-10"},
+            {"winvet_ref": 9100005, "document_id": doc.id, "item_id": product.id, "item_name": "Test lék",
+             "amount": 250, "quantity": 2, "date": "2031-05-11"},
+            {"winvet_ref": 9100006, "document_id": doc.id, "item_id": service.id, "item_name": "Test úkon",
+             "amount": 400, "quantity": 1, "date": "2031-05-03"},
+        ])
+        data = self.env["elite.vet.winvet.dashboard"].get_data("2031-05-10", "2031-05-16", "2031-05-03", "2031-05-09")
+        self.assertEqual(data["kpi"]["revenue"], 1250)
+        self.assertEqual((data["kpi"]["services"], data["kpi"]["products"]), (1000, 250))
+        self.assertEqual(data["kpi_previous"]["revenue"], 400)
+        self.assertEqual(len(data["daily"]), 7)
+        self.assertEqual(data["daily"][0], {"date": "2031-05-10", "service": 1000, "product": 0, "other": 0})
+        self.assertEqual(data["top_services"][0]["name"], "Test úkon")
+        self.assertEqual(data["top_products"][0]["quantity"], 2)
+        no_cmp = self.env["elite.vet.winvet.dashboard"].get_data("2031-05-10", "2031-05-16", compare=False)
+        self.assertFalse(no_cmp["kpi_previous"])
+
+    def test_dashboard_only_for_managers(self):
+        user = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "Recepce Dashboard", "login": "dashboard_reception_test",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id,
+                                  self.env.ref("elite_vet_reservation.group_reservation_reception").id])]})
+        from odoo.exceptions import AccessError
+        with self.assertRaises(AccessError):
+            self.env["elite.vet.winvet.dashboard"].with_user(user).get_data()

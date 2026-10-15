@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="elite_vet_winvet.Dashboard">
+        <div class="o_action evd">
+            <div class="evd-toolbar">
+                <h3 class="evd-title">Přehled tržeb</h3>
+                <div class="btn-group evd-presets" role="group" aria-label="Období">
+                    <button t-foreach="presetList" t-as="p" t-key="p.key" type="button" class="btn btn-sm"
+                            t-att-class="state.preset === p.key ? 'btn-primary' : 'btn-light'"
+                            t-on-click="() => this.setPreset(p.key)" t-esc="p.label"/>
+                </div>
+                <div class="evd-range">
+                    <input type="date" class="form-control form-control-sm" t-att-value="state.from"
+                           t-on-change="(ev) => this.onDateChange('from', ev)" aria-label="Od"/>
+                    <span>–</span>
+                    <input type="date" class="form-control form-control-sm" t-att-value="state.to"
+                           t-on-change="(ev) => this.onDateChange('to', ev)" aria-label="Do"/>
+                </div>
+            </div>
+
+            <t t-if="state.data">
+                <t t-set="d" t-value="state.data"/>
+                <div class="evd-subtitle text-muted">
+                    <t t-esc="periodLabel(d.period)"/>
+                    <span t-if="d.kpi_previous" class="ms-2">· srovnání s <t t-esc="periodLabel(d.previous)"/></span>
+                    <span t-if="d.bounds.last" class="ms-2">· data z WinVetu do <t t-esc="periodLabel({from: d.bounds.last, to: d.bounds.last})"/></span>
+                    <span t-if="state.loading" class="ms-2"><i class="fa fa-spinner fa-spin"/></span>
+                </div>
+
+                <div class="evd-cards">
+                    <button t-foreach="cards" t-as="c" t-key="c.key" type="button" class="evd-card" t-on-click="c.open"
+                            title="Otevřít detail">
+                        <div class="evd-card-label" t-esc="c.label"/>
+                        <div class="evd-card-value" t-esc="c.value"/>
+                        <t t-set="dl" t-value="delta(c.key)"/>
+                        <div class="evd-card-delta" t-att-class="dl.cls">
+                            <t t-esc="dl.text"/><span t-if="dl.text" class="text-muted"> oproti srovnání</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="evd-grid">
+                    <section class="evd-panel evd-wide">
+                        <h5>Tržby v čase</h5>
+                        <div class="evd-chart"><canvas t-ref="daily"/></div>
+                    </section>
+                    <section class="evd-panel">
+                        <h5>Podle toho, kdo zapsal</h5>
+                        <div class="evd-chart"><canvas t-ref="users"/></div>
+                    </section>
+                    <section class="evd-panel">
+                        <h5>Formy platby</h5>
+                        <div class="evd-chart evd-chart-sm"><canvas t-ref="payments"/></div>
+                        <h5 class="mt-3">Druhy zvířat</h5>
+                        <div class="evd-chart evd-chart-sm"><canvas t-ref="species"/></div>
+                    </section>
+                    <t t-foreach="[['service', 'Nejčastější úkony', d.top_services], ['product', 'Nejprodávanější léky a zboží', d.top_products]]"
+                       t-as="block" t-key="block[0]">
+                        <section class="evd-panel">
+                            <h5 t-esc="block[1]"/>
+                            <t t-set="maxAmount" t-value="block[2].length ? block[2][0].amount : 0"/>
+                            <table class="table table-sm evd-top">
+                                <tbody>
+                                    <tr t-foreach="block[2]" t-as="row" t-key="row_index" t-on-click="() => this.openItem(row, block[0])">
+                                        <td class="evd-top-name">
+                                            <div t-esc="row.name"/>
+                                            <div class="evd-bar"><span t-att-style="'width:' + sharePct(row.amount, maxAmount) + '%;background:' + (block[0] === 'service' ? '#2b7870' : '#ea580c')"/></div>
+                                        </td>
+                                        <td class="text-end text-muted"><t t-esc="number(row.quantity)"/>×</td>
+                                        <td class="text-end fw-bold" t-esc="money(row.amount)"/>
+                                    </tr>
+                                    <tr t-if="!block[2].length"><td class="text-muted">V tomto období nic.</td></tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </t>
+                </div>
+            </t>
+            <div t-else="" class="p-4 text-muted">Načítám…</div>
+        </div>
+    </t>
+</templates>

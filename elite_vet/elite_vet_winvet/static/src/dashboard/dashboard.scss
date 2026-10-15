@@ -1,0 +1,39 @@
+// Revenue dashboard (client action elite_vet_winvet.dashboard)
+.evd {
+    height: 100%; overflow: auto; padding: 16px 20px 32px; background: #f6f8fa;
+}
+.evd-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.evd-title { margin: 0 8px 0 0; font-weight: 700; }
+.evd-presets .btn { white-space: nowrap; }
+.evd-range { display: flex; align-items: center; gap: 6px; }
+.evd-range input { width: 9.5rem; }
+.evd-subtitle { margin: 8px 0 16px; }
+
+.evd-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.evd-card {
+    text-align: left; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; padding: 12px 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04); cursor: pointer;
+    &:hover { border-color: #94a3b8; box-shadow: 0 2px 6px rgba(15, 23, 42, .08); }
+}
+.evd-card-label { color: #64748b; font-size: 13px; }
+.evd-card-value { font-size: 1.55rem; font-weight: 700; color: #0f172a; line-height: 1.3; }
+.evd-card-delta { font-size: 12px; min-height: 18px; }
+
+.evd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.evd-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.evd-panel h5 { font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 10px; }
+.evd-wide { grid-column: 1 / -1; }
+.evd-chart { position: relative; height: 300px; }
+.evd-chart-sm { height: 170px; }
+
+.evd-top { margin: 0; }
+.evd-top tr { cursor: pointer; }
+.evd-top tr:hover td { background: #f1f5f9; }
+.evd-top td { vertical-align: middle; border-color: #f1f5f9; }
+.evd-top-name { width: 70%; }
+.evd-bar { height: 4px; background: #f1f5f9; border-radius: 2px; margin-top: 3px; }
+.evd-bar span { display: block; height: 4px; border-radius: 2px; }
+
+@media (max-width: 900px) {
+    .evd-grid { grid-template-columns: 1fr; }
+}

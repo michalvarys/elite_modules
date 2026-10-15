@@ -13,3 +13,4 @@ from . import sale
 from . import visit
 from . import payment
 from . import sync
+from . import dashboard

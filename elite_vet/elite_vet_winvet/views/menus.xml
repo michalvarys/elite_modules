@@ -4,6 +4,9 @@
               web_icon="elite_vet_winvet,static/description/icon.png"
               groups="elite_vet_reservation.group_reservation_reception"/>
 
+    <menuitem id="menu_winvet_dashboard" name="Přehled" parent="menu_winvet_root" sequence="5"
+              action="action_winvet_dashboard"
+              groups="elite_vet_reservation.group_reservation_manager"/>
     <menuitem id="menu_winvet_sales" name="Tržby" parent="menu_winvet_root" sequence="10"
               groups="elite_vet_reservation.group_reservation_manager"/>
     <menuitem id="menu_winvet_sale_line" name="Tržby podle položek" parent="menu_winvet_sales"

@@ -31,9 +31,15 @@ Rozhraní je popsané v elite_vet/winvet_bridge/CONTRACT.md.
         "views/vaccination_views.xml",
         "views/sale_views.xml",
         "views/payment_views.xml",
+        "views/dashboard_views.xml",
         "views/menus.xml",
         "data/filters.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "elite_vet_winvet/static/src/dashboard/*",
+        ],
+    },
     "installable": True,
     "application": True,
     "auto_install": False,
