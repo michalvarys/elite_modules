@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_winvet_config_form" model="ir.ui.view">
+        <field name="name">elite.vet.winvet.config.form</field>
+        <field name="model">elite.vet.winvet.config</field>
+        <field name="arch" type="xml">
+            <form string="API klíč pro WinVet" create="0" delete="0">
+                <sheet>
+                    <div class="alert alert-success" role="alert" invisible="not new_key">
+                        <strong>Nový API klíč – zkopírujte si ho teď, znovu se už nezobrazí:</strong>
+                        <field name="new_key" widget="CopyClipboardChar" class="d-block mt-2"/>
+                        <div class="mt-2">Vložte ho do nastavení mostu WinVet (hlavička
+                            <code>Authorization: Bearer …</code>). Odoo si ukládá jen jeho otisk (SHA-256).</div>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="key_set"/>
+                            <field name="key_created" invisible="not key_set"/>
+                        </group>
+                    </group>
+                    <div class="text-muted mb-3">
+                        Most WinVet se k Odoo přihlašuje tímto klíčem. Vygenerováním nového klíče
+                        přestane platit ten předchozí – most je pak potřeba nastavit znovu.
+                    </div>
+                    <button name="action_generate_key" type="object" class="btn-primary"
+                            string="Vygenerovat nový klíč"
+                            confirm="Dosavadní klíč přestane platit a most WinVet se nepřihlásí, dokud nedostane nový. Pokračovat?"/>
+                    <button name="action_revoke_key" type="object" class="btn-secondary ms-2"
+                            string="Zrušit klíč" invisible="not key_set"
+                            confirm="Most WinVet se pak k Odoo nepřihlásí. Pokračovat?"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_winvet_config" model="ir.actions.act_window">
+        <field name="name">API klíč pro WinVet</field>
+        <field name="res_model">elite.vet.winvet.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+</odoo>

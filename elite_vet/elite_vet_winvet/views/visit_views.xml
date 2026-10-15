@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_visit_list" model="ir.ui.view">
+        <field name="name">elite.vet.visit.list</field>
+        <field name="model">elite.vet.visit</field>
+        <field name="arch" type="xml">
+            <list string="Návštěvy" create="0" delete="0" edit="0">
+                <field name="date"/>
+                <field name="time" optional="show"/>
+                <field name="pet_id"/>
+                <field name="species" optional="show"/>
+                <field name="partner_id"/>
+                <field name="case_name" optional="show"/>
+                <field name="diagnosis_code" optional="hide"/>
+                <field name="diagnosis_name"/>
+                <field name="entered_by_id" optional="show"/>
+                <field name="doctor_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_visit_form" model="ir.ui.view">
+        <field name="name">elite.vet.visit.form</field>
+        <field name="model">elite.vet.visit</field>
+        <field name="arch" type="xml">
+            <form string="Návštěva" create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="pet_id"/>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="time"/>
+                        </group>
+                        <group>
+                            <field name="case_name"/>
+                            <field name="diagnosis_code"/>
+                            <field name="diagnosis_name"/>
+                            <field name="entered_by_id"/>
+                            <field name="doctor_id"/>
+                            <field name="document_id" groups="elite_vet_reservation.group_reservation_manager"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" groups="elite_vet_reservation.group_reservation_manager">
+                        <list>
+                            <field name="item_code"/>
+                            <field name="item_name"/>
+                            <field name="kind"/>
+                            <field name="quantity"/>
+                            <field name="unit"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="amount" sum="Celkem"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_visit_search" model="ir.ui.view">
+        <field name="name">elite.vet.visit.search</field>
+        <field name="model">elite.vet.visit</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="pet_id"/>
+                <field name="partner_id"/>
+                <field name="diagnosis_name"/>
+                <field name="entered_by_id"/>
+                <filter name="this_month" string="Tento měsíc"
+                        domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter name="date" string="Datum" date="date"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
+                    <filter name="group_user" string="Zapsal(a)" context="{'group_by': 'entered_by_id'}"/>
+                    <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_species" string="Druh" context="{'group_by': 'species'}"/>
+                    <filter name="group_diagnosis" string="Diagnóza" context="{'group_by': 'diagnosis_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_visit_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.visit.pivot</field>
+        <field name="model">elite.vet.visit</field>
+        <field name="arch" type="xml">
+            <pivot string="Návštěvy" sample="1">
+                <field name="date" interval="month" type="row"/>
+                <field name="species" type="col"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_visit_graph" model="ir.ui.view">
+        <field name="name">elite.vet.visit.graph</field>
+        <field name="model">elite.vet.visit</field>
+        <field name="arch" type="xml">
+            <graph string="Návštěvy" type="bar" sample="1">
+                <field name="date" interval="month"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_visit" model="ir.actions.act_window">
+        <field name="name">Návštěvy</field>
+        <field name="res_model">elite.vet.visit</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+</odoo>

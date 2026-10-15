@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pet_form_winvet" model="ir.ui.view">
+        <field name="name">elite.vet.pet.form.winvet</field>
+        <field name="model">elite.vet.pet</field>
+        <field name="inherit_id" ref="elite_vet_reservation.view_pet_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-warning mb-0" role="alert" invisible="not important_note">
+                    <strong>Důležité: </strong><field name="important_note" class="d-inline" readonly="1"/>
+                </div>
+            </xpath>
+            <xpath expr="//sheet/group" position="before">
+                <widget name="web_ribbon" title="Uhynulý" bg_color="text-bg-secondary" invisible="not deceased"/>
+                <field name="active" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='breed']" position="after">
+                <field name="sex"/>
+                <field name="color"/>
+            </xpath>
+            <xpath expr="//field[@name='note']" position="after">
+                <notebook>
+                    <page string="Údaje z WinVetu" name="winvet" invisible="not winvet_ref">
+                        <group>
+                            <group>
+                                <field name="chip"/>
+                                <field name="tattoo"/>
+                                <field name="passport"/>
+                                <field name="birth_date"/>
+                                <field name="birth_year" invisible="birth_date"/>
+                                <field name="weight"/>
+                                <field name="winvet_species"/>
+                            </group>
+                            <group>
+                                <field name="registered_date"/>
+                                <field name="next_vaccination"/>
+                                <field name="next_deworming"/>
+                                <field name="deceased"/>
+                                <field name="death_date" invisible="not deceased"/>
+                                <field name="winvet_ref"/>
+                                <field name="winvet_owner_ref"/>
+                            </group>
+                        </group>
+                        <field name="winvet_note" placeholder="Bez poznámky z WinVetu"/>
+                    </page>
+                    <page string="Očkování" name="vaccinations" invisible="not winvet_ref">
+                        <field name="vaccination_ids">
+                            <list>
+                                <field name="date"/>
+                                <field name="item_name"/>
+                                <field name="quantity"/>
+                                <field name="unit"/>
+                                <field name="next_date"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Návštěvy" name="visits" invisible="not winvet_ref">
+                        <field name="visit_ids">
+                            <list>
+                                <field name="date"/>
+                                <field name="time"/>
+                                <field name="case_name"/>
+                                <field name="diagnosis_name"/>
+                                <field name="entered_by_id"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_pet_list_winvet" model="ir.ui.view">
+        <field name="name">elite.vet.pet.list.winvet</field>
+        <field name="model">elite.vet.pet</field>
+        <field name="inherit_id" ref="elite_vet_reservation.view_pet_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="chip" optional="hide"/>
+                <field name="birth_date" optional="hide"/>
+                <field name="next_vaccination" optional="hide"/>
+                <field name="deceased" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_winvet_status_form" model="ir.ui.view">
+        <field name="name">elite.vet.winvet.status.form</field>
+        <field name="model">elite.vet.winvet.status</field>
+        <field name="arch" type="xml">
+            <form string="Stav synchronizace" create="0" delete="0" edit="0">
+                <header>
+                    <button name="action_acknowledge" type="object" string="Potvrdit upozornění"
+                            class="btn-primary" invisible="not alert"/>
+                </header>
+                <div class="alert alert-danger mb-0" role="alert" invisible="not alert">
+                    <strong>Pozor: </strong><field name="alert" class="d-inline"/>
+                </div>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group string="Most a WinVet">
+                            <field name="last_status_at"/>
+                            <field name="last_push_at"/>
+                            <field name="bridge_version"/>
+                            <field name="source"/>
+                            <field name="winvet_version"/>
+                            <field name="previous_winvet_version" invisible="not previous_winvet_version"/>
+                            <field name="ods"/>
+                            <field name="engine"/>
+                            <field name="journal_cursor"/>
+                        </group>
+                        <group string="Kontrola">
+                            <field name="blocked" decoration-danger="blocked"/>
+                            <field name="message"/>
+                            <field name="last_error" decoration-danger="last_error"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Poslední běh" name="entities">
+                            <field name="entity_ids">
+                                <list>
+                                    <field name="entity"/>
+                                    <field name="mode"/>
+                                    <field name="last_push_at"/>
+                                    <field name="created"/>
+                                    <field name="updated"/>
+                                    <field name="deleted"/>
+                                    <field name="skipped" decoration-warning="skipped"/>
+                                    <field name="run_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Změny struktury" name="schema">
+                            <group>
+                                <field name="schema_change_summary" string="Rozdíly proti schválenému stavu"
+                                       placeholder="žádné"/>
+                                <field name="schema_hash" groups="base.group_no_one"/>
+                                <field name="schema_baseline_hash" groups="base.group_no_one"/>
+                            </group>
+                            <field name="schema_change_ids">
+                                <list decoration-danger="severity == 'breaking'" decoration-warning="severity == 'journal'"
+                                      decoration-muted="severity == 'info'">
+                                    <field name="severity" widget="badge"/>
+                                    <field name="table_name"/>
+                                    <field name="object_type"/>
+                                    <field name="object_name"/>
+                                    <field name="change"/>
+                                    <field name="old_value"/>
+                                    <field name="new_value"/>
+                                </list>
+                            </field>
+                            <button name="action_open_schema_changes" type="object" string="Otevřít jako seznam"
+                                    class="btn-link" invisible="not schema_change_summary"/>
+                        </page>
+                        <page string="Otisky struktury" name="fingerprints">
+                            <field name="fingerprints"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_winvet_status" model="ir.actions.act_window">
+        <field name="name">Stav synchronizace</field>
+        <field name="res_model">elite.vet.winvet.status</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" ref="winvet_status"/>
+    </record>
+</odoo>

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============ Sale lines (main analytics) ============ -->
+    <record id="view_sale_line_list" model="ir.ui.view">
+        <field name="name">elite.vet.sale.line.list</field>
+        <field name="model">elite.vet.sale.line</field>
+        <field name="arch" type="xml">
+            <list string="Tržby podle položek" create="0" delete="0" edit="0">
+                <field name="date"/>
+                <field name="document_id" optional="show"/>
+                <field name="partner_id" optional="show"/>
+                <field name="pet_id" optional="show"/>
+                <field name="species" optional="hide"/>
+                <field name="item_code" optional="show"/>
+                <field name="item_name"/>
+                <field name="kind"/>
+                <field name="quantity" sum="Celkem"/>
+                <field name="unit" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="unit_price" optional="hide"/>
+                <field name="amount" sum="Celkem"/>
+                <field name="vat_rate" optional="hide"/>
+                <field name="entered_by_id" optional="show"/>
+                <field name="doctor_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_sale_line_form" model="ir.ui.view">
+        <field name="name">elite.vet.sale.line.form</field>
+        <field name="model">elite.vet.sale.line</field>
+        <field name="arch" type="xml">
+            <form string="Položka dokladu" create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="item_id"/>
+                            <field name="item_code"/>
+                            <field name="item_name"/>
+                            <field name="kind"/>
+                            <field name="quantity"/>
+                            <field name="unit"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="unit_price"/>
+                            <field name="amount"/>
+                            <field name="vat_rate"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="document_id"/>
+                            <field name="doc_type"/>
+                            <field name="partner_id"/>
+                            <field name="visit_id"/>
+                            <field name="pet_id"/>
+                            <field name="species"/>
+                            <field name="entered_by_id"/>
+                            <field name="doctor_id"/>
+                            <field name="winvet_ref"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_sale_line_search" model="ir.ui.view">
+        <field name="name">elite.vet.sale.line.search</field>
+        <field name="model">elite.vet.sale.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="item_name" filter_domain="['|', ('item_name', 'ilike', self), ('item_code', 'ilike', self)]"/>
+                <field name="item_id"/>
+                <field name="partner_id"/>
+                <field name="pet_id"/>
+                <field name="entered_by_id"/>
+                <field name="doctor_id"/>
+                <filter name="services" string="Úkony" domain="[('kind', '=', 'service')]"/>
+                <filter name="products" string="Léky a zboží" domain="[('kind', '=', 'product')]"/>
+                <filter name="other" string="Ostatní" domain="[('kind', '=', 'other')]"/>
+                <separator/>
+                <filter name="date" string="Datum" date="date"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
+                    <filter name="group_week" string="Týden" context="{'group_by': 'date:week'}"/>
+                    <filter name="group_day" string="Den" context="{'group_by': 'date:day'}"/>
+                    <filter name="group_kind" string="Druh položky" context="{'group_by': 'kind'}"/>
+                    <filter name="group_item" string="Položka" context="{'group_by': 'item_name'}"/>
+                    <filter name="group_user" string="Zapsal(a)" context="{'group_by': 'entered_by_id'}"/>
+                    <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_species" string="Druh zvířete" context="{'group_by': 'species'}"/>
+                    <filter name="group_partner" string="Majitel" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_sale_line_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.sale.line.pivot</field>
+        <field name="model">elite.vet.sale.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Tržby podle položek" sample="1">
+                <field name="date" interval="month" type="row"/>
+                <field name="kind" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_sale_line_graph" model="ir.ui.view">
+        <field name="name">elite.vet.sale.line.graph</field>
+        <field name="model">elite.vet.sale.line</field>
+        <field name="arch" type="xml">
+            <graph string="Tržby podle položek" type="bar" stacked="1" sample="1">
+                <field name="date" interval="month"/>
+                <field name="kind"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_sale_line" model="ir.actions.act_window">
+        <field name="name">Tržby podle položek</field>
+        <field name="res_model">elite.vet.sale.line</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Zatím žádné tržby z WinVetu.</p>
+            <p>Data sem posílá most WinVet. Filtry „Úkony“ a „Léky a zboží“ rozdělí tržby
+               podle druhu položky ceníku.</p>
+        </field>
+    </record>
+    <record id="action_sale_line_services" model="ir.actions.act_window">
+        <field name="name">Úkony</field>
+        <field name="res_model">elite.vet.sale.line</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'search_default_services': 1, 'pivot_row_groupby': ['item_name'], 'pivot_column_groupby': ['date:month']}</field>
+    </record>
+    <record id="action_sale_line_products" model="ir.actions.act_window">
+        <field name="name">Léky a zboží</field>
+        <field name="res_model">elite.vet.sale.line</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'search_default_products': 1, 'pivot_row_groupby': ['item_name'], 'pivot_column_groupby': ['date:month'], 'pivot_measures': ['quantity', 'amount']}</field>
+    </record>
+
+    <!-- ============ Documents ============ -->
+    <record id="view_sale_document_list" model="ir.ui.view">
+        <field name="name">elite.vet.sale.document.list</field>
+        <field name="model">elite.vet.sale.document</field>
+        <field name="arch" type="xml">
+            <list string="Doklady" create="0" delete="0" edit="0">
+                <field name="date"/>
+                <field name="number"/>
+                <field name="doc_type_name"/>
+                <field name="partner_id"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="total" sum="Celkem"/>
+                <field name="paid" sum="Celkem"/>
+                <field name="from_deposit" optional="hide" sum="Celkem"/>
+                <field name="state" optional="hide"/>
+                <field name="entered_by_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_sale_document_form" model="ir.ui.view">
+        <field name="name">elite.vet.sale.document.form</field>
+        <field name="model">elite.vet.sale.document</field>
+        <field name="arch" type="xml">
+            <form string="Doklad" create="0" delete="0" edit="0">
+                <sheet>
+                    <div class="oe_title"><h1><field name="number"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="doc_type_name"/>
+                            <field name="date"/>
+                            <field name="partner_id"/>
+                            <field name="parent_id"/>
+                            <field name="entered_by_id"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total"/>
+                            <field name="paid"/>
+                            <field name="from_deposit"/>
+                            <field name="state"/>
+                            <field name="winvet_ref"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Položky" name="lines">
+                            <field name="line_ids">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="pet_id"/>
+                                    <field name="item_code"/>
+                                    <field name="item_name"/>
+                                    <field name="kind"/>
+                                    <field name="quantity"/>
+                                    <field name="unit"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="amount" sum="Celkem"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Platby" name="payments">
+                            <field name="payment_ids">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="method"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="amount" sum="Celkem"/>
+                                    <field name="refunded_date"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_sale_document_search" model="ir.ui.view">
+        <field name="name">elite.vet.sale.document.search</field>
+        <field name="model">elite.vet.sale.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="number"/>
+                <field name="partner_id"/>
+                <field name="entered_by_id"/>
+                <filter name="unpaid" string="Nedoplacené" domain="[('total', '&gt;', 0)]"
+                        help="Doklady s kladnou částkou; zaplacené porovnejte se sloupcem Zaplaceno."/>
+                <filter name="date" string="Datum" date="date"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
+                    <filter name="group_type" string="Typ" context="{'group_by': 'doc_type_name'}"/>
+                    <filter name="group_user" string="Založil(a)" context="{'group_by': 'entered_by_id'}"/>
+                    <filter name="group_partner" string="Majitel" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_sale_document_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.sale.document.pivot</field>
+        <field name="model">elite.vet.sale.document</field>
+        <field name="arch" type="xml">
+            <pivot string="Doklady" sample="1">
+                <field name="date" interval="month" type="row"/>
+                <field name="doc_type_name" type="col"/>
+                <field name="total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_sale_document_graph" model="ir.ui.view">
+        <field name="name">elite.vet.sale.document.graph</field>
+        <field name="model">elite.vet.sale.document</field>
+        <field name="arch" type="xml">
+            <graph string="Doklady" type="bar" sample="1">
+                <field name="date" interval="month"/>
+                <field name="total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_sale_document" model="ir.actions.act_window">
+        <field name="name">Doklady</field>
+        <field name="res_model">elite.vet.sale.document</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+</odoo>

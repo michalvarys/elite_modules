@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_winvet" model="ir.ui.view">
+        <field name="name">res.partner.form.winvet</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="WinVet" name="winvet" invisible="not winvet_ref"
+                      groups="elite_vet_reservation.group_reservation_reception">
+                    <div class="alert alert-warning" role="alert" invisible="not winvet_important_note">
+                        Ve WinVetu je u majitele důležitá poznámka.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="winvet_kind"/>
+                            <field name="winvet_title"/>
+                            <field name="winvet_first_name"/>
+                            <field name="winvet_last_name"/>
+                            <field name="winvet_vat"/>
+                        </group>
+                        <group>
+                            <field name="winvet_important_note"/>
+                            <field name="winvet_created"/>
+                            <field name="winvet_modified"/>
+                        </group>
+                    </group>
+                    <field name="winvet_note" placeholder="Bez poznámky"/>
+                    <field name="winvet_contact_ids">
+                        <list>
+                            <field name="type"/>
+                            <field name="value"/>
+                            <field name="label"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

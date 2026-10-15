@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Temporary owner of WinVet patients whose owner is not in Odoo yet
+             (elite.vet.pet.partner_id is required). The sync relinks them later. -->
+        <record id="partner_unknown_owner" model="res.partner">
+            <field name="name">WinVet – neznámý majitel</field>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="winvet_status" model="elite.vet.winvet.status">
+            <field name="name">Synchronizace WinVet</field>
+        </record>
+    </data>
+</odoo>

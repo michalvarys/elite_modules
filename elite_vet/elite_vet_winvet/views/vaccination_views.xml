@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vaccination_list" model="ir.ui.view">
+        <field name="name">elite.vet.vaccination.list</field>
+        <field name="model">elite.vet.vaccination</field>
+        <field name="arch" type="xml">
+            <list string="Očkování" create="0" delete="0" edit="0">
+                <field name="date"/>
+                <field name="pet_id"/>
+                <field name="partner_id"/>
+                <field name="item_name"/>
+                <field name="quantity" optional="show"/>
+                <field name="unit" optional="show"/>
+                <field name="next_date"/>
+                <field name="kind" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_vaccination_form" model="ir.ui.view">
+        <field name="name">elite.vet.vaccination.form</field>
+        <field name="model">elite.vet.vaccination</field>
+        <field name="arch" type="xml">
+            <form string="Očkování" create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="pet_id"/>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="next_date"/>
+                        </group>
+                        <group>
+                            <field name="item_id"/>
+                            <field name="item_name"/>
+                            <field name="quantity"/>
+                            <field name="unit"/>
+                            <field name="kind"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_vaccination_search" model="ir.ui.view">
+        <field name="name">elite.vet.vaccination.search</field>
+        <field name="model">elite.vet.vaccination</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="pet_id"/>
+                <field name="partner_id"/>
+                <field name="item_name"/>
+                <filter name="due" string="Termín příštího do 30 dnů"
+                        domain="[('next_date', '&gt;=', context_today().strftime('%Y-%m-%d')),
+                                 ('next_date', '&lt;=', (context_today() + relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <filter name="date" string="Datum" date="date"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
+                    <filter name="group_item" string="Položka" context="{'group_by': 'item_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_vaccination_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.vaccination.pivot</field>
+        <field name="model">elite.vet.vaccination</field>
+        <field name="arch" type="xml">
+            <pivot string="Očkování" sample="1">
+                <field name="date" interval="month" type="row"/>
+                <field name="quantity" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_vaccination_graph" model="ir.ui.view">
+        <field name="name">elite.vet.vaccination.graph</field>
+        <field name="model">elite.vet.vaccination</field>
+        <field name="arch" type="xml">
+            <graph string="Očkování" type="bar" sample="1">
+                <field name="date" interval="month"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_vaccination" model="ir.actions.act_window">
+        <field name="name">Očkování</field>
+        <field name="res_model">elite.vet.vaccination</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+</odoo>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_winvet_root" name="WinVet data" sequence="60"
+              web_icon="elite_vet_winvet,static/description/icon.png"
+              groups="elite_vet_reservation.group_reservation_reception"/>
+
+    <menuitem id="menu_winvet_sales" name="Tržby" parent="menu_winvet_root" sequence="10"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_sale_line" name="Tržby podle položek" parent="menu_winvet_sales"
+              action="action_sale_line" sequence="10"/>
+    <menuitem id="menu_winvet_sale_line_services" name="Úkony" parent="menu_winvet_sales"
+              action="action_sale_line_services" sequence="20"/>
+    <menuitem id="menu_winvet_sale_line_products" name="Léky a zboží" parent="menu_winvet_sales"
+              action="action_sale_line_products" sequence="30"/>
+    <menuitem id="menu_winvet_sale_document" name="Doklady" parent="menu_winvet_root"
+              action="action_sale_document" sequence="20"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_payment" name="Platby" parent="menu_winvet_root"
+              action="action_payment" sequence="30"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_visit" name="Návštěvy" parent="menu_winvet_root"
+              action="action_visit" sequence="40"
+              groups="elite_vet_reservation.group_reservation_reception"/>
+    <menuitem id="menu_winvet_vaccination" name="Očkování" parent="menu_winvet_root"
+              action="action_vaccination" sequence="50"
+              groups="elite_vet_reservation.group_reservation_reception"/>
+
+    <menuitem id="menu_winvet_item" name="Ceník" parent="menu_winvet_root"
+              action="action_winvet_item" sequence="60"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_user" name="Uživatelé WinVet" parent="menu_winvet_root"
+              action="action_winvet_user" sequence="70"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_status" name="Stav synchronizace" parent="menu_winvet_root"
+              action="action_winvet_status" sequence="80"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_schema_change" name="Změny struktury WinVetu" parent="menu_winvet_root"
+              action="action_winvet_schema_change" sequence="85"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_config" name="Konfigurace" parent="menu_winvet_root" sequence="90"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_api_key" name="API klíč" parent="menu_winvet_config"
+              action="action_winvet_config" sequence="10"/>
+</odoo>

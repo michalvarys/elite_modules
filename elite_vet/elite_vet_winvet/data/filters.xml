@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Shared favourites of "Tržby podle položek" (user_id empty = for everyone). -->
+    <record id="filter_sale_line_services_month" model="ir.filters">
+        <field name="name">Úkony podle měsíců</field>
+        <field name="model_id">elite.vet.sale.line</field>
+        <field name="action_id" ref="action_sale_line"/>
+        <field name="user_id" eval="False"/>
+        <field name="domain">[('kind', '=', 'service')]</field>
+        <field name="context">{'group_by': ['date:month'], 'pivot_row_groupby': ['item_name'], 'pivot_column_groupby': ['date:month'], 'pivot_measures': ['quantity', 'amount']}</field>
+    </record>
+    <record id="filter_sale_line_products_item" model="ir.filters">
+        <field name="name">Léky a zboží podle položek</field>
+        <field name="model_id">elite.vet.sale.line</field>
+        <field name="action_id" ref="action_sale_line"/>
+        <field name="user_id" eval="False"/>
+        <field name="domain">[('kind', '=', 'product')]</field>
+        <field name="context">{'group_by': ['item_name'], 'pivot_row_groupby': ['item_name'], 'pivot_column_groupby': ['date:month'], 'pivot_measures': ['quantity', 'amount']}</field>
+    </record>
+    <record id="filter_sale_line_by_user" model="ir.filters">
+        <field name="name">Tržby podle toho, kdo zapsal</field>
+        <field name="model_id">elite.vet.sale.line</field>
+        <field name="action_id" ref="action_sale_line"/>
+        <field name="user_id" eval="False"/>
+        <field name="domain">[]</field>
+        <field name="context">{'group_by': ['entered_by_id'], 'pivot_row_groupby': ['entered_by_id'], 'pivot_column_groupby': ['kind'], 'pivot_measures': ['amount']}</field>
+    </record>
+</odoo>

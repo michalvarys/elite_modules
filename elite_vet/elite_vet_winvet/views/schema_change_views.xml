@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_winvet_schema_change_list" model="ir.ui.view">
+        <field name="name">elite.vet.winvet.schema.change.list</field>
+        <field name="model">elite.vet.winvet.schema.change</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0" decoration-danger="severity == 'breaking'" decoration-warning="severity == 'journal'"
+                  decoration-muted="severity == 'info' or acknowledged">
+                <field name="detected_at"/>
+                <field name="severity" widget="badge" decoration-danger="severity == 'breaking'"
+                       decoration-warning="severity in ('journal', 'warning')"/>
+                <field name="table_name"/>
+                <field name="object_type"/>
+                <field name="object_name"/>
+                <field name="change"/>
+                <field name="old_value"/>
+                <field name="new_value"/>
+                <field name="winvet_version" optional="hide"/>
+                <field name="schema_hash" optional="hide"/>
+                <field name="acknowledged" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_winvet_schema_change_search" model="ir.ui.view">
+        <field name="name">elite.vet.winvet.schema.change.search</field>
+        <field name="model">elite.vet.winvet.schema.change</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="table_name"/>
+                <field name="object_name"/>
+                <filter name="serious" string="Blokující a žurnál" domain="[('severity', 'in', ('breaking', 'journal'))]"/>
+                <filter name="not_ack" string="Neprověřené" domain="[('acknowledged', '=', False)]"/>
+                <separator/>
+                <filter name="g_hash" string="Podle zjištění" context="{'group_by': 'detected_at:day'}"/>
+                <filter name="g_table" string="Podle tabulky" context="{'group_by': 'table_name'}"/>
+                <filter name="g_severity" string="Podle závažnosti" context="{'group_by': 'severity'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_winvet_schema_change" model="ir.actions.act_window">
+        <field name="name">Změny struktury WinVetu</field>
+        <field name="res_model">elite.vet.winvet.schema.change</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_not_ack': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Struktura WinVetu odpovídá schválenému stavu</p>
+            <p>Most při každém běhu porovná tabulky, sloupce, indexy a triggery WinVetu se stavem, který byl
+               schválen. Rozdíly se objeví tady: <b>blokující</b> zastaví čtení dotčené oblasti, <b>žurnál</b>
+               přepne na úplnou synchronizaci, ostatní jsou jen pro informaci.</p>
+        </field>
+    </record>
+</odoo>
