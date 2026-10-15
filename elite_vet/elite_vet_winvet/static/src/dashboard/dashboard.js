@@ -161,7 +161,7 @@ export class WinvetDashboard extends Component {
     get cards() {
         const k = this.state.data.kpi;
         const revenue = { key: "revenue", label: "Tržby (položky)", value: this.money(k.revenue), open: () => this.openLines() };
-        const expenses = { key: "expenses", label: "Výdaje", value: this.money(k.expenses), costly: true,
+        const expenses = { key: "expenses", label: "Výdaje bez DPH", value: this.money(k.expenses), costly: true,
                            open: () => this.openExpenses() };
         const profit = { key: "profit", label: "Zisk (tržby − výdaje)", value: this.money(k.profit),
                          cls: k.profit < 0 ? "text-danger" : "", open: () => this.openExpenses() };

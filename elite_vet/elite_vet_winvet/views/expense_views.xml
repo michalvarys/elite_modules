@@ -12,6 +12,8 @@
                 <field name="document_number" optional="hide"/>
                 <field name="payment_method" optional="hide"/>
                 <field name="currency_id" column_invisible="1"/>
+                <field name="vat_rate" optional="show"/>
+                <field name="amount_untaxed" sum="Celkem bez DPH" optional="show"/>
                 <field name="amount" sum="Celkem"/>
                 <field name="message_attachment_count" string="Přílohy" optional="show"/>
             </list>
@@ -33,7 +35,9 @@
                             <field name="date"/>
                             <field name="category_id" options="{'no_create': True}"/>
                             <field name="currency_id" invisible="1"/>
-                            <field name="amount"/>
+                            <field name="amount" string="Částka s DPH"/>
+                            <field name="vat_rate" widget="radio" options="{'horizontal': true}"/>
+                            <field name="amount_untaxed"/>
                             <field name="payment_method"/>
                         </group>
                         <group>
@@ -60,6 +64,7 @@
             <pivot string="Výdaje" sample="1">
                 <field name="category_id" type="row"/>
                 <field name="date" interval="month" type="col"/>
+                <field name="amount_untaxed" type="measure"/>
                 <field name="amount" type="measure"/>
             </pivot>
         </field>
@@ -72,7 +77,7 @@
             <graph string="Výdaje" type="bar" stacked="1" sample="1">
                 <field name="date" interval="month"/>
                 <field name="category_id"/>
-                <field name="amount" type="measure"/>
+                <field name="amount_untaxed" type="measure"/>
             </graph>
         </field>
     </record>

@@ -18,7 +18,7 @@ class TestExpense(WinvetCase):
         cls.drugs = cls.env.ref("elite_vet_winvet.expense_category_drugs")
 
     def expense(self, **vals):
-        base = {"name": "Test výdaj", "date": "2031-05-12", "category_id": self.rent.id, "amount": 300}
+        base = {"name": "Test výdaj", "date": "2031-05-12", "category_id": self.rent.id, "amount": 300, "vat_rate": "0"}
         base.update(vals)
         return self.Expense.create(base)
 
@@ -29,6 +29,13 @@ class TestExpense(WinvetCase):
     def test_amount_must_be_positive(self):
         with self.assertRaises(ValidationError):
             self.expense(amount=0)
+
+    def test_vat_split_and_profit_without_vat(self):
+        e = self.expense(amount=1210, vat_rate="21")
+        self.assertEqual((e.amount_untaxed, e.amount_vat), (1000, 210))
+        self.assertEqual(self.expense(amount=112, vat_rate="12").amount_untaxed, 100)
+        kpi = self.env["elite.vet.winvet.dashboard"].get_data("2031-05-12", "2031-05-12", compare=False)["kpi"]
+        self.assertEqual((kpi["expenses"], kpi["expenses_gross"]), (1100, 1322))
 
     def test_monthly_copies(self):
         first = self.expense(name="Nájem", date="2031-01-31", amount=20000, repeat_monthly_until="2031-04-30")

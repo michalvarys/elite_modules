@@ -100,9 +100,11 @@ class WinvetDashboard(models.AbstractModel):
             out["payments"] += amount or 0.0
         out["clients"] = len(Line._read_group(self._line_domain(d_from, d_to, [("partner_id", "!=", False)]),
                                               ["partner_id"], []))
-        [(expenses, expense_count)] = self.env["elite.vet.expense"]._read_group(
-            self._line_domain(d_from, d_to), [], ["amount:sum", "__count"])
+        # Expenses without VAT: a VAT payer deducts input VAT, so it is not a cost.
+        [(expenses, expenses_gross, expense_count)] = self.env["elite.vet.expense"]._read_group(
+            self._line_domain(d_from, d_to), [], ["amount_untaxed:sum", "amount:sum", "__count"])
         out["expenses"] = expenses or 0.0
+        out["expenses_gross"] = expenses_gross or 0.0
         out["expense_count"] = expense_count
         out["profit"] = out["revenue"] - out["expenses"]
         return out
@@ -118,7 +120,7 @@ class WinvetDashboard(models.AbstractModel):
         for day, kind, amount in Line._read_group(self._line_domain(d_from, d_to), ["date:day", "kind"], ["amount:sum"]):
             days[fields.Date.to_string(day)][kind if kind in ("service", "product") else "other"] += amount or 0.0
         for day, category, amount in self.env["elite.vet.expense"]._read_group(
-                self._line_domain(d_from, d_to), ["date:day", "category_id"], ["amount:sum"]):
+                self._line_domain(d_from, d_to), ["date:day", "category_id"], ["amount_untaxed:sum"]):
             row = days[fields.Date.to_string(day)]
             row["expense"] += amount or 0.0
             row["by_category"][str(category.id)] = row["by_category"].get(str(category.id), 0.0) + (amount or 0.0)
@@ -128,14 +130,14 @@ class WinvetDashboard(models.AbstractModel):
         rows = [{"id": category.id, "label": category.name, "color": category.color or "#64748b",
                  "amount": amount or 0.0, "count": count}
                 for category, amount, count in self.env["elite.vet.expense"]._read_group(
-                    self._line_domain(d_from, d_to), ["category_id"], ["amount:sum", "__count"])]
+                    self._line_domain(d_from, d_to), ["category_id"], ["amount_untaxed:sum", "__count"])]
         return sorted(rows, key=lambda r: -r["amount"])
 
     def _top_expenses(self, d_from, d_to):
-        return [{"id": e.id, "name": e.name, "amount": e.amount, "date": fields.Date.to_string(e.date),
+        return [{"id": e.id, "name": e.name, "amount": e.amount_untaxed, "date": fields.Date.to_string(e.date),
                  "category": e.category_id.name, "color": e.category_id.color or "#64748b"}
                 for e in self.env["elite.vet.expense"].search(self._line_domain(d_from, d_to),
-                                                              order="amount desc", limit=TOP_LIMIT)]
+                                                              order="amount_untaxed desc", limit=TOP_LIMIT)]
 
     def _by_user(self, d_from, d_to):
         Line = self.env["elite.vet.sale.line"]

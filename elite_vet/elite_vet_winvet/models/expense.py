@@ -12,6 +12,8 @@ from odoo.exceptions import ValidationError
 from .payment import METHODS
 
 MAX_REPEATS = 36  # three years of monthly copies at most
+# Czech VAT rates since 2024. "0" also covers a supplier who is not a VAT payer.
+VAT_RATES = [("0", "Bez DPH"), ("12", "12 %"), ("21", "21 %")]
 
 
 def add_months(day, months):
@@ -47,6 +49,11 @@ class VetExpense(models.Model):
     currency_id = fields.Many2one("res.currency", default=lambda s: s.env.ref("base.CZK"), readonly=True)
     amount = fields.Monetary(string="Částka", required=True, tracking=True,
                              help="Celková částka včetně DPH, kterou klinika zaplatila.")
+    vat_rate = fields.Selection(VAT_RATES, string="DPH", required=True, default="21",
+                                help="Sazba DPH na dokladu. Plátce si DPH odečte, do zisku se proto počítá "
+                                     "částka bez DPH.")
+    amount_untaxed = fields.Monetary(string="Bez DPH", compute="_compute_amounts", store=True)
+    amount_vat = fields.Monetary(string="DPH (částka)", compute="_compute_amounts", store=True)
     supplier_id = fields.Many2one("res.partner", string="Dodavatel", index=True, ondelete="set null")
     document_number = fields.Char(string="Číslo dokladu", help="Číslo faktury nebo účtenky.")
     payment_method = fields.Selection(METHODS, string="Zaplaceno", default="transfer")
@@ -76,6 +83,14 @@ class VetExpense(models.Model):
             raise ValidationError(_("Nepodporované hledání."))
         positive = (operator == "=") == bool(value)
         return [("id", "in" if positive else "not in", list(self._attached_ids()))]
+
+    @api.depends("amount", "vat_rate")
+    def _compute_amounts(self):
+        for rec in self:
+            rate = int(rec.vat_rate or "0")
+            untaxed = rec.currency_id.round(rec.amount / (1 + rate / 100.0)) if rec.currency_id else rec.amount
+            rec.amount_untaxed = untaxed
+            rec.amount_vat = rec.amount - untaxed
 
     @api.constrains("amount")
     def _check_amount(self):
@@ -107,6 +122,7 @@ class VetExpense(models.Model):
                     break
                 copies.append({
                     "name": rec.name, "date": day, "category_id": rec.category_id.id, "amount": rec.amount,
+                    "vat_rate": rec.vat_rate,
                     "supplier_id": rec.supplier_id.id, "payment_method": rec.payment_method,
                     "note": rec.note, "recurring_origin_id": rec.id,
                 })
