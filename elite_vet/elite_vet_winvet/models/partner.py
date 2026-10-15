@@ -20,6 +20,13 @@ class ResPartner(models.Model):
     # Set when the sync creates a person owner. The first contacts push of the run may
     # then link the owner to an existing web client with the same e-mail/phone.
     winvet_merge_pending = fields.Boolean(readonly=True, copy=False)
+    # WinVet ids of owners merged into this partner in Odoo (",12,15,"). The sync maps them to
+    # this partner instead of re-creating the merged duplicates; their owner data are not written.
+    winvet_alias_refs = fields.Char(string="Sloučená ID ve WinVetu", readonly=True, copy=False)
+
+    def _winvet_alias_list(self):
+        self.ensure_one()
+        return [int(r) for r in (self.winvet_alias_refs or "").split(",") if r.strip().isdigit()]
 
     def init(self):
         super().init()

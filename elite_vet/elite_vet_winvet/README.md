@@ -38,9 +38,28 @@ a očkování (i na kartě mazlíčka) vidí i **Recepce**.
 - **Smazání ve WinVetu:** kmenová data (uživatelé, ceník, majitelé, kontakty, pacienti) se
   archivují, analytické řádky (doklady, položky, platby, návštěvy, očkování) se mažou.
   Plná synchronizace navíc archivuje/maže to, co v celém běhu nepřišlo.
+- **Souběh s WinVetem (smlouva v2):** u majitelů a pacientů se pole z WinVetu zapíšou jen
+  u nového záznamu nebo když se změnil ve WinVetu (příchozí `modified` ≠ uložené
+  `winvet_modified`). Úprava v Odoo tak vydrží, dokud záznam ve WinVetu někdo nezmění. Bez
+  `modified` (prázdné / neplatné) se porovnávají hodnoty jako dřív. Archivace smazaných
+  a sesouhlasení plného běhu platí beze změny.
+- **Sloučení majitelů v Odoo** (standardní průvodce): cíl si nechá své ID z WinVetu (nebo
+  převezme první ID sloučených), ostatní ID se uloží do `winvet_alias_refs`. Most pak sloučené
+  majitele znovu nezakládá ani nepřepisuje a jejich pacienty, kontakty a doklady přiřadí k cíli.
+- **Ceník** má cenu s DPH, bez DPH a sazbu DPH (ceník „Ordinace“ ve WinVetu); **návštěvy**
+  text dekurzu (`notes`) a **vitální hodnoty** (`elite.vet.visit.vital`: čas, teplota, tep,
+  dech, hmotnost, tlak) – smazané ve WinVetu se mažou.
 - Nesmyslná data (např. rok 0218) se uloží prázdná a vypíšou ve *Stavu synchronizace*.
 - **Upozornění:** změna verze WinVetu nebo zablokované oblasti → červený pruh na Stavu
   synchronizace, zpráva a aktivita pro správce. Stejné zablokování se hlásí jen jednou.
+
+## Rozšíření o další entity
+
+Seznam přijímaných entit a jejich modely, popisky, kmenová data a dodatečné propojení jsou
+metody `elite.vet.winvet.sync` (`_winvet_entities`, `_winvet_entity_models`,
+`_winvet_entity_labels`, `_winvet_master_entities`, `_winvet_fixups`); jiný modul je rozšíří
+a doplní `_push_<entita>` (takto `elite_vet_clinic` přidává `bundles`, `bundle_lines`,
+`phrases`). Zápisy mostu mají v kontextu `winvet_sync=True`.
 
 ## Testy
 

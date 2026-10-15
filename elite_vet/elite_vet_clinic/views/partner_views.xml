@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_clinic" model="ir.ui.view">
+        <field name="name">res.partner.form.clinic</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_patient_card" type="object" class="oe_stat_button" icon="fa-paw"
+                        invisible="not pet_ids" groups="elite_vet_reservation.group_reservation_reception">
+                    <div class="o_stat_info"><span class="o_stat_text">Karta pacienta</span></div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -30,6 +30,12 @@ class WinvetItem(models.Model):
     tracked_drug = fields.Boolean(string="Sledované léčivo", readonly=True)
     unit = fields.Char(string="Jednotka", readonly=True)
     barcode = fields.Char(string="Čárový kód", readonly=True)
+    currency_id = fields.Many2one("res.currency", string="Měna", readonly=True,
+                                  default=lambda self: self.env.ref("base.CZK"))
+    price = fields.Monetary(string="Cena s DPH", readonly=True, currency_field="currency_id",
+                            help="Prodejní cena za jednotku v ceníku „Ordinace“ ve WinVetu, včetně DPH.")
+    price_untaxed = fields.Monetary(string="Cena bez DPH", readonly=True, currency_field="currency_id")
+    vat_rate = fields.Float(string="Sazba DPH (%)", readonly=True)
     active = fields.Boolean(string="Aktivní", default=True)
 
     _sql_constraints = [

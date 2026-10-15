@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_clinic_root" name="Ordinace" sequence="55"
+              web_icon="elite_vet_clinic,static/description/icon.png"
+              groups="elite_vet_reservation.group_reservation_reception"/>
+    <menuitem id="menu_patient_card" name="Karta pacienta" parent="menu_clinic_root" sequence="10"
+              action="action_patient_card"/>
+    <menuitem id="menu_clinical_record" name="Záznamy návštěv" parent="menu_clinic_root" sequence="20"
+              action="action_clinical_record"/>
+    <menuitem id="menu_pet_alert" name="Upozornění na pacientech" parent="menu_clinic_root" sequence="30"
+              action="action_pet_alert"/>
+    <menuitem id="menu_clinic_config" name="Konfigurace" parent="menu_clinic_root" sequence="90"/>
+    <menuitem id="menu_text_template" name="Šablony textů" parent="menu_clinic_config" sequence="10"
+              action="action_text_template"/>
+    <menuitem id="menu_procedure_bundle" name="Balíčky výkonů" parent="menu_clinic_config" sequence="20"
+              action="action_procedure_bundle"/>
+    <menuitem id="menu_partner_deduplicate" name="Sloučit duplicitní klienty" parent="menu_clinic_config"
+              sequence="30" action="action_partner_deduplicate"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+</odoo>

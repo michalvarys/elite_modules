@@ -5,10 +5,18 @@ from datetime import date, datetime
 
 import pytz
 
+# Entities handled by this module, in the push order of the bridge (CONTRACT.md v2).
+# Other modules add entities through elite.vet.winvet.sync._winvet_entities().
 ENTITIES = [
     "users", "items", "owners", "contacts", "patients",
-    "vaccinations", "visits", "sale_documents", "sale_lines", "payments",
+    "vaccinations", "visits", "vitals", "sale_documents", "sale_lines", "payments",
 ]
+
+ENTITY_LABELS = {
+    "users": "Uživatelé", "items": "Ceník", "owners": "Majitelé", "contacts": "Kontakty",
+    "patients": "Pacienti", "vaccinations": "Očkování", "visits": "Návštěvy", "vitals": "Vitální hodnoty",
+    "sale_documents": "Doklady", "sale_lines": "Položky dokladů", "payments": "Platby",
+}
 
 PRAGUE = pytz.timezone("Europe/Prague")
 

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_text_template_list" model="ir.ui.view">
+        <field name="name">elite.vet.text.template.list</field>
+        <field name="model">elite.vet.text.template</field>
+        <field name="arch" type="xml">
+            <list string="Šablony textů">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="section"/>
+                <field name="body" optional="show"/>
+                <field name="group_name" optional="hide"/>
+                <field name="edited_in_odoo" optional="show"/>
+                <field name="winvet_ref" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_text_template_form" model="ir.ui.view">
+        <field name="name">elite.vet.text.template.form</field>
+        <field name="model">elite.vet.text.template</field>
+        <field name="arch" type="xml">
+            <form string="Šablona textu">
+                <sheet>
+                    <widget name="web_ribbon" title="Neaktivní" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title"><h1><field name="name" placeholder="Název šablony"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="section"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="group_name" invisible="not winvet_ref"/>
+                            <field name="winvet_ref" invisible="not winvet_ref"/>
+                            <field name="edited_in_odoo" invisible="not winvet_ref"/>
+                        </group>
+                    </group>
+                    <field name="body" placeholder="Text, který se vloží do záznamu"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_text_template_search" model="ir.ui.view">
+        <field name="name">elite.vet.text.template.search</field>
+        <field name="model">elite.vet.text.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" filter_domain="['|', ('name', 'ilike', self), ('body', 'ilike', self)]"/>
+                <filter name="from_winvet" string="Z WinVetu" domain="[('winvet_ref', '!=', False)]"/>
+                <filter name="edited" string="Upravené v Odoo" domain="[('edited_in_odoo', '=', True)]"/>
+                <separator/>
+                <filter name="archived" string="Neaktivní" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_section" string="Oddíl" context="{'group_by': 'section'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_text_template" model="ir.actions.act_window">
+        <field name="name">Šablony textů</field>
+        <field name="res_model">elite.vet.text.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

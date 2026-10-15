@@ -17,6 +17,8 @@ class VetVisit(models.Model):
     case_name = fields.Char(string="Případ", readonly=True)
     diagnosis_code = fields.Char(string="Kód diagnózy", readonly=True)
     diagnosis_name = fields.Char(string="Diagnóza", readonly=True)
+    notes = fields.Text(string="Dekurz", readonly=True, help="Text záznamu návštěvy z WinVetu.")
+    vital_ids = fields.One2many("elite.vet.visit.vital", "visit_id", string="Vitální hodnoty", readonly=True)
     entered_by_id = fields.Many2one("elite.vet.winvet.user", string="Zapsal(a)", ondelete="set null", readonly=True)
     entered_by_winvet_ref = fields.Integer(string="ID uživatele ve WinVetu", readonly=True)
     doctor_id = fields.Many2one(related="entered_by_id.doctor_id", string="Lékařka", store=True)
@@ -45,3 +47,48 @@ class VetVisit(models.Model):
             parts = [fields.Date.to_string(rec.date) if rec.date else "", rec.pet_id.name or "",
                      rec.diagnosis_name or rec.case_name or ""]
             rec.display_label = " – ".join(p for p in parts if p) or "Návštěva %s" % rec.winvet_ref
+
+
+class VetVisitVital(models.Model):
+    """One measurement during a WinVet visit (DENNI_ZAZNAM_HODNOTA)."""
+
+    _name = "elite.vet.visit.vital"
+    _description = "Vitální hodnoty návštěvy (WinVet)"
+    _order = "visit_id, time, id"
+
+    winvet_ref = fields.Integer(string="ID ve WinVetu", required=True, index=True, readonly=True)
+    visit_id = fields.Many2one("elite.vet.visit", string="Návštěva", index=True, ondelete="cascade", readonly=True)
+    visit_winvet_ref = fields.Integer(string="ID návštěvy ve WinVetu", index=True, readonly=True)
+    pet_id = fields.Many2one(related="visit_id.pet_id", string="Pacient", store=True, index=True)
+    date = fields.Date(related="visit_id.date", string="Datum", store=True)
+    time = fields.Char(string="Čas", readonly=True)
+    temperature = fields.Float(string="Teplota (°C)", readonly=True, digits=(4, 1))
+    heart_rate = fields.Integer(string="Tep (/min)", readonly=True)
+    respiratory_rate = fields.Integer(string="Dech (/min)", readonly=True)
+    weight = fields.Float(string="Hmotnost (kg)", readonly=True, digits=(6, 2))
+    bp_systolic = fields.Integer(string="Tlak systolický", readonly=True)
+    bp_diastolic = fields.Integer(string="Tlak diastolický", readonly=True)
+
+    _sql_constraints = [
+        ("winvet_ref_uniq", "unique(winvet_ref)", "Měření s tímto ID z WinVetu už existuje."),
+    ]
+
+    def summary(self):
+        """'T 38,5 °C · P 120/min · D 30/min · 12,4 kg · TK 120/80' (empty values left out)."""
+        self.ensure_one()
+
+        def num(value, digits):
+            return ("%.*f" % (digits, value)).rstrip("0").rstrip(".").replace(".", ",")
+
+        parts = []
+        if self.temperature:
+            parts.append("T %s °C" % num(self.temperature, 1))
+        if self.heart_rate:
+            parts.append("P %d/min" % self.heart_rate)
+        if self.respiratory_rate:
+            parts.append("D %d/min" % self.respiratory_rate)
+        if self.weight:
+            parts.append("%s kg" % num(self.weight, 2))
+        if self.bp_systolic or self.bp_diastolic:
+            parts.append("TK %s/%s" % (self.bp_systolic or "–", self.bp_diastolic or "–"))
+        return " · ".join(parts)

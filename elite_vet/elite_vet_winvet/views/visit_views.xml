@@ -40,17 +40,37 @@
                             <field name="document_id" groups="elite_vet_reservation.group_reservation_manager"/>
                         </group>
                     </group>
-                    <field name="line_ids" groups="elite_vet_reservation.group_reservation_manager">
-                        <list>
-                            <field name="item_code"/>
-                            <field name="item_name"/>
-                            <field name="kind"/>
-                            <field name="quantity"/>
-                            <field name="unit"/>
-                            <field name="currency_id" column_invisible="1"/>
-                            <field name="amount" sum="Celkem"/>
-                        </list>
-                    </field>
+                    <notebook>
+                        <page string="Dekurz" name="notes">
+                            <field name="notes" placeholder="Bez textu záznamu"/>
+                        </page>
+                        <page string="Vitální hodnoty" name="vitals" invisible="not vital_ids">
+                            <field name="vital_ids">
+                                <list>
+                                    <field name="time"/>
+                                    <field name="temperature"/>
+                                    <field name="heart_rate"/>
+                                    <field name="respiratory_rate"/>
+                                    <field name="weight"/>
+                                    <field name="bp_systolic" optional="hide"/>
+                                    <field name="bp_diastolic" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Položky" name="lines" groups="elite_vet_reservation.group_reservation_manager">
+                            <field name="line_ids" groups="elite_vet_reservation.group_reservation_manager">
+                                <list>
+                                    <field name="item_code"/>
+                                    <field name="item_name"/>
+                                    <field name="kind"/>
+                                    <field name="quantity"/>
+                                    <field name="unit"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="amount" sum="Celkem"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

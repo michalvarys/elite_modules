@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Patient card (OWL client action, registered by the card's JS under this tag).
+         Params: {pet_id, reservation_id}; without pet_id the card shows "Moji pacienti dnes". -->
+    <record id="action_patient_card" model="ir.actions.client">
+        <field name="name">Karta pacienta</field>
+        <field name="tag">elite_vet_clinic.patient_card</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Standard Odoo wizard (base) for merging duplicate contacts, automatic search mode. -->
+    <record id="action_partner_deduplicate" model="ir.actions.act_window">
+        <field name="name">Sloučit duplicitní klienty</field>
+        <field name="res_model">base.partner.merge.automatic.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'active_test': False}</field>
+    </record>
+</odoo>

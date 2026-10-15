@@ -10,6 +10,10 @@
                 <field name="classification"/>
                 <field name="kind"/>
                 <field name="unit"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="price" optional="show"/>
+                <field name="price_untaxed" optional="hide"/>
+                <field name="vat_rate" optional="hide"/>
                 <field name="stock_tracked" optional="show"/>
                 <field name="tracked_drug" optional="show"/>
                 <field name="barcode" optional="hide"/>
@@ -32,6 +36,10 @@
                             <field name="classification"/>
                             <field name="kind"/>
                             <field name="unit"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="price"/>
+                            <field name="price_untaxed"/>
+                            <field name="vat_rate"/>
                         </group>
                         <group>
                             <field name="stock_tracked"/>

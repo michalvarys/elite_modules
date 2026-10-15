@@ -13,7 +13,7 @@ from .contact import CONTACT_TYPE_CODES
 from .item import CLASSIFICATIONS
 from .payment import METHOD_CODES
 from .winvet_tools import (
-    ENTITIES, bad_date, map_species, normalize_phone, to_bool, to_date, to_float, to_int, to_str, to_utc_datetime,
+    ENTITIES, ENTITY_LABELS, bad_date, map_species, normalize_phone, to_bool, to_date, to_float, to_int, to_str, to_utc_datetime,
 )
 
 _logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ ENTITY_MODEL = {
     "patients": "elite.vet.pet",
     "vaccinations": "elite.vet.vaccination",
     "visits": "elite.vet.visit",
+    "vitals": "elite.vet.visit.vital",
     "sale_documents": "elite.vet.sale.document",
     "sale_lines": "elite.vet.sale.line",
     "payments": "elite.vet.payment",
@@ -65,6 +66,7 @@ FIXUPS = [
     ("elite.vet.visit", "pet_id", "pet_winvet_ref", "elite.vet.pet"),
     ("elite.vet.visit", "entered_by_id", "entered_by_winvet_ref", "elite.vet.winvet.user"),
     ("elite.vet.visit", "document_id", "document_winvet_ref", "elite.vet.sale.document"),
+    ("elite.vet.visit.vital", "visit_id", "visit_winvet_ref", "elite.vet.visit"),
     ("elite.vet.sale.document", "parent_id", "parent_winvet_ref", "elite.vet.sale.document"),
     ("elite.vet.sale.document", "partner_id", "owner_winvet_ref", "res.partner"),
     ("elite.vet.sale.document", "entered_by_id", "entered_by_winvet_ref", "elite.vet.winvet.user"),
@@ -75,6 +77,12 @@ FIXUPS = [
     ("elite.vet.payment", "document_id", "document_winvet_ref", "elite.vet.sale.document"),
     ("elite.vet.payment", "partner_id", "owner_winvet_ref", "res.partner"),
 ]
+
+
+def to_round_int(value):
+    """Numbers measured as decimals in WinVet (72.0) stored as integers."""
+    number = to_float(value)
+    return int(round(number)) if number else False
 
 
 def _active(rec):
@@ -94,13 +102,40 @@ class WinvetSync(models.AbstractModel):
     _name = "elite.vet.winvet.sync"
     _description = "WinVet – příjem dat"
 
+    # ------------------------------------------------------------------ extension points
+    # Other modules (elite_vet_clinic) add entities by extending these methods and
+    # providing a `_push_<entity>` handler.
+
+    @api.model
+    def _winvet_entities(self):
+        """Accepted entities in the push order of the bridge (also the order of status lines)."""
+        return list(ENTITIES)
+
+    @api.model
+    def _winvet_entity_models(self):
+        return dict(ENTITY_MODEL)
+
+    @api.model
+    def _winvet_entity_labels(self):
+        return dict(ENTITY_LABELS)
+
+    @api.model
+    def _winvet_master_entities(self):
+        """Entities archived (not deleted) when deleted in WinVet or missing in a full run."""
+        return set(MASTER)
+
+    @api.model
+    def _winvet_fixups(self):
+        return list(FIXUPS)
+
     # ------------------------------------------------------------------ entry points
 
     @api.model
     def _sync_env(self):
+        # winvet_sync tells models that the write comes from WinVet, not from a user.
         return self.sudo().with_context(
             active_test=False, tracking_disable=True, mail_create_nolog=True, mail_notrack=True,
-            mail_create_nosubscribe=True, lang="cs_CZ")
+            mail_create_nosubscribe=True, lang="cs_CZ", winvet_sync=True)
 
     @api.model
     def receive_status(self, payload):
@@ -113,7 +148,7 @@ class WinvetSync(models.AbstractModel):
         self = self._sync_env()
         payload = payload or {}
         entity = payload.get("entity")
-        if entity not in ENTITIES:
+        if entity not in self._winvet_entities():
             return {"ok": False, "error": "unknown entity"}
         mode = payload.get("mode") or "incremental"
         if mode not in ("full", "incremental"):
@@ -199,18 +234,47 @@ class WinvetSync(models.AbstractModel):
             return {}
         Model = self.env[model_name]
         recs = Model.search([("winvet_ref", "in", [self._ref_key(model_name, r) for r in refs])])
-        return {int(r.winvet_ref): r.id for r in recs}
+        found = {int(r.winvet_ref): r.id for r in recs}
+        if model_name == "res.partner" and refs - set(found):
+            aliases = self._partner_alias_map()
+            found.update({r: aliases[r] for r in refs - set(found) if r in aliases})
+        return found
 
     @api.model
-    def _upsert(self, model_name, vals_by_ref, stats, errors, create_extra=None):
+    def _partner_alias_map(self):
+        """{merged WinVet owner id: id of the partner it was merged into in Odoo}."""
+        out = {}
+        for partner in self.env["res.partner"].search([("winvet_alias_refs", "!=", False)]):
+            for ref in partner._winvet_alias_list():
+                out[ref] = partner.id
+        return out
+
+    @api.model
+    def _upsert(self, model_name, vals_by_ref, stats, errors, create_extra=None, guard=None, skip=None):
+        """Create or update rows by WinVet id.
+
+        guard: name of a field (winvet_modified) – an existing row whose stored value equals the
+        incoming one was not changed in WinVet, so its synced fields are not written (edits made
+        in Odoo survive). An empty incoming value cannot tell, the row is compared as usual.
+        skip: callable(rec) -> True for existing rows that must not be written at all.
+        """
         Model = self.env[model_name]
         existing = Model.search([("winvet_ref", "in", [self._ref_key(model_name, r) for r in vals_by_ref])])
         by_ref = {int(r.winvet_ref): r for r in existing}
+        aliases = self._partner_alias_map() if model_name == "res.partner" and len(by_ref) < len(vals_by_ref) \
+            else {}
         result = {}
         to_create = []
         for ref, vals in vals_by_ref.items():
             rec = by_ref.get(ref)
+            if not rec and ref in aliases:
+                # owner merged into another partner in Odoo: never re-created, never written
+                result[ref] = Model.browse(aliases[ref])
+                continue
             if rec:
+                if (guard and vals.get(guard) and rec[guard] == vals[guard]) or (skip and skip(rec)):
+                    result[ref] = rec
+                    continue
                 diff = self._diff(rec, vals)
                 if diff:
                     try:
@@ -274,6 +338,9 @@ class WinvetSync(models.AbstractModel):
                 "tracked_drug": to_bool(r.get("tracked_drug")),
                 "unit": to_str(r.get("unit")),
                 "barcode": to_str(r.get("barcode")),
+                "price": to_float(r.get("price")),
+                "price_untaxed": to_float(r.get("price_untaxed")),
+                "vat_rate": to_float(r.get("vat_rate")),
                 "active": _active(r),
             }
         self._upsert("elite.vet.winvet.item", vals, stats, errors)
@@ -325,7 +392,7 @@ class WinvetSync(models.AbstractModel):
             if kind == "person":
                 v["is_vet_client"] = True
             vals[ref] = v
-        self._upsert("res.partner", vals, stats, errors,
+        self._upsert("res.partner", vals, stats, errors, guard="winvet_modified",
                      create_extra=lambda v: {"winvet_merge_pending": v.get("winvet_kind") == "person"})
 
     def _push_contacts(self, records, stats, errors, batch, batches):
@@ -390,7 +457,7 @@ class WinvetSync(models.AbstractModel):
                 "winvet_created": to_date(r.get("created")),
                 "winvet_modified": to_utc_datetime(r.get("modified")),
             }
-        self._upsert("elite.vet.pet", vals, stats, errors)
+        self._upsert("elite.vet.pet", vals, stats, errors, guard="winvet_modified")
         self._mark_clients(self.env["res.partner"].browse(set(partners.values())))
 
     def _mark_clients(self, partners):
@@ -428,10 +495,28 @@ class WinvetSync(models.AbstractModel):
                 "case_name": to_str(r.get("case_name")),
                 "diagnosis_code": to_str(r.get("diagnosis_code")),
                 "diagnosis_name": to_str(r.get("diagnosis_name")),
+                "notes": to_str(r.get("notes")),
                 "entered_by_id": users.get(user, False), "entered_by_winvet_ref": user or False,
                 "document_id": docs.get(doc, False), "document_winvet_ref": doc or False,
             }
         self._upsert("elite.vet.visit", vals, stats, errors)
+
+    def _push_vitals(self, records, stats, errors, batch, batches):
+        visits = self._ref_map("elite.vet.visit", {to_int(r.get("visit_id")) for r in records.values()})
+        vals = {}
+        for ref, r in records.items():
+            visit = to_int(r.get("visit_id"))
+            vals[ref] = {
+                "visit_id": visits.get(visit, False), "visit_winvet_ref": visit or False,
+                "time": to_str(r.get("time")),
+                "temperature": to_float(r.get("temperature")),
+                "heart_rate": to_round_int(r.get("heart_rate")),
+                "respiratory_rate": to_round_int(r.get("respiratory_rate")),
+                "weight": to_float(r.get("weight")),
+                "bp_systolic": to_round_int(r.get("bp_systolic")),
+                "bp_diastolic": to_round_int(r.get("bp_diastolic")),
+            }
+        self._upsert("elite.vet.visit.vital", vals, stats, errors)
 
     def _push_sale_documents(self, records, stats, errors, batch, batches):
         partners = self._ref_map("res.partner", {to_int(r.get("owner_id")) for r in records.values()})
@@ -576,12 +661,12 @@ class WinvetSync(models.AbstractModel):
     # ------------------------------------------------------------------ deletions, reconciliation, fixups
 
     def _remove(self, entity, refs, stats):
-        model_name = ENTITY_MODEL[entity]
+        model_name = self._winvet_entity_models()[entity]
         recs = self.env[model_name].search([("winvet_ref", "in", [self._ref_key(model_name, r) for r in refs])])
         self._drop(entity, recs, stats)
 
     def _drop(self, entity, recs, stats):
-        if entity in MASTER:
+        if entity in self._winvet_master_entities():
             recs = recs.filtered("active")
             recs.write({"active": False})
         else:
@@ -590,10 +675,10 @@ class WinvetSync(models.AbstractModel):
 
     def _reconcile(self, entity, seen, stats):
         """Full run: rows of the entity whose WinVet id was not in any batch of the run."""
-        Model = self.env[ENTITY_MODEL[entity]]
+        Model = self.env[self._winvet_entity_models()[entity]]
         Model.flush_model()
         where = "winvet_ref IS NOT NULL"
-        if entity in MASTER:
+        if entity in self._winvet_master_entities():
             where += " AND active"
         self.env.cr.execute('SELECT id, winvet_ref FROM "%s" WHERE %s' % (Model._table, where))
         missing = []
@@ -612,7 +697,7 @@ class WinvetSync(models.AbstractModel):
         missing link and a stored raw id)."""
         self.env.flush_all()
         placeholder = self._placeholder_owner().id
-        for model_name, field, ref_field, target_name in FIXUPS:
+        for model_name, field, ref_field, target_name in self._winvet_fixups():
             Model, Target = self.env[model_name], self.env[target_name]
             join = "t.winvet_ref = s.%s::text" % ref_field if target_name in CHAR_REF_MODELS \
                 else "t.winvet_ref = s.%s" % ref_field

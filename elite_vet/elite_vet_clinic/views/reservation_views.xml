@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_reservation_form_clinic" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.form.clinic</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="inherit_id" ref="elite_vet_reservation.view_reservation_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_open_patient_card" type="object" string="Karta pacienta"
+                        invisible="kind == 'block' or state in ('cancelled', 'web_new')"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -3,21 +3,14 @@ import json
 from odoo import api, fields, models
 
 from .schema_change import OBJECTS, SEVERITIES
-from .winvet_tools import ENTITIES
 
 SEVERITY_LABELS = SEVERITIES
 SEVERITY_ORDER = {key: i for i, (key, _label) in enumerate(SEVERITIES)}
 OBJECT_KEYS = {key for key, _label in OBJECTS}
 
-ENTITY_LABELS = {
-    "users": "Uživatelé", "items": "Ceník", "owners": "Majitelé", "contacts": "Kontakty",
-    "patients": "Pacienti", "vaccinations": "Očkování", "visits": "Návštěvy",
-    "sale_documents": "Doklady", "sale_lines": "Položky dokladů", "payments": "Platby",
-}
-
-# Areas of the bridge (keys of `fingerprints` / values of `blocked`).
-BLOCK_LABELS = dict(ENTITY_LABELS, owners="majitelé", patients="pacienti", clinical="klinická data",
-                    sales="tržby", catalog="ceník", journal="žurnál změn")
+# Areas of the bridge (keys of `fingerprints` / values of `blocked`) besides entity names.
+AREA_LABELS = {"owners": "majitelé", "patients": "pacienti", "clinical": "klinická data",
+               "sales": "tržby", "catalog": "ceník", "journal": "žurnál změn"}
 
 
 class WinvetStatus(models.Model):
@@ -98,7 +91,8 @@ class WinvetStatus(models.Model):
         # The bridge runs often: the same set of blocked areas is announced only once (also
         # after it was acknowledged); again only when it changes or comes back later.
         if blocked_txt and blocked_txt != self.last_alert_text:
-            labels = ", ".join(BLOCK_LABELS.get(b, b) for b in blocked)
+            block_labels = dict(self.env["elite.vet.winvet.sync"]._winvet_entity_labels(), **AREA_LABELS)
+            labels = ", ".join(block_labels.get(b, b) for b in blocked)
             parts.append("Oblasti %s jsou zablokované – most je nečte, dokud nebude ověřená "
                          "nová verze WinVetu." % labels)
         vals["last_alert_text"] = blocked_txt or False
@@ -202,7 +196,7 @@ class WinvetStatusEntity(models.Model):
     _order = "sequence"
 
     status_id = fields.Many2one("elite.vet.winvet.status", required=True, ondelete="cascade")
-    entity = fields.Selection([(e, ENTITY_LABELS[e]) for e in ENTITIES], string="Oblast", required=True)
+    entity = fields.Selection(selection="_selection_entity", string="Oblast", required=True)
     sequence = fields.Integer(compute="_compute_sequence", store=True)
     mode = fields.Selection([("full", "Plná"), ("incremental", "Změny")], string="Režim")
     run_id = fields.Char(string="Běh")
@@ -212,7 +206,15 @@ class WinvetStatusEntity(models.Model):
     deleted = fields.Integer(string="Smazané/archivované")
     skipped = fields.Integer(string="Přeskočené")
 
+    @api.model
+    def _selection_entity(self):
+        """Entities of the sync engine (extensible by other modules), in push order."""
+        sync = self.env["elite.vet.winvet.sync"]
+        labels = sync._winvet_entity_labels()
+        return [(e, labels.get(e, e)) for e in sync._winvet_entities()]
+
     @api.depends("entity")
     def _compute_sequence(self):
+        entities = self.env["elite.vet.winvet.sync"]._winvet_entities()
         for rec in self:
-            rec.sequence = ENTITIES.index(rec.entity) if rec.entity in ENTITIES else 99
+            rec.sequence = entities.index(rec.entity) if rec.entity in entities else 99

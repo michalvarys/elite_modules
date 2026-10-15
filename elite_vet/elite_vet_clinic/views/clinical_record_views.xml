@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_clinical_record_list" model="ir.ui.view">
+        <field name="name">elite.vet.clinical.record.list</field>
+        <field name="model">elite.vet.clinical.record</field>
+        <field name="arch" type="xml">
+            <list string="Záznamy návštěv" decoration-muted="state == 'cancelled'" decoration-info="state == 'draft'">
+                <field name="start"/>
+                <field name="pet_id"/>
+                <field name="partner_id"/>
+                <field name="doctor_id"/>
+                <field name="user_id" optional="hide"/>
+                <field name="diagnosis" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="amount_total" sum="Celkem"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-success="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_clinical_record_form" model="ir.ui.view">
+        <field name="name">elite.vet.clinical.record.form</field>
+        <field name="model">elite.vet.clinical.record</field>
+        <field name="arch" type="xml">
+            <form string="Záznam návštěvy">
+                <header>
+                    <button name="action_done" type="object" string="Hotovo, k pokladně" class="btn-primary"
+                            invisible="state != 'draft'" groups="elite_vet_clinic.group_clinic_nurse"/>
+                    <button name="action_reopen" type="object" string="Vrátit do rozepsaných"
+                            invisible="state == 'draft'" groups="elite_vet_clinic.group_clinic_doctor"/>
+                    <button name="action_cancel" type="object" string="Zrušit" invisible="state != 'draft'"
+                            groups="elite_vet_clinic.group_clinic_nurse"/>
+                    <button name="action_open_patient_card" type="object" string="Karta pacienta"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="pet_id" readonly="state != 'draft'"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="start" readonly="state != 'draft'"/>
+                            <field name="doctor_id" readonly="state != 'draft'"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="reservation_id" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Vitální hodnoty">
+                            <field name="temperature" readonly="state != 'draft'"/>
+                            <field name="weight" readonly="state != 'draft'"/>
+                            <field name="heart_rate" readonly="state != 'draft'"/>
+                            <field name="respiratory_rate" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Záznam" name="texts">
+                            <group>
+                                <field name="anamnesis" readonly="state != 'draft'"/>
+                                <field name="examination" readonly="state != 'draft'"/>
+                                <field name="diagnosis" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Účet" name="bill">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="item_id"/>
+                                    <field name="name"/>
+                                    <field name="kind"/>
+                                    <field name="quantity"/>
+                                    <field name="unit"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="price_unit"/>
+                                    <field name="amount" sum="Celkem"/>
+                                    <field name="bundle_id" optional="hide"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer">
+                                <field name="currency_id" invisible="1"/>
+                                <field name="amount_total"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_clinical_record_search" model="ir.ui.view">
+        <field name="name">elite.vet.clinical.record.search</field>
+        <field name="model">elite.vet.clinical.record</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="pet_id"/>
+                <field name="partner_id"/>
+                <field name="doctor_id"/>
+                <field name="diagnosis"/>
+                <filter name="today" string="Dnes" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="draft" string="Rozepsané" domain="[('state', '=', 'draft')]"/>
+                <filter name="done" string="K pokladně" domain="[('state', '=', 'done')]"/>
+                <filter name="date" string="Datum" date="date"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
+                    <filter name="group_day" string="Den" context="{'group_by': 'date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_clinical_record" model="ir.actions.act_window">
+        <field name="name">Záznamy návštěv</field>
+        <field name="res_model">elite.vet.clinical.record</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Zatím žádný záznam návštěvy</p>
+            <p>Záznamy vznikají na kartě pacienta.</p>
+        </field>
+    </record>
+</odoo>

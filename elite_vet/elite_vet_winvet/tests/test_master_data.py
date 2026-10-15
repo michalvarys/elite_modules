@@ -57,8 +57,8 @@ class TestMasterData(WinvetCase):
         second = [self.push("owners", owners), self.push("patients", patients), self.push("items", items)]
         for res in second:
             self.assertEqual((res["created"], res["updated"], res["deleted"], res["skipped"]), (0, 0, 0, 0), res)
-        # a real change is written
-        owners[0]["city"] = "Cheb"
+        # a real change in WinVet (new `modified`) is written
+        owners[0].update(city="Cheb", modified="2026-10-02 10:00:00")
         res = self.push("owners", owners)
         self.assertEqual(res["updated"], 1)
         partner = self.find("res.partner", 1)

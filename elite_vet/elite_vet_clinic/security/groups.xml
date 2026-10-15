@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- One chain in the "Rezervace" category: Recepce < Sestra < Lékařka < Správce rezervací,
+         so the user form shows a single selection. -->
+    <data noupdate="1">
+        <record id="group_clinic_nurse" model="res.groups">
+            <field name="name">Sestra</field>
+            <field name="category_id" ref="elite_vet_reservation.module_category_elite_vet_reservation"/>
+            <field name="implied_ids" eval="[(4, ref('elite_vet_reservation.group_reservation_reception'))]"/>
+            <field name="comment">Navíc zapisuje záznamy návštěv, položky účtu a upozornění na pacientech.</field>
+        </record>
+        <record id="group_clinic_doctor" model="res.groups">
+            <field name="name">Lékařka</field>
+            <field name="category_id" ref="elite_vet_reservation.module_category_elite_vet_reservation"/>
+            <field name="implied_ids" eval="[(4, ref('group_clinic_nurse')), (4, ref('elite_vet_reservation.group_reservation_reception'))]"/>
+            <field name="comment">Jako sestra, navíc spravuje šablony textů a balíčky výkonů a znovu otevírá uzavřené záznamy.</field>
+        </record>
+    </data>
+    <!-- Outside noupdate: existing managers get the doctor rights on install and upgrade. -->
+    <record id="elite_vet_reservation.group_reservation_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_clinic_doctor'))]"/>
+    </record>
+</odoo>

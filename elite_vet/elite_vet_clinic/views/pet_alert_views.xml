@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pet_alert_list" model="ir.ui.view">
+        <field name="name">elite.vet.pet.alert.list</field>
+        <field name="model">elite.vet.pet.alert</field>
+        <field name="arch" type="xml">
+            <list string="Upozornění" editable="bottom">
+                <field name="pet_id"/>
+                <field name="kind" widget="badge" decoration-danger="kind == 'bites'"
+                       decoration-warning="kind == 'allergy'" decoration-info="kind == 'other'"/>
+                <field name="note"/>
+                <field name="active" widget="boolean_toggle" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pet_alert_search" model="ir.ui.view">
+        <field name="name">elite.vet.pet.alert.search</field>
+        <field name="model">elite.vet.pet.alert</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="pet_id"/>
+                <field name="note"/>
+                <filter name="bites" string="Kouše" domain="[('kind', '=', 'bites')]"/>
+                <filter name="allergy" string="Alergie" domain="[('kind', '=', 'allergy')]"/>
+                <separator/>
+                <filter name="archived" string="Neaktivní" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_pet_alert" model="ir.actions.act_window">
+        <field name="name">Upozornění na pacientech</field>
+        <field name="res_model">elite.vet.pet.alert</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

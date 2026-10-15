@@ -6,6 +6,7 @@ from . import run
 from . import winvet_user
 from . import item
 from . import partner
+from . import partner_merge
 from . import contact
 from . import pet
 from . import vaccination
