@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="elite_vet_reservation.Board" t-inherit-mode="extension">
+        <xpath expr="//div[@t-foreach='otherEventsFor(room)']/div[hasclass('evb-ev-line')]" position="inside">
+            <button t-if="hasPatientCard(e)" type="button" class="evpc-board-card" draggable="false"
+                    title="Otevřít kartu pacienta" aria-label="Karta pacienta"
+                    t-on-click.stop="() => this.openPatientCard(e)">
+                <i class="fa fa-id-card-o" aria-hidden="true"/>
+            </button>
+        </xpath>
+    </t>
+</templates>

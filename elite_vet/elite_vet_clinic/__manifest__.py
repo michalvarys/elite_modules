@@ -29,6 +29,12 @@ Popis API je v README.md.
         "views/reservation_views.xml",
         "views/menus.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "elite_vet_clinic/static/src/patient_card/*",
+            "elite_vet_clinic/static/src/board_patch/*",
+        ],
+    },
     "installable": True,
     "application": True,
     "auto_install": False,

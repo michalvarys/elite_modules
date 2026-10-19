@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Popover list with a search field (templates, bundles, price list items). -->
+    <t t-name="elite_vet_clinic.Picker">
+        <div class="evpc-pop" t-att-class="props.align === 'right' ? 'evpc-pop-right' : ''" t-ref="root">
+            <input type="text" class="form-control form-control-sm evpc-pop-input" t-ref="input"
+                   t-att-placeholder="props.placeholder or 'Hledat…'" t-att-value="state.term"
+                   t-on-input="onInput" t-on-keydown="onKeydown" autocomplete="off"
+                   role="combobox" aria-expanded="true" aria-autocomplete="list"/>
+            <ul class="evpc-pop-list" role="listbox">
+                <li t-foreach="state.items" t-as="opt" t-key="opt.id" role="option"
+                    class="evpc-opt" t-att-class="{'evpc-opt-active': opt_index === state.active}"
+                    t-att-aria-selected="opt_index === state.active ? 'true' : 'false'"
+                    t-on-mouseenter="() => this.state.active = opt_index"
+                    t-on-mousedown="(ev) => ev.preventDefault()" t-on-click="() => this.choose(opt_index)">
+                    <div class="evpc-opt-main">
+                        <div class="evpc-opt-title" t-esc="opt.title"/>
+                        <div t-if="opt.subtitle" class="evpc-opt-sub" t-esc="opt.subtitle"/>
+                    </div>
+                    <span t-if="opt.right" class="evpc-opt-right" t-esc="opt.right"/>
+                </li>
+                <li t-if="freeText" role="option" class="evpc-opt evpc-opt-free"
+                    t-att-class="{'evpc-opt-active': state.items.length === state.active}"
+                    t-on-mouseenter="() => this.state.active = state.items.length"
+                    t-on-mousedown="(ev) => ev.preventDefault()" t-on-click="() => this.choose(state.items.length)">
+                    <i class="fa fa-plus me-2"/><t t-esc="freeText"/>
+                </li>
+                <li t-if="!state.loading and !state.items.length and !freeText" class="evpc-pop-empty"
+                    t-esc="props.emptyText or 'Nic nenalezeno.'"/>
+                <li t-if="state.loading and !state.items.length" class="evpc-pop-empty">Hledám…</li>
+            </ul>
+            <div class="evpc-pop-hint">↑↓ výběr · Enter přidá · Esc zavře</div>
+        </div>
+    </t>
+
+    <!-- One search field for patients: name, owner, phone, chip. -->
+    <t t-name="elite_vet_clinic.PatientSearch">
+        <div class="evpc-search" t-att-class="props.big ? 'evpc-search-big' : 'evpc-search-small'" t-ref="root">
+            <i class="fa fa-search evpc-search-icon" aria-hidden="true"/>
+            <input type="search" class="evpc-search-input" t-ref="input" t-att-value="state.term"
+                   placeholder="Hledat pacienta: jméno zvířete, majitel, telefon, čip"
+                   aria-label="Hledat pacienta" autocomplete="off" role="combobox"
+                   t-att-aria-expanded="state.open ? 'true' : 'false'"
+                   t-on-input="onInput" t-on-keydown="onKeydown"
+                   t-on-focus="onFocus"/>
+            <span t-if="state.loading" class="evpc-search-spin fa fa-circle-o-notch fa-spin" aria-hidden="true"/>
+            <ul t-if="state.open" class="evpc-search-results" role="listbox">
+                <li t-foreach="state.results" t-as="p" t-key="p.id" role="option" class="evpc-opt evpc-pet-opt"
+                    t-att-class="{'evpc-opt-active': p_index === state.active}"
+                    t-on-mouseenter="() => this.state.active = p_index"
+                    t-on-mousedown="(ev) => ev.preventDefault()" t-on-click="() => this.select(p)">
+                    <div class="evpc-opt-main">
+                        <div class="evpc-opt-title">
+                            <t t-esc="p.name"/>
+                            <span t-if="petMeta(p)" class="evpc-opt-meta" t-esc="petMeta(p)"/>
+                            <span t-if="p.deceased" class="evpc-st ms-1">† nežije</span>
+                        </div>
+                        <div class="evpc-opt-sub">
+                            <t t-esc="p.owner"/><t t-if="p.phone"> · <span class="evpc-num" t-esc="p.phone"/></t>
+                            <t t-if="p.chip"> · čip <span class="evpc-num" t-esc="p.chip"/></t>
+                        </div>
+                        <div t-if="p.alerts" class="evpc-opt-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="p.alerts"/></div>
+                    </div>
+                    <span class="evpc-opt-right" t-if="p.last_visit">naposledy <t t-esc="fmtDate(p.last_visit)"/></span>
+                </li>
+                <li t-if="state.searched and !state.results.length" class="evpc-pop-empty">
+                    Žádný pacient pro „<t t-esc="state.term"/>“. Zkuste jméno majitele nebo poslední číslice telefonu.
+                </li>
+            </ul>
+        </div>
+    </t>
+
+    <!-- The client action. -->
+    <t t-name="elite_vet_clinic.PatientCard">
+        <div class="o_action evpc" t-ref="root">
+          <div class="o_content evpc-scroll" t-att-class="state.mode === 'card' ? 'evpc-scroll-card' : ''">
+
+            <!-- ============ start screen ============ -->
+            <t t-if="state.mode === 'start'">
+                <div class="evpc-start">
+                    <h1 class="evpc-start-title">Karta pacienta</h1>
+                    <PatientSearch onSelect.bind="onSearchSelect" big="true" autofocus="true" today="todayIso or ''"/>
+                    <section class="evpc-today" aria-labelledby="evpc-today-h">
+                        <div class="evpc-today-head">
+                            <h2 id="evpc-today-h">Moji pacienti dnes</h2>
+                            <span class="evpc-today-date" t-esc="todayTitleDate"/>
+                        </div>
+                        <p class="evpc-today-sub" t-esc="todaySubtitle"/>
+                        <div t-if="state.loading" class="evpc-muted p-3">Načítám…</div>
+                        <p t-elif="!todayItems.length" class="evpc-empty">Dnes nemáte žádné rezervace. Pacienta najdete vyhledáním nahoře.</p>
+                        <ol t-else="" class="evpc-today-list">
+                            <li t-foreach="todayItems" t-as="it" t-key="it.reservation_id">
+                                <button type="button" class="evpc-today-row" t-on-click="() => this.openReservation(it)">
+                                    <span class="evpc-today-time evpc-num"><t t-esc="it.time"/><small t-if="it.time_end">–<t t-esc="it.time_end"/></small></span>
+                                    <span class="evpc-dot" t-att-style="'background:' + (it.room_color or '#94a3b8')" t-att-title="it.room"/>
+                                    <span class="evpc-today-main">
+                                        <span class="evpc-today-pet">
+                                            <t t-esc="it.pet_name or 'Bez mazlíčka'"/>
+                                            <span t-if="it.species_label" class="evpc-opt-meta" t-esc="it.species_label"/>
+                                        </span>
+                                        <span class="evpc-today-sub2">
+                                            <t t-esc="it.owner or ''"/><t t-if="it.procedure"> · <t t-esc="it.procedure"/></t><t t-if="it.room"> · <t t-esc="it.room"/></t>
+                                            <t t-if="!state.today.filtered_by_doctor and it.doctor"> · <t t-esc="it.doctor"/></t>
+                                        </span>
+                                        <span t-if="it.alerts" class="evpc-opt-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
+                                    </span>
+                                    <t t-set="badge" t-value="recordBadge(it)"/>
+                                    <span class="evpc-st" t-att-class="badge.cls" t-esc="badge.label"/>
+                                    <i class="fa fa-angle-right evpc-today-go" aria-hidden="true"/>
+                                </button>
+                            </li>
+                        </ol>
+                    </section>
+                </div>
+            </t>
+
+            <!-- ============ card ============ -->
+            <t t-else="">
+                <nav class="evpc-bar" aria-label="Pacienti">
+                    <button t-if="previousCrumb" type="button" class="evpc-bar-home evpc-bar-back" t-on-click="goBack"
+                            t-att-title="'Zpět: ' + previousCrumb.name">
+                        <i class="fa fa-arrow-left me-1" aria-hidden="true"/><t t-esc="previousCrumb.name"/>
+                    </button>
+                    <button type="button" class="evpc-bar-home" t-on-click="goStart">
+                        <i class="fa fa-angle-left me-1" aria-hidden="true"/>Moji pacienti dnes
+                    </button>
+                    <div class="evpc-tabs" t-if="todayItems.length">
+                        <button t-foreach="todayItems" t-as="it" t-key="it.reservation_id" type="button" class="evpc-tab"
+                                t-att-class="{'evpc-tab-on': isCurrentTab(it), 'evpc-tab-done': it.record_state === 'done'}"
+                                t-att-aria-current="isCurrentTab(it) ? 'page' : false"
+                                t-att-title="it.time + ' · ' + (it.owner or '') + (it.procedure ? ' · ' + it.procedure : '')"
+                                t-on-click="() => this.openReservation(it)">
+                            <span class="evpc-num evpc-tab-time" t-esc="it.time"/> <t t-esc="it.pet_name or 'Bez mazlíčka'"/>
+                        </button>
+                    </div>
+                    <PatientSearch onSelect.bind="onSearchSelect" today="todayIso or ''"/>
+                </nav>
+
+                <div t-if="state.loading or !state.data" class="evpc-loading">Načítám kartu…</div>
+                <t t-else="">
+                    <!-- header band -->
+                    <header class="evpc-pat">
+                        <div class="evpc-pat-id">
+                            <h1 class="evpc-pat-name">
+                                <t t-esc="pet.name"/>
+                                <span t-if="pet.deceased" class="evpc-st ms-2">† nežije</span>
+                                <span t-if="!pet.active" class="evpc-st ms-2">archivovaný</span>
+                            </h1>
+                            <span class="evpc-pat-facts" t-esc="petFacts"/>
+                        </div>
+                        <dl class="evpc-pat-meta">
+                            <div t-if="weightText" t-att-title="weightTitle">
+                                <dt>Váha</dt>
+                                <dd class="evpc-num"><t t-esc="weightText"/>
+                                    <span t-if="weightDelta" class="evpc-delta" t-att-class="weightDelta.cls"> (<t t-esc="weightDelta.text"/>)</span>
+                                </dd>
+                            </div>
+                            <div t-if="pet.chip"><dt>Čip</dt><dd class="evpc-num" t-esc="pet.chip"/></div>
+                            <div>
+                                <dt>Majitel</dt>
+                                <dd>
+                                    <button type="button" class="evpc-link" t-on-click="openOwner" title="Otevřít kartu klienta" t-esc="owner.name"/>
+                                    <a t-if="ownerPhone" class="evpc-num evpc-phone" t-att-href="'tel:' + ownerPhone" t-esc="ownerPhone"/>
+                                </dd>
+                            </div>
+                            <div t-if="vaccinationInfo"><dt>Očkování</dt>
+                                <dd t-att-class="vaccinationInfo.overdue ? 'evpc-overdue' : ''" t-esc="vaccinationInfo.text"/>
+                            </div>
+                        </dl>
+                        <div class="evpc-pat-alerts">
+                            <button t-foreach="data.header.alerts" t-as="a" t-key="a.id" type="button"
+                                    class="evpc-alert" t-att-class="'evpc-alert-' + a.kind" t-on-click="() => this.openAlert(a)"
+                                    title="Upravit upozornění">
+                                <i t-att-class="'fa me-1 ' + (a.kind === 'bites' ? 'fa-hand-paper-o' : a.kind === 'allergy' ? 'fa-medkit' : 'fa-exclamation-triangle')" aria-hidden="true"/>
+                                <t t-esc="a.label"/>
+                            </button>
+                            <span t-if="pet.important_note" class="evpc-alert evpc-alert-note" title="Důležitá poznámka u pacienta">
+                                <i class="fa fa-info-circle me-1" aria-hidden="true"/><t t-esc="pet.important_note"/>
+                            </span>
+                            <button t-if="perms.can_write" type="button" class="evpc-btn evpc-btn-ghost" t-on-click="addAlert">+ Upozornění</button>
+                            <button t-if="perms.can_write" type="button" class="evpc-btn evpc-btn-ghost" t-on-click="editPet">
+                                <i class="fa fa-pencil me-1" aria-hidden="true"/>Upravit pacienta
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="evpc-grid">
+                        <!-- ===== history ===== -->
+                        <section class="evpc-col evpc-col-history" aria-labelledby="evpc-h-hist">
+                            <div class="evpc-col-head">
+                                <h2 id="evpc-h-hist" class="evpc-h">Historie</h2>
+                                <div class="evpc-filter" role="group" aria-label="Filtr historie">
+                                    <button type="button" t-att-class="{'evpc-filter-on': state.tlFilter === 'all'}" t-on-click="() => this.state.tlFilter = 'all'">Vše <small t-esc="tlCounts.all"/></button>
+                                    <button type="button" t-att-class="{'evpc-filter-on': state.tlFilter === 'visits'}" t-on-click="() => this.state.tlFilter = 'visits'">Návštěvy <small t-esc="tlCounts.visits"/></button>
+                                    <button type="button" t-att-class="{'evpc-filter-on': state.tlFilter === 'vacc'}" t-on-click="() => this.state.tlFilter = 'vacc'">Očkování <small t-esc="tlCounts.vacc"/></button>
+                                </div>
+                            </div>
+                            <p t-if="!timeline.length" class="evpc-empty">Zatím žádná historie.</p>
+                            <ol class="evpc-tl">
+                                <li t-foreach="timeline" t-as="e" t-key="entryKey(e)" class="evpc-tl-item"
+                                    t-att-class="{
+                                        'evpc-tl-record': e.type === 'record', 'evpc-tl-visit': e.type === 'visit',
+                                        'evpc-tl-vacc': e.type === 'vaccination', 'evpc-tl-today': e.date === todayIso,
+                                        'evpc-tl-open': state.expanded[entryKey(e)]}">
+                                    <span class="evpc-tl-icon" t-att-title="entryTypeLabel(e)"><i t-att-class="'fa ' + entryIcon(e)" aria-hidden="true"/></span>
+                                    <div class="evpc-tl-body">
+                                        <button type="button" class="evpc-tl-head" t-att-disabled="!isExpandable(e)"
+                                                t-att-aria-expanded="isExpandable(e) ? (state.expanded[entryKey(e)] ? 'true' : 'false') : false"
+                                                t-on-click="() => this.toggleEntry(e)">
+                                            <span class="evpc-tl-when">
+                                                <b t-esc="fmtDate(e.date)"/><t t-if="e.time"> <span class="evpc-num" t-esc="e.time"/></t>
+                                                <t t-if="e.doctor"> · <t t-esc="e.doctor"/></t>
+                                                <span t-if="isOpenRecord(e)" class="evpc-st evpc-st-draft ms-1">otevřený vpravo</span>
+                                                <span t-elif="e.type === 'record' and e.state === 'done'" class="evpc-st evpc-st-done ms-1" t-esc="e.state_label"/>
+                                            </span>
+                                            <span class="evpc-tl-title">
+                                                <t t-if="e.type === 'vaccination'">Očkování: </t><t t-esc="entryTitle(e)"/>
+                                            </span>
+                                            <span t-if="e.type === 'vaccination' and e.next_date" class="evpc-tl-sub">příští <t t-esc="fmtDate(e.next_date)"/></span>
+                                        </button>
+                                        <div t-if="state.expanded[entryKey(e)]" class="evpc-tl-detail">
+                                            <t t-if="e.type === 'visit'">
+                                                <div t-if="e.case_name and e.case_name !== e.diagnosis" class="evpc-tl-sub">Případ: <t t-esc="e.case_name"/></div>
+                                                <div t-if="e.vitals_summary" class="evpc-tl-vitals evpc-num" t-esc="e.vitals_summary"/>
+                                                <t t-if="e.notes">
+                                                    <div class="evpc-notes" t-att-class="{'evpc-notes-clip': isLongNotes(e.notes) and !state.showAll[entryKey(e)]}" t-esc="e.notes"/>
+                                                    <button t-if="isLongNotes(e.notes)" type="button" class="evpc-link small" t-on-click="() => this.toggleShowAll(e)">
+                                                        <t t-if="state.showAll[entryKey(e)]">Zobrazit méně</t><t t-else="">Zobrazit vše</t>
+                                                    </button>
+                                                </t>
+                                                <div t-else="" class="evpc-muted small">Bez textu dekurzu.</div>
+                                            </t>
+                                            <t t-if="e.type === 'record'">
+                                                <div t-if="e.vitals_summary" class="evpc-tl-vitals evpc-num" t-esc="e.vitals_summary"/>
+                                                <div t-foreach="recordSections(e)" t-as="s" t-key="s.key" class="evpc-tl-sec">
+                                                    <div class="evpc-tl-sec-label" t-esc="s.label"/>
+                                                    <div class="evpc-notes" t-esc="s.text"/>
+                                                </div>
+                                                <div t-if="e.items and e.items.length" class="evpc-tl-sub">
+                                                    Účet: <t t-esc="e.items.join(', ')"/> · <span class="evpc-num" t-esc="fmtMoney(e.amount_total)"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ol>
+                            <h2 class="evpc-h mt-3">Trvalá medikace</h2>
+                            <p class="evpc-empty evpc-empty-sm">Evidence trvalé medikace přibude se skladem léků.</p>
+                        </section>
+
+                        <!-- ===== today's record ===== -->
+                        <section class="evpc-col evpc-col-record" aria-labelledby="evpc-h-rec">
+                            <t t-if="!state.record">
+                                <h2 id="evpc-h-rec" class="evpc-h">Dnešní záznam</h2>
+                                <div class="evpc-empty evpc-empty-box">
+                                    <b>Dnes zatím bez záznamu.</b>
+                                    <div>Záznam založí sestra nebo lékařka, když kartu otevře.</div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <t t-set="rec" t-value="state.record"/>
+                                <div class="evpc-col-head evpc-rec-head">
+                                    <h2 id="evpc-h-rec" class="evpc-h">Dnešní záznam<t t-if="rec.time"> · <span class="evpc-num" t-esc="rec.time"/></t></h2>
+                                    <span t-if="rec.state !== 'draft'" class="evpc-st evpc-st-done" t-esc="rec.state_label"/>
+                                    <span t-if="editable" class="evpc-saved" t-att-class="'evpc-saved-' + state.save.status" aria-live="polite">
+                                        <t t-if="state.save.status === 'error'">
+                                            <button type="button" class="evpc-link" t-on-click="retrySave"><t t-esc="saveText"/> – zkusit znovu</button>
+                                        </t>
+                                        <t t-else=""><i t-if="state.save.status === 'idle' and state.save.at" class="fa fa-check me-1" aria-hidden="true"/><t t-esc="saveText"/></t>
+                                    </span>
+                                    <label class="evpc-doctor">
+                                        <span class="visually-hidden">Lékařka</span>
+                                        <select class="form-select form-select-sm" t-att-disabled="!editable or state.busy" t-on-change="onDoctorChange" aria-label="Lékařka">
+                                            <option value="" t-att-selected="!rec.doctor_id">Lékařka nevybrána</option>
+                                            <option t-foreach="data.doctors" t-as="d" t-key="d.id" t-att-value="d.id"
+                                                    t-att-selected="d.id === rec.doctor_id" t-esc="d.name"/>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div t-if="rec.state === 'done'" class="evpc-done-note">
+                                    <i class="fa fa-lock me-2" aria-hidden="true"/>Záznam je uzavřený a účet čeká u pokladny.
+                                    <button t-if="isDoctor" type="button" class="evpc-btn ms-auto" t-att-disabled="state.busy" t-on-click="reopen">Znovu otevřít</button>
+                                </div>
+
+                                <div class="evpc-vitals">
+                                    <label t-foreach="vitals" t-as="v" t-key="v.key" class="evpc-vital"
+                                           t-att-class="{'evpc-invalid': state.invalid[v.key]}">
+                                        <span class="evpc-field-label" t-esc="v.label"/>
+                                        <span class="evpc-vital-input">
+                                            <input type="text" inputmode="decimal" class="evpc-num" t-att-name="v.key"
+                                                   t-att-value="state.form[v.key]" t-att-readonly="!editable"
+                                                   t-on-input="(ev) => this.onField(v.key, ev)" t-on-blur="onFieldBlur"
+                                                   t-on-keydown="onVitalKeydown" autocomplete="off"
+                                                   t-att-aria-invalid="state.invalid[v.key] ? 'true' : 'false'"/>
+                                            <span class="evpc-unit" t-esc="v.unit"/>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div t-foreach="sections" t-as="s" t-key="s.key" class="evpc-field">
+                                    <div class="evpc-field-row">
+                                        <label class="evpc-field-label" t-att-for="'evpc-' + s.key" t-esc="s.label"/>
+                                        <div t-if="editable and templatesFor(s.key).length" class="evpc-anchor">
+                                            <button type="button" class="evpc-btn evpc-btn-sm"
+                                                    t-att-aria-expanded="state.popover === 'tpl-' + s.key ? 'true' : 'false'"
+                                                    t-on-click="() => this.togglePopover('tpl-' + s.key)">
+                                                + Šablona <i class="fa fa-caret-down ms-1" aria-hidden="true"/>
+                                            </button>
+                                            <Picker t-if="state.popover === 'tpl-' + s.key" load="loadTemplates(s.key)"
+                                                    onPick="(opt) => this.applyTemplate(s.key, opt)" onClose.bind="closePopover"
+                                                    placeholder="'Hledat šablonu…'" emptyText="'Žádná šablona.'" align="'right'"/>
+                                        </div>
+                                    </div>
+                                    <textarea class="evpc-text" t-att-id="'evpc-' + s.key" t-att-name="s.key"
+                                              t-att-placeholder="editable ? s.placeholder : ''" t-att-readonly="!editable"
+                                              t-att-value="state.form[s.key]"
+                                              t-on-input="(ev) => this.onField(s.key, ev)" t-on-blur="onFieldBlur"/>
+                                </div>
+
+                                <div t-if="editable" class="evpc-rec-actions">
+                                    <div class="evpc-anchor">
+                                        <button type="button" class="evpc-btn" t-att-disabled="!data.bundles.length or state.busy"
+                                                t-att-aria-expanded="state.popover === 'bundle' ? 'true' : 'false'"
+                                                t-on-click="() => this.togglePopover('bundle')">
+                                            + Balíček <i class="fa fa-caret-down ms-1" aria-hidden="true"/>
+                                        </button>
+                                        <Picker t-if="state.popover === 'bundle'" load="loadBundles()" onPick.bind="addBundle"
+                                                onClose.bind="closePopover" placeholder="'Hledat balíček výkonů…'"
+                                                emptyText="'Žádný balíček.'"/>
+                                    </div>
+                                    <span class="evpc-muted small">Balíček přidá všechny své položky do účtu.</span>
+                                </div>
+                            </t>
+                        </section>
+
+                        <!-- ===== bill ===== -->
+                        <section class="evpc-col evpc-col-bill" aria-labelledby="evpc-h-bill">
+                            <h2 id="evpc-h-bill" class="evpc-h">Účet</h2>
+                            <t t-if="state.record">
+                                <p t-if="!lines.length" class="evpc-empty">Účet je prázdný.<t t-if="editable"> Přidejte úkon, lék nebo balíček.</t></p>
+                                <ul t-else="" class="evpc-lines">
+                                    <li t-foreach="lines" t-as="l" t-key="l.id" class="evpc-line" t-att-class="{'evpc-line-flash': isFlash(l)}">
+                                        <div class="evpc-line-top">
+                                            <span class="evpc-line-name" t-esc="l.name"/>
+                                            <span class="evpc-line-amount evpc-num" t-esc="fmtMoney(l.amount)"/>
+                                            <button t-if="editable" type="button" class="evpc-line-rm" t-att-disabled="state.busy"
+                                                    t-att-aria-label="'Odebrat ' + l.name" title="Odebrat z účtu"
+                                                    t-on-click="() => this.removeLine(l)">×</button>
+                                        </div>
+                                        <div class="evpc-line-bottom">
+                                            <small class="evpc-line-sub" t-att-title="l.bundle_name ? 'Z balíčku ' + l.bundle_name : ''">
+                                                <t t-if="l.bundle_name"><i class="fa fa-cubes me-1" aria-hidden="true"/></t>
+                                                <t t-esc="l.code or l.kind_label or ''"/><t t-if="l.bundle_name"> · <t t-esc="l.bundle_name"/></t>
+                                            </small>
+                                            <span class="evpc-line-nums">
+                                                <input t-if="editable" type="text" inputmode="decimal" class="evpc-line-qty evpc-num"
+                                                       t-att-value="inputNum(l.quantity)" t-att-aria-label="'Množství: ' + l.name"
+                                                       t-on-change="(ev) => this.onLineChange(l, 'quantity', ev)" t-on-keydown="onLineKeydown"/>
+                                                <span t-else="" class="evpc-num" t-esc="fmtNum(l.quantity, 3)"/>
+                                                <span class="evpc-line-unit" t-esc="l.unit or 'ks'"/>
+                                                <span>×</span>
+                                                <input t-if="editable and isDoctor" type="text" inputmode="decimal" class="evpc-line-price evpc-num"
+                                                       t-att-data-price-line="l.id"
+                                                       t-att-value="inputNum(l.price_unit)" t-att-aria-label="'Cena za jednotku: ' + l.name"
+                                                       t-on-change="(ev) => this.onLineChange(l, 'price_unit', ev)" t-on-keydown="onLineKeydown"/>
+                                                <span t-else="" class="evpc-num" t-esc="fmtNum(l.price_unit, 2)"/>
+                                            </span>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <div class="evpc-bill-foot">
+                                    <div class="evpc-total">
+                                        <span>Celkem<small t-if="lines.length" class="evpc-total-count"> · <t t-esc="lines.length"/> <t t-esc="lines.length === 1 ? 'položka' : lines.length &lt; 5 ? 'položky' : 'položek'"/></small></span>
+                                        <span class="evpc-num" t-esc="fmtMoney(state.record.amount_total)"/>
+                                    </div>
+                                    <div t-if="editable" class="evpc-bill-add">
+                                        <div class="evpc-anchor">
+                                            <button type="button" class="evpc-btn" t-att-aria-expanded="state.popover === 'service' ? 'true' : 'false'"
+                                                    t-on-click="() => this.togglePopover('service')">+ Úkon</button>
+                                            <Picker t-if="state.popover === 'service'" load="loadItems('service')" remote="true"
+                                                    onPick.bind="addItem" onClose.bind="closePopover"
+                                                    placeholder="'Hledat úkon v ceníku (název, kód)…'"
+                                                    freeLabel.bind="freeLabel" onFree="(name) => this.addFree('service', name)"/>
+                                        </div>
+                                        <div class="evpc-anchor">
+                                            <button type="button" class="evpc-btn" t-att-aria-expanded="state.popover === 'product' ? 'true' : 'false'"
+                                                    t-on-click="() => this.togglePopover('product')">+ Lék ze skladu</button>
+                                            <Picker t-if="state.popover === 'product'" load="loadItems('product')" remote="true"
+                                                    onPick.bind="addItem" onClose.bind="closePopover" align="'right'"
+                                                    placeholder="'Hledat lék (název, kód, čárový kód)…'"
+                                                    freeLabel.bind="freeLabel" onFree="(name) => this.addFree('product', name)"/>
+                                        </div>
+                                    </div>
+                                    <div class="evpc-bill-final">
+                                        <button t-if="editable" type="button" class="evpc-btn evpc-btn-primary" t-att-disabled="!canFinish"
+                                                t-on-click="markDone">
+                                            <i class="fa fa-check me-2" aria-hidden="true"/>Hotovo, k pokladně
+                                        </button>
+                                        <span class="evpc-disabled-wrap" title="Bude ve fázi 5">
+                                            <button type="button" class="evpc-btn" disabled="disabled" aria-disabled="true">Zpráva pro majitele</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </t>
+                            <p t-else="" class="evpc-empty">Bez dnešního záznamu není účet.</p>
+                        </section>
+                    </div>
+                </t>
+            </t>
+          </div>
+        </div>
+    </t>
+</templates>

@@ -13,6 +13,23 @@
             </list>
         </field>
     </record>
+    <!-- Small form for the "+ Upozornění" dialog of the patient card (opened with default_pet_id). -->
+    <record id="view_pet_alert_form" model="ir.ui.view">
+        <field name="name">elite.vet.pet.alert.form</field>
+        <field name="model">elite.vet.pet.alert</field>
+        <field name="arch" type="xml">
+            <form string="Upozornění">
+                <sheet>
+                    <group>
+                        <field name="pet_id" readonly="context.get('default_pet_id')"/>
+                        <field name="kind" widget="radio" options="{'horizontal': true}"/>
+                        <field name="note" placeholder="např. náhubek, penicilin"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
     <record id="view_pet_alert_search" model="ir.ui.view">
         <field name="name">elite.vet.pet.alert.search</field>
         <field name="model">elite.vet.pet.alert</field>
