@@ -181,3 +181,9 @@ LD_LIBRARY_PATH=/cesta/k/fbclient/lib python3 -m unittest discover -s tests -v
 
 Integrační testy používají lokální analytickou kopii WinVetu (proměnné `WINVET_TEST_DSN`,
 `WINVET_TEST_PASSWORD`, `WINVET_TEST_FBCLIENT`); když není dostupná, přeskočí se.
+
+## Denní příjem záloh přes SFTP na serveru Odoo
+
+Hotový ZIP s FBK lze automaticky obnovovat na našem serveru a synchronizovat
+existujícím mostem. Kompletní český návod, worker, omezený SFTP účet, Docker Compose
+a systemd timer jsou v [`deploy/sftp/README.md`](deploy/sftp/README.md).

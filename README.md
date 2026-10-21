@@ -105,3 +105,7 @@ průvodce místo iframu. Recepce pracuje s Tabulí (sloupec na ordinaci) a front
 za všechny klienty dohromady.
 
 Detaily v [elite_vet/elite_vet_reservation/README.md](elite_vet/elite_vet_reservation/README.md).
+
+
+dokumentace: 
+https://claude.ai/artifact/Pc5MFy27S6h7AZC1Hgx9Ex

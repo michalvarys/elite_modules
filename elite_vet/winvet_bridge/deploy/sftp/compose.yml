@@ -1,0 +1,17 @@
+services:
+  firebird:
+    image: firebirdsql/firebird:5.0.1
+    container_name: winvet-import-fb
+    restart: unless-stopped
+    environment:
+      FIREBIRD_ROOT_PASSWORD_FILE: /run/secrets/firebird_password
+    ports:
+      - "127.0.0.1:3051:3050"
+    volumes:
+      - /srv/winvet/work:/work
+      - firebird-system:/var/lib/firebird/system
+      - /etc/winvet-import/firebird_password:/run/secrets/firebird_password:ro
+    mem_limit: 1g
+    cpus: 1.0
+volumes:
+  firebird-system:

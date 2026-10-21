@@ -1,0 +1,22 @@
+[Unit]
+Description=Restore delivered WinVet backup and synchronize Odoo
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+EnvironmentFile=/etc/winvet-import/secrets.env
+ExecStart=/opt/winvet-import/venv/bin/python /opt/winvet-import/deploy/sftp/backup_import.py --config /etc/winvet-import/import.ini
+TimeoutStartSec=4h
+KillMode=control-group
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/winvet
+ReadOnlyPaths=/srv/sftp/winvet/incoming
