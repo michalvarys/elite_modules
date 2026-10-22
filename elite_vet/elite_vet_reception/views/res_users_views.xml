@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Users list › Akce: role home screens for all internal users (custom ones are kept). -->
+    <record id="action_set_home_actions" model="ir.actions.server">
+        <field name="name">Nastavit výchozí obrazovky</field>
+        <field name="model_id" ref="base.model_res_users"/>
+        <field name="binding_model_id" ref="base.model_res_users"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_elite_vet_set_home_actions()</field>
+    </record>
+</odoo>

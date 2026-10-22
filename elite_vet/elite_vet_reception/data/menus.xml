@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vedení creates the POS employees (PIN login) in Zaměstnanci and manages the shift
+         schedule (Rozpis služeb). The groups are noupdate records of other modules: <function>
+         runs on install and on every update and passes the implied groups to existing users. -->
+    <function model="res.groups" name="write">
+        <value eval="[ref('elite_vet_reservation.group_reservation_manager')]"/>
+        <value eval="{'implied_ids': [(4, ref('hr.group_hr_user')),
+                                      (4, ref('elite_vet_calendar.group_calendar_manager'))]}"/>
+    </function>
+    <!-- Menus by role (models/ir_ui_menu.py): Prodej, Fakturace, Zaměstnanci, WinVet data,
+         Rozpis služeb and the stock items except Příjem zboží + Přehled skladu → Vedení only;
+         Pokladna → Recepce and up. -->
+    <function model="ir.ui.menu" name="_elite_vet_apply_role_menus"/>
+</odoo>

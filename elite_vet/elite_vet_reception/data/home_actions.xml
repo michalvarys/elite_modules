@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Home screen of the reception: the Recepce till. The config id differs per database, so the
+         URL is set by elite.vet.sale.setup._ensure_reception (below, on every update, and in
+         ensure_setup()). -->
+    <record id="action_open_reception_pos" model="ir.actions.act_url">
+        <field name="name">Pokladna Recepce</field>
+        <field name="url">/pos/ui</field>
+        <field name="target">self</field>
+    </record>
+    <function model="elite.vet.sale.setup" name="_ensure_reception"/>
+</odoo>

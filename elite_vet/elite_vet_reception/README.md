@@ -101,6 +101,39 @@ Den je `"YYYY-MM-DD"` v čase kliniky, `minute` = minuty od půlnoci.
 - Před uložením se znovu ověří, že je čas volný; obsazený čas (i když ho odmítne až kontrola
   překryvu při uložení) skončí chybou „Termín 9:00 už mezitím někdo obsadil – vyberte jiný.“
 
+## Role, výchozí obrazovky a menu
+
+| Role | Výchozí obrazovka (`res.users.action_id`) | Menu |
+|---|---|---|
+| Recepce | `action_open_reception_pos` – pokladna Recepce (`/pos/ui?config_id=…`, stejné okno) | Pokladna, Rezervace, Ordinace |
+| Sestra, Lékařka | Karta pacienta (`elite_vet_clinic.action_patient_card`) | + Sklad jen s Přehledem skladu a Příjmem zboží |
+| Vedení | Přehled tržeb a výdajů (`elite_vet_winvet.action_winvet_dashboard`) | vše |
+
+- Výchozí obrazovka se nastaví při založení uživatele a při každé změně jeho skupin – jen když
+  nemá žádnou nebo má některou z rolových; vlastní jinou výchozí obrazovku nikdy nepřepíše.
+- Uživatelé › Akce › **Nastavit výchozí obrazovky** (jen vedení) totéž provede pro všechny
+  interní uživatele (`res.users.action_elite_vet_set_home_actions`), vlastní obrazovky zůstanou.
+- URL pokladny se počítá z id pokladny Recepce (v každé databázi jiné): při instalaci, při každé
+  aktualizaci modulu a v `elite.vet.sale.setup.ensure_setup()`.
+- Menu (`ir.ui.menu._elite_vet_apply_role_menus`, `data/menus.xml`, běží při každé aktualizaci):
+  Prodej, Fakturace, Zaměstnanci, WinVet data a Rozpis služeb jen vedení; Pokladna od recepce;
+  ve Skladu zůstanou sestře a lékařce jen Přehled skladu a Příjem zboží (přesunutý z Operací přímo
+  pod Sklad), ostatní položky, které by viděla, jsou jen pro vedení. Obě položky jsou i v Ordinaci.
+  Menu patří jiným modulům: samostatná aktualizace takového modulu vrátí jeho skupiny, další
+  aktualizace `elite_vet_reception` je zase nastaví.
+- Vedení dostává skupiny Zaměstnanci: uživatel (`hr.group_hr_user`, zakládá zaměstnance pokladny)
+  a Správce rozpisu.
+
+## Obsluha PINem (pos_hr)
+
+Pokladna Recepce má zapnuté přihlášení zaměstnanců (`module_pos_hr`). Zapne se při instalaci
+a aktualizaci modulu, jen když pokladna nemá otevřenou relaci (Odoo změnu za otevřené relace
+nedovolí) – jinak se zapíše varování do logu: zavřete pokladnu a aktualizujte modul znovu.
+
+Zaměstnance s PINem zakládá **vedení** v aplikaci Zaměstnanci (jméno, PIN, případně propojený
+uživatel); modul žádné zaměstnance nezakládá. Bez vybraných zaměstnanců v nastavení pokladny se
+mohou přihlásit všichni zaměstnanci firmy.
+
 ## Testy
 
 ```bash

@@ -19,7 +19,11 @@ Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných k
     ],
     "data": [
         "security/ir.model.access.csv",
+        "data/home_actions.xml",
+        "data/menus.xml",
+        "views/res_users_views.xml",
     ],
+    "post_init_hook": "post_init_hook",
     "installable": True,
     "application": False,
     "auto_install": False,
