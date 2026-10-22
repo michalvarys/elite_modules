@@ -219,6 +219,14 @@ class TestToday(ReceptionCase):
         self.assertNotEqual(third["record_id"], record.id)
         self.assertEqual(self.Record.browse(third["record_id"]).visit_stage, "waiting")
 
+    def test_walk_in_refuses_deceased_pet(self):
+        """Ruling R8."""
+        pet = self.new_pet("Uhynulý bez objednání")
+        pet.deceased = True
+        with self.assertRaisesRegex(UserError, "Zvíře je vedené jako uhynulé."):
+            self.api(self.reception).walk_in(pet.id)
+        self.assertFalse(self.Record.search([("pet_id", "=", pet.id)]))
+
     # ---------------------------------------------------------------- call_patient
     def test_call_patient(self):
         pet = self.new_pet("Volaný")

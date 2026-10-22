@@ -35,6 +35,12 @@ class Reception(models.AbstractModel):
             raise AccessError(_("Tuto akci může provést jen recepce, sestra, lékařka nebo vedení."))
 
     @api.model
+    def _check_bookable_pet(self, pet):
+        """Ruling R8: no booking and no walk-in for a deceased pet."""
+        if pet.deceased:
+            raise UserError(_("Zvíře je vedené jako uhynulé."))
+
+    @api.model
     def _records(self):
         """Clinical records under sudo, with the reception API flag for the clinic write check."""
         return self.env["elite.vet.clinical.record"].sudo().with_context(**{RECEPTION_CONTEXT: True})
@@ -202,6 +208,7 @@ class Reception(models.AbstractModel):
         self._check_reception()
         Records = self._records()
         pet = Records._get_pet(pet_id)
+        self._check_bookable_pet(pet)
         doctor = self.env["elite.vet.doctor"].sudo().browse(int(doctor_id)).exists() if doctor_id \
             else self.env["elite.vet.doctor"]
         record = Records.search([("pet_id", "=", pet.id), ("date", "=", clinic_today()), ("state", "=", "draft")],

@@ -131,6 +131,12 @@ class ReceptionCardIndex(models.AbstractModel):
         return results + self._search_owners(term, shown, SEARCH_LIMIT)
 
     @api.model
+    def pet_options(self):
+        """Choices for the pet form of the card index dialog."""
+        self._check_reception()
+        return {"species": [{"value": key, "label": label} for key, label in SPECIES]}
+
+    @api.model
     def owner_data(self, partner_id):
         self._check_reception()
         partner = self._get_owner(partner_id)

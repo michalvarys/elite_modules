@@ -5,6 +5,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
+from odoo.addons.elite_vet_reservation.models.reservation import RECEPTION_HORIZON_DAYS
 from odoo.addons.elite_vet_reservation.wizard.reservation_wizard import ReservationWizard
 
 from .common import ReceptionCase
@@ -78,6 +79,15 @@ class TestBooking(ReceptionCase):
     def test_free_slots_next_free_day(self):
         reception = self.api(self.reception)
         data = reception.free_slots(self.book_proc.id, self.day.isoformat())
+        self.assertTrue(data["slots"])
+        self.assertIsNone(data["next_free_day"], "searched only when the day has no free time")
+        # the whole day blocked for all rooms: nothing free, the next free day is the day after
+        A = self.env["elite.vet.availability"]
+        self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Celý den test recepce", "block_scope": "full", "room_id": False,
+            "state": "confirmed", "start": A.local_to_utc(self.day, 0), "stop": A.local_to_utc(self.day, 1440)})
+        data = reception.free_slots(self.book_proc.id, self.day.isoformat())
+        self.assertEqual(data["slots"], [])
         self.assertEqual(data["next_free_day"], (self.day + timedelta(days=1)).isoformat())
         # a procedure whose only room has no opening hours: nothing free, no next free day
         closed = self.env["elite.vet.room"].create({"name": "Zavřená ordinace test recepce"})
@@ -86,6 +96,12 @@ class TestBooking(ReceptionCase):
             "room_ids": [(6, 0, [closed.id])]})
         data = reception.free_slots(proc.id, self.day.isoformat())
         self.assertEqual((data["slots"], data["next_free_day"]), ([], None))
+
+    def test_free_slots_beyond_the_horizon(self):
+        far = clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS + 1)
+        with patch.object(ReservationWizard, "_load_slots", side_effect=AssertionError("wizard used")):
+            data = self.api(self.reception).free_slots(self.book_proc.id, far.isoformat())
+        self.assertEqual(data, {"day": far.isoformat(), "slots": [], "next_free_day": None})
 
     def test_free_slots_bad_input(self):
         reception = self.api(self.reception)
@@ -164,3 +180,24 @@ class TestBooking(ReceptionCase):
             reception.book(self.pet.id, self.book_proc.id, self.day.isoformat(), 540, 0)
         with self.assertRaises(AccessError):
             self.api(self.outsider).book(self.pet.id, self.book_proc.id, self.day.isoformat(), 540, self.room.id)
+
+    def test_book_refuses_deceased_pet(self):
+        """Ruling R8."""
+        pet = self.new_pet("Uhynulý objednaný")
+        pet.deceased = True
+        with self.assertRaisesRegex(UserError, "Zvíře je vedené jako uhynulé."):
+            self.api(self.reception).book(pet.id, self.book_proc.id, self.day.isoformat(), 540, self.room.id)
+        self.assertFalse(self.booked(self.owner))
+
+    def test_book_refuses_staff_owner(self):
+        """The card index owner rule applies to booking too."""
+        pet = self.new_pet("Služební objednaný", self.nurse.partner_id)
+        with self.assertRaisesRegex(UserError, "Tento kontakt není klient kliniky."):
+            self.api(self.reception).book(pet.id, self.book_proc.id, self.day.isoformat(), 540, self.room.id)
+
+    def test_book_reservation_not_found_after_save(self):
+        """Never return reservation_id False: a save that leaves no reservation is an error."""
+        with patch.object(ReservationWizard, "action_save", lambda w: True), \
+                self.assertRaisesRegex(UserError, "Rezervaci se nepodařilo uložit"):
+            self.api(self.reception).book(self.pet.id, self.book_proc.id, self.day.isoformat(), 540,
+                                          self.room.id)

@@ -181,6 +181,12 @@ class TestCardIndex(ReceptionCase):
         self.assertEqual((record["pet_id"], record["reservation_id"], record["stage"]),
                          (self.pet.id, res.id, "waiting"))
 
+    def test_pet_options(self):
+        data = self.api(self.reception).pet_options()
+        self.assertIn({"value": "dog", "label": "Pes"}, data["species"])
+        with self.assertRaises(AccessError):
+            self.api(self.outsider).pet_options()
+
     # ---------------------------------------------------------------- fix round 1
     def test_staff_and_company_partners_are_not_owners(self):
         reception = self.api(self.reception)

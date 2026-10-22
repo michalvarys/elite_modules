@@ -10,6 +10,7 @@ from datetime import timedelta
 from odoo import _, api, models
 from odoo.exceptions import UserError, ValidationError
 
+from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
 from odoo.addons.elite_vet_reservation.models.reservation import RECEPTION_HORIZON_DAYS, minutes_label
 
 
@@ -35,9 +36,16 @@ class ReceptionBooking(models.AbstractModel):
         return self.env["elite.vet.reservation.wizard"].create(values)
 
     @api.model
+    def _horizon(self):
+        """Last day the wizard offers times for (same window as `availability.slots`)."""
+        return clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS)
+
+    @api.model
     def _next_free_day(self, wizard, day):
-        """The wizard's "next free day" search from `day` on; None when nothing is free."""
-        for _i in range(RECEPTION_HORIZON_DAYS):
+        """The wizard's "next free day" search after `day`, up to the horizon; None when
+        nothing is free."""
+        horizon = self._horizon()
+        while day < horizon:
             day += timedelta(days=1)
             if wizard._free_slots(day):
                 return day.isoformat()
@@ -65,6 +73,8 @@ class ReceptionBooking(models.AbstractModel):
         self._check_reception()
         procedure = self._get_procedure(procedure_id)
         day = self._day(day)
+        if day > self._horizon():
+            return {"day": day.isoformat(), "slots": [], "next_free_day": None}
         wizard = self._booking_wizard(procedure, day, doctor_id)
         wizard._load_slots()
         slots = [{
@@ -72,7 +82,9 @@ class ReceptionBooking(models.AbstractModel):
             "room_id": line.room_id.id, "room": line.room_id.name,
             "doctor_id": line.doctor_id.id or False, "doctor": line.doctor_id.name or None,
         } for line in wizard.slot_ids]
-        return {"day": day.isoformat(), "slots": slots, "next_free_day": self._next_free_day(wizard, day)}
+        # the next free day is searched only when the day itself has nothing (it is costly)
+        next_free_day = None if slots else self._next_free_day(wizard, day)
+        return {"day": day.isoformat(), "slots": slots, "next_free_day": next_free_day}
 
     @api.model
     def book(self, pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None):
@@ -80,13 +92,14 @@ class ReceptionBooking(models.AbstractModel):
         pet = self.env["elite.vet.pet"].browse(self._to_id(pet_id)).exists()
         if not pet:
             raise UserError(_("Zvíře nebylo nalezeno."))
+        self._check_bookable_pet(pet)
+        partner = self._get_owner(pet.partner_id.id)  # the card index owner rule (no staff / company)
         procedure = self._get_procedure(procedure_id)
         day = self._day(day)
         minute = self._to_id(minute)
         room = self.env["elite.vet.room"].browse(self._to_id(room_id)).exists()
         if not room:
             raise UserError(_("Ordinace nebyla nalezena."))
-        partner = pet.partner_id
         wizard = self._booking_wizard(procedure, day, doctor_id, minute=minute, room_id=room.id,
                                       partner_mode="existing", partner_id=partner.id, pet_id=pet.id,
                                       note=(note or "").strip() or False)
@@ -108,6 +121,8 @@ class ReceptionBooking(models.AbstractModel):
             ("kind", "=", "reservation"), ("state", "=", "confirmed"), ("room_id", "=", room.id),
             ("start", "=", A.local_to_utc(day, minute)), ("partner_id", "=", partner.id)],
             order="id desc", limit=1)
+        if not reservation:
+            raise UserError(_("Rezervaci se nepodařilo uložit – zkuste to prosím znovu."))
         return {
             "reservation_id": reservation.id,
             "label": "%s %s, %s" % (wizard.day_label, minutes_label(minute), room.name),
