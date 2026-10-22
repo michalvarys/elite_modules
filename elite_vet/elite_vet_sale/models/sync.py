@@ -76,7 +76,8 @@ class WinvetSync(models.AbstractModel):
         super()._after_full_run(entity, stats, errors)
         if entity != "stock_totals" or not self.env["elite.vet.sale.setup"].is_winvet_master():
             return
+        # the warnings are stored on the status (stock_mirror_warnings), not in `errors`: they
+        # would overwrite last_error after every cycle and hide real errors of other entities
         result = self.env["elite.vet.winvet.stock.layer"]._apply_mirror()
         _logger.info("Elite Vet: stock mirrored from WinVet – %(products)s products, %(adjusted)s quants "
                      "adjusted, %(n)s warnings", dict(result, n=len(result["warnings"])))
-        errors.extend(result["warnings"])

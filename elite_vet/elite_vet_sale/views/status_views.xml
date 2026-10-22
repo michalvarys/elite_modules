@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_winvet_status_form_sale" model="ir.ui.view">
+        <field name="name">elite.vet.winvet.status.form.sale</field>
+        <field name="model">elite.vet.winvet.status</field>
+        <field name="inherit_id" ref="elite_vet_winvet.view_winvet_status_form"/>
+        <field name="arch" type="xml">
+            <page name="entities" position="after">
+                <page string="Zrcadlo skladu" name="stock_mirror">
+                    <group>
+                        <field name="stock_mirror_date"/>
+                        <field name="stock_mirror_warnings" placeholder="bez upozornění"
+                               decoration-warning="stock_mirror_warnings"/>
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

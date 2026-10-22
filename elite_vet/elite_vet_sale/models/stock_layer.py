@@ -68,7 +68,15 @@ class WinvetStockLayer(models.Model):
             result["warnings"].append("zrcadlo skladu: společnost nemá sklad")
             return result
 
-        items = env["elite.vet.winvet.item"].with_context(active_test=False).search([("product_id", "!=", False)])
+        Item = env["elite.vet.winvet.item"].with_context(active_test=False)
+        stocked = Total.search([("total", "!=", 0), ("item_id", "!=", False)]).item_id
+        # goods WinVet holds stock for but whose product is missing or not storable yet
+        stocked.filtered(lambda i: i.active and i.kind == "product" and not i.product_id.is_storable) \
+            ._sync_products(result["warnings"])
+        inactive = stocked.filtered(lambda i: not i.active and not i.product_id.is_storable)
+        if inactive:
+            result["warnings"].append("%d neaktivních položek se stavem skladu se nepřenáší" % len(inactive))
+        items = Item.search([("product_id", "!=", False)])
         items = items.filtered(lambda i: i.product_id.is_storable)
         layers_by_item, totals_by_item = defaultdict(list), defaultdict(float)
         has_total = set()
@@ -102,6 +110,10 @@ class WinvetStockLayer(models.Model):
                 _logger.warning("Elite Vet: stock of item %s not mirrored: %s", item.winvet_ref, exc)
                 result["warnings"].append("Položka %s: stav skladu nenastaven (%s)" % (self._label(item), exc))
         result["adjusted"] = self._apply_quants(to_apply, result["warnings"])
+        env["elite.vet.winvet.status"].get_status().write({
+            "stock_mirror_warnings": "\n".join(result["warnings"]) or False,
+            "stock_mirror_date": fields.Datetime.now(),
+        })
         return result
 
     def _label(self, item):
@@ -175,8 +187,8 @@ class WinvetStockLayer(models.Model):
                 lot = Lot.create({"name": name, "product_id": product.id, "company_id": company.id,
                                   "expiration_date": expiration})
                 lots[(product.id, name)] = lot
-            elif expiration and lot.expiration_date != expiration:
-                lot.expiration_date = expiration
+            elif lot.expiration_date != expiration:
+                lot.expiration_date = expiration  # also cleared when WinVet has no expiry any more
             wanted[lot.id] = wanted.get(lot.id, 0.0) + qty
         changed = Quant
         for quant in quants:

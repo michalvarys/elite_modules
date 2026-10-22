@@ -73,8 +73,16 @@ skladový produkt položky ceníku:
    ve vrstvách nejsou (a kvanty v podlokacích), se vynulují. Pohyby z Odoo plný běh přepíše.
 4. **Nákupní cena** produktu = cena za MJ nejnovější vrstvy bez DPH.
 
+Zboží (druh „product“), pro které WinVet vede nenulový stav, dostane skladový produkt se
+šaržemi a expirací, i když ve WinVetu nemá zapnutou skladovou evidenci (`_has_winvet_stock`);
+zrcadlo takový produkt před nastavením stavu vytvoří/převede. Neaktivní položky se stavem
+se nepřenášejí (jedno souhrnné upozornění s jejich počtem).
+
 Upozornění („Položka X: rozdíl Y proti stavu WinVetu“, když vrstvy WinVetu nesedí na jeho
-stav, a oříznutí záporného stavu) jdou do chyb pushe, tedy do Stavu synchronizace.
+stav, oříznutí záporného stavu, souhrn neaktivních položek) se ukládají zvlášť do
+`stock_mirror_warnings` / `stock_mirror_date` na Stavu synchronizace (záložka „Zrcadlo
+skladu“), ne do chyb pushe – jinak by po každém cyklu přepsala `last_error` a skryla
+skutečné chyby jiných oblastí.
 
 ## Role
 

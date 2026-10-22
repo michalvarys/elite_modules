@@ -29,6 +29,7 @@ bezpečně spustit znovu (elite.vet.sale.setup.ensure_setup). Popis je v README.
         "security/ir.model.access.csv",
         "data/product_data.xml",
         "views/item_views.xml",
+        "views/status_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

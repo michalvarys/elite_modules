@@ -8,6 +8,8 @@ from .common import SaleCase
 
 ITEM = BASE + 7001          # storable item
 SERVICE = BASE + 7002       # service item (not storable)
+GOODS = BASE + 7003         # goods not stock-tracked in WinVet
+INACTIVE = BASE + 7004      # archived goods
 LOT_A = BASE + 8001         # layer with a lot
 NO_LOT = BASE + 8002        # layer without a lot
 LOT_B = BASE + 8003
@@ -32,6 +34,12 @@ class TestStockMirror(SaleCase):
             {"id": SERVICE, "code": "SK2", "name": "Služba", "classification": "service",
              "stock_tracked": False, "tracked_drug": False, "unit": "ks", "barcode": None,
              "price": 100.0, "price_untaxed": 82.64, "vat_rate": 21.0, "active": True},
+            {"id": GOODS, "code": "SK3", "name": "Zboží bez evidence", "classification": "product",
+             "stock_tracked": False, "tracked_drug": False, "unit": "ks", "barcode": None,
+             "price": 50.0, "price_untaxed": 41.32, "vat_rate": 21.0, "active": True},
+            {"id": INACTIVE, "code": "SK4", "name": "Vyřazené zboží", "classification": "product",
+             "stock_tracked": True, "tracked_drug": False, "unit": "ks", "barcode": None,
+             "price": 50.0, "price_untaxed": 41.32, "vat_rate": 21.0, "active": False},
         ], mode="incremental")
         Item = cls.env["elite.vet.winvet.item"].with_context(active_test=False)
         cls.product = Item.search([("winvet_ref", "=", ITEM)]).product_id
@@ -120,8 +128,51 @@ class TestStockMirror(SaleCase):
         self.full_run(self.default_layers(), [self.total(6.0)])
         # the surplus goes to the lot with the latest expiry
         self.assertEqual(self.quants(), {"A": 4.0, "WV-%d" % NO_LOT: 2.0})
-        self.assertIn("Položka SK1: rozdíl 1 proti stavu WinVetu", self.last_error())
-        self.assertNotIn("záporn", self.last_error())
+        # mirror warnings are kept apart from the push errors (they would hide real errors)
+        self.assertNotIn("rozdíl", self.last_error())
+        status = self.env["elite.vet.winvet.status"].get_status()
+        self.assertIn("Položka SK1: rozdíl 1 proti stavu WinVetu", status.stock_mirror_warnings)
+        self.assertNotIn("SK1: záporn", status.stock_mirror_warnings)
+        self.assertTrue(status.stock_mirror_date)
+
+    def test_mirror_without_warnings_clears_them(self):
+        status = self.env["elite.vet.winvet.status"].get_status()
+        status.stock_mirror_warnings = "staré upozornění"
+        self.Layer.search([]).unlink()
+        self.Total.search([]).unlink()
+        self.Layer._apply_mirror()
+        self.assertFalse(status.stock_mirror_warnings)
+
+    def test_untracked_goods_with_stock_become_storable(self):
+        Item = self.env["elite.vet.winvet.item"].with_context(active_test=False)
+        product = Item.search([("winvet_ref", "=", GOODS)]).product_id
+        self.assertFalse(product.is_storable)
+        self.full_run([self.layer(LOT_B, 3.0, lot="G", expiry="2027-05-31", item=GOODS)],
+                      [self.total(3.0, item=GOODS, ref=TOTAL + 3)])
+        product = Item.search([("winvet_ref", "=", GOODS)]).product_id
+        self.assertTrue(product.is_storable)
+        self.assertEqual(product.tracking, "lot")
+        self.assertTrue(product.use_expiration_date)
+        self.assertEqual(self.quants(product), {"G": 3.0})
+        # the next price list push keeps it storable while WinVet holds stock for it
+        self.push_raw("items", [{"id": GOODS, "code": "SK3", "name": "Zboží bez evidence",
+                                 "classification": "product", "stock_tracked": False, "tracked_drug": False,
+                                 "unit": "ks", "barcode": None, "price": 55.0, "price_untaxed": 45.45,
+                                 "vat_rate": 21.0, "active": True}], mode="incremental")
+        self.assertTrue(product.is_storable)
+
+    def test_inactive_items_with_stock_summarised(self):
+        result = self.mirror([self.layer(LOT_B, 2.0, lot="X", item=INACTIVE)],
+                             [self.total(2.0, item=INACTIVE, ref=TOTAL + 4)])
+        summary = [w for w in result["warnings"] if "neaktivních položek se stavem skladu se nepřenáší" in w]
+        self.assertEqual(len(summary), 1, result)
+        self.assertFalse([w for w in result["warnings"] if "SK4" in w])
+
+    def test_lot_expiry_cleared_when_gone_in_winvet(self):
+        self.mirror([self.layer(LOT_A, 3.0, lot="A", expiry="2027-01-31")], [self.total(3.0)])
+        self.mirror([self.layer(LOT_A, 3.0, lot="A", expiry=None)], [self.total(3.0)])
+        lot = self.env["stock.lot"].search([("product_id", "=", self.product.id), ("name", "=", "A")])
+        self.assertFalse(lot.expiration_date)
 
     def test_incremental_totals_do_not_mirror(self):
         self.push_raw("stock_lots", self.default_layers())

@@ -73,6 +73,18 @@ class WinvetItem(models.Model):
         if diff:
             product.write(diff)
 
+    def _has_winvet_stock(self):
+        """WinVet holds stock for the item (a non-zero stock_totals row), even if the item is not
+        marked as stock-tracked: its product must be storable so the stock mirror covers it."""
+        self.ensure_one()
+        return bool(self.env["elite.vet.winvet.stock.total"].sudo().search_count(
+            [("item_id", "=", self.id), ("total", "!=", 0)], limit=1))
+
+    def _keeps_stock(self, product):
+        """A storable product with stock moves stays storable (Odoo cannot turn it back)."""
+        return bool(product and product.is_storable and self.env["stock.move"].sudo().search_count(
+            [("product_id", "=", product.id)], limit=1))
+
     def _product_vals(self, product):
         """Values of the product for this item; `product` is the existing one or an empty recordset."""
         self.ensure_one()
@@ -80,7 +92,8 @@ class WinvetItem(models.Model):
         category = self.env.ref("elite_vet_sale.pos_category_%s" % ("services" if self.kind == "service"
                                                                      else "products"))
         unit = self.env.ref("uom.product_uom_unit")
-        storable = self.kind == "product" and self.stock_tracked
+        storable = self.kind == "product" and (self.stock_tracked or self._has_winvet_stock()
+                                               or self._keeps_stock(product))
         vals = {
             "name": self.name,
             "default_code": self.code or False,
