@@ -24,12 +24,12 @@ class TestCardIndex(ReceptionCase):
     # ---------------------------------------------------------------- search
     def test_search_by_phone_digits_and_pet_name(self):
         reception = self.api(self.reception)
-        by_phone = reception.search("602111987")
+        by_phone = reception.card_search("602111987")
         pets = [r for r in by_phone if r["kind"] == "pet"]
         self.assertIn(self.pet.id, [r["id"] for r in pets])
         hit = [r for r in pets if r["id"] == self.pet.id][0]
         self.assertEqual(hit["partner_id"], self.owner.id)
-        by_name = reception.search("Azor Klin")
+        by_name = reception.card_search("Azor Klin")
         self.assertIn(self.pet.id, [r["id"] for r in by_name if r["kind"] == "pet"])
 
     def test_search_finds_owner_without_pets(self):
@@ -38,15 +38,15 @@ class TestCardIndex(ReceptionCase):
         partner_id = data["owner"]["id"]
         reception = self.api(self.reception)
         for term in ("Bezzvířecí", "731 555 101", "bezzvireci.karta@"):
-            owners = [r for r in reception.search(term) if r["kind"] == "owner"]
+            owners = [r for r in reception.card_search(term) if r["kind"] == "owner"]
             self.assertIn(partner_id, [r["partner_id"] for r in owners], term)
-        owner = [r for r in reception.search("Bezzvířecí") if r["kind"] == "owner"][0]
+        owner = [r for r in reception.card_search("Bezzvířecí") if r["kind"] == "owner"][0]
         self.assertEqual(owner["name"], "Bezzvířecí Kartotéková")
         self.assertEqual(owner["phone"], "+420 731 555 101")
         # an owner shown through a pet is not listed twice
-        owner_ids = [r["partner_id"] for r in reception.search("602111987") if r["kind"] == "owner"]
+        owner_ids = [r["partner_id"] for r in reception.card_search("602111987") if r["kind"] == "owner"]
         self.assertNotIn(self.owner.id, owner_ids)
-        self.assertEqual(reception.search("x"), [])
+        self.assertEqual(reception.card_search("x"), [])
 
     # ---------------------------------------------------------------- owner_data
     def test_owner_data(self):
@@ -147,7 +147,7 @@ class TestCardIndex(ReceptionCase):
     def test_rights(self):
         outsider = self.api(self.outsider)
         with self.assertRaises(AccessError):
-            outsider.search("Azor")
+            outsider.card_search("Azor")
         with self.assertRaises(AccessError):
             outsider.owner_data(self.owner.id)
         with self.assertRaises(AccessError):
@@ -158,7 +158,7 @@ class TestCardIndex(ReceptionCase):
         with self.assertRaises(AccessError):
             outsider.match_reservation(res.id, self.owner.id, self.pet.id)
         for user in (self.reception, self.nurse, self.doctor_user, self.manager):
-            self.assertTrue(self.api(user).search("Azor Klin"))
+            self.assertTrue(self.api(user).card_search("Azor Klin"))
             self.assertEqual(self.api(user).owner_data(self.owner.id)["owner"]["id"], self.owner.id)
 
     # ---------------------------------------------------------------- match_reservation
@@ -180,3 +180,64 @@ class TestCardIndex(ReceptionCase):
         record = reception.check_in(res.id, employee_name="Jana")
         self.assertEqual((record["pet_id"], record["reservation_id"], record["stage"]),
                          (self.pet.id, res.id, "waiting"))
+
+    # ---------------------------------------------------------------- fix round 1
+    def test_staff_and_company_partners_are_not_owners(self):
+        reception = self.api(self.reception)
+        for partner in (self.nurse.partner_id, self.env.company.partner_id):
+            with self.assertRaises(UserError) as err:
+                reception.owner_data(partner.id)
+            self.assertEqual(err.exception.args[0], "Tento kontakt není klient kliniky.")
+            with self.assertRaises(UserError):
+                reception.save_owner({"phone": "111 222 333"}, partner_id=partner.id)
+            with self.assertRaises(UserError):
+                reception.save_pet(partner.id, {"name": "Služební", "species": "dog"})
+        self.assertNotEqual(self.nurse.partner_id.phone, "111 222 333")
+
+    def test_existing_non_client_is_not_upgraded(self):
+        partner = self.env["res.partner"].create({"name": "Dodavatel Kartotéky"})
+        data = self.api(self.reception).save_owner({"city": "Olomouc"}, partner_id=partner.id)
+        self.assertEqual(data["owner"]["city"], "Olomouc")
+        self.assertFalse(partner.is_vet_client)
+
+    def test_bad_input(self):
+        reception = self.api(self.reception)
+        for vals in (["name"], "name"):
+            with self.assertRaises(UserError):
+                reception.save_owner(vals)
+        with self.assertRaises(UserError):
+            reception.save_owner({"name": {"cs": "Jméno"}})
+        with self.assertRaises(UserError):
+            reception.save_pet(self.owner.id, {"name": "Datum", "species": "dog", "birth_date": ["2020"]})
+        data = reception.save_owner({"name": "Číselná Kartotéka", "zip": 60200})
+        self.assertEqual(self.env["res.partner"].browse(data["owner"]["id"]).zip, "60200")
+        with self.assertRaises(UserError):
+            reception.owner_data("abc")
+        with self.assertRaises(UserError):
+            reception.card_search(["name"])
+
+    def test_owner_phone_branch_only_for_numbers(self):
+        # "Ulice 1234" has 4 digits but is not a number: no phone match on "1234"
+        data = self.owner_by_api(name="Telefonní Kartotéka", phone="604 991 234")
+        owner_ids = [r["partner_id"] for r in self.api(self.reception).card_search("Ulice 1234")
+                     if r["kind"] == "owner"]
+        self.assertNotIn(data["owner"]["id"], owner_ids)
+        owner_ids = [r["partner_id"] for r in self.api(self.reception).card_search("991 234")
+                     if r["kind"] == "owner"]
+        self.assertIn(data["owner"]["id"], owner_ids)
+
+    def test_match_reservation_second_room_and_other_pet(self):
+        reception = self.api(self.reception)
+        res = self.reservation(10, 0, contact_name="Web Druhá Ordinace", pet_name="Dvojka")
+        room2 = self.env["elite.vet.room"].create({"name": "Ordinace 2 test kartotéky"})
+        second = res.add_second_room(room2)
+        summary = reception.match_reservation(second.id, self.owner.id, self.pet.id)
+        self.assertEqual(summary["reservation_id"], res.id)
+        self.assertEqual((res.pet_id, second.pet_id), (self.pet, self.pet))
+
+        reception.check_in(res.id)
+        other_pet = self.new_pet("Jiné Zvíře Kartotéky")
+        with self.assertRaises(UserError) as err:
+            reception.match_reservation(res.id, self.owner.id, other_pet.id)
+        self.assertEqual(err.exception.args[0], "Rezervace už má návštěvu jiného zvířete.")
+        self.assertEqual(res.pet_id, self.pet)

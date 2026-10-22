@@ -4,6 +4,8 @@ and pets, and link a web reservation to them.
 Owners and pets are written with the caller's own rights (reception has create/write on
 res.partner and elite.vet.pet); sudo is used only for the clinic-derived data (bills).
 """
+import re
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.osv import expression
@@ -17,14 +19,23 @@ SEARCH_LIMIT = 20
 
 
 def _clean(vals, allowed):
-    """Only the allowed keys; strings stripped, empty values -> False."""
+    """Only the allowed keys, values as stripped strings; empty values -> False."""
+    if vals is None:
+        vals = {}
+    if not isinstance(vals, dict):
+        raise UserError(_("Neplatná data formuláře."))
     clean = {}
     for key in allowed:
-        if key in (vals or {}):
-            value = vals[key]
-            if isinstance(value, str):
-                value = value.strip()
-            clean[key] = value or False
+        if key not in vals:
+            continue
+        value = vals[key]
+        if value is None or value is False:
+            value = ""
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            value = str(value)
+        elif not isinstance(value, str):
+            raise UserError(_("Neplatná hodnota pole %s.") % key)
+        clean[key] = value.strip() or False
     return clean
 
 
@@ -35,14 +46,24 @@ class ReceptionCardIndex(models.AbstractModel):
 
     @api.model
     def _get_owner(self, partner_id):
-        partner = self.env["res.partner"].browse(int(partner_id or 0)).exists()
+        partner = self.env["res.partner"].browse(self._to_id(partner_id)).exists()
         if not partner:
             raise UserError(_("Majitel nebyl nalezen."))
+        staff = partner.sudo().with_context(active_test=False)
+        if staff.user_ids or staff in self.env["res.company"].sudo().search([]).partner_id:
+            raise UserError(_("Tento kontakt není klient kliniky."))
         return partner
 
     @api.model
+    def _to_id(self, value):
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            raise UserError(_("Neplatné ID: %s") % value) from None
+
+    @api.model
     def _get_owner_pet(self, partner, pet_id):
-        pet = self.env["elite.vet.pet"].browse(int(pet_id or 0)).exists()
+        pet = self.env["elite.vet.pet"].browse(self._to_id(pet_id)).exists()
         if not pet:
             raise UserError(_("Zvíře nebylo nalezeno."))
         if pet.partner_id != partner:
@@ -62,7 +83,8 @@ class ReceptionCardIndex(models.AbstractModel):
     def _search_owners(self, term, exclude_ids, limit):
         domain = ["|", ("name", "ilike", term), ("email", "ilike", term)]
         digits = normalize_phone(term)
-        if len(digits) >= 4:
+        # same rule as search_patients: the term is a number (digits and phone separators only)
+        if len(digits) >= 4 and len(digits) >= len(re.sub(r"[\s+\-/().]", "", term)):
             domain = expression.OR([domain, [("id", "in", self._owner_ids_by_phone(digits))]])
         domain = expression.AND([domain, [("is_vet_client", "=", True), ("id", "not in", list(exclude_ids))]])
         owners = self.env["res.partner"].search(domain, limit=limit, order="name, id")
@@ -87,20 +109,20 @@ class ReceptionCardIndex(models.AbstractModel):
             return False
         try:
             return fields.Date.to_date(value)
-        except ValueError:
+        except (TypeError, ValueError):
             raise UserError(_("Neplatné datum narození: %s (zadejte RRRR-MM-DD).") % value) from None
 
     # ------------------------------------------------------------------ read API
 
     @api.model
-    def search(self, domain, offset=0, limit=None, order=None):
-        """`search(term)` from the card index: pets (clinic `search_patients`: name, owner, chip,
-        phone digits) plus owners matching name / phone / e-mail that no listed pet shows already
-        (e.g. owners without pets). A non-string argument is the ORM search (kept working)."""
-        if not isinstance(domain, str):
-            return super().search(domain, offset=offset, limit=limit, order=order)
+    def card_search(self, term):
+        """Card index search: pets (clinic `search_patients`: name, owner, chip, phone digits)
+        plus owners matching name / phone / e-mail that no listed pet shows already
+        (e.g. owners without pets)."""
         self._check_reception()
-        term = domain.strip()
+        if not isinstance(term, str):
+            raise UserError(_("Zadejte hledaný text."))
+        term = term.strip()
         if len(term) < 2:
             return []
         pets = self.env["elite.vet.clinical.record"].search_patients(term, limit=SEARCH_LIMIT)
@@ -135,8 +157,6 @@ class ReceptionCardIndex(models.AbstractModel):
             partner = self._get_owner(partner_id)
             if "name" in vals and not vals["name"]:
                 raise UserError(_("Vyplňte jméno majitele."))
-            if not partner.is_vet_client:
-                vals["is_vet_client"] = True
             if vals:
                 partner.write(vals)
         else:
@@ -176,13 +196,19 @@ class ReceptionCardIndex(models.AbstractModel):
         """Link a (web) reservation to an owner and a pet from the card index; its second-room
         copy gets the same client. The board is notified by the reservation write."""
         self._check_reception()
-        reservation = self.env["elite.vet.reservation"].browse(int(reservation_id or 0)).exists()
+        reservation = self.env["elite.vet.reservation"].browse(self._to_id(reservation_id)).exists()
         if not reservation or reservation.kind != "reservation":
             raise UserError(_("Rezervace nebyla nalezena."))
+        if reservation.is_second_room and reservation.linked_reservation_id:
+            reservation = reservation.linked_reservation_id  # the client belongs to the main reservation
         if reservation.state in ("cancelled", "no_show"):
             raise UserError(_("Zrušenou rezervaci nelze spárovat."))
         partner = self._get_owner(partner_id)
         pet = self._get_owner_pet(partner, pet_id)
+        visit = self._records().search([("reservation_id", "=", reservation.id), ("state", "!=", "cancelled")],
+                                       limit=1)
+        if visit and visit.pet_id != pet:
+            raise UserError(_("Rezervace už má návštěvu jiného zvířete."))
         vals = {"partner_id": partner.id, "pet_id": pet.id}
         reservation.write(vals)
         second = reservation.linked_reservation_id

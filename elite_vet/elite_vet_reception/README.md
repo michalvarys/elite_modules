@@ -68,7 +68,7 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 
 | Metoda | Vrací |
 |---|---|
-| `search(term)` | seznam: zvířata (`kind: "pet"`, tvar `search_patients` karty pacienta – jméno, majitel, čip, číslice telefonu) a majitelé (`kind: "owner"`: `id, partner_id, name, owner, phone, email, pet_count`) podle jména / telefonu / e-mailu, které žádné nalezené zvíře neukazuje (např. bez zvířat); méně než 2 znaky = `[]` |
+| `card_search(term)` | seznam: zvířata (`kind: "pet"`, tvar `search_patients` karty pacienta – jméno, majitel, čip, číslice telefonu) a majitelé (`kind: "owner"`: `id, partner_id, name, owner, phone, email, pet_count`) podle jména / telefonu / e-mailu, které žádné nalezené zvíře neukazuje (např. bez zvířat); méně než 2 znaky = `[]` |
 | `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...]}` |
 | `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
 | `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče `name, species, breed, sex, birth_date, chip, note`; jméno a druh povinné, zvíře musí patřit majiteli |
@@ -80,7 +80,11 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 - **open_bills** – nezaplacené účty majitele, stejný tvar jako `to_pay` (`record_id, amount,
   payment_state_label, …`).
 - Stejný telefon nebo e-mail jako jiný majitel nevadí: uloží se, nic se neslučuje.
-- `search` s doménou (ne řetězcem) zůstává běžným ORM hledáním.
+- Majitel nesmí být kontakt uživatele (personál) ani firmy: „Tento kontakt není klient kliniky.“
+  Úprava existujícího kontaktu mu `is_vet_client` nepřidá (jen nový majitel ho dostane).
+- Hodnoty formuláře se berou jako text (ořezaný); jiná data skončí chybou.
+- `match_reservation` u druhé ordinace páruje hlavní rezervaci; rezervace, která už má návštěvu
+  jiného zvířete, skončí chybou „Rezervace už má návštěvu jiného zvířete.“
 
 ## Testy
 
