@@ -317,9 +317,12 @@
 }
 .evpc-total { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0 10px; font-weight: 700; font-size: 19px; }
 .evpc-total-count { font-size: 12.5px; font-weight: 400; color: var(--evpc-muted); }
-.evpc-bill-add { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
-    // the footer sits at the bottom of the column: the list opens upwards
-    .evpc-pop { top: auto; bottom: calc(100% + 4px); }
+.evpc-bill-add { position: relative; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+    // The footer sits at the bottom of the column: the list opens upwards. It spans the bill
+    // column instead of a fixed 380 px, because the column scrolls on its own (overflow) and
+    // would clip a list that reaches into the record column.
+    .evpc-anchor { position: static; }
+    .evpc-pop { top: auto; bottom: calc(100% + 4px); left: 0; right: 0; width: auto; max-width: none; }
 }
 .evpc-bill-final { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 12px; border-top: 1px solid var(--evpc-line); }
 
