@@ -95,11 +95,16 @@ cena s DPH z řádku (úprava ceny lékařkou platí), pořadí. Opětovné uzav
 přepíše (tatáž nabídka); záznam bez položek nabídku nemá (dřívější nezaplacenou smaže).
 Zápis nabídky běží přes `sudo()` až po kontrole práva zápisu do záznamu.
 
-`payment_state` (počítaný): **Bez účtu** / **Čeká na platbu** / **Zaplaceno** (některý `pos.order`
-s řádkem nabídky je zaplacený nebo fakturovaný) / **Zrušeno** (zrušený záznam nebo nabídka).
-Zaplacený záznam nejde znovu otevřít ani zrušit (`UserError` – vratka v pokladně); zrušení
-záznamu zruší nezaplacenou nabídku. API karty (`_record_data`) vrací navíc `payment_state`,
-`payment_state_label`, `sale_order_name`.
+`payment_state` (počítaný): **Bez účtu** / **Čeká na platbu** / **Částečně zaplaceno** (některý
+zaplacený `pos.order` s řádkem nabídky, ale `amount_unpaid` z `pos_sale` > 0 – záloha nebo vyrovnání
+jen části) / **Zaplaceno** (zaplaceno nebo fakturováno a `amount_unpaid` = 0) / **Zrušeno** (zrušený
+záznam nebo nabídka). Zaplacený záznam nejde znovu otevřít ani zrušit (`UserError` – vratka
+v pokladně), částečně zaplacený také ne („Na účet už je zaplacená záloha…“). Když recepce zaplatí
+nabídku, zatímco je záznam znovu otevřený, další „Hotovo“ projde, nabídku nechá, jak je, a do
+chatteru záznamu zapíše „Účet už byl zaplacen v pokladně – položky účtu se nezměnily.“ Potvrzená,
+ale nezaplacená nabídka (bez platby v pokladně) se zruší, vrátí do stavu nabídky a přepíše; stejně
+tak zrušená. Zrušení záznamu zruší nezaplacenou nabídku. API karty (`_record_data`) vrací navíc
+`payment_state`, `payment_state_label`, `sale_order_name`.
 
 ## Role
 
@@ -123,4 +128,4 @@ docker compose start odoo
 
 `tests/common.py`: `SaleCase` (rozšiřuje `ClinicCase` z `elite_vet_clinic`) – spustí
 `ensure_setup()` a nabízí `pos_config`, `tax21`, `tax12`, `tax0`; `settle(quotation, method="card",
-invoice=False)` vyrovná nabídku v pokladně Recepce jako `pos_sale` (`sync_from_ui`) a vrátí `pos.order`.
+invoice=False, order_lines=None)` vyrovná nabídku v pokladně Recepce jako `pos_sale` (`sync_from_ui`) a vrátí `pos.order`.

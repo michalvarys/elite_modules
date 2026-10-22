@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from odoo import fields
 
 from odoo.addons.elite_vet_clinic.tests.common import ClinicCase
@@ -26,16 +28,17 @@ class SaleCase(ClinicCase):
             config.open_ui()
         return config.current_session_id
 
-    def settle(self, quotation, method="card", invoice=False):
+    def settle(self, quotation, method="card", invoice=False, order_lines=None):
         """Settle a quotation in the Recepce till as the POS UI does with pos_sale's "Settle the
-        order" (one POS line per quotation line, prices incl. tax, paid in full) -> pos.order."""
+        order" (one POS line per quotation line, prices incl. tax, paid in full) -> pos.order.
+        `order_lines` (sale.order.line): settle only these lines (a partial settlement)."""
         session = self.pos_session()
         config = session.config_id
         currency = config.currency_id
         payment_method = config.payment_method_ids.filtered(lambda m: m.name == PAYMENT_METHODS[method])[:1]
         assert payment_method, "payment method %s missing on %s" % (method, config.name)
         lines = []
-        for sol in quotation.order_line.filtered(lambda l: not l.display_type):
+        for sol in (order_lines if order_lines is not None else quotation.order_line).filtered(lambda l: not l.display_type):
             taxes = sol.tax_id
             values = taxes.compute_all(sol.price_unit, currency, sol.product_uom_qty, product=sol.product_id,
                                        partner=quotation.partner_id) if taxes else {
@@ -51,7 +54,7 @@ class SaleCase(ClinicCase):
             }))
         total_incl = currency.round(sum(line[2]["price_subtotal_incl"] for line in lines))
         total_excl = currency.round(sum(line[2]["price_subtotal"] for line in lines))
-        uuid = "ev-settle-%s-%s" % (quotation.id, fields.Datetime.now().timestamp())
+        uuid = str(uuid4())
         data = {
             "amount_paid": total_incl, "amount_return": 0, "amount_tax": total_incl - total_excl,
             "amount_total": total_incl, "date_order": fields.Datetime.to_string(fields.Datetime.now()),

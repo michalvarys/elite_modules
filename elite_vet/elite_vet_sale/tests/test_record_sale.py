@@ -128,3 +128,83 @@ class TestRecordSale(SaleCase):
         data = self.as_user(self.reception).get_record(record.id)
         self.assertEqual(data["payment_state"], "waiting")
         self.assertEqual(data["sale_order_name"], record.sale_order_id.name)
+
+    # fix round 1 ------------------------------------------------------------
+    def test_paid_while_reopened_done_keeps_quotation(self):
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        self.doctor_api().reopen_record(record.id)
+        self.settle(order)
+        lines_before = order.order_line
+        exam_line = record.line_ids.filtered(lambda l: l.item_id == self.exam)
+        exam_line.with_user(self.nurse).quantity = 3
+        data = self.done(record)
+        self.assertEqual(record.state, "done")
+        self.assertEqual(data["payment_state"], "paid")
+        self.assertEqual(record.sale_order_id, order)
+        self.assertEqual(order.order_line, lines_before)
+        self.assertAlmostEqual(order.amount_total, 550.0, places=2)
+        self.assertIn("Účet už byl zaplacen v pokladně", record.message_ids[:1].body)
+
+    def test_confirmed_unpaid_quotation_rewritten(self):
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+        self.doctor_api().reopen_record(record.id)
+        self.nurse_api().remove_line(record.line_ids.filtered(lambda l: not l.item_id).id)
+        self.done(record)
+        self.assertEqual(record.sale_order_id, order)
+        self.assertEqual(order.state, "draft")
+        self.assertEqual(len(order.order_line), 1)
+        self.assertAlmostEqual(order.amount_total, 450.0, places=2)
+        self.assertEqual(record.payment_state, "waiting")
+
+    def test_partial_settlement_is_partial(self):
+        # Simplest realistic partial payment: reception settles only one line of the quotation.
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        exam_line = order.order_line.filtered(lambda l: l.product_id == self.exam.product_id)
+        pos_order = self.settle(order, order_lines=exam_line)
+        self.assertIn(pos_order.state, ("paid", "done", "invoiced"))
+        self.assertEqual(record.payment_state, "partial")
+        self.assertEqual(self.nurse_api().get_record(record.id)["payment_state_label"], "Částečně zaplaceno")
+        with self.assertRaisesRegex(UserError, "záloha"):
+            self.doctor_api().reopen_record(record.id)
+        with self.assertRaisesRegex(UserError, "záloha"):
+            record.with_user(self.nurse).action_cancel()
+        self.settle(order, order_lines=order.order_line - exam_line)
+        self.assertEqual(record.payment_state, "paid")
+
+    def test_cancel_paid_record_blocked(self):
+        record = self.new_record()
+        self.done(record)
+        self.settle(record.sale_order_id, method="cash")
+        with self.assertRaisesRegex(UserError, "vratku"):
+            record.with_user(self.nurse).action_cancel()
+        self.assertEqual(record.state, "done")
+
+    def test_cancelled_quotation_back_to_draft(self):
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        order._action_cancel()
+        self.assertEqual(record.payment_state, "cancelled")
+        self.doctor_api().reopen_record(record.id)
+        self.done(record)
+        self.assertEqual(record.sale_order_id, order)
+        self.assertEqual(order.state, "draft")
+        self.assertEqual(record.payment_state, "waiting")
+
+    def test_settle_with_invoice(self):
+        record = self.new_record()
+        self.done(record)
+        pos_order = self.settle(record.sale_order_id, method="transfer", invoice=True)
+        self.assertEqual(pos_order.state, "invoiced")
+        self.assertTrue(pos_order.account_move)
+        self.assertEqual(pos_order.account_move.state, "posted")
+        self.assertEqual(pos_order.account_move.partner_id, self.owner)
+        self.assertEqual(record.payment_state, "paid")

@@ -1,8 +1,9 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import float_is_zero
 
-PAYMENT_STATES = [("none", "Bez účtu"), ("waiting", "Čeká na platbu"), ("paid", "Zaplaceno"),
-                  ("cancelled", "Zrušeno")]
+PAYMENT_STATES = [("none", "Bez účtu"), ("waiting", "Čeká na platbu"), ("partial", "Částečně zaplaceno"),
+                  ("paid", "Zaplaceno"), ("cancelled", "Zrušeno")]
 PAID_POS_STATES = ("paid", "done", "invoiced")
 
 
@@ -15,13 +16,16 @@ class ClinicalRecordSale(models.Model):
                                     index="btree_not_null", ondelete="set null")
     payment_state = fields.Selection(PAYMENT_STATES, string="Stav platby", compute="_compute_payment_state")
 
-    @api.depends("state", "sale_order_id.state", "sale_order_id.order_line.pos_order_line_ids.order_id.state")
+    @api.depends("state", "sale_order_id.state", "sale_order_id.amount_total",
+                 "sale_order_id.order_line.pos_order_line_ids.order_id.state",
+                 "sale_order_id.order_line.pos_order_line_ids.price_subtotal_incl")
     def _compute_payment_state(self):
         for rec in self:
             order = rec.sale_order_id.sudo()
-            if order and any(state in PAID_POS_STATES
-                             for state in order.order_line.pos_order_line_ids.order_id.mapped("state")):
-                rec.payment_state = "paid"
+            if order and rec._has_pos_payment():
+                # pos_sale's amount_unpaid: a deposit or a partial settlement leaves something to pay.
+                paid = float_is_zero(order.amount_unpaid, precision_rounding=order.currency_id.rounding)
+                rec.payment_state = "paid" if paid else "partial"
             elif rec.state == "cancelled" or order.state == "cancel":
                 rec.payment_state = "cancelled"
             elif order:
@@ -29,16 +33,28 @@ class ClinicalRecordSale(models.Model):
             else:
                 rec.payment_state = "none"
 
+    def _has_pos_payment(self):
+        """Some POS order with a line of the quotation is paid (or invoiced)."""
+        self.ensure_one()
+        states = self.sale_order_id.sudo().order_line.pos_order_line_ids.order_id.mapped("state")
+        return any(state in PAID_POS_STATES for state in states)
+
     # ------------------------------------------------------------------ state changes
 
     def _check_not_paid(self):
-        if any(rec.payment_state == "paid" for rec in self):
+        states = set(self.mapped("payment_state"))
+        if "paid" in states:
             raise UserError(_("Účet je už zaplacený – vrácení udělejte v pokladně jako vratku."))
+        if "partial" in states:
+            raise UserError(_("Na účet už je zaplacená záloha – změny udělejte v pokladně."))
 
     def action_done(self):
         res = super().action_done()
         for rec in self:
-            if rec.line_ids or rec.sale_order_id:
+            if rec.payment_state in ("paid", "partial"):
+                # Paid at the till while the record was reopened: the paid quotation stays as it is.
+                rec.message_post(body=_("Účet už byl zaplacen v pokladně – položky účtu se nezměnily."))
+            elif rec.line_ids or rec.sale_order_id:
                 rec._sync_sale_order()
         return res
 
@@ -64,7 +80,8 @@ class ClinicalRecordSale(models.Model):
         self._check_not_paid()
         order = self.sale_order_id.sudo()
         if order.state == "sale":
-            raise UserError(_("Nabídka %s je už potvrzená a nejde ji přepsat.") % order.name)
+            # Confirmed outside the till but never paid (checked above): back to a quotation.
+            order._action_cancel()
         if not self.line_ids:
             if order:
                 if order.state != "cancel":
