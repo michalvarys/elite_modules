@@ -32,11 +32,13 @@ bezpečně spustit znovu (elite.vet.sale.setup.ensure_setup). Popis je v README.
         "views/item_views.xml",
         "views/status_views.xml",
         "views/sale_order_views.xml",
+        "views/goods_receipt_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "elite_vet_sale/static/src/board_patch/*",
             "elite_vet_sale/static/src/patient_card_patch/*",
+            "elite_vet_sale/static/src/goods_receipt/*",
         ],
     },
     "post_init_hook": "post_init_hook",

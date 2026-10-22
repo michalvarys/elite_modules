@@ -1,0 +1,59 @@
+// Goods receipt (elite_vet_sale.goods_receipt): tablet first, one column.
+.evgr {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: auto;
+    padding: 16px;
+    background: $o-view-background-color;
+    gap: 12px;
+
+    .evgr-muted { color: $text-muted; }
+    .evgr-label { display: block; font-size: 0.8rem; color: $text-muted; margin-bottom: 2px; }
+    .evgr-head { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; }
+    .evgr-title { margin: 0 16px 0 0; font-size: 1.5rem; }
+    .evgr-supplier { position: relative; flex: 1 1 280px; min-width: 240px; }
+    .evgr-supplier-chosen { display: flex; align-items: center; gap: 8px; min-height: 38px; font-size: 1.1rem; }
+    .evgr-doc { flex: 0 1 220px; }
+    .evgr-dropdown {
+        position: absolute; z-index: 20; left: 0; right: 0; top: 100%;
+        max-height: 320px; overflow: auto; background: $o-view-background-color;
+        border: 1px solid $border-color; border-radius: 6px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+    .evgr-opt { padding: 10px 12px; cursor: pointer; }
+    .evgr-opt-active, .evgr-opt:hover { background: rgba($primary, 0.1); }
+    .evgr-opt-new { font-weight: 600; color: $primary; }
+
+    .evgr-scan { display: flex; align-items: center; gap: 10px; }
+    .evgr-scan-icon { font-size: 1.8rem; color: $text-muted; }
+    .evgr-scan-input { font-family: $font-family-monospace; }
+
+    .evgr-lines { flex: 1 1 auto; overflow-x: auto; border: 1px solid $border-color; border-radius: 6px; }
+    .evgr-lines table { min-width: 720px; }
+    .evgr-empty { text-align: center; color: $text-muted; padding: 32px 8px; }
+    .evgr-product { font-weight: 600; }
+    .evgr-line-last > td { background: rgba($success, 0.14); }
+    .evgr-col-lot { width: 150px; }
+    .evgr-col-exp { width: 150px; }
+    .evgr-col-qty { width: 150px; }
+    .evgr-col-cost { width: 120px; }
+    .evgr-col-total { width: 120px; white-space: nowrap; }
+    .evgr-qty { display: flex; align-items: center; gap: 4px; }
+    .evgr-qty .btn { min-width: 40px; min-height: 36px; font-size: 1.1rem; padding: 0 8px; }
+    .evgr-qty-input { width: 60px; }
+
+    .evgr-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+    .evgr-sum { display: flex; gap: 24px; font-size: 1.05rem; }
+    .evgr-hint { flex: 1 1 auto; }
+    .evgr-validate { min-width: 180px; }
+
+    .evgr-modal-backdrop {
+        position: fixed; inset: 0; z-index: 1050; background: rgba(0, 0, 0, 0.35);
+        display: flex; align-items: flex-start; justify-content: center; padding: 10vh 16px 16px;
+    }
+    .evgr-modal {
+        background: $o-view-background-color; border-radius: 8px; padding: 20px; width: 100%; max-width: 560px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    }
+    .evgr-product-list { max-height: 45vh; overflow: auto; margin-top: 8px; }
+}

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="elite_vet_sale.GoodsReceipt">
+        <div class="evgr o_action">
+            <div class="evgr-head">
+                <h2 class="evgr-title">Příjem zboží</h2>
+                <div class="evgr-supplier">
+                    <label class="evgr-label">Dodavatel</label>
+                    <t t-if="state.supplier">
+                        <div class="evgr-supplier-chosen">
+                            <strong t-esc="state.supplier.name"/>
+                            <button type="button" class="btn btn-link btn-sm" t-on-click="changeSupplier">změnit</button>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <input t-ref="supplier" type="text" class="form-control evgr-supplier-input"
+                               placeholder="Vyberte nebo napište dodavatele…" autocomplete="off"
+                               t-att-value="state.supplierTerm" t-on-input="onSupplierInput"
+                               t-on-focus="onSupplierFocus" t-on-keydown="onSupplierKeydown"/>
+                        <div t-if="state.supplierOpen" class="evgr-dropdown">
+                            <t t-foreach="state.suppliers" t-as="s" t-key="s.id">
+                                <div t-attf-class="evgr-opt {{ s_index === state.supplierActive ? 'evgr-opt-active' : '' }}"
+                                     t-on-mousedown.prevent="() => this.selectSupplier(s)">
+                                    <span t-esc="s.name"/>
+                                    <span t-if="s.recent" class="evgr-muted"> · naposledy</span>
+                                </div>
+                            </t>
+                            <div t-if="canCreateSupplier"
+                                 t-attf-class="evgr-opt evgr-opt-new {{ state.supplierActive === state.suppliers.length ? 'evgr-opt-active' : '' }}"
+                                 t-on-mousedown.prevent="createSupplier">
+                                + Nový dodavatel „<t t-esc="state.supplierTerm.trim()"/>“
+                            </div>
+                            <div t-if="!state.suppliers.length and !canCreateSupplier" class="evgr-opt evgr-muted">
+                                Žádný dodavatel – napište název.
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                <div class="evgr-doc">
+                    <label class="evgr-label">Dodací list</label>
+                    <input type="text" class="form-control" placeholder="číslo (volitelné)" autocomplete="off"
+                           t-model="state.documentNumber" t-on-keydown="onFieldKeydown"/>
+                </div>
+            </div>
+
+            <div class="evgr-scan">
+                <i class="fa fa-barcode evgr-scan-icon"/>
+                <input t-ref="scan" type="text" class="form-control form-control-lg evgr-scan-input"
+                       placeholder="Pípněte kód zboží (čtečka) nebo ho napište a Enter"
+                       autocomplete="off" spellcheck="false" t-on-keydown="onScanKeydown"/>
+                <span t-if="state.scanning" class="evgr-muted"><i class="fa fa-spinner fa-spin"/></span>
+            </div>
+            <div t-if="state.lastError" class="alert alert-danger py-1 mb-2" t-esc="state.lastError"/>
+
+            <div class="evgr-lines">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Produkt</th>
+                            <th class="evgr-col-lot">Šarže</th>
+                            <th class="evgr-col-exp">Expirace</th>
+                            <th class="evgr-col-qty text-center">Množství</th>
+                            <th class="evgr-col-cost text-end">Cena/MJ bez DPH</th>
+                            <th class="evgr-col-total text-end">Celkem</th>
+                            <th/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-if="!state.lines.length">
+                            <td colspan="7" class="evgr-empty">Zatím nic – pípněte první kód.</td>
+                        </tr>
+                        <t t-foreach="state.lines" t-as="line" t-key="line.id">
+                            <tr t-attf-class="evgr-line {{ line.key === state.lastKey ? 'evgr-line-last' : '' }}">
+                                <td>
+                                    <div class="evgr-product" t-esc="line.product.name"/>
+                                    <div class="evgr-muted small">
+                                        <t t-esc="line.product.code"/>
+                                        <t t-if="line.vat_rate !== undefined"> · DPH <t t-esc="line.vat_rate"/> %</t>
+                                    </div>
+                                </td>
+                                <td class="evgr-col-lot">
+                                    <t t-if="!line.tracked"><span class="evgr-muted">bez šarže</span></t>
+                                    <t t-elif="line.key === state.lotPromptKey">
+                                        <input t-ref="lot" type="text" class="form-control form-control-sm evgr-lot is-invalid"
+                                               placeholder="Zadejte šarži" t-att-value="line.lot"
+                                               t-on-change="(ev) => this.onLotChange(line, ev)" t-on-keydown="onLotKeydown"/>
+                                    </t>
+                                    <t t-else="">
+                                        <input type="text" t-attf-class="form-control form-control-sm evgr-lot {{ line.lot ? '' : 'is-invalid' }}"
+                                               placeholder="Šarže" t-att-value="line.lot"
+                                               t-on-change="(ev) => this.onLotChange(line, ev)" t-on-keydown="onLotKeydown"/>
+                                    </t>
+                                </td>
+                                <td class="evgr-col-exp">
+                                    <input t-if="line.tracked" type="date" class="form-control form-control-sm"
+                                           t-att-value="line.expiry" t-on-change="(ev) => this.onExpiryChange(line, ev)"/>
+                                </td>
+                                <td class="evgr-col-qty">
+                                    <div class="evgr-qty">
+                                        <button type="button" class="btn btn-light" t-on-click="() => this.step(line, -1)">−</button>
+                                        <input type="text" inputmode="decimal" class="form-control form-control-sm text-center evgr-qty-input"
+                                               t-att-value="inputNum(line.quantity)" t-on-change="(ev) => this.onQtyChange(line, ev)"
+                                               t-on-keydown="onFieldKeydown"/>
+                                        <button type="button" class="btn btn-light" t-on-click="() => this.step(line, 1)">+</button>
+                                    </div>
+                                </td>
+                                <td class="evgr-col-cost">
+                                    <input type="text" inputmode="decimal" class="form-control form-control-sm text-end"
+                                           t-att-value="inputNum(line.unit_cost)" t-on-change="(ev) => this.onCostChange(line, ev)"
+                                           t-on-keydown="onFieldKeydown"/>
+                                </td>
+                                <td class="evgr-col-total text-end" t-esc="fmtMoney(lineTotal(line))"/>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-link text-danger" title="Odebrat"
+                                            t-on-click="() => this.remove(line)"><i class="fa fa-trash"/></button>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="evgr-foot">
+                <div class="evgr-sum">
+                    <span>Bez DPH <strong t-esc="fmtMoney(totals.untaxed)"/></span>
+                    <span>S DPH <strong t-esc="fmtMoney(totals.total)"/></span>
+                </div>
+                <div class="evgr-hint evgr-muted">
+                    <t t-if="!state.supplier">Vyberte dodavatele.</t>
+                    <t t-elif="missingLots.length">Doplňte šarži u <t t-esc="missingLots.length"/> řádků.</t>
+                </div>
+                <button type="button" class="btn btn-primary btn-lg evgr-validate" t-att-disabled="!canValidate"
+                        t-on-click="validate">
+                    <i t-if="state.busy" class="fa fa-spinner fa-spin me-1"/>Naskladnit
+                </button>
+            </div>
+
+            <div t-if="state.pending" class="evgr-modal-backdrop">
+                <div class="evgr-modal">
+                    <h4>Neznámý kód</h4>
+                    <div class="evgr-muted mb-2">
+                        <code t-esc="state.pending.code"/>
+                        <t t-if="state.pending.lot"> · šarže <t t-esc="state.pending.lot"/></t>
+                    </div>
+                    <p class="mb-2">Vyberte produkt – kód se uloží a příště se pozná sám.</p>
+                    <input t-ref="product" type="text" class="form-control evgr-product-search" autocomplete="off"
+                           placeholder="Název, kód nebo čárový kód produktu…"
+                           t-att-value="state.productTerm" t-on-input="onProductInput" t-on-keydown="onProductKeydown"/>
+                    <div class="evgr-product-list">
+                        <t t-foreach="state.products" t-as="p" t-key="p.id">
+                            <div t-attf-class="evgr-opt {{ p_index === state.productActive ? 'evgr-opt-active' : '' }}"
+                                 t-on-click="() => this.assignProduct(p)">
+                                <span t-esc="p.name"/>
+                                <span class="evgr-muted small"> <t t-esc="p.code"/> <t t-esc="p.barcode"/></span>
+                            </div>
+                        </t>
+                        <div t-if="state.productTerm.trim().length >= 2 and !state.products.length" class="evgr-muted p-2">
+                            Nic nenalezeno.
+                        </div>
+                    </div>
+                    <div class="text-end mt-2">
+                        <button type="button" class="btn btn-secondary" t-on-click="cancelPending">Zrušit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

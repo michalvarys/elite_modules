@@ -7,3 +7,6 @@ from . import sale_order
 from . import clinical_record
 from . import reservation
 from . import pos_order
+from . import product_code
+from . import expense
+from . import goods_receipt

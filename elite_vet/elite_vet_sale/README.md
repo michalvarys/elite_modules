@@ -107,6 +107,43 @@ ale nezaplacená nabídka (bez platby v pokladně) se zruší, vrátí do stavu 
 tak zrušená. Zrušení záznamu zruší nezaplacenou nabídku. API karty (`_record_data`) vrací navíc
 `payment_state`, `payment_state_label`, `sale_order_name`.
 
+## Příjem zboží čtečkou (`elite.vet.goods.receipt`)
+
+Klientská akce **„Příjem zboží“** (`elite_vet_sale.action_goods_receipt`, menu Ordinace i Sklad →
+Operace, skupina Sestra a výš; API kontroluje skupinu `group_clinic_nurse`, recepce nesmí).
+Obrazovka je pro tablet: pole pro čtečku má fokus vždy (po každé akci i po kliknutí mimo pole),
+čtečka napíše kód + Enter; Ctrl+] (FNC1 čteček v režimu klávesnice) se vloží jako oddělovač GS.
+Skeny se zpracují jeden po druhém, takže druhé pípnutí stejné šarže navýší množství o 1.
+Poslední naskenovaný řádek je zvýrazněný.
+
+- **Dodavatel:** `suppliers(term)` – nahoře partneři hotových příjmů (od posledního), pak partneři
+  pojmenovaní jako dodavatelé vrstev WinVetu (`stock.layer.supplier`, od nejčastějšího, shoda jména bez
+  ohledu na velikost písmen); s hledaným textem i další firmy. `create_supplier(name)` založí firmu
+  jen se jménem (existující firmu stejného jména použije).
+- **Kód:** `gs1.parse` (`models/gs1.py`, čisté funkce) – AI `01` GTIN, `10` šarže, `17` expirace (den
+  `00` = poslední den měsíce), `21` sériové číslo; FNC1 `\x1d`, závorkový zápis, prefixy `]d2`/`]C1`/`]Q3`.
+  EAN a jiné kódy zůstanou v `raw`. Produkt se hledá podle `barcode` nebo `elite.vet.product.code`
+  v podobách GTIN-14 i EAN-13 (bez úvodní 0) a naopak.
+- `scan(code)` → `{product, lot, expiry, known, suggested_cost (standard_price bez DPH), vat_rate}`;
+  šarže/expirace z GS1, jinak z posledního hotového příjmu produktu (bez příjmu šarže s nejpozdější
+  expirací). Neznámý kód → okno s hledáním produktu (`search_products`) → `assign_code(code, product_id)`
+  uloží GTIN (u GS1 bez šarže) nebo celý kód do `elite.vet.product.code` (správce je opraví v Sklad →
+  Konfigurace → Produkty → Kódy produktů pro čtečku). Produkt se šaržemi bez šarže → pole šarže
+  s fokusem.
+- `validate(supplier_id, lines, document_number)` → příjemka na hlavním skladu (typ příjmu skladu),
+  hotová, řádky stejného produktu a šarže sečtené; `stock.lot` se založí nebo dostane expiraci (12:00);
+  `standard_price` = poslední nákupní cena (u kategorie se standardní cenou nastavená před dokončením,
+  aby příjem byl oceněný nákupní cenou); číslo dodacího listu jde do `origin`. **Výdaj**
+  `elite.vet.expense` (kategorie Léky a zdravotnický materiál, `picking_id` na příjemku, částka
+  = Σ množství × cena × (1 + DPH), sazba = ta s největší částkou, zaokrouhlená na 0/12/21).
+  Zboží zdarma (částka 0) výdaj nevytvoří.
+- **DPH nákupu:** vlastní nákupní daň produktu, pokud ji někdo nastavil; výchozí nákupní daň
+  společnosti (21 %), kterou Odoo dá každému novému produktu, se nebere a použije se prodejní daň
+  (sazba položky WinVetu) – jinak by léky s 12 % šly do výdaje s 21 %.
+
+Dokud je WinVet hlavní (`is_winvet_master()`), plný běh zrcadla skladu stav příjmu přepíše stavem
+WinVetu – příjem čtečkou má smysl až po přepnutí, nebo souběžně s příjmem ve WinVetu.
+
 ## Role
 
 Skupiny POS, Prodeje a Skladu se odvozují ze skupin rezervací (řada Recepce < Sestra <
