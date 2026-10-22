@@ -87,6 +87,26 @@ class ReceptionBooking(models.AbstractModel):
         return {"day": day.isoformat(), "slots": slots, "next_free_day": next_free_day}
 
     @api.model
+    def free_days(self, procedure_id, day, doctor_id=False, days=7):
+        """Number of free times on `days` days from `day` (the day strip of Objednat).
+
+        `count` is the number of distinct free times of the day (as the wizard offers them);
+        None for a past day or a day beyond the horizon (nothing can be booked there).
+        """
+        self._check_reception()
+        procedure = self._get_procedure(procedure_id)
+        start = self._day(day)
+        today, horizon = clinic_today(), self._horizon()
+        wizard = self._booking_wizard(procedure, start, doctor_id)
+        result = []
+        for offset in range(max(1, min(int(days), 14))):
+            current = start + timedelta(days=offset)
+            bookable = today <= current <= horizon
+            result.append({"day": current.isoformat(),
+                           "count": len(wizard._free_slots(current)) if bookable else None})
+        return result
+
+    @api.model
     def book(self, pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None):
         self._check_reception()
         pet = self.env["elite.vet.pet"].browse(self._to_id(pet_id)).exists()

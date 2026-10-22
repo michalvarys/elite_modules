@@ -107,6 +107,7 @@ Den je `"YYYY-MM-DD"` v čase kliniky, `minute` = minuty od půlnoci.
 |---|---|
 | `booking_options()` | `{"procedures": [{id, name, duration}], "doctors": [{id, name}]}` (lékařky přijímající objednávky) |
 | `free_slots(procedure_id, day, doctor_id=False)` | `{"day", "slots": [{time, minute, room_id, room, doctor_id, doctor}], "next_free_day"}` – řádky průvodce (čas × ordinace); `next_free_day` = nejbližší další den s volným časem v horizontu recepce, jinak `None` |
+| `free_days(procedure_id, day, doctor_id=False, days=7)` | `[{day, count}]` – řada dnů v Objednat: počet různých volných časů dne (jako průvodce); `None` pro minulý den a den za horizontem; nejvýš 14 dní |
 | `book(pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None)` | `{reservation_id, label}` – potvrzená rezervace pro zvíře a jeho majitele (kontakt z majitele), lékařka ve službě; potvrzovací e-mail jako v průvodci (když má majitel e-mail) |
 
 - Uhynulé zvíře objednat ani přijmout bez objednání nejde: „Zvíře je vedené jako uhynulé.“
@@ -168,18 +169,21 @@ pokladny zůstávají standardní.
   v režimu `booking` dosavadní výběr; v režimu `order` se bez něj ukáže zákazník otevřené
   objednávky). Tlačítka, která potřebují zvíře, jsou bez vybraného živého zvířete neaktivní
   s poznámkou „Vyberte zvíře.“ (klient bez zvířat: „Přidejte zvíře (+ Nové zvíře).“)
-- **Objednat** (`ReceptionBookingScreen`): pole Klient a zvíře („Vybrat…“ / „Změnit“ – Kartotéka
-  v režimu `booking`), úkon, lékařka, den ‹ Dnes › / datum, další volný den, volné časy
-  (`free_slots`; úkon → ordinace → čas: víc ordinací s volnem = nejdřív výběr ordinace `rooms`, jedna
-  se vybere sama `activeRoom`), poznámka, Objednat (`book`). Po úspěchu se formulář vyprázdní (úkon, čas, klient
-  a zvíře, poznámka), den a lékařka zůstanou, upozornění „Objednáno: čt 22. 10. 2026 9:00 · Rex“;
-  po chybě („mezitím obsazeno“) se časy načtou znovu. Vybraný klient je ve stavu obrazovky (prop
-  `pet` jen jako počáteční hodnota). Props z tabule a lišty (POS obrazovku nepřipojuje znovu, jen
-  mění props – `onWillUpdateProps`, rozlišení podle `key`): `prefill` `{day, minute, room_id, room, key}`
-  (klik do volného místa: den, po výběru úkonu se vybere čas v té ordinaci, když je volný, jinak
-  upozornění), `reset` `{key}` (lišta Objednat znovu: konec režimu Přesunout), `move` `{reservation_id, procedure_id, doctor_id, day, label, pet_name, owner,
-  procedure, key}` (režim Přesunout rezervaci: úkon a lékařka předvyplněné, tlačítko
-  „Přesunout na …“ = `move_reservation`). „Otevřít tabuli“ otevře `BoardDialog` na vybraném dni.
+- **Objednat** (`ReceptionBookingScreen`): jeden sloupec očíslovaných kroků – 1 Klient a zvíře
+  („Vybrat…“ / „Změnit“ – Kartotéka v režimu `booking`), 2 úkon, 3 den (řada 7 dní od `weekStart`
+  s počty z `free_days`, ‹ › o týden a vybere první den s volnem, kalendář, další volný den;
+  filtr „jen lékařka…“ = `doctorId`), 4 ordinace (jen víc ordinací s volnem – `rooms`, jedna se
+  vybere sama – `activeRoom`; volba zůstává přes změnu dne), 5 čas (`free_slots` vybrané
+  ordinace, dopoledne / odpoledne). Dole souhrn (`summary`), poznámka a jediné tlačítko Objednat
+  (`book`). Po úspěchu se formulář vyprázdní (vše kromě dne), upozornění „Objednáno: čt 22. 10.
+  2026 9:00 · Rex“; po chybě („mezitím obsazeno“) se dny i časy načtou znovu. Vybraný klient je ve
+  stavu obrazovky (prop `pet` jen jako počáteční hodnota). Props z tabule a lišty (POS obrazovku
+  nepřipojuje znovu, jen mění props – `onWillUpdateProps`, rozlišení podle `key`): `prefill`
+  `{day, minute, room_id, room, key}` (klik do volného místa: den a ordinace, po výběru úkonu se
+  vybere čas, když je volný, jinak upozornění), `reset` `{key}` (lišta Objednat znovu: konec režimu
+  Přesunout), `move` `{reservation_id, procedure_id, doctor_id, day, label, pet_name, owner,
+  procedure, key}` (režim Přesunout rezervaci: bez kroku klienta, úkon a lékařka předvyplněné,
+  tlačítko „Přesunout“ = `move_reservation`). „Tabule“ otevře `BoardDialog` na vybraném dni.
 - **Tabule** (`board_dialog/`, `BoardDialog`, velikost dialogu `fs`): data z
   `elite.vet.reservation.board_data(day)` (stejná jako backendová tabule, `payment_state`
   z elite_vet_sale) ve vlastní šabloně a SCSS (třídy `o_ev_board_*`, geometrie jako backend:

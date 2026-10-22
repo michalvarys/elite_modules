@@ -3,41 +3,59 @@
 
     <t t-name="elite_vet_reception.BookingScreen">
         <div class="o_ev_booking screen h-100 w-100 overflow-auto bg-100 p-2 p-md-3">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                <h2 class="o_ev_title mb-0 me-2"><t t-if="state.move">Přesunout rezervaci</t><t t-else="">Objednat</t></h2>
-                <t t-if="state.move">
-                    <div class="o_ev_client fs-5 o_ev_move_info">
-                        <i class="fa fa-arrows me-1"/><b t-esc="state.move.pet_name or state.move.owner or 'Rezervace'"/>
-                        <span t-if="state.move.owner and state.move.pet_name" class="text-muted"> · <t t-esc="state.move.owner"/></span>
-                        <span class="text-muted"> · teď <t t-esc="state.move.label"/></span>
-                    </div>
-                    <button class="btn btn-light btn-lg o_ev_move_leave" t-on-click="leaveMove">Nepřesouvat</button>
-                </t>
-            </div>
-            <div t-if="state.prefill" class="alert mb-3 o_ev_prefill"
-                 t-att-class="state.prefill.found === false ? 'alert-warning' : 'alert-info'">
-                Z tabule: <b><t t-esc="state.prefill.room"/>, <t t-esc="dayLabel(state.prefill.day)"/>, <t t-esc="state.prefill.label"/></b>.
-                <t t-if="!state.procedureId"> Vyberte úkon – čas se vybere, pokud je pro něj volný.</t>
-                <t t-elif="state.prefill.found === false"> Tento čas pro vybraný úkon volný není – vyberte z volných časů dne.</t>
-                <t t-elif="state.prefill.found"> Čas je vybraný.</t>
-            </div>
-            <div class="row g-3">
-                <div class="col-12 col-lg-5 d-flex flex-column gap-2">
-                    <div t-if="!state.move" class="o_ev_field o_ev_booking_client">
-                        <b>Klient a zvíře</b>
+            <div class="o_ev_booking_body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <h2 class="o_ev_title mb-0 me-2"><t t-if="state.move">Přesunout rezervaci</t><t t-else="">Objednat</t></h2>
+                    <t t-if="state.move">
+                        <div class="o_ev_client fs-5 o_ev_move_info">
+                            <i class="fa fa-arrows me-1"/><b t-esc="state.move.pet_name or state.move.owner or 'Rezervace'"/>
+                            <span t-if="state.move.owner and state.move.pet_name" class="text-muted"> · <t t-esc="state.move.owner"/></span>
+                            <span class="text-muted"> · teď <t t-esc="state.move.label"/></span>
+                        </div>
+                        <button class="btn btn-light btn-lg o_ev_move_leave" t-on-click="leaveMove">Nepřesouvat</button>
+                    </t>
+                </div>
+                <div t-if="state.prefill" class="alert mb-3 o_ev_prefill"
+                     t-att-class="state.prefill.found === false ? 'alert-warning' : 'alert-info'">
+                    Z tabule: <b><t t-esc="state.prefill.room"/>, <t t-esc="dayLabel(state.prefill.day)"/>, <t t-esc="state.prefill.label"/></b>.
+                    <t t-if="!state.procedureId"> Vyberte úkon – čas se vybere, pokud je pro něj volný.</t>
+                    <t t-elif="state.prefill.found === false"> Tento čas pro vybraný úkon volný není – vyberte jiný.</t>
+                    <t t-elif="state.prefill.found"> Čas je vybraný.</t>
+                </div>
+                <div t-if="state.booked" class="alert alert-success mb-3 o_ev_booked">
+                    Objednáno: <b t-esc="state.booked"/>. Potvrzení dostane klient e-mailem, pokud ho má vyplněný.
+                </div>
+                <div t-if="state.moved" class="alert alert-success mb-3 o_ev_moved">
+                    Přesunuto na <b t-esc="state.moved"/>. Při změně času dostane klient e-mail, pokud ho má vyplněný.
+                </div>
+
+                <div class="row g-2">
+                <!-- 1 client and pet -->
+                <div t-if="!state.move" class="col-12 col-lg-6">
+                <div class="o_ev_step h-100 o_ev_booking_client" t-att-class="pet ? 'o_ev_done' : ''">
+                    <div class="o_ev_step_num">1</div>
+                    <div class="o_ev_step_body">
+                        <b class="o_ev_step_title">Klient a zvíře</b>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <div t-if="pet" class="fs-5 o_ev_grow">
                                 <i class="fa fa-paw me-1"/><b class="o_ev_booking_pet" t-esc="pet.name"/>
                                 <span t-if="pet.owner" class="text-muted o_ev_booking_owner"> · <t t-esc="pet.owner"/></span>
                             </div>
                             <div t-else="" class="text-muted o_ev_grow o_ev_booking_no_pet">nevybráno</div>
-                            <button class="btn btn-secondary btn-lg o_ev_pick_client" t-on-click="pickClient">
+                            <button class="btn btn-lg o_ev_pick_client" t-att-class="pet ? 'btn-light' : 'btn-secondary'" t-on-click="pickClient">
                                 <i class="fa fa-address-book-o me-1"/><t t-if="pet">Změnit</t><t t-else="">Vybrat…</t>
                             </button>
                         </div>
                     </div>
-                    <label class="o_ev_field">
-                        <b>Úkon</b>
+                </div>
+                </div>
+
+                <!-- 2 procedure -->
+                <div t-att-class="state.move ? 'col-12' : 'col-12 col-lg-6'">
+                <div class="o_ev_step h-100" t-att-class="state.procedureId ? 'o_ev_done' : ''">
+                    <div class="o_ev_step_num"><t t-if="state.move">1</t><t t-else="">2</t></div>
+                    <div class="o_ev_step_body">
+                        <b class="o_ev_step_title">Úkon</b>
                         <select class="form-select form-select-lg o_ev_procedure" t-on-change="onProcedureChange">
                             <option value="" t-att-selected="!state.procedureId">Vyberte úkon…</option>
                             <option t-foreach="state.procedures" t-as="proc" t-key="proc.id" t-att-value="proc.id"
@@ -45,89 +63,125 @@
                                 <t t-esc="proc.name"/> · <t t-esc="proc.duration"/> min
                             </option>
                         </select>
-                    </label>
-                    <label class="o_ev_field">
-                        <b>Lékařka</b>
-                        <select class="form-select form-select-lg o_ev_doctor" t-on-change="onDoctorChange">
-                            <option value="" t-att-selected="!state.doctorId">Kterákoli, která úkon dělá</option>
-                            <option t-foreach="state.doctors" t-as="doc" t-key="doc.id" t-att-value="doc.id"
-                                    t-att-selected="'' + doc.id === '' + state.doctorId" t-esc="doc.name"/>
-                        </select>
-                    </label>
-                    <div class="o_ev_field">
-                        <b>Den</b>
-                        <div class="d-flex flex-wrap align-items-center gap-2">
-                            <span class="fs-5 o_ev_booking_day" t-esc="dayTitle"/>
-                            <div class="btn-group">
-                                <button class="btn btn-light btn-lg" title="Předchozí den" t-on-click="() => this.changeDay(-1)"><i class="fa fa-chevron-left"/></button>
-                                <button class="btn btn-light btn-lg" t-on-click="() => this.changeDay(0)">Dnes</button>
-                                <button class="btn btn-light btn-lg" title="Další den" t-on-click="() => this.changeDay(1)"><i class="fa fa-chevron-right"/></button>
+                    </div>
+                </div>
+                </div>
+                </div>
+
+                <t t-if="state.procedureId">
+                    <!-- 3 day -->
+                    <div class="o_ev_step" t-att-class="state.slots and state.slots.length ? 'o_ev_done' : ''">
+                        <div class="o_ev_step_num"><t t-esc="stepNo(3)"/></div>
+                        <div class="o_ev_step_body">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <b class="o_ev_step_title o_ev_grow">Den</b>
+                                <span t-if="doctor" class="o_ev_badge o_ev_badge_in o_ev_doctor_filter">
+                                    jen <t t-esc="doctor.name"/>
+                                    <button class="btn btn-link btn-sm p-0 ms-1 o_ev_doctor_clear" title="Kterákoli lékařka" t-on-click="clearDoctor"><i class="fa fa-times"/></button>
+                                </span>
+                                <select t-elif="state.showDoctor" class="form-select w-auto o_ev_doctor" t-on-change="onDoctorChange">
+                                    <option value="">Kterákoli lékařka</option>
+                                    <option t-foreach="state.doctors" t-as="doc" t-key="doc.id" t-att-value="doc.id" t-esc="doc.name"/>
+                                </select>
+                                <button t-else="" class="btn btn-link o_ev_doctor_open" t-on-click="() => this.state.showDoctor = true">jen lékařka…</button>
                             </div>
-                            <input type="date" class="form-control form-control-lg w-auto" t-att-value="state.day" t-on-change="onDayInput"/>
+                            <div class="o_ev_days">
+                                <button class="btn btn-light btn-lg o_ev_week_prev" title="Předchozí týden" t-att-disabled="!canGoBack" t-on-click="() => this.shiftWeek(-7)"><i class="fa fa-chevron-left"/></button>
+                                <button t-foreach="state.days or []" t-as="d" t-key="d.day" class="btn o_ev_day"
+                                        t-att-class="(d.day === state.day ? 'btn-primary' : 'btn-light') + (d.count ? '' : ' o_ev_day_empty')"
+                                        t-att-disabled="d.count === null" t-on-click="() => this.selectDay(d.day)">
+                                    <span class="d-block o_ev_day_name" t-esc="shortDayLabel(d.day)"/>
+                                    <small class="d-block">
+                                        <t t-if="d.count === null">–</t>
+                                        <t t-elif="d.count" t-esc="freeLabel(d.count)"/>
+                                        <t t-else="">nic volného</t>
+                                    </small>
+                                </button>
+                                <button class="btn btn-light btn-lg o_ev_week_next" title="Další týden" t-on-click="() => this.shiftWeek(7)"><i class="fa fa-chevron-right"/></button>
+                                <input type="date" class="form-control form-control-lg w-auto o_ev_day_input" title="Jiné datum" t-att-value="state.day" t-on-change="onDayInput"/>
+                            </div>
                         </div>
                     </div>
-                    <label t-if="!state.move" class="o_ev_field">
-                        <b>Poznámka k rezervaci</b>
-                        <input type="text" class="form-control form-control-lg" t-model="state.note" placeholder="nepovinné"/>
-                    </label>
-                </div>
-                <div class="col-12 col-lg-7">
+
                     <t t-set="freeRooms" t-value="rooms"/>
                     <t t-set="shownRoom" t-value="activeRoom"/>
-                    <t t-if="state.procedureId and freeRooms.length > 1">
-                        <div class="o_ev_col_title"><span>Ordinace</span></div>
-                        <div class="o_ev_rooms mb-3">
-                            <button t-foreach="freeRooms" t-as="room" t-key="room.room_id" class="btn o_ev_room"
-                                    t-att-class="shownRoom and shownRoom.room_id === room.room_id ? 'btn-primary' : 'btn-light'"
-                                    t-on-click="() => this.selectRoom(room)">
-                                <b class="d-block o_ev_room_name" t-esc="room.room"/>
-                                <small class="d-block">
-                                    <t t-if="room.doctor"><t t-esc="room.doctor"/> · </t>
-                                    <t t-esc="freeLabel(room.slots.length)"/>
-                                </small>
-                            </button>
+                    <div class="row g-2">
+                    <!-- 4 room (only with more than one room free) -->
+                    <div t-if="freeRooms.length > 1" class="col-12 col-lg-4">
+                    <div class="o_ev_step h-100" t-att-class="shownRoom ? 'o_ev_done' : ''">
+                        <div class="o_ev_step_num"><t t-esc="stepNo(4)"/></div>
+                        <div class="o_ev_step_body">
+                            <b class="o_ev_step_title">Ordinace</b>
+                            <div class="o_ev_rooms">
+                                <button t-foreach="freeRooms" t-as="room" t-key="room.room_id" class="btn o_ev_room"
+                                        t-att-class="shownRoom and shownRoom.room_id === room.room_id ? 'btn-primary' : 'btn-light'"
+                                        t-on-click="() => this.selectRoom(room)">
+                                    <b class="d-block o_ev_room_name" t-esc="room.room"/>
+                                    <small class="d-block">
+                                        <t t-if="room.doctor"><t t-esc="room.doctor"/> · </t>
+                                        <t t-esc="freeLabel(room.slots.length)"/>
+                                    </small>
+                                </button>
+                            </div>
                         </div>
-                    </t>
-                    <div class="o_ev_col_title">
-                        <span>Volné časy<t t-if="shownRoom"> · <t t-esc="shownRoom.room"/><t t-if="shownRoom.doctor"> · <t t-esc="shownRoom.doctor"/></t></t></span>
-                        <i t-if="state.loading" class="fa fa-circle-o-notch fa-spin"/>
                     </div>
-                    <div t-if="!state.procedureId" class="o_ev_empty">Nejdřív vyberte úkon.</div>
-                    <t t-elif="state.slots">
-                        <div t-if="!state.slots.length" class="o_ev_empty">
-                            Tento den není volný žádný čas.
-                            <button t-if="state.nextFreeDay" class="btn btn-secondary ms-2 o_ev_next_free" t-on-click="goNextFreeDay">
-                                Další volný den: <t t-esc="dayLabel(state.nextFreeDay)"/>
-                            </button>
-                            <span t-elif="!isPastDay"> V horizontu objednávek už není žádný volný den.</span>
+
+                    </div>
+                    <!-- 5 time -->
+                    <div t-att-class="freeRooms.length > 1 ? 'col-12 col-lg-8' : 'col-12'">
+                    <div class="o_ev_step h-100" t-att-class="state.selected ? 'o_ev_done' : ''">
+                        <div class="o_ev_step_num"><t t-esc="stepNo(freeRooms.length > 1 ? 5 : 4)"/></div>
+                        <div class="o_ev_step_body">
+                            <div class="d-flex align-items-center gap-2">
+                                <b class="o_ev_step_title">Čas<t t-if="shownRoom and freeRooms.length === 1"> · <t t-esc="shownRoom.room"/><t t-if="shownRoom.doctor"> · <t t-esc="shownRoom.doctor"/></t></t></b>
+                                <i t-if="state.loading" class="fa fa-circle-o-notch fa-spin"/>
+                            </div>
+                            <t t-if="state.slots">
+                                <div t-if="!state.slots.length" class="o_ev_empty">
+                                    Tento den není volný žádný čas.
+                                    <button t-if="state.nextFreeDay" class="btn btn-secondary ms-2 o_ev_next_free" t-on-click="goNextFreeDay">
+                                        Další volný den: <t t-esc="dayLabel(state.nextFreeDay)"/>
+                                    </button>
+                                    <span t-elif="!isPastDay"> V horizontu objednávek už není žádný volný den.</span>
+                                </div>
+                                <div t-elif="!shownRoom" class="o_ev_empty o_ev_pick_room">Nejdřív vyberte ordinaci.</div>
+                                <t t-else="">
+                                    <div t-foreach="dayParts(shownRoom.slots)" t-as="part" t-key="part.name" class="o_ev_day_part">
+                                        <span class="o_ev_day_part_name" t-esc="part.name"/>
+                                        <div class="o_ev_slots">
+                                            <button t-foreach="part.slots" t-as="slot" t-key="slotKey(slot)" class="btn o_ev_slot"
+                                                    t-att-class="isSelected(slot) ? 'btn-primary' : 'btn-light'" t-on-click="() => this.selectSlot(slot)">
+                                                <span class="o_ev_num" t-esc="slot.time"/>
+                                                <small t-if="slot.doctor and !shownRoom.doctor" class="d-block" t-esc="slot.doctor"/>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
+                            </t>
                         </div>
-                        <div t-elif="!shownRoom" class="o_ev_empty o_ev_pick_room">Vyberte ordinaci.</div>
-                        <div t-else="" class="o_ev_slots">
-                            <button t-foreach="shownRoom.slots" t-as="slot" t-key="slotKey(slot)" class="btn o_ev_slot"
-                                    t-att-class="isSelected(slot) ? 'btn-primary' : 'btn-light'" t-on-click="() => this.selectSlot(slot)">
-                                <span class="o_ev_num" t-esc="slot.time"/>
-                                <small t-if="slot.doctor and !shownRoom.doctor" class="d-block" t-esc="slot.doctor"/>
-                            </button>
-                        </div>
-                    </t>
-                    <div class="d-flex flex-wrap gap-2 mt-3">
+                    </div>
+                    </div>
+                    </div>
+                </t>
+
+                <!-- summary and the one button -->
+                <div class="o_ev_summary">
+                    <div class="o_ev_summary_text">
+                        <t t-if="summary"><t t-esc="summary"/></t>
+                        <span t-elif="state.move" class="text-muted">Vyberte den a nový čas.</span>
+                        <span t-else="" class="text-muted">Vyberte klienta, úkon, den a čas.</span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <input t-if="!state.move" type="text" class="form-control form-control-lg o_ev_grow o_ev_note" t-model="state.note" placeholder="Poznámka k rezervaci (nepovinné)"/>
                         <button t-if="state.move" class="btn btn-primary btn-lg o_ev_move" t-att-disabled="!state.selected or state.saving" t-on-click="moveReservation">
-                            <t t-if="state.selected">Přesunout na <t t-esc="state.selected.time"/>, <t t-esc="state.selected.room"/></t>
-                            <t t-else="">Přesunout</t>
+                            Přesunout
                         </button>
                         <button t-else="" class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
-                            <t t-if="state.selected">Objednat na <t t-esc="state.selected.time"/>, <t t-esc="state.selected.room"/></t>
-                            <t t-else="">Objednat</t>
+                            Objednat
                         </button>
-                        <button class="btn btn-light btn-lg" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Otevřít tabuli</button>
+                        <button class="btn btn-light btn-lg o_ev_open_board" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Tabule</button>
                     </div>
-                    <div t-if="state.selected and !pet and !state.move" class="text-warning mt-2">Pro objednání vyberte klienta a zvíře (Klient a zvíře › Vybrat…).</div>
-                    <div t-if="state.moved" class="alert alert-success mt-3 o_ev_moved">
-                        Přesunuto na <b t-esc="state.moved"/>. Při změně času dostane klient e-mail, pokud ho má vyplněný.
-                    </div>
-                    <div t-if="state.booked" class="alert alert-success mt-3 o_ev_booked">
-                        Objednáno: <b t-esc="state.booked"/>. Potvrzení dostane klient e-mailem, pokud ho má vyplněný.
-                    </div>
+                    <div t-if="state.selected and !pet and !state.move" class="text-warning mt-2">Chybí klient a zvíře – krok 1, Vybrat…</div>
                 </div>
             </div>
         </div>

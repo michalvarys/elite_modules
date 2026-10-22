@@ -3,9 +3,11 @@
  * Opened from the board with `prefill` (a click into a free place: day, room, time - the time is
  * selected once a procedure is chosen and the time is free) or with `move` (Přesunout: the free
  * times of the reservation's procedure, the chosen one moves it with `move_reservation`).
- * The client and pet are picked in the field "Klient a zvíře" (Kartotéka in the booking mode).
- * After a booking the form is emptied (procedure, time, client, pet); day and doctor stay. The
- * "Objednáno" message stays until the next booking is started (client, procedure, doctor, day, time).
+ * One column of steps: client and pet (Kartotéka in the booking mode), procedure, day (a strip of
+ * seven days with the number of free times, `free_days`), room (only when more than one has free
+ * times) and time (morning / afternoon), then a one-line summary above the only button.
+ * The doctor is an optional filter ("jen lékařka…"). After a booking the form is emptied
+ * (everything but the day). The "Objednáno" message stays until the next booking is started.
  */
 import { Component, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
@@ -49,6 +51,9 @@ export class ReceptionBookingScreen extends Component {
             procedureId: "",
             doctorId: "",
             day: clinicToday(),
+            weekStart: clinicToday(), // first day of the day strip
+            days: null, // [{day, count}] of the strip (free_days)
+            showDoctor: false, // the doctor filter select is open
             slots: null,
             nextFreeDay: null,
             roomId: null, // chosen room (kept over day changes; shown only while it has free times)
@@ -94,16 +99,16 @@ export class ReceptionBookingScreen extends Component {
             }
             const doctorKnown = this.state.doctors.some((d) => d.id === move.doctor_id);
             this.state.doctorId = doctorKnown ? String(move.doctor_id) : "";
-            this.state.day = move.day >= clinicToday() ? move.day : clinicToday();
-            await this.loadSlots();
+            this.state.day = this.state.weekStart = move.day >= clinicToday() ? move.day : clinicToday();
+            await Promise.all([this.loadDays(), this.loadSlots()]);
         } else if (prefill) {
             this.state.move = null;
             this.state.moved = null;
             this.state.booked = null;
             const hh = `${Math.floor(prefill.minute / 60)}:${String(prefill.minute % 60).padStart(2, "0")}`;
             this.state.prefill = { ...prefill, label: hh, found: null };
-            this.state.day = prefill.day;
-            await this.loadSlots();
+            this.state.day = this.state.weekStart = prefill.day;
+            await Promise.all([this.loadDays(), this.loadSlots()]);
         }
     }
 
@@ -113,6 +118,45 @@ export class ReceptionBookingScreen extends Component {
 
     get dayTitle() {
         return dayLabel(this.state.day);
+    }
+
+    get doctor() {
+        return this.state.doctors.find((d) => d.id === Number(this.state.doctorId)) || null;
+    }
+
+    get canGoBack() {
+        return this.state.weekStart > clinicToday();
+    }
+
+    /** "Rex · Kontrola · čt 22. 10. 2026 9:30 · Ordinace 2 · MVDr. Malá" once a time is chosen. */
+    get summary() {
+        const slot = this.state.selected;
+        if (!slot) {
+            return "";
+        }
+        const who = this.state.move ? this.state.move.pet_name || this.state.move.owner : this.pet?.name;
+        return [who, this.procedure?.name, `${dayLabel(this.state.day)} ${slot.time}`, slot.room, slot.doctor]
+            .filter(Boolean)
+            .join(" · ");
+    }
+
+    /** Step numbers: without the client step (move mode) every step is one lower. */
+    stepNo(number) {
+        return this.state.move ? number - 1 : number;
+    }
+
+    /** "čt 22. 10." */
+    shortDayLabel(isoDay) {
+        return luxon.DateTime.fromISO(isoDay).setLocale("cs").toFormat("ccc d. L.");
+    }
+
+    /** The times split into morning and afternoon (empty parts left out). */
+    dayParts(slots) {
+        const parts = [
+            { name: "Dopoledne", slots: slots.filter((slot) => slot.minute < 12 * 60) },
+            { name: "Odpoledne", slots: slots.filter((slot) => slot.minute >= 12 * 60) },
+        ];
+        return parts.filter((part) => part.slots.length);
     }
 
     get isPastDay() {
@@ -175,6 +219,20 @@ export class ReceptionBookingScreen extends Component {
         return this.state.selected && this.slotKey(this.state.selected) === this.slotKey(slot);
     }
 
+    /** Free times per day of the strip (weekStart + 6 days). */
+    async loadDays() {
+        if (!this.state.procedureId) {
+            this.state.days = null;
+            return;
+        }
+        const request = [Number(this.state.procedureId), this.state.weekStart, Number(this.state.doctorId) || false];
+        const data = await callReception(this.orm, this.notification, "free_days", request);
+        const current = [Number(this.state.procedureId), this.state.weekStart, Number(this.state.doctorId) || false];
+        if (data && JSON.stringify(request) === JSON.stringify(current)) {
+            this.state.days = data;
+        }
+    }
+
     async loadSlots() {
         this.state.selected = null;
         if (!this.state.procedureId) {
@@ -216,34 +274,60 @@ export class ReceptionBookingScreen extends Component {
     onProcedureChange(ev) {
         this.state.procedureId = ev.target.value;
         this.state.booked = null;
+        this.loadDays();
         this.loadSlots();
     }
 
     onDoctorChange(ev) {
         this.state.doctorId = ev.target.value;
         this.state.booked = null;
+        this.loadDays();
         this.loadSlots();
     }
 
-    onDayInput(ev) {
-        if (ev.target.value) {
-            this.state.day = ev.target.value;
-            this.state.booked = null;
-            this.loadSlots();
-        }
+    clearDoctor() {
+        this.state.doctorId = "";
+        this.state.showDoctor = false;
+        this.state.booked = null;
+        this.loadDays();
+        this.loadSlots();
     }
 
-    changeDay(delta) {
-        this.state.day = delta ? shiftDay(this.state.day, delta) : clinicToday();
+    selectDay(day) {
+        this.state.day = day;
         this.state.booked = null;
         this.loadSlots();
     }
 
-    goNextFreeDay() {
-        if (this.state.nextFreeDay) {
-            this.state.day = this.state.nextFreeDay;
+    /** Another date from the calendar: the strip starts there. */
+    onDayInput(ev) {
+        if (ev.target.value) {
+            this.state.day = this.state.weekStart = ev.target.value < clinicToday() ? clinicToday() : ev.target.value;
             this.state.booked = null;
+            this.loadDays();
             this.loadSlots();
+        }
+    }
+
+    /** ‹ › of the strip: a week back / forward, the first day with free times gets selected. */
+    async shiftWeek(delta) {
+        const start = shiftDay(this.state.weekStart, delta);
+        this.state.weekStart = start < clinicToday() ? clinicToday() : start;
+        this.state.booked = null;
+        await this.loadDays();
+        const free = (this.state.days || []).find((d) => d.count);
+        this.selectDay(free ? free.day : this.state.weekStart);
+    }
+
+    goNextFreeDay() {
+        const next = this.state.nextFreeDay;
+        if (next) {
+            const inStrip = (this.state.days || []).some((d) => d.day === next);
+            if (!inStrip) {
+                this.state.weekStart = next;
+                this.loadDays();
+            }
+            this.selectDay(next);
         }
     }
 
@@ -270,9 +354,12 @@ export class ReceptionBookingScreen extends Component {
         });
     }
 
-    /** After a booking: a fresh form for the next client; day and doctor stay. */
+    /** After a booking: a fresh form for the next client; only the day stays. */
     resetForm() {
         this.state.procedureId = "";
+        this.state.doctorId = "";
+        this.state.showDoctor = false;
+        this.state.days = null;
         this.state.roomId = null;
         this.state.selected = null;
         this.state.slots = null;
@@ -296,6 +383,7 @@ export class ReceptionBookingScreen extends Component {
             this.state.roomId = null;
             this.state.selected = null;
             this.state.slots = null;
+            this.state.days = null;
             this.state.nextFreeDay = null;
         }
         this.state.move = null;
@@ -327,7 +415,7 @@ export class ReceptionBookingScreen extends Component {
         } finally {
             this.state.saving = false;
         }
-        await this.loadSlots();
+        await Promise.all([this.loadDays(), this.loadSlots()]);
     }
 
     async book() {
@@ -357,7 +445,7 @@ export class ReceptionBookingScreen extends Component {
             this.state.saving = false;
         }
         // taken in the meantime: the list must show the current state
-        await this.loadSlots();
+        await Promise.all([this.loadDays(), this.loadSlots()]);
     }
 }
 

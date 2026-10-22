@@ -112,6 +112,31 @@ class TestBooking(ReceptionCase):
         with self.assertRaises(AccessError):
             self.api(self.outsider).free_slots(self.book_proc.id, self.day.isoformat())
 
+    def test_free_days_counts_times_of_the_wizard(self):
+        reception = self.api(self.reception)
+        start = self.day - timedelta(days=1)
+        data = reception.free_days(self.book_proc.id, start.isoformat())
+        self.assertEqual([d["day"] for d in data], [(start + timedelta(days=i)).isoformat() for i in range(7)])
+        times = {m for m, _room, _doc in self.wizard_lines(self.book_proc, self.day)}
+        self.assertEqual(data[1], {"day": self.day.isoformat(), "count": len(times)})
+        self.assertTrue(data[1]["count"])
+        # the doctor filter is passed on (she has a shift only on self.day)
+        mine = reception.free_days(self.book_proc.id, start.isoformat(), self.doctor.id)
+        self.assertEqual([d["count"] for d in mine][1], len({m for m, _r, _d in
+                                                             self.wizard_lines(self.book_proc, self.day, self.doctor)}))
+
+    def test_free_days_past_and_beyond_the_horizon(self):
+        reception = self.api(self.reception)
+        yesterday = clinic_today() - timedelta(days=1)
+        data = reception.free_days(self.book_proc.id, yesterday.isoformat(), days=2)
+        self.assertIsNone(data[0]["count"])
+        self.assertIsNotNone(data[1]["count"])
+        far = clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS + 1)
+        self.assertEqual(reception.free_days(self.book_proc.id, far.isoformat(), days=1),
+                         [{"day": far.isoformat(), "count": None}])
+        with self.assertRaises(AccessError):
+            self.api(self.outsider).free_days(self.book_proc.id, far.isoformat())
+
     # ---------------------------------------------------------------- book
     def test_book_creates_one_confirmed_reservation(self):
         reception = self.api(self.reception)

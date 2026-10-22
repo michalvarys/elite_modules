@@ -222,26 +222,33 @@ na zákazníka u faktury) otevře tuto Kartotéku se stejnými pravidly.
 
 ## 4. Objednat
 
-![Objednat](img/recepce-objednat.png)
+Objednání jde po očíslovaných krocích shora dolů. Hotový krok má číslo vybarvené, další krok
+se ukáže, až je předchozí vyplněný.
 
 1. **Klient a zvíře** – klikněte **Vybrat…**, v Kartotéce najděte (nebo založte) klienta,
-   klikněte na zvíře a **Vybrat**. Okno se zavře a v poli je zvíře a majitel; **Změnit** vybere
+   klikněte na zvíře a **Vybrat**. Okno se zavře a v kroku je zvíře a majitel; **Změnit** vybere
    jiného.
 2. **Úkon** – povinné (u každého je délka).
-3. **Lékařka** – nepovinné. „Kterákoli, která úkon dělá“ nabídne časy všech lékařek ve službě.
-4. **Den** – šipky **‹ Dnes ›** nebo datum. Když den nemá volný čas, objeví se tlačítko
-   s **nejbližším dalším volným dnem**.
-5. **Ordinace** – když má úkon ten den volno ve více ordinacích, vyberte ordinaci (u každé je
-   lékařka, pokud ji má celý den jedna, a počet volných časů). Když je volno jen v jedné, vybere se
-   sama a tento krok se neukáže.
-6. **Volné časy** vybrané ordinace. Počítají se stejně jako na tabuli a na webu. Kliknutím čas
-   vyberete (zvýrazní se) a tlačítko ukáže čas i ordinaci („Objednat na 9:00, Ordinace 1“).
-7. **Poznámka k rezervaci** – nepovinné.
-8. **Objednat na 18:15, Ordinace 1.** Objeví se potvrzení „Objednáno: čt 22. 10. 2026 18:15 · Rex“.
-   Rezervace je potvrzená a je na tabuli i v Přicházejí toho dne.
-9. **Formulář se vyprázdní** pro dalšího klienta: úkon, ordinace, čas, klient a zvíře i poznámka zmizí,
-   **den a lékařka zůstanou**. Zelené potvrzení zmizí, jakmile začnete další objednání (klient,
-   úkon, lékařka, den nebo čas).
+3. **Den** – řada sedmi dnů, u každého počet volných časů („10 volných“, „nic volného“). Šipky
+   **‹ ›** posunou o týden (nejdřív na dnešek), kalendář pod nimi vybere jiné datum. Když vybraný
+   den nemá volno, objeví se tlačítko s **nejbližším dalším volným dnem**.
+   Chce-li klient konkrétní lékařku, klikněte vpravo na **jen lékařka…** a vyberte ji; dny,
+   ordinace i časy se pak počítají jen pro ni. Křížkem u jejího jména filtr zrušíte.
+4. **Ordinace** – jen když má úkon ten den volno ve více ordinacích. U každé je lékařka (pokud ji
+   má celý den jedna) a počet volných časů. Když je volno jen v jedné, vybere se sama a tento krok
+   se neukáže. Vybraná ordinace zůstane i po změně dne.
+5. **Čas** – volné časy vybrané ordinace, rozdělené na dopoledne a odpoledne. Počítají se stejně
+   jako na tabuli a na webu.
+
+Dole je **souhrn** celé objednávky jednou větou, třeba „Rex · Kontrola · čt 22. 10. 2026 9:30 ·
+Ordinace 2 · MVDr. Malá“, pod ním nepovinná **poznámka** a jediné tlačítko **Objednat**. Zkontrolujte
+souhrn a klikněte. Objeví se potvrzení „Objednáno: čt 22. 10. 2026 9:30 · Rex“; rezervace je
+potvrzená a je na tabuli i v Přicházejí toho dne.
+
+Potom se **formulář vyprázdní** pro dalšího klienta (klient a zvíře, úkon, lékařka, ordinace,
+čas, poznámka); zůstane jen den. Zelené potvrzení zmizí, jakmile začnete další objednání.
+
+![Objednat – hotový formulář se souhrnem](img/recepce-objednat.png)
 
 **E-mail klientovi:** když má majitel v kartotéce e-mail, dostane potvrzení rezervace
 automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá – termín mu řekněte.
@@ -249,16 +256,17 @@ automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá 
 Když mezitím termín obsadil někdo jiný (web, kolegyně), objeví se „Termín … už mezitím někdo
 obsadil – vyberte jiný.“ a časy se načtou znovu. Uhynulé zvíře objednat nejde.
 
-**Otevřít tabuli** otevře tabuli vybraného dne v okně nad pokladnou (kapitola 5); vybraný
+**Tabule** vedle Objednat otevře tabuli vybraného dne v okně nad pokladnou (kapitola 5); vybraný
 klient zůstane.
 
 V režimu **Přesunout rezervaci** (z tabule) vás zpět k běžnému objednání vrátí **Nepřesouvat**
 nebo znovu kliknutí na **Objednat** v liště. Úkon a čas přesouvané rezervace se přitom zruší –
 formulář začíná od výběru úkonu.
+Při přesouvání chybí krok Klient a zvíře; souhrn ukazuje přesouvané zvíře a tlačítko je **Přesunout**.
 
 ## 5. Tabule
 
-Tlačítko **Tabule** v liště (nebo **Otevřít tabuli** na záložce Objednat) otevře velké okno
+Tlačítko **Tabule** v liště (nebo **Tabule** vedle Objednat na záložce Objednat) otevře velké okno
 s tabulí dne přímo nad pokladnou – pokladna ani rozepsaný účet pod ním se nemění a nic se
 nepřepíná do jiné stránky.
 
@@ -290,7 +298,7 @@ Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas 
   vyberte klienta a zvíře a **Přiřadit k rezervaci**. Tabule zůstane otevřená pod ním.
   U proběhlé a nedorazivší rezervace Klient… není.
 - **Přesunout** – okno se zavře a otevře se záložka Objednat v režimu **Přesunout rezervaci**:
-  úkon a lékařka jsou předvyplněné, vyberte den a volný čas a klikněte **Přesunout na …**.
+  úkon a lékařka jsou předvyplněné, vyberte den a volný čas a klikněte **Přesunout**.
   **Nepřesouvat** režim ukončí.
 - **Zrušit rezervaci** – zeptá se ještě v okně („Opravdu zrušit? Klientovi odejde e-mail
   o zrušení.“, nebo bez e-mailu „Opravdu zrušit tuto rezervaci?“) a po **Ano, zrušit rezervaci**

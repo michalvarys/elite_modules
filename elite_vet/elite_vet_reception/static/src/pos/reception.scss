@@ -83,10 +83,111 @@
             color: $gray-600;
         }
     }
+    .o_ev_step {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: $white;
+        border: 1px solid $gray-300;
+        border-radius: 0.5rem;
+        .o_ev_step_num {
+            flex: 0 0 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            background: $gray-200;
+            color: $gray-700;
+        }
+        &.o_ev_done .o_ev_step_num {
+            background: $primary;
+            color: $white;
+        }
+        .o_ev_step_body {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .o_ev_step_title {
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: $gray-600;
+        }
+    }
+    .o_ev_days {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.4rem;
+        .o_ev_day {
+            min-width: 6.25rem;
+            border: 1px solid $gray-300;
+            .o_ev_day_name {
+                font-weight: 700;
+            }
+            &.o_ev_day_empty:not(.btn-primary) small {
+                color: $gray-500;
+            }
+        }
+    }
+    .o_ev_day_part {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        + .o_ev_day_part {
+            margin-top: 0.5rem;
+        }
+        .o_ev_day_part_name {
+            flex: 0 0 6rem;
+            padding-top: 0.9rem;
+            font-size: 0.85rem;
+            color: $gray-600;
+        }
+    }
+    .o_ev_summary {
+        position: sticky;
+        bottom: 0;
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: $white;
+        border: 2px solid $primary;
+        border-radius: 0.5rem;
+        .o_ev_summary_text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+    }
+    @media (max-width: 575px) {
+        .o_ev_day_part {
+            flex-direction: column;
+            gap: 0.25rem;
+            .o_ev_day_part_name {
+                flex: none;
+                padding-top: 0;
+            }
+        }
+    }
+    .row.g-2 + .o_ev_step,
+    .o_ev_step + .row.g-2,
+    .row.g-2 + .row.g-2 {
+        margin-top: 0.5rem;
+    }
     .o_ev_rooms {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        @media (min-width: 992px) {
+            flex-direction: column;
+            .o_ev_room {
+                width: 100%;
+            }
+        }
         .o_ev_room {
             min-width: 9rem;
             min-height: 3.25rem;
