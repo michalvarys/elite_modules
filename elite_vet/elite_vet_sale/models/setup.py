@@ -70,7 +70,7 @@ class EliteVetSaleSetup(models.AbstractModel):
     def pos_config(self):
         config = self.env.ref("%s.pos_config_reception" % MODULE, raise_if_not_found=False)
         if not config:
-            self.ensure_setup()
+            self.sudo().ensure_setup()
             config = self.env.ref("%s.pos_config_reception" % MODULE)
         return config
 

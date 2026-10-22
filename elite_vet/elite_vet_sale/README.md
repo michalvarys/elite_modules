@@ -11,7 +11,8 @@ Tato první část modulu obsahuje jen společné nastavení, na kterém stojí 
 
 ## Nastavení (`elite.vet.sale.setup.ensure_setup`)
 
-Spustí se při instalaci (post-init hook) a lze ho bez obav spustit znovu – nic nezdvojí.
+Spustí se při instalaci (post-init hook), při aktualizaci modulu na verzi 18.0.1.0.1
+(migrace `migrations/18.0.1.0.1/post-migrate.py`) a lze ho bez obav spustit znovu – nic nezdvojí.
 Pořadí kroků:
 
 1. **Společnost:** země CZ a měna CZK – jen pokud společnost ještě nemá žádný zaúčtovaný
