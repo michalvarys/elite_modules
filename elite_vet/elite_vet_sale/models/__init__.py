@@ -10,3 +10,4 @@ from . import pos_order
 from . import product_code
 from . import expense
 from . import goods_receipt
+from . import product

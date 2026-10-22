@@ -6,3 +6,4 @@ from . import test_pos_settlement
 from . import test_board_data
 from . import test_gs1
 from . import test_goods_receipt
+from . import test_stock_views

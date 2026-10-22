@@ -33,6 +33,8 @@ bezpečně spustit znovu (elite.vet.sale.setup.ensure_setup). Popis je v README.
         "views/status_views.xml",
         "views/sale_order_views.xml",
         "views/goods_receipt_views.xml",
+        "views/stock_views.xml",
+        "views/menus.xml",
     ],
     "assets": {
         "web.assets_backend": [

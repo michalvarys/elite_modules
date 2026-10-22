@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_stock_overview" name="Přehled skladu" parent="stock.menu_stock_root"
+              sequence="3" action="action_stock_overview" groups="stock.group_stock_user"/>
+</odoo>
