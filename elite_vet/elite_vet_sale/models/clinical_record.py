@@ -104,6 +104,7 @@ class ClinicalRecordSale(models.Model):
         day = self.date.strftime("%-d. %-m. %Y") if self.date else ""
         return {
             "partner_id": self.pet_id.partner_id.id,
+            "pricelist_id": self.env["elite.vet.sale.setup"].pos_config().pricelist_id.id,
             "client_order_ref": " – ".join(p for p in (self.pet_id.name, day) if p),
             "order_line": [(5, 0, 0)] + [(0, 0, self._sale_line_vals(line)) for line in self.line_ids],
         }

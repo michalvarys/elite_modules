@@ -40,3 +40,32 @@ class TestBoardData(SaleCase):
     def test_reservation_without_record_is_false(self):
         res = self.reservation("11:00:00", "11:30:00")
         self.assertIs(self.event(res)["payment_state"], False)
+
+
+@tagged("post_install", "-at_install")
+class TestQuotationPricelist(SaleCase):
+    """Visit quotations always use the till's CZK pricelist (ruling R11)."""
+
+    def test_quotation_uses_till_pricelist_despite_usd_client_pricelist(self):
+        usd = self.env.ref("base.USD")
+        usd_list = self.env["product.pricelist"].create({"name": "TEST USD", "currency_id": usd.id})
+        self.owner.property_product_pricelist = usd_list
+        api = self.as_user(self.nurse)
+        data = api.open_today_record(self.pet.id, force_new=True)
+        api.add_free_line(data["id"], "Služba v Kč", 100.0)
+        api.mark_done(data["id"])
+        order = self.Record.browse(data["id"]).sale_order_id
+        till_list = self.setup.pos_config().pricelist_id
+        self.assertEqual(order.pricelist_id, till_list)
+        self.assertEqual(order.currency_id.name, "CZK")
+        self.settle(order)
+        self.assertEqual(self.Record.browse(data["id"]).payment_state, "paid")
+
+    def test_ensure_setup_twice_creates_no_second_pricelist(self):
+        self.setup.ensure_setup()
+        before = self.env["product.pricelist"].with_context(active_test=False).search_count([])
+        self.setup.ensure_setup()
+        self.assertEqual(self.env["product.pricelist"].with_context(active_test=False).search_count([]), before)
+        config = self.setup.pos_config()
+        self.assertEqual(config.pricelist_id.currency_id, self.company.currency_id)
+        self.assertIn(config.pricelist_id, config.available_pricelist_ids)

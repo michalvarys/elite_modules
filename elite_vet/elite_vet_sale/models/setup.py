@@ -202,8 +202,44 @@ class EliteVetSaleSetup(models.AbstractModel):
             vals["invoice_journal_id"] = invoice_journal.id
         if config.picking_type_id != picking_type and not config.current_session_id:
             vals["picking_type_id"] = picking_type.id
+        pricelist = self._ensure_pricelist(company, config)
+        if config.pricelist_id != pricelist:
+            vals["pricelist_id"] = pricelist.id
+        if pricelist not in config.available_pricelist_ids:
+            vals["available_pricelist_ids"] = [(4, pricelist.id)]
         if vals:
             config.write(vals)
+
+    def _ensure_pricelist(self, company, config):
+        """The pricelist of the Recepce till, in the company currency (CZK). Visit quotations use it, so
+        they always match the till's currency. The default pricelist is switched to CZK while nothing
+        uses it yet, otherwise "Ceník Kč" is created."""
+        Pricelist = self.env["product.pricelist"].sudo().with_context(active_test=False)
+        currency = company.currency_id
+        current = config.pricelist_id
+        if current and current.currency_id == currency:
+            return current
+        known = self.env.ref("%s.pricelist_czk" % MODULE, raise_if_not_found=False)
+        if known and known.currency_id == currency:
+            return known
+        pricelist = Pricelist.search([("name", "=", "Ceník Kč"), ("currency_id", "=", currency.id),
+                                      ("company_id", "in", (False, company.id))], limit=1)
+        if not pricelist:
+            default = self.env.ref("product.list0", raise_if_not_found=False)
+            used = default and (self.env["sale.order"].sudo().search_count([("pricelist_id", "=", default.id)])
+                                or self.env["pos.order"].sudo().search_count([("pricelist_id", "=", default.id)])
+                                or self.env["res.partner"].sudo().with_context(active_test=False).search_count(
+                                    [("specific_property_product_pricelist", "=", default.id)]))
+            if default and not used:
+                default.write({"currency_id": currency.id, "name": "Ceník Kč"})
+                pricelist = default
+            else:
+                pricelist = Pricelist.create({"name": "Ceník Kč", "currency_id": currency.id,
+                                              "company_id": company.id})
+        if not known:
+            self.env["ir.model.data"].sudo()._update_xmlids([{
+                "xml_id": "%s.pricelist_czk" % MODULE, "record": pricelist, "noupdate": True}])
+        return pricelist
 
     def _free_cash_journal(self, company):
         """A cash journal no other POS payment method uses (Odoo allows one cash method per journal)."""
