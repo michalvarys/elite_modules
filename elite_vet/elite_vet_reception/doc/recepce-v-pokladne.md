@@ -164,7 +164,7 @@ vybíráte, a dole je nejvýš **jedno hlavní tlačítko** (a Zavřít):
 | Odkud otevřete | Nadpis okna | Hlavní tlačítko – co udělá |
 |---|---|---|
 | lišta **Kartotéka…** | Kartotéka | žádné – jen hledání, prohlížení, nový klient a úpravy |
-| **Objednat**, pole Klient a zvíře › **Vybrat…** / **Změnit** | Vybrat klienta a zvíře pro objednání | **Vybrat** – klient a zvíře se zapíšou do formuláře Objednat (kapitola 4) |
+| **Objednat**, krok Klient a zvíře › **+ Nový klient** / **Upravit** / majitel bez zvířete | Vybrat klienta a zvíře pro objednání | **Vybrat** – klient a zvíře se zapíšou do formuláře Objednat (kapitola 4) |
 | **Pokladna**, tlačítko **Klient** u účtu | Klient k účtu v pokladně | **Vybrat k účtu** – klient bude zákazníkem rozdělaného účtu |
 | **Dnes**, **Klient…** / **Spárovat** u rezervace; detail na **tabuli** › **Klient…** | Klient k rezervaci 21:00 Kontrola | **Přiřadit k rezervaci** – klient a zvíře se zapíšou k té rezervaci (kapitola 2) |
 | **Dnes**, **+ Bez objednání** | Přijmout bez objednání | **Přijmout** – s výběrem lékařky; zvíře jde do čekárny (kapitola 2) |
@@ -225,15 +225,29 @@ na zákazníka u faktury) otevře tuto Kartotéku se stejnými pravidly.
 Objednání jde po očíslovaných krocích shora dolů. Hotový krok má číslo vybarvené, další krok
 se ukáže, až je předchozí vyplněný.
 
-1. **Klient a zvíře** – klikněte **Vybrat…**, v Kartotéce najděte (nebo založte) klienta,
-   klikněte na zvíře a **Vybrat**. Okno se zavře a v kroku je zvíře a majitel; **Změnit** vybere
-   jiného.
-2. **Úkon** – povinné (u každého je délka).
-3. **Den** – řada sedmi dnů, u každého počet volných časů („10 volných“, „nic volného“). Šipky
-   **‹ ›** posunou o týden (nejdřív na dnešek), kalendář pod nimi vybere jiné datum. Když vybraný
-   den nemá volno, objeví se tlačítko s **nejbližším dalším volným dnem**.
+1. **Klient a zvíře** – pište rovnou do pole hledání v kroku (jméno, telefon, čip nebo jméno
+   zvířete, aspoň 2 znaky). Výsledky se ukážou pod polem samy, za každé zvíře jeden řádek, třeba
+   „Rex (pes) · Jana Nováková · 777 123 456“ (uhynulá zvířata ani personál se nenabízejí).
+   Kliknutím na řádek (nebo Enter na prvním) je zvíře vybrané a v kroku zůstane „Rex · Jana
+   Nováková“. **Změnit** otevře hledání znovu, **Upravit** otevře Kartotéku na tomto klientovi
+   (úprava kontaktu nebo zvířete, pak **Vybrat**).
+   Nový klient: **+ Nový klient** vedle pole otevře Kartotéku rovnou na formuláři nového klienta
+   (i s prvním zvířetem); po uložení klikněte **Vybrat**. Majitel bez zvířete má v hledání řádek
+   „bez zvířete – přidat zvíře…“ – otevře formulář nového zvířete.
+2. **Úkon** – nejčastější úkony posledních 30 dní jsou velká tlačítka (u každého délka), stačí
+   kliknout. Ostatní najdete pod **Jiný úkon…** (seznam s hledáním); vybraný úkon se pak ukáže
+   zvýrazněný vedle častých.
+3. **Den** – nad řadou dnů je zelené tlačítko s **nejbližším volným časem**, třeba „Nejdřív: dnes
+   14:30 · Ordinace 2 · MVDr. Malá“ – jedním kliknutím vyplní den, ordinaci i čas a stačí
+   objednat. Řada sedmi dnů ukazuje u každého počet volných časů („10 volných“); **„nic
+   volného“** je otevřený, ale plně obsazený den, šedé **„zavřeno“** den, kdy úkon nejde vůbec
+   (ordinace zavřená, celodenní blokace, nebo nikdo ze služby, když je lékařka potřeba) – na ten
+   kliknout nejde. Když vybraný den po výběru úkonu volno nemá, přeskočí výběr sám na první den
+   řady s volnem. Šipky **‹ ›** posunou o týden (nejdřív na dnešek), kalendář pod nimi vybere jiné
+   datum. Když vybraný den nemá volno, objeví se tlačítko s **nejbližším dalším volným dnem**.
    Chce-li klient konkrétní lékařku, klikněte vpravo na **jen lékařka…** a vyberte ji; dny,
-   ordinace i časy se pak počítají jen pro ni. Křížkem u jejího jména filtr zrušíte.
+   ordinace, časy i nejbližší volný čas se pak počítají jen pro ni. Křížkem u jejího jména filtr
+   zrušíte.
 4. **Ordinace** – jen když má úkon ten den volno ve více ordinacích. U každé je lékařka (pokud ji
    má celý den jedna) a počet volných časů. Když je volno jen v jedné, vybere se sama a tento krok
    se neukáže. Vybraná ordinace zůstane i po změně dne.
@@ -248,7 +262,7 @@ potvrzená a je na tabuli i v Přicházejí toho dne.
 Potom se **formulář vyprázdní** pro dalšího klienta (klient a zvíře, úkon, lékařka, ordinace,
 čas, poznámka); zůstane jen den. Zelené potvrzení zmizí, jakmile začnete další objednání.
 
-![Objednat – hotový formulář se souhrnem](img/recepce-objednat.png)
+![Objednat – klient, časté úkony, nejbližší volný čas a řada dnů se „zavřeno“](img/recepce-objednat.png)
 
 **E-mail klientovi:** když má majitel v kartotéce e-mail, dostane potvrzení rezervace
 automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá – termín mu řekněte.

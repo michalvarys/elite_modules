@@ -55,6 +55,9 @@ export class CardIndexDialog extends Component {
         client: { type: Object, optional: true },
         // booking mode: (pet: {id, name, owner, partner_id}) => void
         onSelect: { type: Function, optional: true },
+        // form opened first: "new_owner" (Objednat + Nový klient) or "new_pet" (for `client`,
+        // an owner without a live pet picked in the inline search of Objednat)
+        start: { validate: (s) => ["new_owner", "new_pet"].includes(s), optional: true },
         // called after a change the caller shows (match, walk-in)
         onChanged: { type: Function, optional: true },
     };
@@ -85,10 +88,17 @@ export class CardIndexDialog extends Component {
             ]);
             this.state.species = options?.species || [];
             this.state.doctors = booking?.doctors || [];
+            if (this.props.start === "new_owner") {
+                this.newOwner();
+                return;
+            }
             const preset = this.preset;
             if (preset?.partner_id) {
                 await this.loadOwner(preset.partner_id, preset.pet_id || null);
                 if (this.state.data) {
+                    if (this.props.start === "new_pet") {
+                        this.newPet();
+                    }
                     return;
                 }
             }

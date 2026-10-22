@@ -48,6 +48,40 @@ class TestCardIndex(ReceptionCase):
         self.assertNotIn(self.owner.id, owner_ids)
         self.assertEqual(reception.card_search("x"), [])
 
+    def test_booking_search_rows(self):
+        """Task 12: inline search of Objednat - one row per live pet, an owner without a live
+        pet as an owner row, no staff / company partners."""
+        reception = self.api(self.reception)
+        bety = self.new_pet("Bety Klinická")
+        dead = self.new_pet("Starý Klinický")
+        dead.deceased = True
+        rows = reception.booking_search("Klinická-Testová")
+        mine = [r for r in rows if r["partner_id"] == self.owner.id]
+        self.assertEqual(sorted(r["id"] for r in mine), sorted([self.pet.id, bety.id]))
+        self.assertTrue(all(r["kind"] == "pet" for r in mine))
+        azor = [r for r in mine if r["id"] == self.pet.id][0]
+        self.assertEqual(azor, {"kind": "pet", "id": self.pet.id, "name": "Azor Klinický", "species_label": "Pes",
+                                "owner": self.owner.name, "partner_id": self.owner.id,
+                                "phone": "777 654 321"})
+        # found by e-mail (no pet matches it): the owner's live pets, each once
+        by_mail = [r for r in reception.booking_search("majitelka.clinic@") if r["partner_id"] == self.owner.id]
+        self.assertEqual(sorted(r["id"] for r in by_mail), sorted([self.pet.id, bety.id]))
+        # owner without pets / with a deceased pet only: one owner row
+        lonely = self.owner_by_api(name="Bezzvířecí Objednací")["owner"]["id"]
+        widow = self.owner_by_api(name="Bezzvířecí Pozůstalá")["owner"]["id"]
+        self.new_pet("Uhynulý Pozůstalý", self.env["res.partner"].browse(widow)).deceased = True
+        rows = reception.booking_search("Bezzvířecí")
+        self.assertEqual(sorted((r["kind"], r["partner_id"]) for r in rows),
+                         sorted([("owner", lonely), ("owner", widow)]))
+        # staff and company partners are never offered
+        self.new_pet("Služební Pes", self.nurse.partner_id)
+        self.new_pet("Firemní Pes", self.env.company.partner_id)
+        self.assertEqual(reception.booking_search("Služební Pes"), [])
+        self.assertEqual(reception.booking_search("Firemní Pes"), [])
+        self.assertEqual(reception.booking_search("x"), [])
+        with self.assertRaises(AccessError):
+            self.api(self.outsider).booking_search("Azor")
+
     # ---------------------------------------------------------------- owner_data
     def test_owner_data(self):
         self.env["elite.vet.pet.alert"].create({"pet_id": self.pet.id, "kind": "bites", "note": "náhubek"})

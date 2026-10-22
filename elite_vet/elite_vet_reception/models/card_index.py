@@ -16,6 +16,7 @@ from odoo.addons.elite_vet_reservation.models.pet import SPECIES, normalize_phon
 OWNER_FIELDS = ("name", "phone", "mobile", "email", "street", "city", "zip")
 PET_FIELDS = ("name", "species", "breed", "sex", "birth_date", "chip", "note")
 SEARCH_LIMIT = 20
+BOOKING_SEARCH_LIMIT = 20
 
 
 def _clean(vals, allowed):
@@ -49,10 +50,16 @@ class ReceptionCardIndex(models.AbstractModel):
         partner = self.env["res.partner"].browse(self._to_id(partner_id)).exists()
         if not partner:
             raise UserError(_("Majitel nebyl nalezen."))
-        staff = partner.sudo().with_context(active_test=False)
-        if staff.user_ids or staff in self.env["res.company"].sudo().search([]).partner_id:
+        if self._not_clients(partner):
             raise UserError(_("Tento kontakt není klient kliniky."))
         return partner
+
+    @api.model
+    def _not_clients(self, partners):
+        """Staff (a user, also archived) and company partners: never an owner of the card index."""
+        companies = self.env["res.company"].sudo().search([]).partner_id
+        return partners.sudo().with_context(active_test=False).filtered(
+            lambda p: p.user_ids or p in companies)
 
     @api.model
     def _to_id(self, value):
@@ -129,6 +136,50 @@ class ReceptionCardIndex(models.AbstractModel):
         results = [dict(p, kind="pet") for p in pets]
         shown = {p["partner_id"] for p in pets}
         return results + self._search_owners(term, shown, SEARCH_LIMIT)
+
+    @api.model
+    def booking_search(self, term):
+        """Inline client search of Objednat (step 1): the card index search as rows to pick from.
+
+        One row per live pet (`kind` "pet"); an owner found by name / phone / e-mail gets a row
+        per live pet (each pet once), and an owner without a live pet one row of `kind` "owner"
+        (the dialog adds a pet). Same owner rules as booking:
+        no staff and company partners, no deceased pets.
+        """
+        results = self.card_search(term)
+        Pet = self.env["elite.vet.pet"]
+        Record = self.env["elite.vet.clinical.record"]
+        blocked = set(self._not_clients(self.env["res.partner"].browse({r["partner_id"] for r in results})).ids)
+        rows, seen = [], set()
+
+        def pet_row(pet_id, name, species_label, owner, partner_id, phone):
+            seen.add(pet_id)
+            return {"kind": "pet", "id": pet_id, "name": name, "species_label": species_label or None,
+                    "owner": owner, "partner_id": partner_id, "phone": phone or None}
+
+        owners_done = set()
+        for result in results:
+            partner_id = result["partner_id"]
+            if partner_id in blocked:
+                continue
+            if result["kind"] == "pet" and not result["deceased"]:
+                if result["id"] not in seen:
+                    rows.append(pet_row(result["id"], result["name"], result["species_label"], result["owner"],
+                                        partner_id, result["phone"]))
+                continue
+            if partner_id in owners_done:
+                continue
+            owners_done.add(partner_id)
+            live = Pet.search([("partner_id", "=", partner_id), ("deceased", "=", False)], order="name, id")
+            if result["kind"] == "owner":
+                for pet in live.filtered(lambda p: p.id not in seen):
+                    rows.append(pet_row(pet.id, pet.name, Record._species_label(pet), result["owner"],
+                                        partner_id, result["phone"]))
+            if not live:
+                # no live pet (none at all, or only a deceased one matched): the dialog adds one
+                rows.append({"kind": "owner", "id": partner_id, "partner_id": partner_id,
+                             "owner": result["owner"], "phone": result["phone"]})
+        return rows[:BOOKING_SEARCH_LIMIT]
 
     @api.model
     def pet_options(self):

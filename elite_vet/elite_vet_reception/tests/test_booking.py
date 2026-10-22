@@ -118,7 +118,7 @@ class TestBooking(ReceptionCase):
         data = reception.free_days(self.book_proc.id, start.isoformat())
         self.assertEqual([d["day"] for d in data], [(start + timedelta(days=i)).isoformat() for i in range(7)])
         times = {m for m, _room, _doc in self.wizard_lines(self.book_proc, self.day)}
-        self.assertEqual(data[1], {"day": self.day.isoformat(), "count": len(times)})
+        self.assertEqual(data[1], {"day": self.day.isoformat(), "count": len(times), "closed": False})
         self.assertTrue(data[1]["count"])
         # the doctor filter is passed on (she has a shift only on self.day)
         mine = reception.free_days(self.book_proc.id, start.isoformat(), self.doctor.id)
@@ -133,9 +133,152 @@ class TestBooking(ReceptionCase):
         self.assertIsNotNone(data[1]["count"])
         far = clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS + 1)
         self.assertEqual(reception.free_days(self.book_proc.id, far.isoformat(), days=1),
-                         [{"day": far.isoformat(), "count": None}])
+                         [{"day": far.isoformat(), "count": None, "closed": False}])
         with self.assertRaises(AccessError):
             self.api(self.outsider).free_days(self.book_proc.id, far.isoformat())
+
+    def test_free_days_closed_or_fully_booked(self):
+        """Task 12: `closed` = the day cannot have a free time at all; a fully booked open day is
+        not closed ("nic volného")."""
+        A = self.env["elite.vet.availability"]
+        Res = self.env["elite.vet.reservation"]
+        reception = self.api(self.reception)
+        proc = self.env["elite.vet.procedure"].create({
+            "name": "Zavřeno test recepce", "duration": 20, "symbol": "Z", "color": "blue",
+            "room_ids": [(6, 0, [self.room.id])]})
+        booked, blocked, exception = (self.day + timedelta(days=i) for i in (1, 2, 3))
+        # the whole opening time of the only room booked
+        Res.create({"kind": "reservation", "state": "confirmed", "room_id": self.room.id,
+                    "procedure_id": proc.id, "doctor_id": self.doctor.id,
+                    "start": A.local_to_utc(booked, 8 * 60), "stop": A.local_to_utc(booked, 12 * 60)})
+        Res.create({"kind": "block", "block_reason": "Celý den zavřeno test", "block_scope": "full",
+                    "room_id": False, "state": "confirmed",
+                    "start": A.local_to_utc(blocked, 0), "stop": A.local_to_utc(blocked, 1440)})
+        self.env["elite.vet.room.exception"].create({"room_id": self.room.id, "date": exception, "closed": True})
+        data = {d["day"]: d for d in reception.free_days(proc.id, self.day.isoformat(), days=5)}
+        self.assertEqual(data[self.day.isoformat()]["closed"], False)
+        self.assertTrue(data[self.day.isoformat()]["count"])
+        self.assertEqual(data[booked.isoformat()], {"day": booked.isoformat(), "count": 0, "closed": False})
+        self.assertEqual(data[blocked.isoformat()], {"day": blocked.isoformat(), "count": 0, "closed": True})
+        self.assertEqual(data[exception.isoformat()], {"day": exception.isoformat(), "count": 0, "closed": True})
+        # a web-only block does not close the day for reception
+        web_only = self.day + timedelta(days=4)
+        Res.create({"kind": "block", "block_reason": "Jen web test", "block_scope": "web", "room_id": False,
+                    "state": "confirmed", "start": A.local_to_utc(web_only, 0), "stop": A.local_to_utc(web_only, 1440)})
+        day = reception.free_days(proc.id, web_only.isoformat(), days=1)[0]
+        self.assertFalse(day["closed"])
+        self.assertTrue(day["count"])
+        # a doctor required: a day without any shift is closed, the day with her shift is not
+        self.env["elite.vet.setting"].nastaveni().booking_require_doctor = True
+        data = reception.free_days(self.book_proc.id, self.day.isoformat(), days=2)
+        self.assertEqual([(d["closed"], bool(d["count"])) for d in data], [(False, True), (True, False)])
+        # the doctor filter likewise (a day without her shift)
+        self.env["elite.vet.setting"].nastaveni().booking_require_doctor = False
+        data = reception.free_days(self.book_proc.id, self.day.isoformat(), self.doctor.id, days=2)
+        self.assertEqual([(d["closed"], bool(d["count"])) for d in data], [(False, True), (True, False)])
+        # a procedure whose only room has no opening hours at all
+        closed_room = self.env["elite.vet.room"].create({"name": "Bez hodin test recepce"})
+        never = self.env["elite.vet.procedure"].create({
+            "name": "Nikdy zavřeno test", "duration": 20, "symbol": "N", "color": "red",
+            "room_ids": [(6, 0, [closed_room.id])]})
+        self.assertTrue(all(d["closed"] for d in reception.free_days(never.id, self.day.isoformat())))
+
+    # ---------------------------------------------------------------- frequent procedures
+    def test_booking_options_frequent(self):
+        """Task 12: up to 6 procedures by the reservations of the last 30 days, else the first ones."""
+        A = self.env["elite.vet.availability"]
+        Res = self.env["elite.vet.reservation"]
+        today = clinic_today()
+        # nothing else counted in this test: reservations already in the window are cancelled
+        self.env.cr.execute("UPDATE elite_vet_reservation SET state = 'cancelled' WHERE kind = 'reservation'")
+        Res.invalidate_model(["state"])
+        procs = [self.env["elite.vet.procedure"].create({
+            "name": "Častý %s test recepce" % i, "duration": 15, "symbol": "C", "color": "green",
+            "room_ids": [(6, 0, [self.room.id])]}) for i in range(3)]
+        slot = iter(range(8 * 60, 20 * 60, 15))
+
+        def reserve(proc, day, state="confirmed"):
+            minute = next(slot)
+            Res.with_context(ev_no_mail=True).create({
+                "kind": "reservation", "state": state, "room_id": self.room.id, "procedure_id": proc.id,
+                "doctor_id": self.doctor.id,
+                "start": A.local_to_utc(day, minute), "stop": A.local_to_utc(day, minute + 15)})
+
+        for _i in range(3):
+            reserve(procs[2], today)
+        for _i in range(2):
+            reserve(procs[1], today - timedelta(days=29))
+        reserve(procs[0], today - timedelta(days=31))  # too old
+        reserve(procs[0], today, state="cancelled")  # cancelled
+        reserve(procs[0], today + timedelta(days=1))  # future, not yet a fact
+        reserve(procs[0], today, state="no_show")  # booked, the client did not come: counts
+        reception = self.api(self.reception)
+        self.assertEqual(reception.booking_options()["frequent"], [procs[2].id, procs[1].id, procs[0].id])
+        # more than six: only the six most booked
+        extra = [self.env["elite.vet.procedure"].create({
+            "name": "Další častý %s test" % i, "duration": 15, "symbol": "D", "color": "blue",
+            "room_ids": [(6, 0, [self.room.id])]}) for i in range(5)]
+        for proc in extra:
+            reserve(proc, today)
+            reserve(proc, today)
+        frequent = reception.booking_options()["frequent"]
+        self.assertEqual(len(frequent), 6)
+        self.assertEqual(frequent[0], procs[2].id)
+        self.assertNotIn(procs[0].id, frequent)
+        # no data at all: the first procedures in their normal order
+        self.env.cr.execute("UPDATE elite_vet_reservation SET state = 'cancelled' WHERE kind = 'reservation'")
+        Res.invalidate_model(["state"])
+        options = reception.booking_options()
+        self.assertEqual(options["frequent"], [p["id"] for p in options["procedures"][:6]])
+
+    # ---------------------------------------------------------------- nearest free time
+    def test_nearest_free(self):
+        """Task 12: the earliest free time from today; rooms at the same minute in natural order."""
+        self.room.name = "Ordinace 10 test recepce"
+        self.room2.name = "Ordinace 9 test recepce"
+        reception = self.api(self.reception)
+        day = clinic_today()
+        while not reception.free_slots(self.book_proc.id, day.isoformat())["slots"]:
+            day += timedelta(days=1)
+        slots = reception.free_slots(self.book_proc.id, day.isoformat())["slots"]
+        first = min(s["minute"] for s in slots)
+        expected = [s for s in slots if s["minute"] == first and s["room_id"] == self.room2.id][0]
+        self.assertEqual(reception.nearest_free(self.book_proc.id), dict(expected, day=day.isoformat()))
+        # the doctor filter: her only shift (self.day, room 1, from 8:00)
+        mine = reception.nearest_free(self.book_proc.id, self.doctor.id)
+        self.assertEqual(mine, {"day": self.day.isoformat(), "time": "8:00", "minute": 480,
+                                "room_id": self.room.id, "room": self.room.name,
+                                "doctor_id": self.doctor.id, "doctor": self.doctor.name})
+        with self.assertRaises(AccessError):
+            self.api(self.outsider).nearest_free(self.book_proc.id)
+
+    def test_nearest_free_nothing_and_horizon(self):
+        reception = self.api(self.reception)
+        room = self.env["elite.vet.room"].create({"name": "Výjimečná ordinace test recepce"})
+        proc = self.env["elite.vet.procedure"].create({
+            "name": "Výjimečný test recepce", "duration": 20, "symbol": "V", "color": "red",
+            "room_ids": [(6, 0, [room.id])]})
+        horizon = clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS)
+        # open only the day after the horizon: never searched, nothing found
+        self.env["elite.vet.room.exception"].create({
+            "room_id": room.id, "date": horizon + timedelta(days=1), "hour_from": 8.0, "hour_to": 12.0})
+        searched = []
+        original = ReservationWizard._free_slots
+
+        def spy(wizard, day):
+            searched.append(day)
+            return original(wizard, day)
+
+        with patch.object(ReservationWizard, "_free_slots", spy):
+            self.assertIsNone(reception.nearest_free(proc.id))
+        self.assertEqual((min(searched), max(searched)), (clinic_today(), horizon))
+        # open on the last day of the horizon: found there
+        self.env["elite.vet.room.exception"].create({
+            "room_id": room.id, "date": horizon, "hour_from": 9.0, "hour_to": 12.0})
+        found = reception.nearest_free(proc.id)
+        self.assertEqual((found["day"], found["minute"], found["room_id"]), (horizon.isoformat(), 540, room.id))
+        with self.assertRaises(UserError):
+            reception.nearest_free(0)
 
     # ---------------------------------------------------------------- book
     def test_book_creates_one_confirmed_reservation(self):

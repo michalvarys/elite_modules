@@ -3,13 +3,17 @@
  * Opened from the board with `prefill` (a click into a free place: day, room, time - the time is
  * selected once a procedure is chosen and the time is free) or with `move` (Přesunout: the free
  * times of the reservation's procedure, the chosen one moves it with `move_reservation`).
- * One column of steps: client and pet (Kartotéka in the booking mode), procedure, day (a strip of
- * seven days with the number of free times, `free_days`), room (only when more than one has free
- * times) and time (morning / afternoon), then a one-line summary above the only button.
- * The doctor is an optional filter ("jen lékařka…"). After a booking the form is emptied
- * (everything but the day). The "Objednáno" message stays until the next booking is started.
+ * One column of steps: client and pet (an inline search, `booking_search`; Kartotéka in the
+ * booking mode for a new client, a new pet or Upravit), procedure (the frequent ones as buttons,
+ * "Jiný úkon…" for the rest), day (a strip of seven days with the number of free times or
+ * "zavřeno", `free_days`; above it the nearest free time in one click, `nearest_free`), room
+ * (only when more than one has free times) and time (morning / afternoon), then a one-line
+ * summary above the only button. The doctor is an optional filter ("jen lékařka…"). After a
+ * procedure or doctor change the strip jumps to its first day with free times when the selected
+ * day has none. After a booking the form is emptied (everything but the day). The "Objednáno"
+ * message stays until the next booking is started.
  */
-import { Component, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, onWillUpdateProps, useEffect, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
@@ -22,6 +26,13 @@ import {
     dayLabel,
     shiftDay,
 } from "@elite_vet_reception/pos/reception_api";
+
+const CLIENT_SEARCH_DELAY = 300; // ms after the last key before the inline search runs
+
+/** Lower case without diacritics, for the procedure filter. */
+function plain(text) {
+    return (text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
 
 export class ReceptionBookingScreen extends Component {
     static template = "elite_vet_reception.BookingScreen";
@@ -47,6 +58,16 @@ export class ReceptionBookingScreen extends Component {
         this.state = useState({
             procedures: [],
             doctors: [],
+            frequent: [], // ids of the frequent procedures (buttons of step Úkon)
+            showAllProcedures: false, // "Jiný úkon…" list open
+            procedureFilter: "",
+            clientSearch: false, // inline client search open although a pet is selected (Změnit)
+            clientTerm: "",
+            clientResults: null, // booking_search rows of clientTerm
+            clientSearching: false,
+            nearest: null, // nearest_free of the procedure / doctor
+            nearestLoaded: false,
+            pick: null, // {day, minute, room_id}: the nearest time, selected once its day is loaded
             pet: this.props.pet || null, // {id, name, owner, partner_id}
             procedureId: "",
             doctorId: "",
@@ -66,11 +87,23 @@ export class ReceptionBookingScreen extends Component {
             move: null, // props.move while the move mode lasts
             moved: null, // label of the done move
         });
+        this.clientInput = useRef("clientInput");
+        this.clientTimer = null;
+        useEffect(
+            (open) => {
+                if (open) {
+                    this.clientInput.el?.focus();
+                }
+            },
+            () => [this.showClientSearch]
+        );
+        onWillUnmount(() => clearTimeout(this.clientTimer));
         onWillStart(async () => {
             const options = await callReception(this.orm, this.notification, "booking_options");
             if (options) {
                 this.state.procedures = options.procedures;
                 this.state.doctors = options.doctors;
+                this.state.frequent = options.frequent || [];
             }
             await this.applyBoardProps(this.props);
         });
@@ -100,7 +133,7 @@ export class ReceptionBookingScreen extends Component {
             const doctorKnown = this.state.doctors.some((d) => d.id === move.doctor_id);
             this.state.doctorId = doctorKnown ? String(move.doctor_id) : "";
             this.state.day = this.state.weekStart = move.day >= clinicToday() ? move.day : clinicToday();
-            await Promise.all([this.loadDays(), this.loadSlots()]);
+            await this.reloadAll({ jump: true });
         } else if (prefill) {
             this.state.move = null;
             this.state.moved = null;
@@ -108,12 +141,57 @@ export class ReceptionBookingScreen extends Component {
             const hh = `${Math.floor(prefill.minute / 60)}:${String(prefill.minute % 60).padStart(2, "0")}`;
             this.state.prefill = { ...prefill, label: hh, found: null };
             this.state.day = this.state.weekStart = prefill.day;
-            await Promise.all([this.loadDays(), this.loadSlots()]);
+            await this.reloadAll();
         }
     }
 
     get pet() {
         return this.state.pet;
+    }
+
+    /** Step 1 shows the search field (no pet yet, or Změnit). */
+    get showClientSearch() {
+        return !this.state.move && (!this.pet || this.state.clientSearch);
+    }
+
+    /** Buttons of step Úkon: the frequent procedures, plus the selected one when it is not frequent. */
+    get procedureChips() {
+        const byId = new Map(this.state.procedures.map((p) => [p.id, p]));
+        const chips = this.state.frequent.map((id) => byId.get(id)).filter(Boolean);
+        const selected = this.procedure;
+        if (selected && !chips.includes(selected)) {
+            chips.push(selected);
+        }
+        return chips;
+    }
+
+    /** All procedures for "Jiný úkon…", filtered by the typed text. */
+    get filteredProcedures() {
+        const term = plain(this.state.procedureFilter.trim());
+        return term ? this.state.procedures.filter((p) => plain(p.name).includes(term)) : this.state.procedures;
+    }
+
+    /** The strip item of the selected day ({day, count, closed}) or null. */
+    get currentDay() {
+        return (this.state.days || []).find((d) => d.day === this.state.day) || null;
+    }
+
+    /** "dnes 14:30 · Ordinace 2 · MVDr. Malá" of the nearest free time. */
+    get nearestLabel() {
+        const nearest = this.state.nearest;
+        if (!nearest) {
+            return "";
+        }
+        const today = clinicToday();
+        const day =
+            nearest.day === today ? "dnes" : nearest.day === shiftDay(today, 1) ? "zítra" : this.shortDayLabel(nearest.day);
+        return [`${day} ${nearest.time}`, nearest.room, nearest.doctor].filter(Boolean).join(" · ");
+    }
+
+    /** "Rex (pes) · Jana Nováková · 777 123 456" of a row of the inline search. */
+    clientRowLabel(row) {
+        const pet = row.kind === "pet" ? (row.species_label ? `${row.name} (${row.species_label.toLowerCase()})` : row.name) : null;
+        return [pet, row.owner, row.phone].filter(Boolean).join(" · ");
     }
 
     get dayTitle() {
@@ -249,6 +327,7 @@ export class ReceptionBookingScreen extends Component {
                 this.state.slots = data.slots;
                 this.state.nextFreeDay = data.next_free_day;
                 this.selectPrefilled();
+                this.selectPicked();
             }
         } finally {
             this.state.loading = false;
@@ -271,26 +350,97 @@ export class ReceptionBookingScreen extends Component {
         }
     }
 
-    onProcedureChange(ev) {
-        this.state.procedureId = ev.target.value;
+    /** The nearest time picked with the button, once the slots of its day are loaded. */
+    selectPicked() {
+        const pick = this.state.pick;
+        if (!pick || pick.day !== this.state.day || !this.state.slots) {
+            return;
+        }
+        this.state.pick = null;
+        const slot = this.state.slots.find((s) => s.minute === pick.minute && s.room_id === pick.room_id);
+        if (slot) {
+            this.state.roomId = slot.room_id;
+            this.selectSlot(slot);
+        } else {
+            this.notification.add("Tento čas mezitím někdo obsadil – vyberte jiný.", { type: "warning" });
+            this.loadNearest();
+        }
+    }
+
+    /** Nearest free time of the procedure (and the doctor filter). */
+    async loadNearest() {
+        this.state.nearest = null;
+        this.state.nearestLoaded = false;
+        if (!this.state.procedureId) {
+            return;
+        }
+        const request = [Number(this.state.procedureId), Number(this.state.doctorId) || false];
+        const data = await callReception(this.orm, this.notification, "nearest_free", request);
+        const current = [Number(this.state.procedureId), Number(this.state.doctorId) || false];
+        if (JSON.stringify(request) === JSON.stringify(current)) {
+            this.state.nearest = data || null;
+            this.state.nearestLoaded = data !== undefined;
+        }
+    }
+
+    /**
+     * Strip, times and the nearest time again (procedure / doctor change, the move mode, the
+     * board prefill). With `jump` a selected day without free times is left for the first day of
+     * the strip that has some (not with the board prefill: its day was clicked).
+     */
+    async reloadAll({ jump = false } = {}) {
+        const nearest = this.loadNearest();
+        await Promise.all([this.loadDays(), this.loadSlots()]);
+        if (jump && !this.state.prefill) {
+            const current = this.currentDay;
+            const free = (this.state.days || []).find((d) => d.count);
+            if (current && !current.count && free) {
+                this.selectDay(free.day);
+            }
+        }
+        await nearest;
+    }
+
+    /** The day, room and time of the nearest free time (the strip moves to its week). */
+    pickNearest() {
+        const nearest = this.state.nearest;
+        if (!nearest) {
+            return;
+        }
+        this.state.prefill = null;
+        this.state.pick = { day: nearest.day, minute: nearest.minute, room_id: nearest.room_id };
+        if (!(this.state.days || []).some((d) => d.day === nearest.day)) {
+            this.state.weekStart = nearest.day;
+            this.loadDays();
+        }
+        this.state.roomId = nearest.room_id;
+        this.selectDay(nearest.day);
+    }
+
+    selectProcedure(procedureId) {
+        this.state.procedureId = String(procedureId);
+        this.state.showAllProcedures = false;
+        this.state.procedureFilter = "";
         this.state.booked = null;
-        this.loadDays();
-        this.loadSlots();
+        this.reloadAll({ jump: true });
+    }
+
+    toggleAllProcedures() {
+        this.state.showAllProcedures = !this.state.showAllProcedures;
+        this.state.procedureFilter = "";
     }
 
     onDoctorChange(ev) {
         this.state.doctorId = ev.target.value;
         this.state.booked = null;
-        this.loadDays();
-        this.loadSlots();
+        this.reloadAll({ jump: true });
     }
 
     clearDoctor() {
         this.state.doctorId = "";
         this.state.showDoctor = false;
         this.state.booked = null;
-        this.loadDays();
-        this.loadSlots();
+        this.reloadAll({ jump: true });
     }
 
     selectDay(day) {
@@ -341,17 +491,99 @@ export class ReceptionBookingScreen extends Component {
         }
     }
 
-    /** Field "Klient a zvíře": Kartotéka in the booking mode, Vybrat fills the field. */
-    pickClient() {
-        const pet = this.pet;
+    // ------------------------------------------------------------------ step 1: client and pet
+
+    onClientInput(ev) {
+        this.state.clientTerm = ev.target.value;
+        clearTimeout(this.clientTimer);
+        if (this.state.clientTerm.trim().length < 2) {
+            this.state.clientResults = null;
+            return;
+        }
+        this.clientTimer = setTimeout(() => this.searchClients(), CLIENT_SEARCH_DELAY);
+    }
+
+    /** Enter: search at once; with results already shown the first row is taken. */
+    onClientKeydown(ev) {
+        if (ev.key === "Escape" && this.pet) {
+            this.closeClientSearch();
+        } else if (ev.key === "Enter") {
+            ev.preventDefault();
+            const results = this.state.clientResults;
+            if (results && results.length && !this.state.clientSearching) {
+                this.pickClientRow(results[0]);
+            } else {
+                clearTimeout(this.clientTimer);
+                this.searchClients();
+            }
+        }
+    }
+
+    async searchClients() {
+        const term = this.state.clientTerm.trim();
+        if (term.length < 2) {
+            return;
+        }
+        this.state.clientSearching = true;
+        try {
+            const rows = await callReception(this.orm, this.notification, "booking_search", [term]);
+            if (rows && term === this.state.clientTerm.trim()) {
+                this.state.clientResults = rows;
+            }
+        } finally {
+            this.state.clientSearching = false;
+        }
+    }
+
+    setPet(pet) {
+        this.state.pet = pet;
+        this.state.booked = null;
+        this.closeClientSearch();
+    }
+
+    /** A pet row selects it; an owner without a live pet opens Kartotéka to add one. */
+    pickClientRow(row) {
+        if (row.kind === "pet") {
+            this.setPet({ id: row.id, name: row.name, owner: row.owner, partner_id: row.partner_id });
+        } else {
+            this.openCardIndex({ client: { partner_id: row.partner_id }, start: "new_pet" });
+        }
+    }
+
+    /** Změnit: the inline search again (the selected pet stays until another one is taken). */
+    openClientSearch() {
+        this.state.clientSearch = true;
+        this.state.clientTerm = "";
+        this.state.clientResults = null;
+    }
+
+    closeClientSearch() {
+        clearTimeout(this.clientTimer);
+        this.state.clientSearch = false;
+        this.state.clientTerm = "";
+        this.state.clientResults = null;
+    }
+
+    /** Kartotéka in the booking mode; its Vybrat fills step 1. */
+    openCardIndex(props = {}) {
         this.dialog.add(CardIndexDialog, {
             mode: "booking",
-            ...(pet ? { client: { partner_id: pet.partner_id, pet_id: pet.id } } : {}),
-            onSelect: (picked) => {
-                this.state.pet = picked;
-                this.state.booked = null;
-            },
+            ...props,
+            onSelect: (picked) => this.setPet(picked),
         });
+    }
+
+    /** + Nový klient: the new-client form of Kartotéka. */
+    newClient() {
+        this.openCardIndex({ start: "new_owner" });
+    }
+
+    /** Upravit: Kartotéka on the selected client and pet. */
+    editClient() {
+        const pet = this.pet;
+        if (pet) {
+            this.openCardIndex({ client: { partner_id: pet.partner_id, pet_id: pet.id } });
+        }
     }
 
     /** After a booking: a fresh form for the next client; only the day stays. */
@@ -367,6 +599,12 @@ export class ReceptionBookingScreen extends Component {
         this.state.pet = null;
         this.state.note = "";
         this.state.prefill = null;
+        this.state.showAllProcedures = false;
+        this.state.procedureFilter = "";
+        this.state.nearest = null;
+        this.state.nearestLoaded = false;
+        this.state.pick = null;
+        this.closeClientSearch();
     }
 
     openBoard() {
@@ -385,6 +623,9 @@ export class ReceptionBookingScreen extends Component {
             this.state.slots = null;
             this.state.days = null;
             this.state.nextFreeDay = null;
+            this.state.nearest = null;
+            this.state.nearestLoaded = false;
+            this.state.pick = null;
         }
         this.state.move = null;
         this.state.moved = null;
@@ -415,7 +656,7 @@ export class ReceptionBookingScreen extends Component {
         } finally {
             this.state.saving = false;
         }
-        await Promise.all([this.loadDays(), this.loadSlots()]);
+        await this.reloadAll();
     }
 
     async book() {
@@ -445,7 +686,7 @@ export class ReceptionBookingScreen extends Component {
             this.state.saving = false;
         }
         // taken in the meantime: the list must show the current state
-        await Promise.all([this.loadDays(), this.loadSlots()]);
+        await this.reloadAll();
     }
 }
 

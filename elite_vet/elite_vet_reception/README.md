@@ -73,6 +73,7 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 
 | Metoda | Vrací |
 |---|---|
+| `booking_search(term)` | řádky vyhledávání v kroku 1 Objednat: `{kind: "pet", id, name, species_label, owner, partner_id, phone}` za každé živé zvíře (majitel nalezený jménem / telefonem / e-mailem → všechna jeho živá zvířata, každé jednou), majitel bez živého zvířete `{kind: "owner", id, partner_id, owner, phone}`; bez personálu a firem (pravidlo Kartotéky), bez uhynulých; nejvýš 20 řádků, méně než 2 znaky = `[]` |
 | `card_search(term)` | seznam: zvířata (`kind: "pet"`, tvar `search_patients` karty pacienta – jméno, majitel, čip, číslice telefonu) a majitelé (`kind: "owner"`: `id, partner_id, name, owner, phone, email, pet_count`) podle jména / telefonu / e-mailu, které žádné nalezené zvíře neukazuje (např. bez zvířat); méně než 2 znaky = `[]` |
 | `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...]}` |
 | `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
@@ -105,9 +106,10 @@ Den je `"YYYY-MM-DD"` v čase kliniky, `minute` = minuty od půlnoci.
 
 | Metoda | Vrací |
 |---|---|
-| `booking_options()` | `{"procedures": [{id, name, duration}], "doctors": [{id, name}]}` (lékařky přijímající objednávky) |
+| `booking_options()` | `{"procedures": [{id, name, duration}], "doctors": [{id, name}], "frequent": [id]}` (lékařky přijímající objednávky; `frequent` = nejvýš 6 úkonů s nejvíc rezervacemi – druh rezervace, ne zrušené, bez kopií druhé ordinace – za posledních 30 dní do dneška, od nejčastějšího; bez dat prvních 6 úkonů v běžném pořadí) |
 | `free_slots(procedure_id, day, doctor_id=False)` | `{"day", "slots": [{time, minute, room_id, room, doctor_id, doctor}], "next_free_day"}` – řádky průvodce (čas × ordinace); `next_free_day` = nejbližší další den s volným časem v horizontu recepce, jinak `None` |
-| `free_days(procedure_id, day, doctor_id=False, days=7)` | `[{day, count}]` – řada dnů v Objednat: počet různých volných časů dne (jako průvodce); `None` pro minulý den a den za horizontem; nejvýš 14 dní |
+| `free_days(procedure_id, day, doctor_id=False, days=7)` | `[{day, count, closed}]` – řada dnů v Objednat: počet různých volných časů dne (jako průvodce); `None` pro minulý den a den za horizontem; nejvýš 14 dní. `closed: true` = den bez jakékoli možnosti volna bez ohledu na rezervace: žádná ordinační doba v ordinacích úkonu pro recepci (i výjimka „zavřeno“), plná blokace přes ně, nebo – když je lékařka potřeba (nastavení, specializace úkonu, filtr lékařky) – žádná služba lékařky, která úkon dělá. Otevřený, ale plně obsazený den má `count: 0, closed: false` |
+| `nearest_free(procedure_id, doctor_id=False)` | `{day, time, minute, room_id, room, doctor_id, doctor}` nejbližšího volného času od teď v horizontu recepce (řádky průvodce jako `free_slots`; víc ordinací ve stejné minutě → první podle přirozeného řazení názvů, jako na obrazovce), jinak `None`; za horizont se nehledá |
 | `book(pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None)` | `{reservation_id, label}` – potvrzená rezervace pro zvíře a jeho majitele (kontakt z majitele), lékařka ve službě; potvrzovací e-mail jako v průvodci (když má majitel e-mail) |
 
 - Uhynulé zvíře objednat ani přijmout bez objednání nejde: „Zvíře je vedené jako uhynulé.“
@@ -159,7 +161,7 @@ pokladny zůstávají standardní.
   | `mode` | Odkud | Nadpis | Hlavní tlačítko |
   |---|---|---|---|
   | `browse` (výchozí) | lišta Kartotéka… | Kartotéka | žádné (jen hledání, prohlížení, založení a úprava) |
-  | `booking` | Objednat, pole „Klient a zvíře“ | Vybrat klienta a zvíře pro objednání | Vybrat → `onSelect({id, name, owner, partner_id})`, okno se zavře |
+  | `booking` | Objednat, krok 1 („+ Nový klient“, „Upravit“, majitel bez zvířete) | Vybrat klienta a zvíře pro objednání | Vybrat → `onSelect({id, name, owner, partner_id})`, okno se zavře |
   | `order` | Pokladna, tlačítko Klient | Klient k účtu v pokladně | Vybrat k účtu – zákazník otevřené objednávky; objednávka s položkami jiného klienta se nepřepíše – vznikne nová (úkol 5) |
   | `reservation` | Dnes Klient… / Spárovat, detail na tabuli Klient… | Klient k rezervaci 9:00 Očkování | Přiřadit k rezervaci (`match_reservation`), pak `onChanged` |
   | `walk_in` | Dnes + Bez objednání | Přijmout bez objednání | Přijmout (`walk_in`) s výběrem lékařky kterákoli / konkrétní, pak `onChanged` |
@@ -167,12 +169,23 @@ pokladny zůstávají standardní.
   Další props: `reservation` (režim `reservation`: `{reservation_id, time, procedure, owner,
   partner_id, pet_id, pet_name}`, předvyplní klienta a zvíře), `client` (`{partner_id, pet_id}` –
   v režimu `booking` dosavadní výběr; v režimu `order` se bez něj ukáže zákazník otevřené
-  objednávky). Tlačítka, která potřebují zvíře, jsou bez vybraného živého zvířete neaktivní
+  objednávky), `start` (`"new_owner"` – okno se otevře rovnou na formuláři Nový klient;
+  `"new_pet"` – u klienta z `client` rovnou na formuláři Nové zvíře). Tlačítka, která potřebují zvíře, jsou bez vybraného živého zvířete neaktivní
   s poznámkou „Vyberte zvíře.“ (klient bez zvířat: „Přidejte zvíře (+ Nové zvíře).“)
 - **Objednat** (`ReceptionBookingScreen`): jeden sloupec očíslovaných kroků – 1 Klient a zvíře
-  („Vybrat…“ / „Změnit“ – Kartotéka v režimu `booking`), 2 úkon, 3 den (řada 7 dní od `weekStart`
-  s počty z `free_days`, ‹ › o týden a vybere první den s volnem, kalendář, další volný den;
-  filtr „jen lékařka…“ = `doctorId`), 4 ordinace (jen víc ordinací s volnem – `rooms`, jedna se
+  (pole hledání přímo v kroku: `booking_search` 300 ms po posledním znaku, od 2 znaků, Enter =
+  hned / první řádek; řádek zvířete „Rex (pes) · Jana Nováková · 777…“ vybere, řádek majitele bez
+  zvířete otevře Kartotéku `booking` + `start: "new_pet"`; „+ Nový klient“ = Kartotéka `booking` +
+  `start: "new_owner"`; po výběru „Rex · Jana Nováková [Změnit] [Upravit]“ – Změnit otevře
+  hledání znovu, Upravit Kartotéku na klientovi a zvířeti), 2 úkon (častá z `frequent` jako velká
+  tlačítka, vybraný úkon mimo ně jako další zvýrazněné tlačítko; „Jiný úkon…“ = seznam všech
+  s filtrem bez diakritiky), 3 den (nad řadou tlačítko „Nejdřív: dnes 14:30 · Ordinace 2 ·
+  MVDr. Malá“ z `nearest_free` – vyplní den, ordinaci i čas a posune řadu na jeho týden; řada 7 dní
+  od `weekStart` s počty z `free_days`, zavřený den šedý, neaktivní, „zavřeno“, „nic volného“ jen
+  pro otevřený plně obsazený; ‹ › o týden a vybere první den s volnem, kalendář, další volný den;
+  filtr „jen lékařka…“ = `doctorId`; po změně úkonu / lékařky a v režimu Přesunout skočí výběr na
+  první den řady s volnem, když vybraný den volno nemá – ne po kliknutí na den ani s `prefill`
+  z tabule), 4 ordinace (jen víc ordinací s volnem – `rooms`, jedna se
   vybere sama – `activeRoom`; volba zůstává přes změnu dne), 5 čas (`free_slots` vybrané
   ordinace, dopoledne / odpoledne). Dole souhrn (`summary`), poznámka a jediné tlačítko Objednat
   (`book`). Po úspěchu se formulář vyprázdní (vše kromě dne), upozornění „Objednáno: čt 22. 10.
