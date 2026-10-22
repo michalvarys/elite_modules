@@ -57,6 +57,17 @@ class TestGoodsReceipt(SaleCase):
         # the 14-digit form of the barcode is found too
         self.assertEqual(self.receipt().scan(GTIN_A)["product"]["id"], self.product_a.id)
 
+    def test_scan_gs1_without_lot_does_not_prefill(self):
+        self.env["stock.lot"].create({"name": "LAST", "product_id": self.product_a.id,
+                                      "expiration_date": datetime(2027, 6, 30, 12)})
+        res = self.receipt().scan("]d201" + GTIN_A + "17280131")
+        self.assertEqual(res["product"]["id"], self.product_a.id)
+        self.assertIsNone(res["lot"])
+        self.assertEqual(res["expiry"], "2028-01-31")
+        res = self.receipt().scan("(01)" + GTIN_A)
+        self.assertIsNone(res["lot"])
+        self.assertIsNone(res["expiry"])
+
     def test_unknown_code_then_assign_code(self):
         code = "0108595009999999" + "10L-B" + GS + "17280115"
         res = self.receipt().scan(code)

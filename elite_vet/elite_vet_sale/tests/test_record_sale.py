@@ -208,3 +208,53 @@ class TestRecordSale(SaleCase):
         self.assertEqual(pos_order.account_move.state, "posted")
         self.assertEqual(pos_order.account_move.partner_id, self.owner)
         self.assertEqual(record.payment_state, "paid")
+
+    # final review (Ruling R15) --------------------------------------------
+    def test_refinish_updates_lines_in_place(self):
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        exam_sol = order.order_line.filtered(lambda l: l.product_id == self.exam.product_id)
+        free_sol = order.order_line - exam_sol
+        self.doctor_api().reopen_record(record.id)
+        exam_line = record.line_ids.filtered(lambda l: l.item_id == self.exam)
+        self.nurse_api().update_line(exam_line.id, {"quantity": 2})
+        self.nurse_api().add_free_line(record.id, "Výplach uší", 80.0)
+        self.done(record)
+        self.assertEqual(len(order.order_line), 3)
+        self.assertIn(exam_sol, order.order_line)
+        self.assertIn(free_sol, order.order_line)
+        self.assertEqual(exam_sol.product_uom_qty, 2)
+        self.assertEqual(free_sol.name, "Stříhání drápků")
+        self.assertAlmostEqual(order.amount_total, 1080.0, places=2)
+        # removing a line drops only its quotation line
+        self.doctor_api().reopen_record(record.id)
+        self.nurse_api().remove_line(record.line_ids.filtered(lambda l: l.name == "Stříhání drápků").id)
+        self.done(record)
+        self.assertFalse(free_sol.exists())
+        self.assertIn(exam_sol, order.order_line)
+        self.assertEqual(len(order.order_line), 2)
+        self.assertAlmostEqual(order.amount_total, 980.0, places=2)
+
+    def test_refinish_refused_while_till_holds_the_bill(self):
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        pos_order = self.settle(order, draft=True)
+        self.assertEqual(pos_order.state, "draft")
+        self.assertEqual(record.payment_state, "waiting")
+        self.doctor_api().reopen_record(record.id)
+        with self.assertRaisesRegex(UserError, "Recepce účet právě vyřizuje v pokladně"):
+            self.done(record)
+
+    def test_payment_detected_by_quotation_link_only(self):
+        record = self.new_record()
+        self.done(record)
+        order = record.sale_order_id
+        pos_order = self.settle(order, link_lines=False)
+        self.assertIn(pos_order.state, ("paid", "done", "invoiced"))
+        self.assertFalse(order.order_line.pos_order_line_ids)
+        self.assertTrue(record._has_pos_payment())
+        self.assertEqual(record.payment_state, "paid")
+        with self.assertRaisesRegex(UserError, "vratku"):
+            self.doctor_api().reopen_record(record.id)

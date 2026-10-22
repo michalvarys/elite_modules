@@ -6,7 +6,8 @@ Supported forms of the same content:
 - either one behind a symbology identifier ``]d2`` (DataMatrix), ``]C1`` (GS1-128), ``]Q3`` (QR).
 
 Read AIs: 01 GTIN, 10 lot, 17 expiry (YYMMDD, day 00 = last day of the month), 21 serial.
-Other known AIs are skipped. Anything that is not a GS1 string (EAN-13, a supplier code...)
+Other AIs are skipped; an unknown AI (e.g. 712 NHRN) is skipped up to the next GS separator.
+Anything that is not a GS1 string (EAN-13, a supplier code...)
 comes back with ``gtin`` None and the code in ``raw``.
 """
 import calendar
@@ -64,7 +65,12 @@ def _elements_raw(body):
             if ai in FIXED or ai in VARIABLE:
                 break
         else:
-            break  # unknown AI: stop, keep what was read
+            # Unknown AI (length unknown): its data ends at the next FNC1; without one, stop.
+            end = body.find(GS, pos)
+            if end < 0:
+                break
+            pos = end
+            continue
         pos += len(ai)
         if ai in FIXED:
             value = body[pos:pos + FIXED[ai]]
@@ -80,14 +86,24 @@ def _elements_raw(body):
     return elements or None
 
 
+def _split_prefix(raw):
+    for prefix in PREFIXES:
+        if raw.startswith(prefix):
+            return raw[len(prefix):], True
+    return raw, False
+
+
+def is_gs1_shaped(parsed):
+    """The scanned code is a GS1 element string (symbology prefix, FNC1, bracket notation or
+    a GTIN read from it), even if it carried no lot."""
+    body, prefixed = _split_prefix(parsed["raw"] or "")
+    return bool(parsed["gtin"] or prefixed or GS in body or _elements_brackets(body))
+
+
 def parse(code):
     """GS1 content of a scanned code -> {gtin, lot, expiry (date), serial, raw}."""
     raw = (code or "").strip()
-    body, prefixed = raw, False
-    for prefix in PREFIXES:
-        if body.startswith(prefix):
-            body, prefixed = body[len(prefix):], True
-            break
+    body, prefixed = _split_prefix(raw)
     elements = _elements_brackets(body)
     if elements is None:
         # Without a symbology prefix or an FNC1, only "01 + 14 digits + more" is taken as GS1,

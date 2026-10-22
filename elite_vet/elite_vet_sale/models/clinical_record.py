@@ -1,6 +1,6 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_is_zero
+from odoo.tools import float_compare
 
 PAYMENT_STATES = [("none", "Bez účtu"), ("waiting", "Čeká na platbu"), ("partial", "Částečně zaplaceno"),
                   ("paid", "Zaplaceno"), ("cancelled", "Zrušeno")]
@@ -18,13 +18,19 @@ class ClinicalRecordSale(models.Model):
 
     @api.depends("state", "sale_order_id.state", "sale_order_id.amount_total",
                  "sale_order_id.order_line.pos_order_line_ids.order_id.state",
-                 "sale_order_id.order_line.pos_order_line_ids.price_subtotal_incl")
+                 "sale_order_id.order_line.pos_order_line_ids.price_subtotal_incl",
+                 "sale_order_id.pos_order_line_ids.order_id.state",
+                 "sale_order_id.pos_order_line_ids.price_subtotal_incl")
     def _compute_payment_state(self):
         for rec in self:
             order = rec.sale_order_id.sudo()
             if order and rec._has_pos_payment():
                 # pos_sale's amount_unpaid: a deposit or a partial settlement leaves something to pay.
-                paid = float_is_zero(order.amount_unpaid, precision_rounding=order.currency_id.rounding)
+                # It counts only POS lines linked to a quotation line; paid lines linked to the
+                # quotation alone (sale_order_origin_id) are subtracted here.
+                unlinked = rec._paid_pos_lines().filtered(lambda l: not l.sale_order_line_id)
+                unpaid = order.amount_unpaid - sum(unlinked.mapped("price_subtotal_incl"))
+                paid = float_compare(unpaid, 0.0, precision_rounding=order.currency_id.rounding) <= 0
                 rec.payment_state = "paid" if paid else "partial"
             elif rec.state == "cancelled" or order.state == "cancel":
                 rec.payment_state = "cancelled"
@@ -33,11 +39,27 @@ class ClinicalRecordSale(models.Model):
             else:
                 rec.payment_state = "none"
 
+    def _quotation_pos_lines(self):
+        """POS lines of the quotation: linked to one of its lines, or only to the quotation
+        itself (sale_order_origin_id) when the line link is missing (e.g. a line rewritten
+        while the till held it)."""
+        self.ensure_one()
+        order = self.sale_order_id.sudo()
+        return order.order_line.pos_order_line_ids | order.pos_order_line_ids
+
+    def _paid_pos_lines(self):
+        return self._quotation_pos_lines().filtered(lambda l: l.order_id.state in PAID_POS_STATES)
+
     def _has_pos_payment(self):
         """Some POS order with a line of the quotation is paid (or invoiced)."""
         self.ensure_one()
-        states = self.sale_order_id.sudo().order_line.pos_order_line_ids.order_id.mapped("state")
-        return any(state in PAID_POS_STATES for state in states)
+        return bool(self._paid_pos_lines())
+
+    def _check_not_in_till(self):
+        """Ruling R15: a draft POS order holds the ids of the quotation lines – no rewrite."""
+        for rec in self:
+            if rec.sale_order_id and rec._quotation_pos_lines().order_id.filtered(lambda o: o.state == "draft"):
+                raise UserError(_("Recepce účet právě vyřizuje v pokladně – počkejte na dokončení platby."))
 
     # ------------------------------------------------------------------ state changes
 
@@ -78,6 +100,7 @@ class ClinicalRecordSale(models.Model):
         self.ensure_one()
         self.check_access("write")
         self._check_not_paid()
+        self._check_not_in_till()
         order = self.sale_order_id.sudo()
         if order.state == "sale":
             # Confirmed outside the till but never paid (checked above): back to a quotation.
@@ -106,8 +129,36 @@ class ClinicalRecordSale(models.Model):
             "partner_id": self.pet_id.partner_id.id,
             "pricelist_id": self.env["elite.vet.sale.setup"].pos_config().pricelist_id.id,
             "client_order_ref": " – ".join(p for p in (self.pet_id.name, day) if p),
-            "order_line": [(5, 0, 0)] + [(0, 0, self._sale_line_vals(line)) for line in self.line_ids],
+            "order_line": self._sale_line_commands(),
         }
+
+    def _sale_line_commands(self):
+        """Update the quotation lines in place (Ruling R15): the POS and pos_sale keep the ids
+        of quotation lines. Every bill line takes an unused quotation line (in sequence order)
+        with the same product and name, else with the same product; only the rest is created
+        or removed."""
+        self.ensure_one()
+        existing = list(self.sale_order_id.sudo().order_line.filtered(lambda l: not l.display_type)
+                        .sorted(lambda l: (l.sequence, l.id)))
+        bill = [(line, self._sale_line_vals(line)) for line in self.line_ids.sorted(lambda l: (l.sequence, l.id))]
+        matches = {}
+        for same_name in (True, False):
+            for line, vals in bill:
+                if line in matches:
+                    continue
+                match = next((sol for sol in existing if sol.product_id.id == vals["product_id"]
+                              and (not same_name or sol.name == vals["name"])), None)
+                if match:
+                    existing.remove(match)
+                    matches[line] = match
+        commands = [(2, sol.id) for sol in existing]
+        for line, vals in bill:
+            if line in matches:
+                vals.pop("product_id")
+                commands.append((1, matches[line].id, vals))
+            else:
+                commands.append((0, 0, vals))
+        return commands
 
     def _sale_line_vals(self, line):
         # An archived product (item withdrawn from the price list) is still billed as itself.

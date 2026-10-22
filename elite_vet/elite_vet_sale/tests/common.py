@@ -28,10 +28,12 @@ class SaleCase(ClinicCase):
             config.open_ui()
         return config.current_session_id
 
-    def settle(self, quotation, method="card", invoice=False, order_lines=None):
+    def settle(self, quotation, method="card", invoice=False, order_lines=None, draft=False, link_lines=True):
         """Settle a quotation in the Recepce till as the POS UI does with pos_sale's "Settle the
         order" (one POS line per quotation line, prices incl. tax, paid in full) -> pos.order.
-        `order_lines` (sale.order.line): settle only these lines (a partial settlement)."""
+        `order_lines` (sale.order.line): settle only these lines (a partial settlement).
+        `draft`: the order is only synced, not paid (reception still at the till).
+        `link_lines` False: POS lines keep only sale_order_origin_id (no sale_order_line_id)."""
         session = self.pos_session()
         config = session.config_id
         currency = config.currency_id
@@ -50,7 +52,7 @@ class SaleCase(ClinicCase):
                 "full_product_name": sol.name,
                 "price_subtotal": values["total_excluded"], "price_subtotal_incl": values["total_included"],
                 "tax_ids": [(6, 0, taxes.ids)],
-                "sale_order_origin_id": quotation.id, "sale_order_line_id": sol.id,
+                "sale_order_origin_id": quotation.id, "sale_order_line_id": sol.id if link_lines else False,
             }))
         total_incl = currency.round(sum(line[2]["price_subtotal_incl"] for line in lines))
         total_excl = currency.round(sum(line[2]["price_subtotal"] for line in lines))
@@ -65,5 +67,7 @@ class SaleCase(ClinicCase):
                                     "payment_method_id": payment_method.id})],
             "uuid": uuid, "user_id": self.env.uid, "to_invoice": invoice,
         }
+        if draft:
+            data.update({"state": "draft", "amount_paid": 0, "payment_ids": []})
         self.env["pos.order"].sync_from_ui([data])
         return self.env["pos.order"].search([("uuid", "=", uuid)])

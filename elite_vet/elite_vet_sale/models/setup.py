@@ -207,6 +207,13 @@ class EliteVetSaleSetup(models.AbstractModel):
             vals["pricelist_id"] = pricelist.id
         if pricelist not in config.available_pricelist_ids:
             vals["available_pricelist_ids"] = [(4, pricelist.id)]
+        if "payment_method_ids" in vals and config.session_ids.filtered(lambda s: s.state != "closed"):
+            # Odoo refuses payment method changes while the till is open (pos.config.write,
+            # _get_forbidden_change_fields); that would abort the module update. Adding a pricelist
+            # is allowed. The next run after closing the till adds the methods.
+            _logger.warning("Elite Vet: till %s has an open session, payment methods not added – close "
+                            "the till and run ensure_setup() again", config.name)
+            vals.pop("payment_method_ids")
         if vals:
             config.write(vals)
 

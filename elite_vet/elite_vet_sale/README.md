@@ -111,11 +111,16 @@ skutečné chyby jiných oblastí.
 Zákazník = majitel pacienta, `client_order_ref` = „<pacient> – D. M. RRRR“, řádky = řádky účtu
 (produkt položky ceníku – i archivovaný; bez produktu „Volná položka“ s názvem řádku), množství,
 cena s DPH z řádku (úprava ceny lékařkou platí), pořadí. Opětovné uzavření řádky nabídky
-přepíše (tatáž nabídka); záznam bez položek nabídku nemá (dřívější nezaplacenou smaže).
+upraví na místě (tatáž nabídka, ruling R15): řádek účtu převezme nepoužitý řádek nabídky se stejným
+produktem a názvem, jinak se stejným produktem; jen zbylé řádky vzniknou nebo se smažou – pokladna
+a `pos_sale` drží id řádků nabídky. Je-li na nabídku navázaná rozpracovaná (draft) objednávka
+pokladny, „Hotovo“ skončí chybou „Recepce účet právě vyřizuje v pokladně – počkejte na dokončení
+platby.“ Záznam bez položek nabídku nemá (dřívější nezaplacenou smaže).
 Zápis nabídky běží přes `sudo()` až po kontrole práva zápisu do záznamu.
 
 `payment_state` (počítaný): **Bez účtu** / **Čeká na platbu** / **Částečně zaplaceno** (některý
-zaplacený `pos.order` s řádkem nabídky, ale `amount_unpaid` z `pos_sale` > 0 – záloha nebo vyrovnání
+zaplacený `pos.order` s řádkem nabídky – nebo jen s odkazem na nabídku `sale_order_origin_id`, když
+vazba na řádek chybí –, ale `amount_unpaid` z `pos_sale` > 0 – záloha nebo vyrovnání
 jen části) / **Zaplaceno** (zaplaceno nebo fakturováno a `amount_unpaid` = 0) / **Zrušeno** (zrušený
 záznam nebo nabídka). Zaplacený záznam nejde znovu otevřít ani zrušit (`UserError` – vratka
 v pokladně), částečně zaplacený také ne („Na účet už je zaplacená záloha…“). Když recepce zaplatí
@@ -139,12 +144,14 @@ Poslední naskenovaný řádek je zvýrazněný.
   ohledu na velikost písmen); s hledaným textem i další firmy. `create_supplier(name)` založí firmu
   jen se jménem (existující firmu stejného jména použije).
 - **Kód:** `gs1.parse` (`models/gs1.py`, čisté funkce) – AI `01` GTIN, `10` šarže, `17` expirace (den
-  `00` = poslední den měsíce), `21` sériové číslo; FNC1 `\x1d`, závorkový zápis, prefixy `]d2`/`]C1`/`]Q3`.
+  `00` = poslední den měsíce), `21` sériové číslo; FNC1 `\x1d`, závorkový zápis, prefixy `]d2`/`]C1`/`]Q3`;
+neznámý AI (např. `712` NHRN) se přeskočí po další oddělovač GS.
   EAN a jiné kódy zůstanou v `raw`. Produkt se hledá podle `barcode` nebo `elite.vet.product.code`
   v podobách GTIN-14 i EAN-13 (bez úvodní 0) a naopak.
 - `scan(code)` → `{product, lot, expiry, known, suggested_cost (standard_price bez DPH), vat_rate}`;
   šarže/expirace z GS1, jinak z posledního hotového příjmu produktu (bez příjmu šarže s nejpozdější
-  expirací). Neznámý kód → okno s hledáním produktu (`search_products`) → `assign_code(code, product_id)`
+  expirací) – to jen u kódu, který není GS1; GS1 kód bez šarže nic nepředvyplní (`gs1.is_gs1_shaped`)
+  a obrazovka se na šarži zeptá. Neznámý kód → okno s hledáním produktu (`search_products`) → `assign_code(code, product_id)`
   uloží GTIN (u GS1 bez šarže) nebo celý kód do `elite.vet.product.code` (správce je opraví v Sklad →
   Konfigurace → Produkty → Kódy produktů pro čtečku). Produkt se šaržemi bez šarže → pole šarže
   s fokusem.
@@ -170,9 +177,11 @@ nevyřízený doprodej); prošlá šarže (`scan` vrací `expired`) se přijme, 
 kód načtený čtečkou do pole šarže (začíná `]`, obsahuje GS nebo `(01)`, nebo ≥ 13 číslic) jde do
 fronty skenů místo do šarže.
 
-## Přehled skladu (sestry)
+## Přehled skladu (sestry, recepce)
 
-Menu **Sklady → Přehled skladu** (`action_stock_overview`, skupina uživatel skladu = Sestra a výš):
+Menu **Sklady → Přehled skladu** (`action_stock_overview`, skupina uživatel skladu = Sestra a výš)
+a **Ordinace → Přehled skladu** (stejná akce, Recepce a výš; recepce má na `stock.quant` a `stock.lot`
+jen čtení):
 stav po šaržích (`stock.quant`, jen interní lokace, seskupeno podle produktu) jen ke čtení
 se sloupci produkt, šarže, expirace, množství. Filtry (ve vyhledávání `stock.quant` i `stock.lot`,
 tedy i ve standardních obrazovkách Skladu):
@@ -195,7 +204,7 @@ Lékařka < Správce rezervací, vyšší role dědí nižší):
 |---|---|---|---|---|
 | Pokladna | uživatel | uživatel | uživatel | správce POS |
 | Prodej (nabídky) | prodejce, všechny doklady (nabídky zakládá lékařka) | jako recepce | jako recepce | správce prodeje |
-| Sklad (příjem zboží, stav) | čtení přes pokladnu | uživatel skladu | uživatel skladu | správce skladu |
+| Sklad (příjem zboží, stav) | čtení (Ordinace → Přehled skladu) | uživatel skladu | uživatel skladu | správce skladu |
 
 ## Testy
 
@@ -230,6 +239,8 @@ a zaokrouhlení jednotky „Jednotky“ na 0,001 (léky se prodávají i po dese
 18.0.1.0.1 (migrace). Při běžném `-u` bez změny verze se nespouští. Když budoucí verze nastavení
 změní (nová platební metoda, daň, pokladna…), musí přidat migraci `migrations/<verze>/post-migrate.py`,
 která `ensure_setup()` zavolá – stejně jako 18.0.1.0.1.
+Před aktualizací modulu zavřete pokladnu. (Při otevřené pokladně nastavení chybějící platební metody
+nepřidá, jen zapíše varování do logu.)
 
 **DPH výdaje z příjmu.** Použije se vlastní nákupní daň produktu, jen pokud ji někdo nastavil
 ručně; výchozí nákupní daň společnosti (21 %) se ignoruje a bere se sazba prodejní daně (sazba

@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 
 from lxml import etree
 
+from odoo.exceptions import AccessError
 from odoo.tests import tagged
 from odoo.tools import safe_eval as safe_eval_module
 from odoo.tools.safe_eval import safe_eval
@@ -77,3 +78,21 @@ class TestStockViews(SaleCase):
         menu = self.env.ref("elite_vet_sale.menu_stock_overview")
         self.assertIn(menu.id, self.env["ir.ui.menu"].with_user(self.nurse)._visible_menu_ids())
         self.assertNotIn(menu.id, self.env["ir.ui.menu"].with_user(self.reception)._visible_menu_ids())
+
+    def test_reception_reads_stock_but_cannot_write(self):
+        menu = self.env.ref("elite_vet_sale.menu_stock_overview_clinic")
+        self.assertIn(menu.id, self.env["ir.ui.menu"].with_user(self.reception)._visible_menu_ids())
+        action = self.env.ref("elite_vet_sale.action_stock_overview")
+        Quant = self.env["stock.quant"].with_user(self.reception)
+        Lot = self.env["stock.lot"].with_user(self.reception)
+        Quant.get_view(action.view_id.id, "list")
+        quants = Quant.search([("product_id", "=", self.enough.id), ("location_id", "=", self.stock.id)])
+        self.assertEqual(quants.lot_id, self.lot_expired | self.lot_far)
+        quants.read(["product_id", "lot_id", "expiration_date", "quantity"])
+        self.assertEqual(Lot.search([("id", "=", self.lot_soon.id)]), self.lot_soon)
+        with self.assertRaises(AccessError):
+            Lot.browse(self.lot_soon.id).write({"name": "PR-CHANGED"})
+        with self.assertRaises(AccessError):
+            Quant.browse(quants[:1].id).write({"inventory_quantity": 99})
+        with self.assertRaises(AccessError):
+            Lot.create({"name": "PR-NEW", "product_id": self.low.id})

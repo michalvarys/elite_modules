@@ -78,6 +78,19 @@ class TestSetup(SaleCase):
         self.assertFalse(picking_type.use_existing_lots)
         self.assertFalse(picking_type.use_create_lots)
 
+    def test_ensure_setup_with_open_till(self):
+        config = self.pos_config
+        transfer = config.payment_method_ids.filtered(lambda m: m.name == "Převodem")
+        if not config.current_session_id:
+            config.open_ui()
+        self.assertTrue(config.current_session_id)
+        config.with_context(bypass_payment_method_ids_forbidden_change=True).write(
+            {"payment_method_ids": [(3, transfer.id)]})
+        with self.assertLogs("odoo.addons.elite_vet_sale.models.setup", "WARNING") as logs:
+            self.setup.ensure_setup()
+        self.assertIn("payment methods not added", logs.output[0])
+        self.assertNotIn(transfer, config.payment_method_ids)
+
     def test_stock_fefo(self):
         warehouse = self.env["stock.warehouse"].search([("company_id", "=", self.company.id)], limit=1)
         self.assertEqual(warehouse.lot_stock_id.removal_strategy_id, self.env.ref("product_expiry.removal_fefo"))

@@ -84,6 +84,9 @@ class GoodsReceipt(models.AbstractModel):
                 existing = self.env["stock.lot"].search([("product_id", "=", product.id), ("name", "=", lot)],
                                                         limit=1)
                 expiry = existing.expiration_date and existing.expiration_date.date()
+        elif gs1.is_gs1_shaped(parsed):
+            # A GS1 code without a lot: the lot of the last receipt would be a guess – ask for it.
+            lot = None
         else:
             last = self._last_lot(product)
             lot = last.name or None

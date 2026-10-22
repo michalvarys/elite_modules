@@ -56,6 +56,22 @@ class TestGs1(BaseCase):
         self.assertIsNone(parsed["expiry"])
         self.assertEqual(parsed["lot"], "X")
 
+    def test_unknown_ai_is_skipped_to_the_next_separator(self):
+        # 712 = NHRN (national healthcare reimbursement number), variable length
+        for code in ["]d2" + "0108595001601961" + "712ABC12345" + GS + "17270331" + "10L7",
+                     "0108595001601961" + "17270331" + "712X9" + GS + "10L7",
+                     "(01)08595001601961(712)ABC12345(17)270331(10)L7"]:
+            parsed = gs1.parse(code)
+            self.assertEqual(parsed["gtin"], "08595001601961", repr(code))
+            self.assertEqual(parsed["lot"], "L7", repr(code))
+            self.assertEqual(parsed["expiry"], date(2027, 3, 31), repr(code))
+
+    def test_gs1_shape(self):
+        self.assertTrue(gs1.is_gs1_shaped(gs1.parse("]d2" + "0108595001601961" + "17270331")))
+        self.assertTrue(gs1.is_gs1_shaped(gs1.parse("(01)08595001601961")))
+        for code in ["8595001601961", "08595001601961", "ABC-123"]:
+            self.assertFalse(gs1.is_gs1_shaped(gs1.parse(code)), repr(code))
+
     def test_gtin_lookup_forms(self):
         self.assertEqual(gs1.lookup_codes("08595001601961", "x"), ["08595001601961", "8595001601961", "x"])
         self.assertEqual(gs1.lookup_codes(None, "8595001601961"), ["8595001601961", "08595001601961"])
