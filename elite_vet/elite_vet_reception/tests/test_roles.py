@@ -112,6 +112,15 @@ class TestRoles(ReceptionCase):
         for xmlid in ("website.menu_website_configuration", "spreadsheet_dashboard.spreadsheet_dashboard_menu_root"):
             self.assertIn(self.env.ref(xmlid).id, visible, xmlid)
 
+    def test_apps_menu_back_to_administrators_on_update(self):
+        """Final review M-1: an earlier version gave Apps to Vedení; the update restores the stock group."""
+        apps = self.env.ref("base.menu_management")
+        apps.groups_id = [(6, 0, [self.env.ref(MANAGER).id])]
+        self.env["ir.ui.menu"]._elite_vet_apply_role_menus()
+        self.assertEqual(apps.groups_id, self.env.ref("base.group_system"))
+        if not self.manager.has_group("base.group_system"):
+            self.assertNotIn(apps.id, self.visible(self.manager))
+
     def test_existing_users_get_home_action_on_update(self):
         user = self.new_user("role_update_test", RECEPTION)
         custom = self.new_user("role_update_custom_test", RECEPTION)

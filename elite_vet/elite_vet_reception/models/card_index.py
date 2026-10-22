@@ -217,7 +217,14 @@ class ReceptionCardIndex(models.AbstractModel):
                                        limit=1)
         if visit and visit.pet_id != pet:
             raise UserError(_("Rezervace už má návštěvu jiného zvířete."))
-        vals = {"partner_id": partner.id, "pet_id": pet.id}
+        vals = {"partner_id": partner.id, "pet_id": pet.id, "pet_name": pet.name, "pet_species": pet.species}
+        if reservation.partner_id and reservation.partner_id != partner:
+            # Another client: the contact follows the new partner like in the booking wizard, so the
+            # reservation e-mails and the phone on the board do not stay with the previous client.
+            vals.update({
+                "contact_name": partner.name, "contact_phone": partner.phone or partner.mobile or False,
+                "contact_email": partner.email or False, "lang": partner.lang or "cs_CZ",
+            })
         reservation.write(vals)
         second = reservation.linked_reservation_id
         if second.is_second_room and second.linked_reservation_id == reservation:

@@ -169,7 +169,9 @@ class Reception(models.AbstractModel):
         reservation = self.env["elite.vet.reservation"].sudo().browse(int(reservation_id)).exists()
         if not reservation or reservation.kind != "reservation":
             raise UserError(_("Rezervace nebyla nalezena."))
-        if reservation.state not in ("confirmed", "done"):
+        if reservation.state == "done":
+            raise UserError(_("Proběhlou rezervaci nelze znovu přijmout."))
+        if reservation.state != "confirmed":
             raise UserError(_("Přijmout lze jen potvrzenou rezervaci."))
         if local_date(reservation.start) != clinic_today():
             raise UserError(_("Rezervace není na dnešek – přijmout jde jen dnešní návštěvu."))

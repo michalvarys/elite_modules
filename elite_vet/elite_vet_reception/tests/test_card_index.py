@@ -182,6 +182,15 @@ class TestCardIndex(ReceptionCase):
         self.assertEqual((record["pet_id"], record["reservation_id"], record["stage"]),
                          (self.pet.id, res.id, "waiting"))
 
+    def test_first_match_keeps_web_contact(self):
+        """Matching a web reservation for the first time keeps the contact the client typed."""
+        res = self.reservation(10, 30, contact_name="Webová Kontaktní", pet_name="Bobík Kontakt",
+                               contact_email="web.kontakt@example.invalid", contact_phone="777 000 111")
+        self.api(self.reception).match_reservation(res.id, self.owner.id, self.pet.id)
+        self.assertEqual((res.contact_name, res.contact_email, res.contact_phone),
+                         ("Webová Kontaktní", "web.kontakt@example.invalid", "777 000 111"))
+        self.assertEqual(res.pet_name, self.pet.name)
+
     def test_pet_options(self):
         data = self.api(self.reception).pet_options()
         self.assertIn({"value": "dog", "label": "Pes"}, data["species"])
@@ -262,12 +271,26 @@ class TestCardIndex(ReceptionCase):
     # ---------------------------------------------------------------- Task 8: any reservation (from Dnes / the board)
     def test_reassign_reservation_to_another_client(self):
         reception = self.api(self.reception)
-        res = self.reservation(9, 0, pet=self.pet)
-        other_owner = self.env["res.partner"].create({"name": "Nový Klient Rezervace", "is_vet_client": True})
+        res = self.reservation(9, 0, pet=self.pet, contact_name=self.owner.name, contact_phone="+420 602 000 111",
+                               contact_email="puvodni.klient@example.invalid")
+        room2 = self.env["elite.vet.room"].create({"name": "Ordinace test kartotéky 2"})
+        second = res.add_second_room(room2)
+        other_owner = self.env["res.partner"].create({
+            "name": "Nový Klient Rezervace", "is_vet_client": True, "phone": "+420 603 999 888",
+            "email": "novy.klient@example.invalid"})
         other_pet = self.new_pet("Nové Zvíře Rezervace", owner=other_owner)
         summary = reception.match_reservation(res.id, other_owner.id, other_pet.id)
         self.assertEqual((res.partner_id, res.pet_id), (other_owner, other_pet))
         self.assertEqual((summary["partner_id"], summary["pet_id"]), (other_owner.id, other_pet.id))
+        # final review I-1: the contact follows the new client (no e-mails to the previous one)
+        self.assertEqual((res.contact_name, res.contact_phone, res.contact_email, res.lang),
+                         (other_owner.name, other_owner.phone, other_owner.email, other_owner.lang))
+        self.assertEqual((res.pet_name, res.pet_species), (other_pet.name, other_pet.species))
+        self.assertEqual(res.contact_email, "novy.klient@example.invalid")
+        self.assertEqual((second.partner_id, second.pet_id, second.contact_email, second.contact_phone),
+                         (other_owner, other_pet, other_owner.email, other_owner.phone))
+        detail = reception.board_reservation(res.id)
+        self.assertEqual((detail["phone"], detail["email"]), (other_owner.phone, other_owner.email))
         # once the visit exists, another pet is refused (existing rule)
         reception.check_in(res.id)
         with self.assertRaises(UserError):

@@ -66,7 +66,7 @@
                                 <t t-esc="row.owner or ''"/>
                                 <t t-if="row.room"> · <t t-esc="row.room"/></t>
                                 <t t-esc="' · ' + (row.doctor or 'kterákoli lékařka')"/>
-                                <t t-if="row.stage === 'in_room' and row.arrived_time"> · přišel <t t-esc="row.arrived_time"/></t>
+                                <t t-if="row.stage === 'in_room' and row.arrived_time"> · příchod <t t-esc="row.arrived_time"/></t>
                                 <t t-elif="row.waiting_minutes !== null"> · čeká <t t-esc="row.waiting_minutes"/> min</t>
                             </small>
                         </div>

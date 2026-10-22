@@ -51,7 +51,8 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 Pravidla přijetí:
 
 - Přijmout jde jen rezervaci na dnešek (den kliniky): „Rezervace není na dnešek – přijmout jde jen
-  dnešní návštěvu.“
+  dnešní návštěvu.“ Jen potvrzenou rezervaci; proběhlá (`done`): „Proběhlou rezervaci nelze znovu
+  přijmout.“
 - Souběžné přijetí ze dvou pokladen: druhé narazí na unikátnost rezervace a vrátí už založený záznam.
 - Rezervace, která už záznam má (lékařka otevřela kartu dřív), vrátí tento záznam; nový nevznikne
   a stav V ordinaci zůstane.
@@ -91,6 +92,10 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 - `match_reservation` u druhé ordinace páruje hlavní rezervaci; rezervace, která už má návštěvu
   jiného zvířete, skončí chybou „Rezervace už má návštěvu jiného zvířete.“ Rezervaci s jiným
   zvířetem, která ještě návštěvu nemá, přepíše (změna klienta). Zrušená rezervace: chyba; proběhlá (`done`): „Proběhlou rezervaci nelze změnit.“
+  Při změně klienta (rezervace už měla jiného majitele) se kontakt rezervace (jméno, telefon, e-mail,
+  jazyk) přepíše podle nového majitele, stejně jako v průvodci rezervací; e-maily i telefon na tabuli
+  pak patří novému klientovi. Jméno a druh zvířete se srovnají vždy; první spárování webové rezervace
+  kontakt z formuláře ponechá. Totéž platí pro kopii ve druhé ordinaci.
 
 ## Objednání (záložka Objednat)
 
@@ -232,7 +237,7 @@ dostupnosti.
 - `unassigned` (nový klíč odpovědi, pravidlo R17): dnešní rozepsaní neobjednaní bez lékařky ve stavu
   Čeká / V ordinaci, stejný tvar jako `items`. Plní se jen u filtrovaného seznamu lékařky (nefiltrovaný
   je má v `items`); úvodní obrazovka je ukazuje v Čekají s poznámkou „kterákoli lékařka“.
-- Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „přišel 9:24 · čeká 6 min“,
+- Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „příchod 9:24 · čeká 6 min“,
   tlačítko Zavolat), **V ordinaci**, **Objednaní – ještě nepřišli** (rezervace bez záznamu nebo se
   záznamem bez stavu), **Hotovo dnes** (uzavřený záznam; také rezervace ve stavu Proběhlá bez záznamu).
 - Neobjednaní (dnešní záznamy se stavem návštěvy bez rezervace, `walk_in: true`, `reservation_id: None`)
@@ -264,8 +269,9 @@ dostupnosti.
 - URL pokladny se počítá z id pokladny Recepce (v každé databázi jiné): při instalaci, při každé
   aktualizaci modulu a v `elite.vet.sale.setup.ensure_setup()`.
 - Menu (`ir.ui.menu._elite_vet_apply_role_menus`, `data/menus.xml`, běží při každé aktualizaci):
-  Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web, Přehledy (Dashboards)
-  a Aplikace jen vedení; Ordinace od sestry; Pokladna od recepce; Diskuze všem;
+  Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy (Dashboards)
+  jen vedení; Aplikace zůstávají správci systému (standard Odoo; starší verze je dávala vedení, aktualizace
+  to vrátí); Ordinace od sestry; Pokladna od recepce; Diskuze všem;
   ve Skladu zůstanou sestře a lékařce jen Přehled skladu a Příjem zboží (přesunutý z Operací přímo
   pod Sklad hned za Přehled skladu), ostatní položky, které by viděla, jsou jen pro vedení. Obě položky jsou i v Ordinaci.
   Menu patří jiným modulům: samostatná aktualizace takového modulu vrátí jeho skupiny, další
@@ -295,7 +301,7 @@ v [návodu, část C](doc/recepce-v-pokladne.md)):
   použijte Uživatelé › Akce › **Nastavit výchozí obrazovky** (zaškrtnout libovolného uživatele,
   provede se pro všechny interní). Vlastní výchozí obrazovka se nepřepisuje.
 - **Skrytá menu** (každá aktualizace `elite_vet_reception` je nastaví znovu): Prodej, Fakturace,
-  Zaměstnanci, WinVet data, Rozpis služeb, Web, Přehledy a Aplikace jen vedení; Ordinace od
+  Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy jen vedení (Aplikace jen správce systému); Ordinace od
   sestry (recepce ne); ve Skladu sestra a lékařka jen Přehled skladu a Příjem zboží.
   Samostatná aktualizace modulu, kterému menu patří, vrátí jeho skupiny – pak aktualizujte
   i `elite_vet_reception`.

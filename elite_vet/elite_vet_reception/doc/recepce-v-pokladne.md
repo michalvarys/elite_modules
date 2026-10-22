@@ -396,8 +396,8 @@ Správce = Vedení; vyšší role má vše, co nižší).
 - **Nastavit výchozí obrazovky:** Nastavení → Uživatelé → v seznamu zaškrtněte libovolného
   uživatele → **Akce → Nastavit výchozí obrazovky**. Nastaví výchozí obrazovky **všem** interním
   uživatelům podle role, nejen zaškrtnutým (vlastní zůstanou). Použijte, když jste měnili členy přímo ve formuláři skupiny.
-- **Skrytá menu:** Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web, Přehledy
-  a Aplikace vidí jen vedení; recepce nevidí Ordinaci. Lékařky vidí služby na tabuli.
+- **Skrytá menu:** Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy
+  vidí jen vedení, Aplikace jen správce systému; recepce nevidí Ordinaci. Lékařky vidí služby na tabuli.
 - **Účetní** potřebuje roli **Vedení** – Fakturace je jen pro vedení.
 - Každý, kdo ráno **otevírá pokladnu**, musí mít u svého uživatele vyplněný **e-mail**. Bez něj
   Odoo otevření odmítne („nakonfigurujte e-mailovou adresu odesílatele“).

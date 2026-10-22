@@ -156,6 +156,15 @@ class TestToday(ReceptionCase):
         data = self.api(self.reception).check_in(res.id)
         self.assertEqual(self.Record.browse(data["record_id"]).pet_id, pet)
 
+    def test_check_in_refuses_done_reservation(self):
+        """Final review M-6: a finished reservation is not checked in again (RPC only, the UI never offers it)."""
+        pet = self.new_pet("Proběhlá návštěva")
+        res = self.reservation(9, 0, pet=pet, state="done")
+        with self.assertRaises(UserError) as err:
+            self.api(self.reception).check_in(res.id)
+        self.assertEqual(str(err.exception), "Proběhlou rezervaci nelze znovu přijmout.")
+        self.assertFalse(self.Record.search_count([("pet_id", "=", pet.id)]))
+
     def test_check_in_record_created_by_another_path(self):
         pet = self.new_pet("Jinou cestou")
         res = self.reservation(9, 0, pet=pet)
