@@ -15,6 +15,7 @@ bezpečně spustit znovu (elite.vet.sale.setup.ensure_setup). Popis je v README.
     "website": "https://www.michalvarys.eu",
     "license": "LGPL-3",
     "depends": [
+        "elite_vet_reservation",
         "elite_vet_clinic",
         "elite_vet_winvet",
         "point_of_sale",
