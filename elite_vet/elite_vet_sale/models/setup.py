@@ -15,6 +15,7 @@ CZ_SALE_TAX_XMLIDS = {
     12.0: "l10n_cz_12_domestic_supplies",
     0.0: "l10n_cz_other_transaction_deduction",
 }
+UNIT_ROUNDING = 0.001
 CUSTOM_TAX_NAME = "%d %% DPH (cena s DPH)"
 
 
@@ -32,6 +33,8 @@ class EliteVetSaleSetup(models.AbstractModel):
         self._ensure_country_currency(company)
         self._ensure_chart(company)
         self._ensure_price_include(company)
+        self._ensure_lots_and_expiry()
+        self._ensure_units()
         self._ensure_fefo(company)
         self._ensure_pos(company)
         self._ensure_free_product(company)
@@ -136,6 +139,23 @@ class EliteVetSaleSetup(models.AbstractModel):
                             "new clinic taxes override it.", company.name)
             return
         company.account_price_include = "tax_included"
+
+    def _ensure_lots_and_expiry(self):
+        """Same as enabling "Lots & Serial Numbers" in the settings: the group is implied by internal
+        users. product_expiry has no group of its own for expiration dates, they follow the lot group."""
+        group_user = self.env.ref("base.group_user")
+        lots = self.env.ref("stock.group_production_lot")
+        if lots not in group_user.implied_ids:
+            group_user.write({"implied_ids": [(4, lots.id)]})
+
+    def _ensure_units(self):
+        """Medicines are sold by ml and tablets: Units accept three decimals."""
+        precision = self.env.ref("product.decimal_product_uom")
+        if precision.digits < 3:
+            precision.digits = 3
+        unit = self.env.ref("uom.product_uom_unit")
+        if unit.rounding != UNIT_ROUNDING:
+            unit.rounding = UNIT_ROUNDING
 
     def _warehouses(self, company):
         return self.env["stock.warehouse"].sudo().search([("company_id", "=", company.id)], order="sequence, id")

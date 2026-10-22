@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_winvet_item_form_sale" model="ir.ui.view">
+        <field name="name">elite.vet.winvet.item.form.sale</field>
+        <field name="model">elite.vet.winvet.item</field>
+        <field name="inherit_id" ref="elite_vet_winvet.view_winvet_item_form"/>
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="product_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

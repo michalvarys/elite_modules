@@ -12,6 +12,14 @@
             <field name="list_price">0.0</field>
             <field name="default_code">EV-VOLNA</field>
         </record>
+        <record id="pos_category_services" model="pos.category">
+            <field name="name">Úkony</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="pos_category_products" model="pos.category">
+            <field name="name">Léky a zboží</field>
+            <field name="sequence">20</field>
+        </record>
         <record id="config_winvet_master" model="ir.config_parameter">
             <field name="key">elite_vet_sale.winvet_master</field>
             <field name="value">1</field>
