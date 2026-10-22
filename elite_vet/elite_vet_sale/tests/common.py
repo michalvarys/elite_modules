@@ -22,11 +22,16 @@ class SaleCase(ClinicCase):
         cls.tax0 = cls.setup.tax_for_rate(0)
 
     def pos_session(self):
-        """The open session of the Recepce till (opened when there is none)."""
+        """The open session of the Recepce till (opened when there is none). A new session starts
+        in opening control; it is opened with an empty cash box as the POS UI does, so the tests do
+        not depend on a session left open in the database."""
         config = self.env["elite.vet.sale.setup"].pos_config()
         if not config.current_session_id:
             config.open_ui()
-        return config.current_session_id
+        session = config.current_session_id
+        if session.state == "opening_control":
+            session.set_opening_control(0, "")
+        return session
 
     def settle(self, quotation, method="card", invoice=False, order_lines=None, draft=False, link_lines=True):
         """Settle a quotation in the Recepce till as the POS UI does with pos_sale's "Settle the

@@ -81,9 +81,7 @@ class TestSetup(SaleCase):
     def test_ensure_setup_with_open_till(self):
         config = self.pos_config
         transfer = config.payment_method_ids.filtered(lambda m: m.name == "Převodem")
-        if not config.current_session_id:
-            config.open_ui()
-        self.assertTrue(config.current_session_id)
+        self.assertTrue(self.pos_session())
         config.with_context(bypass_payment_method_ids_forbidden_change=True).write(
             {"payment_method_ids": [(3, transfer.id)]})
         with self.assertLogs("odoo.addons.elite_vet_sale.models.setup", "WARNING") as logs:

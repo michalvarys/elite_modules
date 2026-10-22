@@ -80,8 +80,8 @@ class TestStockViews(SaleCase):
         self.assertNotIn(menu.id, self.env["ir.ui.menu"].with_user(self.reception)._visible_menu_ids())
 
     def test_reception_reads_stock_but_cannot_write(self):
-        menu = self.env.ref("elite_vet_sale.menu_stock_overview_clinic")
-        self.assertIn(menu.id, self.env["ir.ui.menu"].with_user(self.reception)._visible_menu_ids())
+        # Reception reads the stock (lots in the till); the Ordinace menu with the stock overview is
+        # for nurses and up (workplaces ruling R11, elite_vet_reception), so no menu is asserted here.
         action = self.env.ref("elite_vet_sale.action_stock_overview")
         Quant = self.env["stock.quant"].with_user(self.reception)
         Lot = self.env["stock.lot"].with_user(self.reception)
