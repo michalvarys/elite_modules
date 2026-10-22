@@ -1,0 +1,26 @@
+{
+    "name": "Elite Vet - Recepce",
+    "version": "18.0.1.0.0",
+    "category": "Sales/Point of Sale",
+    "summary": "Recepce v pokladně: dnešní příchody, čekárna, účty k zaplacení a stavy návštěvy.",
+    "description": """
+Elite Vet - Recepce
+===================
+
+Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných klientů, stavy návštěvy
+(Čeká / V ordinaci) a přehled dne. Popis je v README.md.
+""",
+    "author": "Michal Varys",
+    "website": "https://www.michalvarys.eu",
+    "license": "LGPL-3",
+    "depends": [
+        "elite_vet_sale",
+        "pos_hr",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+    ],
+    "installable": True,
+    "application": False,
+    "auto_install": False,
+}
