@@ -134,7 +134,8 @@ export class ReceptionTodayScreen extends Component {
         });
     }
 
-    openMatch(row) {
+    /** Kartotéka for the reservation: its client and pet preloaded, "Přiřadit k rezervaci". */
+    openClient(row) {
         this.dialog.add(CardIndexDialog, {
             reservation: row,
             onChanged: () => this.load(),

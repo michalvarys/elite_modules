@@ -5,17 +5,21 @@ Owners and pets are written with the caller's own rights (reception has create/w
 res.partner and elite.vet.pet); sudo is used only for the clinic-derived data (bills).
 """
 import re
+from datetime import timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.osv import expression
 
-from odoo.addons.elite_vet_clinic.models.patient_card import date_str, local_time
+from odoo.addons.elite_vet_clinic.models.clinical_record import local_date
+from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
 from odoo.addons.elite_vet_reservation.models.pet import SPECIES, normalize_phone
 
 OWNER_FIELDS = ("name", "phone", "mobile", "email", "street", "city", "zip")
 PET_FIELDS = ("name", "species", "breed", "sex", "birth_date", "chip", "note")
 SEARCH_LIMIT = 20
+ASSIGN_STATES = ("web_new", "confirmed")
+WEEKDAYS = ("po", "út", "st", "čt", "pá", "so", "ne")
 
 
 def _clean(vals, allowed):
@@ -150,6 +154,47 @@ class ReceptionCardIndex(models.AbstractModel):
             "pets": [self._pet_dict(pet) for pet in pets],
             "open_bills": self._to_pay(partner=partner),
         }
+
+    @api.model
+    def reservations_to_assign(self, days=7):
+        """Reservations a client can be assigned to from the card index: confirmed and web ones
+        from today to `days` days ahead (main reservations only), ordered by start. `has_record`:
+        the visit exists already, so only its own pet can stay."""
+        self._check_reception()
+        try:
+            days = max(0, min(int(days), 31))
+        except (TypeError, ValueError):
+            raise UserError(_("Neplatný počet dní: %s") % days) from None
+        A = self.env["elite.vet.availability"]
+        Reservation = self.env["elite.vet.reservation"].sudo()
+        lang = Reservation._clinic_lang()
+        today = clinic_today()
+        reservations = Reservation.search([
+            ("kind", "=", "reservation"), ("state", "in", ASSIGN_STATES), ("is_second_room", "=", False),
+            ("start", ">=", A.local_to_utc(today, 0)),
+            ("start", "<", A.local_to_utc(today + timedelta(days=days + 1), 0))], order="start, id")
+        with_record = set(self._records().search([("reservation_id", "in", reservations.ids),
+                                                  ("state", "!=", "cancelled")]).reservation_id.ids)
+        rows = []
+        for res in reservations:
+            day = local_date(res.start)
+            if day == today:
+                label = _("dnes")
+            elif day == today + timedelta(days=1):
+                label = _("zítra")
+            else:
+                label = "%s %d. %d." % (WEEKDAYS[day.weekday()], day.day, day.month)
+            rows.append({
+                "reservation_id": res.id, "date": date_str(day), "date_label": label,
+                "time": local_time(res.start), "pet_id": res.pet_id.id or None,
+                "pet_name": res.pet_id.name or res.pet_name or None,
+                "partner_id": res.partner_id.id or None,
+                "owner": res.partner_id.name or res.contact_name or None,
+                "procedure": res.procedure_id.with_context(lang=lang).name or None,
+                "doctor": res.doctor_id.name or None, "needs_match": not res.pet_id,
+                "has_record": res.id in with_record,
+            })
+        return rows
 
     # ------------------------------------------------------------------ write API
 

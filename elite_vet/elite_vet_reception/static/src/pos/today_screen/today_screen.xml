@@ -40,8 +40,12 @@
                             </small>
                         </div>
                         <button t-if="row.needs_match" class="btn btn-secondary o_ev_match"
-                                t-on-click="() => this.openMatch(row)">Spárovat</button>
-                        <button t-elif="isToday" class="btn btn-primary o_ev_check_in"
+                                title="Najít nebo založit klienta a zvíře k této rezervaci"
+                                t-on-click="() => this.openClient(row)">Spárovat</button>
+                        <button t-else="" class="btn btn-secondary o_ev_client"
+                                title="Změnit klienta nebo zvíře rezervace"
+                                t-on-click="() => this.openClient(row)">Klient…</button>
+                        <button t-if="!row.needs_match and isToday" class="btn btn-primary o_ev_check_in"
                                 t-att-disabled="state.busy['in-' + row.reservation_id]"
                                 t-on-click="() => this.checkIn(row)">Přijmout</button>
                     </div>

@@ -77,7 +77,8 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 | `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
 | `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče `name, species, breed, sex, birth_date, chip, note`; jméno a druh povinné, zvíře musí patřit majiteli |
 | `pet_options()` | `{"species": [{value, label}]}` – druhy pro formulář zvířete |
-| `match_reservation(reservation_id, partner_id, pet_id)` | `{reservation_id, time, partner_id, owner, pet_id, pet_name, needs_match}` – webová rezervace dostane majitele a zvíře (i její druhá ordinace), pak jde přijmout |
+| `match_reservation(reservation_id, partner_id, pet_id)` | `{reservation_id, time, partner_id, owner, pet_id, pet_name, needs_match}` – rezervace (webová i už spárovaná) dostane majitele a zvíře (i její druhá ordinace); webová pak jde přijmout |
+| `reservations_to_assign(days=7)` | potvrzené a webové rezervace od dneška do `days` dní dopředu (bez druhých ordinací), podle začátku: `reservation_id, date, date_label, time, pet_id, pet_name, partner_id, owner, procedure, doctor, needs_match, has_record` (`date_label` = „dnes“, „zítra“ nebo „čt 29. 10.“; `has_record` = už má nezrušenou návštěvu) |
 
 - **pets** – všechna aktivní zvířata majitele (uhynulá na konci): `id, name, species, species_label, breed,
   sex, birth_date, chip, note, alerts, next_vaccination, deceased` (`alerts` = souhrn upozornění,
@@ -89,7 +90,8 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
   Úprava existujícího kontaktu mu `is_vet_client` nepřidá (jen nový majitel ho dostane).
 - Hodnoty formuláře se berou jako text (ořezaný); jiná data skončí chybou.
 - `match_reservation` u druhé ordinace páruje hlavní rezervaci; rezervace, která už má návštěvu
-  jiného zvířete, skončí chybou „Rezervace už má návštěvu jiného zvířete.“
+  jiného zvířete, skončí chybou „Rezervace už má návštěvu jiného zvířete.“ Rezervaci s jiným
+  zvířetem, která ještě návštěvu nemá, přepíše (změna klienta). Zrušená rezervace: chyba.
 
 ## Objednání (záložka Objednat)
 
@@ -122,8 +124,9 @@ pokladny zůstávají standardní.
 - **Dnes** (`ReceptionTodayScreen`): výchozí obrazovka po načtení pokladny i po přihlášení PINem
   (patch `PosStore.firstScreen` a přesměrování ProductScreen → Dnes jen hned po přihlašovací
   obrazovce, když předtím nebyla otevřená Pokladna). Tři sloupce z `today_data`, přepínání dní
-  ‹ Dnes ›; Přijmout jen pro dnešek (`check_in` se jménem přihlášeného zaměstnance), Spárovat
-  u nespárované webové rezervace (Kartotéka), Zaplatit (viz níže). Obnovení zprávou na sběrnici
+  ‹ Dnes ›; Přijmout jen pro dnešek (`check_in` se jménem přihlášeného zaměstnance), u každé
+  rezervace Klient… (u nespárované webové „Spárovat“) – Kartotéka v režimu rezervace s jejím
+  majitelem a zvířetem, Zaplatit (viz níže). Obnovení zprávou na sběrnici
   `elite_vet_reservation/changed` a záložně každých 30 s; o půlnoci se „Dnes“ samo přepne na nový
   den; když se první načtení nepovede, ukáže se chyba s tlačítkem „Zkusit znovu“. Nová relace se tu (jako na obrazovce
   produktů) zeptá na počáteční stav hotovosti.
@@ -136,8 +139,9 @@ pokladny zůstávají standardní.
   a majitelé), karta majitele s otevřenými účty a zvířaty, formuláře majitele (nový klient
   rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`), akce Přijmout bez objednání
   (volitelně lékařka), Objednat, Vybrat k účtu (zákazník otevřené objednávky; objednávka s položkami jiného klienta se
-  nepřepíše – vznikne nová), Spárovat
-  s rezervací (otevřeno z Dnes), Zavřít.
+  nepřepíše – vznikne nová), Přiřadit k rezervaci (otevřeno z Dnes: ta rezervace; z lišty
+  „Přiřadit k rezervaci…“: výběr z `reservations_to_assign`, rezervace s návštěvou neaktivní),
+  Zavřít. Po přiřazení se Dnes obnoví.
 - **Objednat** (`ReceptionBookingScreen`): úkon, lékařka, den ‹ Dnes › / datum, další volný den,
   volné časy (`free_slots`), poznámka, Objednat (`book`); po úspěchu i po chybě („mezitím
   obsazeno“) se časy načtou znovu.

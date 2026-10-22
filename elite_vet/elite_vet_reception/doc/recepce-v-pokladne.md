@@ -87,20 +87,29 @@ návštěvu.
 Když lékařka kartu otevřela dřív, než jste klienta přijali, Přijmout nic nezdvojí – použije se
 záznam, který už existuje.
 
-### Webová rezervace: Spárovat
+### Klient k rezervaci: Klient… a Spárovat
 
-Rezervace z webu, kterou ještě nikdo nepřiřadil ke klientovi v kartotéce, má v **Přicházejí**
-poznámku **nespárováno** a místo Přijmout tlačítko **Spárovat**.
+Každá rezervace v **Přicházejí** má tlačítko **Klient…** – když přijde jiné zvíře nebo jiný
+majitel, než je v rezervaci, opravíte to tady. Rezervace z webu, kterou ještě nikdo nepřiřadil
+ke klientovi v kartotéce, má poznámku **nespárováno** a místo Klient… a Přijmout tlačítko
+**Spárovat**.
 
-1. Klikněte **Spárovat**. Otevře se Kartotéka s nadpisem „spárovat rezervaci 23:00 (…)“
-   a rovnou hledá podle jména z webu.
+1. Klikněte **Klient…** (nebo **Spárovat**). Otevře se Kartotéka s nadpisem „rezervace 21:15
+   (…)“. U rezervace s klientem je rovnou otevřená jeho karta s vybraným zvířetem z rezervace:
+
+   ![Klient… u rezervace](img/recepce-klient-rezervace.png)
+
+   U webové rezervace bez klienta Kartotéka hledá podle jména z webu:
 
    ![Spárovat webovou rezervaci](img/recepce-sparovat.png)
 
-2. Klikněte na správné zvíře (nebo majitele a pak zvíře). Když klient v kartotéce není,
-   založte ho tlačítkem **+ Nový klient** (kapitola 3).
-3. Klikněte **Spárovat s rezervací**. Rezervace dostane majitele a zvíře a v Přicházejí už má
-   tlačítko **Přijmout**.
+2. Vyberte správné zvíře – jiné zvíře majitele kliknutím, jiného klienta hledáním. Když klient
+   v kartotéce není, založte ho tlačítkem **+ Nový klient** (kapitola 3).
+3. Klikněte **Přiřadit k rezervaci**. Zobrazí se „Klient je přiřazený k rezervaci …“, okno se
+   zavře a Dnes ukáže rezervaci s novým klientem a zvířetem (webová už má **Přijmout**).
+
+Rezervaci, ke které už je návštěva (klient je přijatý nebo lékařka otevřela kartu), nejde přiřadit
+jinému zvířeti – „Rezervace už má návštěvu jiného zvířete.“
 
 ### Zaplatit
 
@@ -175,8 +184,24 @@ a firem v kartotéce upravit nejde („Tento kontakt není klient kliniky.“).
 | **Přijmout bez objednání** | vybrané zvíře jde rovnou do čekárny (bez rezervace). Lékařka podle výběru **Lékařka**: konkrétní, nebo **kterákoli** – takového pacienta vidí v Čekají všechny lékařky s poznámkou „kterákoli lékařka“ a ujme se ho ta, která ho zavolá. Pak se vrátíte na Dnes. |
 | **Objednat** | přepne na záložku Objednat s vybraným zvířetem (kapitola 4) |
 | **Vybrat k účtu** | majitel se stane zákazníkem objednávky v pokladně (např. prodej krmiva). Nákup s položkami jiného klienta se nepřepíše – vznikne nová objednávka. |
-| **Spárovat s rezervací** | jen při otevření ze Spárovat (kapitola 2) |
+| **Přiřadit k rezervaci…** | vybraného klienta a zvíře přiřadí k rezervaci na dnešek nebo příštích 7 dní (viz níže) |
+| **Přiřadit k rezervaci** | jen při otevření z Klient… / Spárovat (kapitola 2); místo Přijmout bez objednání |
 | **Zavřít** | zavře okno |
+
+### Přiřadit k rezervaci…
+
+Když klient zavolá, že na rezervaci (třeba zítřejší) přijde s jiným zvířetem, nebo když chcete
+webovou rezervaci spárovat odjinud než z Dnes:
+
+1. V Kartotéce otevřete klienta a vyberte zvíře.
+2. Klikněte **Přiřadit k rezervaci…**. Okno ukáže rezervace na dnešek a příštích 7 dní: den
+   a čas, dosavadní zvíře a klient (nebo **nespárováno**), úkon a lékařka. Rezervace, které už
+   mají návštěvu, jsou šedé se štítkem **už má návštěvu** a vybrat nejdou.
+
+   ![Přiřadit k rezervaci](img/recepce-priradit.png)
+
+3. Klikněte na rezervaci. Zobrazí se „Klient je přiřazený k rezervaci …“ a okno se zavře.
+   **‹ Zpět ke klientovi** vás vrátí na kartu bez změny.
 
 ## 4. Objednat
 
