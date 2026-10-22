@@ -6,8 +6,26 @@ faktury a sklad se šaržemi a expirací
 Závisí na `elite_vet_clinic`, `elite_vet_winvet`, `point_of_sale`, `pos_sale`,
 `sale_management`, `stock`, `product_expiry` a `l10n_cz`.
 
-Tato první část modulu obsahuje jen společné nastavení, na kterém stojí další části
-(ceník → produkty, zrcadlo skladu, nabídky, vyrovnání v pokladně, příjem zboží).
+Modul obsahuje společné nastavení prodeje a skladu, ceník → produkty, zrcadlo skladu ze WinVetu,
+nabídky z karty pacienta, vyrovnání v pokladně, příjem zboží čtečkou a přehled skladu pro sestry.
+Návod pro recepci a sestry: [doc/pokladna-a-sklad.md](doc/pokladna-a-sklad.md).
+
+## Modely a API (přehled)
+
+| Model | Co dělá |
+|---|---|
+| `elite.vet.sale.setup` (abstraktní) | `ensure_setup()`, `tax_for_rate(rate)`, `pos_config()`, `free_product()`, `is_winvet_master()` |
+| `elite.vet.winvet.item` (rozšíření) | `product_id`; `_sync_products()` – položka ceníku → produkt |
+| `elite.vet.winvet.stock.layer`, `elite.vet.winvet.stock.total` | vrstvy a stavy skladu z mostu; `stock.layer._apply_mirror()` |
+| `elite.vet.winvet.status` (rozšíření) | `stock_mirror_warnings`, `stock_mirror_date` (záložka Zrcadlo skladu) |
+| `elite.vet.clinical.record` (rozšíření) | `sale_order_id`, `payment_state`; „Hotovo“ → nabídka |
+| `sale.order` (rozšíření) | `clinical_record_id`, `pet_id`, `doctor_id`, `reservation_id` |
+| `pos.order` (rozšíření) | po zaplacení přepočítá stav platby záznamu a pošle změnu na tabuli |
+| `elite.vet.reservation` (rozšíření) | `board_data()` vrací navíc `payment_state` pro štítek na tabuli |
+| `elite.vet.goods.receipt` (abstraktní) | API obrazovky Příjem zboží: `init_data`, `scan`, `assign_code`, `search_products`, `suppliers`, `create_supplier`, `validate` |
+| `elite.vet.product.code` | další kódy produktů pro čtečku (GTIN, interní kódy) |
+| `elite.vet.expense` (rozšíření) | `picking_id` – příjemka, ze které výdaj vznikl |
+| `product.product` (rozšíření) | `stock_below_minimum` (hledatelné) – filtr „Dochází“ |
 
 ## Nastavení (`elite.vet.sale.setup.ensure_setup`)
 
@@ -152,6 +170,22 @@ nevyřízený doprodej); prošlá šarže (`scan` vrací `expired`) se přijme, 
 kód načtený čtečkou do pole šarže (začíná `]`, obsahuje GS nebo `(01)`, nebo ≥ 13 číslic) jde do
 fronty skenů místo do šarže.
 
+## Přehled skladu (sestry)
+
+Menu **Sklady → Přehled skladu** (`action_stock_overview`, skupina uživatel skladu = Sestra a výš):
+stav po šaržích (`stock.quant`, jen interní lokace, seskupeno podle produktu) jen ke čtení
+se sloupci produkt, šarže, expirace, množství. Filtry (ve vyhledávání `stock.quant` i `stock.lot`,
+tedy i ve standardních obrazovkách Skladu):
+
+- **Dochází** – `product_id.stock_below_minimum`: stav na lokaci pravidla doplnění
+  (`stock.warehouse.orderpoint.qty_on_hand`) je pod jeho minimem, nebo je součet na interních
+  lokacích záporný (prodáno bez stavu). Úplně vyprodané zboží bez kvantu v seznamu stavů není
+  – to ukáže Sklady → Operace → Doplňování zboží → Doplňování.
+- **Expiruje do 30 dní** – expirace od teď do konce dne za 30 dní, jen kladné množství.
+- **Prošlé** – expirace už prošla, jen kladné množství.
+
+„Expiruje do 30 dní“ a „Prošlé“ se sčítají (nebo), „Dochází“ s nimi platí současně (a).
+
 ## Role
 
 Skupiny POS, Prodeje a Skladu se odvozují ze skupin rezervací (řada Recepce < Sestra <
@@ -175,3 +209,37 @@ docker compose start odoo
 `tests/common.py`: `SaleCase` (rozšiřuje `ClinicCase` z `elite_vet_clinic`) – spustí
 `ensure_setup()` a nabízí `pos_config`, `tax21`, `tax12`, `tax0`; `settle(quotation, method="card",
 invoice=False, order_lines=None)` vyrovná nabídku v pokladně Recepce jako `pos_sale` (`sync_from_ui`) a vrátí `pos.order`.
+
+## Pro správce
+
+**WinVet vede, nebo Odoo?** Systémový parametr `elite_vet_sale.winvet_master` (Nastavení →
+Technické → Systémové parametry). `1` (výchozí, zkušební provoz): WinVet vede ceník, ceny a sklad,
+Odoo je po každém plném běhu mostu přepíše; příjem zboží výdaj nezapisuje a obrazovka ukazuje
+upozornění. `0` (po přechodu z WinVetu): ceník ani sklad se nepřepisují, příjem zboží zapisuje
+výdaje. Přepnutí zpět na `1` je možné, ale další plný běh přepíše stav skladu stavem WinVetu.
+
+**Zrcadlo skladu** běží po plném běhu mostu (popsáno výše). Upozornění najdete ve **WinVet data →
+Stav synchronizace → záložka Zrcadlo skladu** (čas posledního zrcadla a seznam rozdílů).
+Chyby pushe jsou dál na první záložce.
+
+**Přesnost množství.** Nastavení zvýší přesnost „Product Unit of Measure“ na 3 desetinná místa
+a zaokrouhlení jednotky „Jednotky“ na 0,001 (léky se prodávají i po desetinách balení). Obojí je
+**společné pro celou databázi** (všechny produkty, sklady, nákupy, i jiných modulů).
+
+**Kdy běží nastavení.** `ensure_setup()` se spustí při instalaci a při aktualizaci na verzi
+18.0.1.0.1 (migrace). Při běžném `-u` bez změny verze se nespouští. Když budoucí verze nastavení
+změní (nová platební metoda, daň, pokladna…), musí přidat migraci `migrations/<verze>/post-migrate.py`,
+která `ensure_setup()` zavolá – stejně jako 18.0.1.0.1.
+
+**DPH výdaje z příjmu.** Použije se vlastní nákupní daň produktu, jen pokud ji někdo nastavil
+ručně; výchozí nákupní daň společnosti (21 %) se ignoruje a bere se sazba prodejní daně (sazba
+položky WinVetu). Výdaj má sazbu podle největší části částky, zaokrouhlenou na 0/12/21 %.
+
+**Sazba 0 %** se mapuje na daň `l10n_cz` „0 % Osvobozeno“ (`l10n_cz_other_transaction_deduction`).
+**Musí potvrdit účetní** (osvobozené plnění × plnění mimo předmět daně), před ostrým provozem.
+
+**Známé omezení (jiný modul).** `elite_vet_clinic/security/groups.xml` dává správci rezervací
+skupinu Lékařka záznamem `<record id="elite_vet_reservation.group_reservation_manager">`. Ten
+záznam patří modulu rezervací a je `noupdate`, takže se použije jen při instalaci kliniky, ne při
+`-u`. Kdo vazbu ručně odebere, aktualizací ji nevrátí. Role prodeje a skladu v tomto modulu se
+zapisují přes `<function>` a aktualizace je obnoví.
