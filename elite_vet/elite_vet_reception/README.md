@@ -4,6 +4,8 @@ Odoo 18 modul: pracoviště recepce v pokladně Odoo „Recepce“ a stavy náv�
 (spec: `docs/superpowers/specs/2026-10-22-reception-workplaces-design.md`).
 Závisí na `elite_vet_sale` a `pos_hr`. Ostatní moduly se neupravují, jen rozšiřují (`_inherit`).
 
+Návod pro recepci, lékařky a vedení: [doc/recepce-v-pokladne.md](doc/recepce-v-pokladne.md).
+
 ## Stavy návštěvy
 
 Na `elite.vet.clinical.record` přibývá:
@@ -209,6 +211,35 @@ nedovolí) – jinak se zapíše varování do logu: zavřete pokladnu a aktuali
 Zaměstnance s PINem zakládá **vedení** v aplikaci Zaměstnanci (jméno, PIN, případně propojený
 uživatel); modul žádné zaměstnance nezakládá. Bez vybraných zaměstnanců v nastavení pokladny se
 mohou přihlásit všichni zaměstnanci firmy.
+
+## Pro správce
+
+Krátce, co musí vedení / správce nastavit a hlídat (podrobnosti výše; uživatelský postup
+v [návodu, část C](doc/recepce-v-pokladne.md)):
+
+- **Role a výchozí obrazovky.** Role = skupiny Elite Vet (Recepce < Sestra < Lékařka < Správce =
+  Vedení). Recepce → pokladna Recepce, sestra a lékařka → Karta pacienta, vedení → Přehled tržeb
+  a výdajů. Nastaví se samy při změně skupin uživatele; po úpravě členů ve formuláři skupiny
+  použijte Uživatelé › Akce › **Nastavit výchozí obrazovky** (zaškrtnout libovolného uživatele,
+  provede se pro všechny interní). Vlastní výchozí obrazovka se nepřepisuje.
+- **Skrytá menu** (každá aktualizace `elite_vet_reception` je nastaví znovu): Prodej, Fakturace,
+  Zaměstnanci, WinVet data, Rozpis služeb, Web, Přehledy a Aplikace jen vedení; Ordinace od
+  sestry (recepce ne); ve Skladu sestra a lékařka jen Přehled skladu a Příjem zboží.
+  Samostatná aktualizace modulu, kterému menu patří, vrátí jeho skupiny – pak aktualizujte
+  i `elite_vet_reception`.
+- **Účetní** potřebuje skupinu **Vedení** (menu Fakturace je jen pro vedení).
+- **Zaměstnanci s PINem.** Modul žádné nezakládá. Vedení je zakládá v **Zaměstnanci** (jméno,
+  záložka Nastavení › **PIN kód**, případně Příslušný uživatel) a povolí na pokladně: Prodejní
+  místa › Konfigurace › Nastavení › pokladna Recepce › Rozhraní PoS › Přihlásit se jako
+  zaměstnanec › **Základní oprávnění** (recepční) / **Pokročilé oprávnění** (uzávěrka, oprava
+  platby, vklad a výběr hotovosti). Prázdné seznamy = smí každý zaměstnanec firmy.
+  Bez pokročilého oprávnění vidí „Zavřít pokladnu“ jen zaměstnanec propojený s uživatelem,
+  pod kterým je relace otevřená.
+- **E-mail u uživatele.** Kdo otevírá pokladnu (počáteční stav hotovosti), musí mít e-mail –
+  jinak Odoo otevření relace odmítne.
+- **Před aktualizací modulů zavřete pokladnu.** Přihlášení PINem (`module_pos_hr`) jde zapnout
+  jen bez otevřené relace; jinak aktualizace zapíše varování do logu a je třeba ji po uzávěrce
+  zopakovat. Totéž platí pro nastavení `elite_vet_sale`.
 
 ## Testy
 
