@@ -9,4 +9,6 @@
         <field name="target">self</field>
     </record>
     <function model="elite.vet.sale.setup" name="_ensure_reception"/>
+    <!-- Existing users get their role home screen on every update too (custom ones are kept). -->
+    <function model="res.users" name="_elite_vet_apply_home_actions_all"/>
 </odoo>

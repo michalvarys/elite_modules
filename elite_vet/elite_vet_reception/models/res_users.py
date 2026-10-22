@@ -65,12 +65,18 @@ class ResUsers(models.Model):
         return changed
 
     @api.model
+    def _elite_vet_apply_home_actions_all(self):
+        """Role home actions of all internal users (custom ones kept); also runs on every module
+        update (data/home_actions.xml) and in the post-init hook."""
+        return self.sudo().with_context(active_test=False).search(
+            [("share", "=", False)])._elite_vet_apply_home_action()
+
+    @api.model
     def action_elite_vet_set_home_actions(self):
         """Button "Nastavit výchozí obrazovky": the role home action for all internal users."""
         if not self.env.user.has_group(MANAGER_GROUP):
             raise AccessError(_("Výchozí obrazovky může nastavit jen vedení."))
-        users = self.sudo().search([("share", "=", False)])
-        changed = users._elite_vet_apply_home_action()
+        changed = self._elite_vet_apply_home_actions_all()
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

@@ -4,6 +4,7 @@ an update of the owning module alone restores its own groups until the next upda
 from odoo import api, models
 
 RECEPTION = "elite_vet_reservation.group_reservation_reception"
+NURSE = "elite_vet_clinic.group_clinic_nurse"
 DOCTOR = "elite_vet_clinic.group_clinic_doctor"
 MANAGER = "elite_vet_reservation.group_reservation_manager"
 
@@ -14,7 +15,12 @@ MANAGER_ROOTS = (
     "hr.menu_hr_root",
     "elite_vet_winvet.menu_winvet_root",
     "elite_vet_calendar.menu_rozpis_root",
+    "website.menu_website_configuration",
+    "spreadsheet_dashboard.spreadsheet_dashboard_menu_root",
+    "base.menu_management",
 )
+# Ordinace (with its copies of Příjem zboží and Přehled skladu) from the nurse up (ruling R11).
+NURSE_ROOTS = ("elite_vet_clinic.menu_clinic_root",)
 RECEPTION_ROOTS = ("point_of_sale.menu_point_root",)
 STOCK_ROOT = "stock.menu_stock_root"
 # The two stock items nurses and doctors keep (Příjem zboží is moved up from Operations).
@@ -30,6 +36,8 @@ class IrUiMenu(models.Model):
         Menu = self.with_context(**{"ir.ui.menu.full_list": True, "active_test": False})
         for xmlid in MANAGER_ROOTS:
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), manager)
+        for xmlid in NURSE_ROOTS:
+            self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), self.env.ref(NURSE))
         for xmlid in RECEPTION_ROOTS:
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), reception)
 
@@ -41,6 +49,10 @@ class IrUiMenu(models.Model):
             kept |= self.env.ref(xmlid, raise_if_not_found=False) or Menu.browse()
         for menu in kept.filtered(lambda m: m.parent_id != stock_root):
             menu.parent_id = stock_root
+        # Příjem zboží right after Přehled skladu.
+        overview, receipt = (self.env.ref(xmlid, raise_if_not_found=False) for xmlid in STOCK_KEPT)
+        if overview and receipt and receipt.sequence != overview.sequence + 1:
+            receipt.sequence = overview.sequence + 1
         # Every other stock item a doctor (the highest non-manager role) would see becomes manager
         # only; items already limited to other groups (stock manager, debug mode, ...) keep them.
         doctor = self.env.ref(DOCTOR)

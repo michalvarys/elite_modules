@@ -87,15 +87,47 @@ class TestRoles(ReceptionCase):
         self.assertIn(self.env.ref("elite_vet_web.menu_rezervace_root").id, visible)
         for xmlid in ("sale.sale_menu_root", "account.menu_finance", "stock.menu_stock_root",
                       "elite_vet_winvet.menu_winvet_root", "hr.menu_hr_root",
-                      "elite_vet_calendar.menu_rozpis_root"):
+                      "elite_vet_calendar.menu_rozpis_root", "elite_vet_clinic.menu_clinic_root"):
             with self.subTest(menu=xmlid):
                 self.assertNotIn(self.env.ref(xmlid).id, visible)
+        # Items of a hidden app are not loaded in the web client (the menu tree starts at the
+        # visible roots; _visible_menu_ids alone does not check the parents).
+        loaded = self.env["ir.ui.menu"].with_user(self.reception).load_menus(False)
+        for xmlid in ("elite_vet_sale.menu_stock_overview_clinic", "elite_vet_sale.menu_goods_receipt_clinic",
+                      "elite_vet_clinic.menu_patient_card"):
+            with self.subTest(loaded=xmlid):
+                self.assertNotIn(self.env.ref(xmlid).id, loaded)
+        self.assertIn(self.env.ref("elite_vet_reservation.menu_reservation_board").id, loaded)
+
+    def test_only_management_sees_website_dashboards_apps(self):
+        hidden = ("website.menu_website_configuration", "spreadsheet_dashboard.spreadsheet_dashboard_menu_root",
+                  "base.menu_management")
+        for user in (self.reception, self.nurse, self.doctor_user):
+            visible = self.visible(user)
+            with self.subTest(user=user.login):
+                for xmlid in hidden:
+                    self.assertNotIn(self.env.ref(xmlid).id, visible, xmlid)
+                self.assertIn(self.env.ref("mail.menu_root_discuss").id, visible)
+        visible = self.visible(self.manager)
+        for xmlid in ("website.menu_website_configuration", "spreadsheet_dashboard.spreadsheet_dashboard_menu_root"):
+            self.assertIn(self.env.ref(xmlid).id, visible, xmlid)
+
+    def test_existing_users_get_home_action_on_update(self):
+        user = self.new_user("role_update_test", RECEPTION)
+        custom = self.new_user("role_update_custom_test", RECEPTION)
+        custom.action_id = self.custom_action.id
+        self.env.cr.execute("UPDATE res_users SET action_id = NULL WHERE id = %s", [user.id])
+        user.invalidate_recordset(["action_id"])
+        self.env["res.users"]._elite_vet_apply_home_actions_all()
+        self.assertEqual(user.action_id.id, self.pos_action.id)
+        self.assertEqual(custom.action_id.id, self.custom_action.id)
 
     def test_nurse_and_doctor_menus(self):
         stock_root = self.env.ref("stock.menu_stock_root")
         overview = self.env.ref("elite_vet_sale.menu_stock_overview")
         receipt = self.env.ref("elite_vet_sale.menu_goods_receipt_stock")
         self.assertEqual(receipt.parent_id, stock_root)
+        self.assertEqual(receipt.sequence, overview.sequence + 1)
         others = self.env["ir.ui.menu"].with_context(**{"ir.ui.menu.full_list": True}).search(
             [("parent_id", "=", stock_root.id), ("id", "not in", (overview | receipt).ids)])
         self.assertTrue(others)

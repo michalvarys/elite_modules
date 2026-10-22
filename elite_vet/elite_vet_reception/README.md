@@ -105,22 +105,27 @@ Den je `"YYYY-MM-DD"` v čase kliniky, `minute` = minuty od půlnoci.
 
 | Role | Výchozí obrazovka (`res.users.action_id`) | Menu |
 |---|---|---|
-| Recepce | `action_open_reception_pos` – pokladna Recepce (`/pos/ui?config_id=…`, stejné okno) | Pokladna, Rezervace, Ordinace |
-| Sestra, Lékařka | Karta pacienta (`elite_vet_clinic.action_patient_card`) | + Sklad jen s Přehledem skladu a Příjmem zboží |
+| Recepce | `action_open_reception_pos` – pokladna Recepce (`/pos/ui?config_id=…`, stejné okno) | Pokladna, Rezervace, Diskuze |
+| Sestra, Lékařka | Karta pacienta (`elite_vet_clinic.action_patient_card`) | + Ordinace, Sklad jen s Přehledem skladu a Příjmem zboží |
 | Vedení | Přehled tržeb a výdajů (`elite_vet_winvet.action_winvet_dashboard`) | vše |
 
 - Výchozí obrazovka se nastaví při založení uživatele a při každé změně jeho skupin – jen když
   nemá žádnou nebo má některou z rolových; vlastní jinou výchozí obrazovku nikdy nepřepíše.
 - Uživatelé › Akce › **Nastavit výchozí obrazovky** (jen vedení) totéž provede pro všechny
   interní uživatele (`res.users.action_elite_vet_set_home_actions`), vlastní obrazovky zůstanou.
+  Stejně se to provede při každé aktualizaci modulu (`_elite_vet_apply_home_actions_all`).
+- Změna členů přímo ve formuláři skupiny (Nastavení › Skupiny) výchozí obrazovku nemění – potom
+  klikněte na „Nastavit výchozí obrazovky“.
 - URL pokladny se počítá z id pokladny Recepce (v každé databázi jiné): při instalaci, při každé
   aktualizaci modulu a v `elite.vet.sale.setup.ensure_setup()`.
 - Menu (`ir.ui.menu._elite_vet_apply_role_menus`, `data/menus.xml`, běží při každé aktualizaci):
-  Prodej, Fakturace, Zaměstnanci, WinVet data a Rozpis služeb jen vedení; Pokladna od recepce;
+  Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web, Přehledy (Dashboards)
+  a Aplikace jen vedení; Ordinace od sestry; Pokladna od recepce; Diskuze všem;
   ve Skladu zůstanou sestře a lékařce jen Přehled skladu a Příjem zboží (přesunutý z Operací přímo
-  pod Sklad), ostatní položky, které by viděla, jsou jen pro vedení. Obě položky jsou i v Ordinaci.
+  pod Sklad hned za Přehled skladu), ostatní položky, které by viděla, jsou jen pro vedení. Obě položky jsou i v Ordinaci.
   Menu patří jiným modulům: samostatná aktualizace takového modulu vrátí jeho skupiny, další
   aktualizace `elite_vet_reception` je zase nastaví.
+- Účetní, která má vidět Fakturaci, potřebuje skupinu Vedení (menu Fakturace je jen pro vedení).
 - Vedení dostává skupiny Zaměstnanci: uživatel (`hr.group_hr_user`, zakládá zaměstnance pokladny)
   a Správce rozpisu.
 
