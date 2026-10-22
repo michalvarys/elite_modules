@@ -22,7 +22,8 @@ function lineKey(productId, lot) { return productId + "|" + (lot || "").trim(); 
 // A scanner beep that landed in the lot field (GS1 prefix/separator/brackets, EAN or longer number).
 export function looksLikeScan(value) {
     const v = (value || "").trim();
-    return v.startsWith("]") || v.includes(GS) || v.includes("(01)") || /^\d{13,}$/.test(v);
+    // a bare GS1 string (01 + GTIN, lot last) or any run of 13+ digits (EAN, GTIN) is a scan too
+    return v.startsWith("]") || v.includes(GS) || v.includes("(01)") || /^01\d{14}/.test(v) || /\d{13,}/.test(v);
 }
 function todayIso() {
     const d = new Date();
@@ -63,10 +64,10 @@ export class GoodsReceipt extends Component {
             this.state.winvetMaster = init.winvet_master;
         });
         onPatched(() => {
-            if (this.focusPending) {
-                this.focusPending = false;
-                this.applyFocus();
-            }
+            // also when a re-render removed the focused field (supplier picked, dialog closed):
+            // nobody types into <body>, so the scan field takes the focus back
+            const lost = !document.activeElement || document.activeElement === document.body;
+            if (this.focusPending || lost) this.applyFocus();
         });
         onWillUnmount(() => { clearTimeout(this.supplierTimer); clearTimeout(this.productTimer); });
     }
@@ -78,10 +79,34 @@ export class GoodsReceipt extends Component {
         this.focusPending = true;
         setTimeout(() => this.applyFocus());
     }
+    // Called once per focusScan(): right away, or after the next patch when the lot prompt /
+    // product dialog it is meant for is not rendered yet. It never takes the focus away from a
+    // field the user is typing in, except for a lot prompt or product dialog that just appeared.
     applyFocus() {
-        if (this.state.pending) return this.productRef.el?.focus();
-        if (this.state.lotPromptKey && this.lotRef.el) return this.lotRef.el.focus();
-        this.scanRef.el?.focus();
+        const waiting = (this.state.pending && !this.productRef.el)
+            || (this.state.lotPromptKey && !this.lotRef.el);
+        if (waiting) {
+            this.focusPending = true;   // the next patch renders it
+            return;
+        }
+        this.focusPending = false;
+        const active = document.activeElement;
+        const typing = active && active !== this.scanRef.el && active.matches?.("input, textarea, select");
+        if (this.state.pending) {
+            if (!this.pendingFocused || !typing) this.productRef.el.focus();
+            this.pendingFocused = true;
+            return;
+        }
+        this.pendingFocused = false;
+        const prompt = this.state.lotPromptKey ? this.lotRef.el : null;
+        if (!prompt) this.promptFocusedKey = null;
+        if (prompt && this.promptFocusedKey !== this.state.lotPromptKey) {
+            this.promptFocusedKey = this.state.lotPromptKey;
+            prompt.focus();
+            return;
+        }
+        if (typing) return;
+        (prompt || this.scanRef.el)?.focus();
     }
 
     // ------------------------------------------------------------ supplier
@@ -120,10 +145,12 @@ export class GoodsReceipt extends Component {
             else if (this.canCreateSupplier) this.createSupplier();
         } else if (ev.key === "Escape") {
             this.state.supplierOpen = false;
+            ev.target.blur();
             this.focusScan();
         }
     }
     selectSupplier(supplier) {
+        this.supplierRef.el?.blur();   // the search field disappears with the choice
         Object.assign(this.state, { supplier, supplierTerm: "", supplierOpen: false });
         this.focusScan();
     }
@@ -228,6 +255,7 @@ export class GoodsReceipt extends Component {
     async assignProduct(product) {
         const pending = this.state.pending;
         try {
+            this.productRef.el?.blur();   // the dialog closes
             const res = await this.orm.call(MODEL, "assign_code", [pending.code, product.id]);
             this.state.pending = null;
             this.addLine(res);
@@ -238,6 +266,7 @@ export class GoodsReceipt extends Component {
         this.focusScan();
     }
     cancelPending() {
+        this.productRef.el?.blur();
         this.state.pending = null;
         this.focusScan();
     }
