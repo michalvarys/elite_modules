@@ -60,7 +60,7 @@ Lékařka < Správce rezervací, vyšší role dědí nižší):
 | | Recepce | Sestra | Lékařka | Správce |
 |---|---|---|---|---|
 | Pokladna | uživatel | uživatel | uživatel | správce POS |
-| Prodej (nabídky) | prodejce, vlastní doklady | jako recepce | jako recepce | správce prodeje |
+| Prodej (nabídky) | prodejce, všechny doklady (nabídky zakládá lékařka) | jako recepce | jako recepce | správce prodeje |
 | Sklad (příjem zboží, stav) | čtení přes pokladnu | uživatel skladu | uživatel skladu | správce skladu |
 
 ## Testy

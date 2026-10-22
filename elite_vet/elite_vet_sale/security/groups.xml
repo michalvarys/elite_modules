@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Outside noupdate: existing users of the Elite Vet roles get the POS, sale and stock
-         rights on install and upgrade (spec, section "Role"). The chain
-         Recepce < Sestra < Lékařka < Správce rezervací passes them on upwards. -->
-    <record id="elite_vet_reservation.group_reservation_reception" model="res.groups">
-        <field name="implied_ids" eval="[(4, ref('point_of_sale.group_pos_user')),
-                                         (4, ref('sales_team.group_sale_salesman'))]"/>
-    </record>
-    <record id="elite_vet_clinic.group_clinic_nurse" model="res.groups">
-        <field name="implied_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
-    </record>
-    <record id="elite_vet_reservation.group_reservation_manager" model="res.groups">
-        <field name="implied_ids" eval="[(4, ref('point_of_sale.group_pos_manager')),
-                                         (4, ref('stock.group_stock_manager')),
-                                         (4, ref('sales_team.group_sale_manager'))]"/>
-    </record>
+    <!-- POS, sale and stock rights of the Elite Vet roles (spec, section "Role"); the chain
+         Recepce < Sestra < Lékařka < Správce rezervací passes them on upwards.
+         The role groups are noupdate records of other modules, so a <record> here would apply
+         only on install; <function> runs on install and on every upgrade, and adding an implied
+         group also gives it to the existing users of the role.
+         Reception sees all sale orders: quotations come from the doctors' visit records. -->
+    <function model="res.groups" name="write">
+        <value eval="[ref('elite_vet_reservation.group_reservation_reception')]"/>
+        <value eval="{'implied_ids': [(4, ref('point_of_sale.group_pos_user')),
+                                      (4, ref('sales_team.group_sale_salesman_all_leads'))]}"/>
+    </function>
+    <function model="res.groups" name="write">
+        <value eval="[ref('elite_vet_clinic.group_clinic_nurse')]"/>
+        <value eval="{'implied_ids': [(4, ref('stock.group_stock_user'))]}"/>
+    </function>
+    <function model="res.groups" name="write">
+        <value eval="[ref('elite_vet_reservation.group_reservation_manager')]"/>
+        <value eval="{'implied_ids': [(4, ref('point_of_sale.group_pos_manager')),
+                                      (4, ref('stock.group_stock_manager')),
+                                      (4, ref('sales_team.group_sale_manager'))]}"/>
+    </function>
 </odoo>

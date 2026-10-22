@@ -112,3 +112,11 @@ class TestSetup(SaleCase):
         for group in ("point_of_sale.group_pos_manager", "stock.group_stock_manager",
                       "sales_team.group_sale_manager"):
             self.assertTrue(self.manager.has_group(group), group)
+
+    def test_reception_sees_quotations_of_others(self):
+        quotation = self.env["sale.order"].with_user(self.nurse).create({"partner_id": self.owner.id})
+        self.assertEqual(quotation.user_id, self.nurse)
+        self.assertEqual(self.env["sale.order"].with_user(self.reception).search([("id", "=", quotation.id)]),
+                         quotation)
+        self.assertTrue(self.reception.has_group("sales_team.group_sale_salesman_all_leads"))
+        self.assertFalse(self.reception.has_group("sales_team.group_sale_manager"))
