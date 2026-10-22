@@ -16,6 +16,8 @@ class TestGoodsReceipt(SaleCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.Receipt = cls.env["elite.vet.goods.receipt"]
+        # Odoo leads the stock (after the switch from WinVet); the trial run has its own test.
+        cls.env["ir.config_parameter"].sudo().set_param("elite_vet_sale.winvet_master", "0")
         cls.supplier = cls.env["res.partner"].create({"name": "Dodavatel Příjmu Test s.r.o.", "is_company": True})
         Product = cls.env["product.product"]
         common = {"type": "consu", "is_storable": True, "tracking": "lot", "use_expiration_date": True}
@@ -160,3 +162,43 @@ class TestGoodsReceipt(SaleCase):
         self.assertIn(self.product_a.id, ids)
         self.assertIn(self.product_b.id, ids)
         self.assertEqual([p["id"] for p in self.receipt().search_products("PRB")], [self.product_b.id])
+
+    # fix round 1 ------------------------------------------------------------
+    def test_free_goods_keep_the_purchase_price(self):
+        self.receipt().validate(self.supplier.id, [
+            {"product_id": self.product_a.id, "lot": "PAID", "expiry": None, "quantity": 2, "unit_cost": 100},
+            {"product_id": self.product_a.id, "lot": "FREE", "expiry": None, "quantity": 1, "unit_cost": 0},
+        ], None)
+        self.assertEqual(self.product_a.standard_price, 100.0)
+        # two lots of one product in one receipt: both stocked, no backorder
+        picking = self.env["stock.picking"].search([("partner_id", "=", self.supplier.id)], order="id desc", limit=1)
+        self.assertEqual(picking.state, "done")
+        self.assertFalse(self.env["stock.picking"].search_count([("backorder_id", "=", picking.id)]))
+        self.assertEqual(sorted((ml.lot_id.name, ml.quantity) for ml in picking.move_line_ids),
+                         [("FREE", 1.0), ("PAID", 2.0)])
+        # only free goods: the price stays as it was
+        self.receipt().validate(self.supplier.id, [
+            {"product_id": self.product_b.id, "lot": "FREE-B", "expiry": None, "quantity": 1, "unit_cost": 0}], None)
+        self.assertEqual(self.product_b.standard_price, 40.0)
+
+    def test_trial_run_stocks_in_without_expense(self):
+        self.env["ir.config_parameter"].sudo().set_param("elite_vet_sale.winvet_master", "1")
+        self.assertTrue(self.receipt().init_data()["winvet_master"])
+        expenses = self.env["elite.vet.expense"].search_count([])
+        res = self.receipt().validate(self.supplier.id, [
+            {"product_id": self.product_b.id, "lot": "TR-1", "expiry": None, "quantity": 3, "unit_cost": 20}], None)
+        self.assertEqual(self.env["stock.picking"].browse(res["picking_id"]).state, "done")
+        self.assertFalse(res["expense_id"])
+        self.assertTrue(res["winvet_master"])
+        self.assertEqual(self.env["elite.vet.expense"].search_count([]), expenses)
+
+    def test_odoo_master_flag_and_expense(self):
+        self.assertFalse(self.receipt().init_data()["winvet_master"])
+        res = self.receipt().validate(self.supplier.id, [
+            {"product_id": self.product_b.id, "lot": "OM-1", "expiry": None, "quantity": 1, "unit_cost": 20}], None)
+        self.assertTrue(res["expense_id"])
+        self.assertFalse(res["winvet_master"])
+
+    def test_expired_flag(self):
+        self.assertTrue(self.receipt().scan("01" + GTIN_A + "17200131" + "10OLD")["expired"])
+        self.assertFalse(self.receipt().scan("01" + GTIN_A + "17991231" + "10NEW")["expired"])

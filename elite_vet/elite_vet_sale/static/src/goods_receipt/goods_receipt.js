@@ -4,7 +4,7 @@
 // (models/goods_receipt.py) parses GS1 / EAN codes, "Naskladnit" creates the receipt + expense.
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { Component, useState, useRef, onMounted, onWillUnmount, useExternalListener } from "@odoo/owl";
+import { Component, useState, useRef, onMounted, onPatched, onWillUnmount, useExternalListener } from "@odoo/owl";
 
 const MODEL = "elite.vet.goods.receipt";
 const SEARCH_DELAY = 250;
@@ -19,6 +19,15 @@ function parseNum(value) {
 function inputNum(value) { return value === null || value === undefined ? "" : String(value).replace(".", ","); }
 function errorMessage(e) { return e?.data?.message || e?.message || String(e); }
 function lineKey(productId, lot) { return productId + "|" + (lot || "").trim(); }
+// A scanner beep that landed in the lot field (GS1 prefix/separator/brackets, EAN or longer number).
+export function looksLikeScan(value) {
+    const v = (value || "").trim();
+    return v.startsWith("]") || v.includes(GS) || v.includes("(01)") || /^\d{13,}$/.test(v);
+}
+function todayIso() {
+    const d = new Date();
+    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
+}
 
 export class GoodsReceipt extends Component {
     static template = "elite_vet_sale.GoodsReceipt";
@@ -31,7 +40,7 @@ export class GoodsReceipt extends Component {
             supplier: null, supplierTerm: "", suppliers: [], supplierOpen: false, supplierActive: 0,
             lines: [], lastKey: null, lotPromptKey: null,
             pending: null, productTerm: "", products: [], productActive: 0,
-            documentNumber: "", busy: false, scanning: 0, lastError: "",
+            documentNumber: "", busy: false, scanning: 0, lastError: "", winvetMaster: false,
         });
         this.scanRef = useRef("scan");
         this.supplierRef = useRef("supplier");
@@ -47,17 +56,32 @@ export class GoodsReceipt extends Component {
         useExternalListener(window, "mouseup", (ev) => {
             if (!ev.target.closest?.("input, textarea, select, .evgr-modal, .evgr-supplier")) this.focusScan();
         });
-        onMounted(() => { this.focusScan(); this.loadSuppliers(""); });
+        onMounted(async () => {
+            this.focusScan();
+            this.loadSuppliers("");
+            const init = await this.orm.call(MODEL, "init_data", []);
+            this.state.winvetMaster = init.winvet_master;
+        });
+        onPatched(() => {
+            if (this.focusPending) {
+                this.focusPending = false;
+                this.applyFocus();
+            }
+        });
         onWillUnmount(() => { clearTimeout(this.supplierTimer); clearTimeout(this.productTimer); });
     }
 
     // ------------------------------------------------------------ focus
+    // The lot prompt / product dialog may only appear with the next render: the focus is
+    // applied after the next patch as well as right away.
     focusScan() {
-        setTimeout(() => {
-            if (this.state.pending) return this.productRef.el?.focus();
-            if (this.state.lotPromptKey && this.lotRef.el) return this.lotRef.el.focus();
-            this.scanRef.el?.focus();
-        });
+        this.focusPending = true;
+        setTimeout(() => this.applyFocus());
+    }
+    applyFocus() {
+        if (this.state.pending) return this.productRef.el?.focus();
+        if (this.state.lotPromptKey && this.lotRef.el) return this.lotRef.el.focus();
+        this.scanRef.el?.focus();
     }
 
     // ------------------------------------------------------------ supplier
@@ -167,7 +191,8 @@ export class GoodsReceipt extends Component {
             });
         }
         this.state.lastKey = key;
-        this.state.lotPromptKey = tracked && !lot ? key : null;
+        // a line without a lot asks for it; another scan meanwhile keeps that question open
+        if (tracked && !lot) this.state.lotPromptKey = key;
     }
 
     // ------------------------------------------------------------ unknown code -> product
@@ -230,6 +255,13 @@ export class GoodsReceipt extends Component {
         this.state.lastKey = line.key;
     }
     onLotChange(line, ev) {
+        if (looksLikeScan(ev.target.value)) {
+            // a scan, not a lot typed by hand -> into the scan queue, the lot stays as it was
+            const code = ev.target.value;
+            ev.target.value = line.lot;
+            this.enqueue(code);
+            return;
+        }
         line.lot = ev.target.value.trim();
         this.merge(line);
         if (this.state.lotPromptKey && (line.lot || !this.state.lines.includes(line))) this.state.lotPromptKey = null;
@@ -270,6 +302,7 @@ export class GoodsReceipt extends Component {
         if (this.state.lotPromptKey === line.key) this.state.lotPromptKey = null;
         this.focusScan();
     }
+    isExpired(line) { return line.tracked && !!line.expiry && line.expiry < todayIso(); }
     lineTotal(line) { return line.quantity * line.unit_cost; }
     get totals() {
         let untaxed = 0, total = 0;
@@ -298,8 +331,10 @@ export class GoodsReceipt extends Component {
             }));
             const res = await this.orm.call(MODEL, "validate",
                 [this.state.supplier.id, lines, this.state.documentNumber.trim() || null]);
-            this.notification.add(`Naskladněno: ${res.picking_name}` + (res.expense_id ? ", výdaj zapsán." : "."),
-                { type: "success", title: "Příjem zboží" });
+            const tail = res.winvet_master ? ". Ve zkušebním provozu se výdaj nezapisuje."
+                : res.expense_id ? ", výdaj zapsán." : ".";
+            this.notification.add(`Naskladněno: ${res.picking_name}${tail}`, { type: "success", title: "Příjem zboží" });
+            this.state.winvetMaster = res.winvet_master;
             Object.assign(this.state, { lines: [], lastKey: null, lotPromptKey: null, documentNumber: "" });
         } catch (e) {
             this.notification.add(errorMessage(e), { type: "danger", title: "Příjem zboží" });

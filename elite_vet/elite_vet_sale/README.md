@@ -141,8 +141,16 @@ Poslední naskenovaný řádek je zvýrazněný.
   společnosti (21 %), kterou Odoo dá každému novému produktu, se nebere a použije se prodejní daň
   (sazba položky WinVetu) – jinak by léky s 12 % šly do výdaje s 21 %.
 
-Dokud je WinVet hlavní (`is_winvet_master()`), plný běh zrcadla skladu stav příjmu přepíše stavem
-WinVetu – příjem čtečkou má smysl až po přepnutí, nebo souběžně s příjmem ve WinVetu.
+**Zkušební provoz** (ruling R14): dokud je WinVet hlavní (`is_winvet_master()`, `init_data()` to
+předá obrazovce), obrazovka ukáže upozornění, příjemka se vytvoří a dokončí, ale **výdaj se
+nezapíše** (`expense_id` False, „Ve zkušebním provozu se výdaj nezapisuje.“) – plný běh zrcadla
+skladu stav příjmu stejně přepíše stavem WinVetu a nákup je v knihách WinVetu.
+
+Další pravidla: nákupní cena se mění jen z řádků s cenou > 0 (zboží zdarma ji nepřepíše); jeden
+pohyb na produkt a řádek pohybu na šarži (Odoo slučuje pohyby stejného produktu – jinak by vznikl
+nevyřízený doprodej); prošlá šarže (`scan` vrací `expired`) se přijme, řádek ukáže „Prošlá šarže“;
+kód načtený čtečkou do pole šarže (začíná `]`, obsahuje GS nebo `(01)`, nebo ≥ 13 číslic) jde do
+fronty skenů místo do šarže.
 
 ## Role
 

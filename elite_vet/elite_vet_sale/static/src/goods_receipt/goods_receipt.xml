@@ -43,6 +43,9 @@
                 </div>
             </div>
 
+            <div t-if="state.winvetMaster" class="alert alert-warning mb-0 evgr-trial">
+                Zkušební provoz: WinVet zatím vede sklad. Naskladnění se při další synchronizaci z WinVetu přepíše a výdaj se nezapíše.
+            </div>
             <div class="evgr-scan">
                 <i class="fa fa-barcode evgr-scan-icon"/>
                 <input t-ref="scan" type="text" class="form-control form-control-lg evgr-scan-input"
@@ -92,8 +95,10 @@
                                     </t>
                                 </td>
                                 <td class="evgr-col-exp">
-                                    <input t-if="line.tracked" type="date" class="form-control form-control-sm"
+                                    <input t-if="line.tracked" type="date"
+                                           t-attf-class="form-control form-control-sm {{ isExpired(line) ? 'is-invalid' : '' }}"
                                            t-att-value="line.expiry" t-on-change="(ev) => this.onExpiryChange(line, ev)"/>
+                                    <span t-if="isExpired(line)" class="badge text-bg-danger evgr-expired">Prošlá šarže</span>
                                 </td>
                                 <td class="evgr-col-qty">
                                     <div class="evgr-qty">

@@ -73,7 +73,8 @@ class GoodsReceipt(models.AbstractModel):
     def _scan_result(self, parsed, product):
         lot, expiry = parsed["lot"], parsed["expiry"]
         res = {"product": None, "lot": lot, "expiry": expiry.isoformat() if expiry else None,
-               "known": bool(product), "suggested_cost": 0.0, "vat_rate": 0.0}
+               "known": bool(product), "suggested_cost": 0.0, "vat_rate": 0.0,
+               "expired": bool(expiry and expiry < fields.Date.context_today(self))}
         if not product:
             return res
         if product.tracking == "none":
@@ -92,10 +93,17 @@ class GoodsReceipt(models.AbstractModel):
             "expiry": expiry.isoformat() if expiry else None,
             "suggested_cost": product.sudo().with_company(self.env.company).standard_price,
             "vat_rate": self._vat_rate(product),
+            "expired": bool(expiry and expiry < fields.Date.context_today(self)),
         })
         return res
 
     # API ------------------------------------------------------------------
+    @api.model
+    def init_data(self):
+        """Start of the screen: {winvet_master} (trial run banner, ruling R14)."""
+        self._check_access()
+        return {"winvet_master": self.env["elite.vet.sale.setup"].is_winvet_master()}
+
     @api.model
     def scan(self, code):
         """Scanned code -> {product, lot, expiry, known, suggested_cost, vat_rate}."""
@@ -152,7 +160,7 @@ class GoodsReceipt(models.AbstractModel):
             if partner:
                 recent.setdefault(partner.id, True)
         result = []
-        for partner in Partner.browse(list(recent)).exists():
+        for partner in Partner.browse(list(recent)).exists().filtered("active"):
             if not term or term.casefold() in (partner.name or "").casefold():
                 result.append({"id": partner.id, "name": partner.name, "recent": True})
         if term and len(result) < limit:
@@ -196,16 +204,17 @@ class GoodsReceipt(models.AbstractModel):
         dest = picking_type.default_location_dest_id or warehouse.lot_stock_id
         document_number = (document_number or "").strip() or False
 
-        moves, last_cost = [], {}
+        # One move per product (Odoo merges moves of the same product on confirm anyway),
+        # one move line per lot.
+        by_product, last_cost = OrderedDict(), {}
         for (product, lot_name), group in groups.items():
             lot = self._ensure_lot(product, lot_name, group["expiry"], company) if lot_name else False
-            price = group["cost"] / group["quantity"] if group["quantity"] else 0.0
-            last_cost[product] = group["last_cost"]
-            moves.append((lot, {
-                "name": product.display_name, "product_id": product.id, "product_uom": product.uom_id.id,
-                "product_uom_qty": group["quantity"], "price_unit": price,
-                "location_id": src.id, "location_dest_id": dest.id, "company_id": company.id,
-            }))
+            entry = by_product.setdefault(product, {"quantity": 0.0, "cost": 0.0, "lots": []})
+            entry["quantity"] += group["quantity"]
+            entry["cost"] += group["cost"]
+            entry["lots"].append((lot, group["quantity"]))
+            if group["last_cost"] > 0:
+                last_cost[product] = group["last_cost"]  # free goods keep the cost
         # Standard cost: the receipt is valued at standard_price, so it is set first (AVCO/FIFO
         # categories compute it from the move price themselves).
         for product, cost in last_cost.items():
@@ -215,22 +224,34 @@ class GoodsReceipt(models.AbstractModel):
         picking = self.env["stock.picking"].create({
             "picking_type_id": picking_type.id, "partner_id": supplier.id, "origin": document_number,
             "location_id": src.id, "location_dest_id": dest.id, "company_id": company.id,
-            "move_ids": [(0, 0, vals) for _lot, vals in moves],
+            "move_ids": [(0, 0, {
+                "name": product.display_name, "product_id": product.id, "product_uom": product.uom_id.id,
+                "product_uom_qty": entry["quantity"], "price_unit": entry["cost"] / entry["quantity"],
+                "location_id": src.id, "location_dest_id": dest.id, "company_id": company.id,
+            }) for product, entry in by_product.items()],
         })
         picking.action_confirm()
-        for move, (lot, vals) in zip(picking.move_ids.sorted("id"), moves):
+        for product, entry in by_product.items():
+            move = picking.move_ids.filtered(lambda m, p=product: m.product_id == p)
             move.move_line_ids.unlink()
-            move.write({"move_line_ids": [(0, 0, {
-                "product_id": move.product_id.id, "product_uom_id": move.product_uom.id,
-                "lot_id": lot.id if lot else False, "quantity": vals["product_uom_qty"],
+            move[:1].write({"move_line_ids": [(0, 0, {
+                "product_id": product.id, "product_uom_id": move[:1].product_uom.id,
+                "lot_id": lot.id if lot else False, "quantity": quantity,
                 "location_id": src.id, "location_dest_id": dest.id, "picking_id": picking.id,
-            })], "picked": True})
+            }) for lot, quantity in entry["lots"]]})
+        picking.move_ids.picked = True
         res = picking.with_context(skip_backorder=True, skip_expired=True, skip_sms=True,
-                                   cancel_backorder=True).button_validate()
+                                   picking_ids_not_to_backorder=picking.ids).button_validate()
         if picking.state != "done":
             raise UserError(_("Příjemku %(name)s se nepodařilo dokončit (%(res)s).", name=picking.name, res=res))
-        expense = self._create_expense(supplier, groups, picking, document_number)
-        return {"picking_id": picking.id, "picking_name": picking.name, "expense_id": expense.id or False}
+        # Trial run (ruling R14): WinVet still leads the stock, the next mirror run overwrites this
+        # receipt and the purchase is in WinVet's books -> no expense.
+        winvet_master = self.env["elite.vet.sale.setup"].is_winvet_master()
+        expense = self.env["elite.vet.expense"]
+        if not winvet_master:
+            expense = self._create_expense(supplier, groups, picking, document_number)
+        return {"picking_id": picking.id, "picking_name": picking.name, "expense_id": expense.id or False,
+                "winvet_master": winvet_master}
 
     def _group_lines(self, lines):
         Product = self.env["product.product"]
@@ -252,7 +273,8 @@ class GoodsReceipt(models.AbstractModel):
             group["quantity"] += quantity
             group["cost"] += quantity * cost
             group["expiry"] = expiry or group["expiry"]
-            group["last_cost"] = cost
+            if cost > 0:
+                group["last_cost"] = cost
         return groups
 
     def _ensure_lot(self, product, name, expiry, company):
