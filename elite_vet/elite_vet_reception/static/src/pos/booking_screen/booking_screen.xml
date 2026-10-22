@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_vet_reception.BookingScreen">
+        <div class="o_ev_booking screen h-100 w-100 overflow-auto bg-100 p-2 p-md-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <h2 class="o_ev_title mb-0 me-2">Objednat</h2>
+                <div t-if="pet" class="o_ev_client fs-5">
+                    <i class="fa fa-paw me-1"/><b class="o_ev_booking_pet" t-esc="pet.name"/>
+                    <span t-if="pet.owner" class="text-muted"> · <t t-esc="pet.owner"/></span>
+                </div>
+                <div t-else="" class="text-muted">Vyberte klienta a zvíře v Kartotéce.</div>
+                <button class="btn btn-light btn-lg" t-on-click="pickClient">
+                    <i class="fa fa-address-book-o me-1"/><t t-if="pet">Jiný klient…</t><t t-else="">Kartotéka…</t>
+                </button>
+            </div>
+            <div class="row g-3">
+                <div class="col-12 col-lg-5 d-flex flex-column gap-2">
+                    <label class="o_ev_field">
+                        <b>Úkon</b>
+                        <select class="form-select form-select-lg o_ev_procedure" t-on-change="onProcedureChange">
+                            <option value="" t-att-selected="!state.procedureId">Vyberte úkon…</option>
+                            <option t-foreach="state.procedures" t-as="proc" t-key="proc.id" t-att-value="proc.id"
+                                    t-att-selected="'' + proc.id === '' + state.procedureId">
+                                <t t-esc="proc.name"/> · <t t-esc="proc.duration"/> min
+                            </option>
+                        </select>
+                    </label>
+                    <label class="o_ev_field">
+                        <b>Lékařka</b>
+                        <select class="form-select form-select-lg o_ev_doctor" t-on-change="onDoctorChange">
+                            <option value="" t-att-selected="!state.doctorId">Kterákoli, která úkon dělá</option>
+                            <option t-foreach="state.doctors" t-as="doc" t-key="doc.id" t-att-value="doc.id"
+                                    t-att-selected="'' + doc.id === '' + state.doctorId" t-esc="doc.name"/>
+                        </select>
+                    </label>
+                    <div class="o_ev_field">
+                        <b>Den</b>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="fs-5 o_ev_booking_day" t-esc="dayTitle"/>
+                            <div class="btn-group">
+                                <button class="btn btn-light btn-lg" title="Předchozí den" t-on-click="() => this.changeDay(-1)"><i class="fa fa-chevron-left"/></button>
+                                <button class="btn btn-light btn-lg" t-on-click="() => this.changeDay(0)">Dnes</button>
+                                <button class="btn btn-light btn-lg" title="Další den" t-on-click="() => this.changeDay(1)"><i class="fa fa-chevron-right"/></button>
+                            </div>
+                            <input type="date" class="form-control form-control-lg w-auto" t-att-value="state.day" t-on-change="onDayInput"/>
+                        </div>
+                    </div>
+                    <label class="o_ev_field">
+                        <b>Poznámka k rezervaci</b>
+                        <input type="text" class="form-control form-control-lg" t-model="state.note" placeholder="nepovinné"/>
+                    </label>
+                </div>
+                <div class="col-12 col-lg-7">
+                    <div class="o_ev_col_title"><span>Volné časy</span><i t-if="state.loading" class="fa fa-circle-o-notch fa-spin"/></div>
+                    <div t-if="!state.procedureId" class="o_ev_empty">Nejdřív vyberte úkon.</div>
+                    <t t-elif="state.slots">
+                        <div t-if="!state.slots.length" class="o_ev_empty">
+                            Tento den není volný žádný čas.
+                            <button t-if="state.nextFreeDay" class="btn btn-secondary ms-2 o_ev_next_free" t-on-click="goNextFreeDay">
+                                Další volný den: <t t-esc="dayLabel(state.nextFreeDay)"/>
+                            </button>
+                            <span t-elif="!isPastDay"> V horizontu objednávek už není žádný volný den.</span>
+                        </div>
+                        <div class="o_ev_slots">
+                            <button t-foreach="state.slots" t-as="slot" t-key="slotKey(slot)" class="btn o_ev_slot"
+                                    t-att-class="isSelected(slot) ? 'btn-primary' : 'btn-light'" t-on-click="() => this.selectSlot(slot)">
+                                <span class="o_ev_num" t-esc="slot.time"/>
+                                <small class="d-block"><t t-esc="slot.room"/><t t-if="slot.doctor"> · <t t-esc="slot.doctor"/></t></small>
+                            </button>
+                        </div>
+                    </t>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
+                            <t t-if="state.selected">Objednat na <t t-esc="state.selected.time"/></t>
+                            <t t-else="">Objednat</t>
+                        </button>
+                        <button class="btn btn-light btn-lg" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Otevřít tabuli</button>
+                    </div>
+                    <div t-if="state.selected and !pet" class="text-warning mt-2">Pro objednání vyberte zvíře v Kartotéce.</div>
+                    <div t-if="state.booked" class="alert alert-success mt-3 o_ev_booked">
+                        Objednáno: <b t-esc="state.booked"/>. Potvrzení dostane klient e-mailem, pokud ho má vyplněný.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

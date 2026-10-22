@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_vet_reception.TodayScreen">
+        <div class="o_ev_today screen h-100 w-100 overflow-auto bg-100 p-2 p-md-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <h2 class="o_ev_title mb-0 me-2" t-esc="dayTitle"/>
+                <div class="btn-group">
+                    <button class="btn btn-light btn-lg" title="Předchozí den" t-on-click="() => this.changeDay(-1)">
+                        <i class="fa fa-chevron-left"/>
+                    </button>
+                    <button class="btn btn-light btn-lg" t-att-disabled="isToday" t-on-click="() => this.changeDay(0)">Dnes</button>
+                    <button class="btn btn-light btn-lg" title="Další den" t-on-click="() => this.changeDay(1)">
+                        <i class="fa fa-chevron-right"/>
+                    </button>
+                </div>
+                <button class="btn btn-light btn-lg ms-auto" title="Obnovit" t-on-click="() => this.load()">
+                    <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.loading }"/>
+                </button>
+            </div>
+            <div t-if="!state.data" class="text-muted p-3">Načítám…</div>
+            <div t-else="" class="row g-3">
+                <!-- Přicházejí -->
+                <section class="col-12 col-lg-4 o_ev_col_arriving">
+                    <div class="o_ev_col_title"><span>Přicházejí</span><span class="o_ev_num" t-esc="state.data.arriving.length"/></div>
+                    <div t-if="!state.data.arriving.length" class="o_ev_empty">Nikdo další není objednaný.</div>
+                    <div t-foreach="state.data.arriving" t-as="row" t-key="row.reservation_id" class="o_ev_row">
+                        <span class="o_ev_num o_ev_time" t-esc="row.time"/>
+                        <div class="o_ev_grow">
+                            <div class="fw-bold" t-esc="row.pet_name or 'Bez zvířete'"/>
+                            <small class="text-muted">
+                                <t t-esc="row.owner or 'Bez jména'"/>
+                                <t t-if="row.procedure"> · <t t-esc="row.procedure"/></t>
+                                <t t-if="row.doctor"> · <t t-esc="row.doctor"/></t>
+                                <t t-if="row.needs_match"> · nespárováno</t>
+                            </small>
+                        </div>
+                        <button t-if="row.needs_match" class="btn btn-secondary o_ev_match"
+                                t-on-click="() => this.openMatch(row)">Spárovat</button>
+                        <button t-elif="isToday" class="btn btn-primary o_ev_check_in"
+                                t-att-disabled="state.busy['in-' + row.reservation_id]"
+                                t-on-click="() => this.checkIn(row)">Přijmout</button>
+                    </div>
+                </section>
+                <!-- Čekárna a ordinace -->
+                <section class="col-12 col-lg-4 o_ev_col_waiting">
+                    <div class="o_ev_col_title"><span>Čekárna a ordinace</span><span class="o_ev_num" t-esc="state.data.waiting.length"/></div>
+                    <div t-if="!state.data.waiting.length" class="o_ev_empty">Čekárna je prázdná.</div>
+                    <div t-foreach="state.data.waiting" t-as="row" t-key="row.record_id" class="o_ev_row">
+                        <div class="o_ev_grow">
+                            <div class="fw-bold" t-esc="row.pet_name"/>
+                            <small class="text-muted">
+                                <t t-esc="row.owner or ''"/>
+                                <t t-if="row.room"> · <t t-esc="row.room"/></t>
+                                <t t-esc="' · ' + (row.doctor or 'kterákoli lékařka')"/>
+                                <t t-if="row.stage === 'in_room' and row.arrived_time"> · přišel <t t-esc="row.arrived_time"/></t>
+                                <t t-elif="row.waiting_minutes !== null"> · čeká <t t-esc="row.waiting_minutes"/> min</t>
+                            </small>
+                        </div>
+                        <span class="o_ev_badge" t-att-class="row.stage === 'in_room' ? 'o_ev_badge_in' : ''" t-esc="row.stage_label"/>
+                    </div>
+                </section>
+                <!-- K pokladně -->
+                <section class="col-12 col-lg-4 o_ev_col_to_pay">
+                    <div class="o_ev_col_title"><span>K pokladně</span><span class="o_ev_num" t-esc="state.data.to_pay.length"/></div>
+                    <div t-if="!state.data.to_pay.length" class="o_ev_empty">Žádný účet nečeká na zaplacení.</div>
+                    <div t-foreach="state.data.to_pay" t-as="row" t-key="row.record_id" class="o_ev_row">
+                        <div class="o_ev_grow">
+                            <div class="fw-bold" t-esc="row.pet_name"/>
+                            <small class="text-muted">
+                                <t t-esc="row.owner or ''"/> · <span class="o_ev_num" t-esc="formatAmount(row.amount)"/>
+                                <t t-if="row.payment_state === 'partial'"> · <t t-esc="row.payment_state_label"/></t>
+                                <t t-if="row.date_label !== 'dnes'"> · z <t t-esc="row.date_label"/></t>
+                            </small>
+                        </div>
+                        <button class="btn btn-primary o_ev_pay" t-att-disabled="state.busy['pay-' + row.record_id]"
+                                t-on-click="() => this.pay(row)">Zaplatit</button>
+                    </div>
+                    <div class="o_ev_col_title mt-3"><span><t t-if="isToday">Dnes zaplaceno</t><t t-else="">Zaplaceno</t></span><span class="o_ev_num o_ev_paid_count" t-esc="state.data.paid_count"/></div>
+                </section>
+            </div>
+        </div>
+    </t>
+
+</templates>

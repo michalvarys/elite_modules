@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_vet_reception.CardIndexDialog">
+        <Dialog title="title" size="'xl'" contentClass="'o_ev_card_index'">
+            <form class="d-flex gap-2 mb-3" t-on-submit="onSearchSubmit">
+                <input type="search" class="form-control form-control-lg o_ev_search" t-model="state.term"
+                       placeholder="Hledat: jméno, telefon, čip, zvíře …" autofocus="autofocus"/>
+                <button type="submit" class="btn btn-primary btn-lg" t-att-disabled="state.searching">
+                    <i class="fa fa-search me-1"/>Hledat
+                </button>
+                <button type="button" class="btn btn-secondary btn-lg text-nowrap o_ev_new_owner" t-on-click="newOwner">+ Nový klient</button>
+            </form>
+
+            <!-- Owner form (new or edit) -->
+            <form t-if="state.ownerForm" class="o_ev_form o_ev_owner_form" t-on-submit="saveOwner">
+                <h4 t-if="state.ownerForm.isNew">Nový klient</h4>
+                <h4 t-else="">Upravit klienta</h4>
+                <div class="row g-2">
+                    <label class="col-12 col-md-6 o_ev_field"><b>Jméno *</b>
+                        <input class="form-control form-control-lg" name="name" t-model="state.ownerForm.values.name" required="required"/></label>
+                    <label class="col-6 col-md-3 o_ev_field"><b>Telefon</b>
+                        <input class="form-control form-control-lg" name="phone" type="tel" t-model="state.ownerForm.values.phone"/></label>
+                    <label class="col-6 col-md-3 o_ev_field"><b>Mobil</b>
+                        <input class="form-control form-control-lg" name="mobile" type="tel" t-model="state.ownerForm.values.mobile"/></label>
+                    <label class="col-12 col-md-6 o_ev_field"><b>E-mail</b>
+                        <input class="form-control form-control-lg" name="email" type="email" t-model="state.ownerForm.values.email"/></label>
+                    <label class="col-12 col-md-6 o_ev_field"><b>Ulice</b>
+                        <input class="form-control form-control-lg" name="street" t-model="state.ownerForm.values.street"/></label>
+                    <label class="col-8 col-md-4 o_ev_field"><b>Město</b>
+                        <input class="form-control form-control-lg" name="city" t-model="state.ownerForm.values.city"/></label>
+                    <label class="col-4 col-md-2 o_ev_field"><b>PSČ</b>
+                        <input class="form-control form-control-lg" name="zip" t-model="state.ownerForm.values.zip"/></label>
+                </div>
+                <t t-if="state.ownerForm.isNew">
+                    <h5 class="mt-3">Zvíře <small class="text-muted">(nepovinné, další jde přidat potom)</small></h5>
+                    <div class="row g-2">
+                        <label class="col-12 col-md-6 o_ev_field"><b>Jméno zvířete</b>
+                            <input class="form-control form-control-lg" name="pet_name" t-model="state.ownerForm.firstPet.name"/></label>
+                        <label class="col-12 col-md-6 o_ev_field"><b>Druh</b>
+                            <select class="form-select form-select-lg" name="pet_species" t-model="state.ownerForm.firstPet.species">
+                                <option t-foreach="state.species" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
+                            </select></label>
+                    </div>
+                </t>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary btn-lg o_ev_save_owner" t-att-disabled="state.saving">Uložit</button>
+                    <button type="button" class="btn btn-light btn-lg" t-on-click="cancelForm">Zrušit</button>
+                </div>
+            </form>
+
+            <!-- Pet form (new or edit) -->
+            <form t-elif="state.petForm" class="o_ev_form o_ev_pet_form" t-on-submit="savePet">
+                <h4><t t-if="state.petForm.petId">Upravit zvíře</t><t t-else="">Nové zvíře</t> · <t t-esc="owner.name"/></h4>
+                <div class="row g-2">
+                    <label class="col-12 col-md-6 o_ev_field"><b>Jméno *</b>
+                        <input class="form-control form-control-lg" name="name" t-model="state.petForm.values.name" required="required"/></label>
+                    <label class="col-6 col-md-3 o_ev_field"><b>Druh *</b>
+                        <select class="form-select form-select-lg" name="species" t-model="state.petForm.values.species">
+                            <option t-foreach="state.species" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
+                        </select></label>
+                    <label class="col-6 col-md-3 o_ev_field"><b>Pohlaví</b>
+                        <input class="form-control form-control-lg" name="sex" t-model="state.petForm.values.sex" list="o_ev_sex_options"/>
+                        <datalist id="o_ev_sex_options">
+                            <option value="pes"/><option value="fena"/><option value="kocour"/><option value="kočka"/>
+                            <option value="samec"/><option value="samice"/>
+                        </datalist></label>
+                    <label class="col-12 col-md-6 o_ev_field"><b>Plemeno</b>
+                        <input class="form-control form-control-lg" name="breed" t-model="state.petForm.values.breed"/></label>
+                    <label class="col-6 col-md-3 o_ev_field"><b>Narození</b>
+                        <input class="form-control form-control-lg" name="birth_date" type="date" t-model="state.petForm.values.birth_date"/></label>
+                    <label class="col-6 col-md-3 o_ev_field"><b>Čip</b>
+                        <input class="form-control form-control-lg" name="chip" t-model="state.petForm.values.chip"/></label>
+                    <label class="col-12 o_ev_field"><b>Poznámka</b>
+                        <textarea class="form-control" name="note" rows="2" t-model="state.petForm.values.note"/></label>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary btn-lg o_ev_save_pet" t-att-disabled="state.saving">Uložit</button>
+                    <button type="button" class="btn btn-light btn-lg" t-on-click="cancelForm">Zrušit</button>
+                </div>
+            </form>
+
+            <!-- Owner with pets -->
+            <div t-elif="state.data" class="row g-3 o_ev_owner_card">
+                <div class="col-12 col-lg-5 d-flex flex-column gap-2">
+                    <div class="o_ev_col_title">
+                        <span>Klient</span>
+                        <button t-if="state.results" type="button" class="btn btn-link p-0" t-on-click="backToResults">‹ Zpět na výsledky</button>
+                    </div>
+                    <div class="o_ev_field"><b>Jméno</b><span class="fs-5 o_ev_owner_name" t-esc="owner.name"/></div>
+                    <div class="o_ev_field"><b>Telefon · e-mail</b>
+                        <span class="o_ev_owner_phone" t-esc="ownerPhones"/>
+                        <span class="o_ev_owner_email" t-esc="owner.email or 'bez e-mailu'"/></div>
+                    <div class="o_ev_field"><b>Adresa</b>
+                        <t t-esc="ownerAddress"/></div>
+                    <div class="o_ev_field">
+                        <b>Otevřené účty: <t t-esc="state.data.open_bills.length"/></b>
+                        <div t-foreach="state.data.open_bills" t-as="bill" t-key="bill.record_id">
+                            <t t-esc="bill.pet_name"/> · <t t-esc="formatAmount(bill.amount)"/> · <t t-esc="bill.payment_state_label"/>
+                            <t t-if="bill.date_label !== 'dnes'"> (<t t-esc="bill.date_label"/>)</t>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-secondary o_ev_edit_owner" t-on-click="editOwner">Upravit</button>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-7 d-flex flex-column gap-2">
+                    <div class="o_ev_col_title">
+                        <span>Zvířata</span>
+                        <button type="button" class="btn btn-secondary o_ev_new_pet" t-on-click="newPet">+ Nové zvíře</button>
+                    </div>
+                    <div t-if="!pets.length" class="o_ev_empty">Klient zatím nemá žádné zvíře.</div>
+                    <div t-foreach="pets" t-as="p" t-key="p.id" class="o_ev_row o_ev_pet" role="button"
+                         t-att-class="{ 'o_ev_selected': p.id === state.petId, 'opacity-50': p.deceased }"
+                         t-on-click="() => this.selectPet(p)">
+                        <div class="o_ev_grow">
+                            <div class="fw-bold"><t t-esc="p.name"/><t t-if="petLine(p)"> · <t t-esc="petLine(p)"/></t></div>
+                            <small class="text-muted">
+                                <t t-if="p.birth_date">nar. <t t-esc="formatDate(p.birth_date)"/></t>
+                                <t t-if="p.chip"> · čip <t t-esc="p.chip"/></t>
+                                <t t-if="p.next_vaccination"> · očkování <t t-esc="formatDate(p.next_vaccination)"/></t>
+                            </small>
+                        </div>
+                        <span t-if="p.deceased" class="o_ev_badge">uhynulé</span>
+                        <span t-if="p.alerts" class="o_ev_badge o_ev_badge_alert" t-esc="p.alerts"/>
+                    </div>
+                    <div t-if="pet" class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-secondary o_ev_edit_pet" t-on-click="editPet">Upravit <t t-esc="pet.name"/></button>
+                    </div>
+                    <div t-if="pet and !pet.deceased" class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                        <label class="d-flex align-items-center gap-2">
+                            <span class="text-muted text-nowrap">Lékařka</span>
+                            <select class="form-select o_ev_walk_in_doctor" t-model="state.walkInDoctorId">
+                                <option value="">kterákoli</option>
+                                <option t-foreach="state.doctors" t-as="doc" t-key="doc.id" t-att-value="doc.id" t-esc="doc.name"/>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search results -->
+            <div t-elif="state.results" class="d-flex flex-column gap-2 o_ev_results">
+                <div t-if="!state.results.length" class="o_ev_empty">Nic nenalezeno. Klienta můžete založit tlačítkem „+ Nový klient“.</div>
+                <div t-foreach="state.results" t-as="r" t-key="resultKey(r)" class="o_ev_row o_ev_result" role="button"
+                     t-on-click="() => this.openResult(r)">
+                    <i t-att-class="r.kind === 'pet' ? 'fa fa-paw' : 'fa fa-user'" class="text-muted"/>
+                    <div class="o_ev_grow">
+                        <t t-if="r.kind === 'pet'">
+                            <div class="fw-bold"><t t-esc="r.name"/><t t-if="r.species_label"> · <t t-esc="r.species_label"/></t><t t-if="r.breed">, <t t-esc="r.breed"/></t></div>
+                            <small class="text-muted"><t t-esc="r.owner"/><t t-if="r.phone"> · <t t-esc="r.phone"/></t><t t-if="r.chip"> · čip <t t-esc="r.chip"/></t></small>
+                        </t>
+                        <t t-else="">
+                            <div class="fw-bold" t-esc="r.name"/>
+                            <small class="text-muted"><t t-esc="r.phone or ''"/><t t-if="r.email"> · <t t-esc="r.email"/></t> · zvířat: <t t-esc="r.pet_count"/></small>
+                        </t>
+                    </div>
+                    <span t-if="r.deceased" class="o_ev_badge">uhynulé</span>
+                    <span t-if="r.alerts" class="o_ev_badge o_ev_badge_alert" t-esc="r.alerts"/>
+                </div>
+            </div>
+            <div t-else="" class="o_ev_empty">Zadejte jméno, telefon, číslo čipu nebo jméno zvířete a stiskněte Enter.</div>
+
+            <t t-set-slot="footer">
+                <t t-if="state.data and !editing">
+                    <button t-if="props.reservation" type="button" class="btn btn-primary btn-lg o_ev_match_reservation"
+                            t-att-disabled="!canUsePet" t-on-click="matchReservation">Spárovat s rezervací</button>
+                    <button t-else="" type="button" class="btn btn-primary btn-lg o_ev_walk_in"
+                            t-att-disabled="!canUsePet" t-on-click="walkIn">Přijmout bez objednání</button>
+                    <button type="button" class="btn btn-secondary btn-lg o_ev_book_pet" t-att-disabled="!canUsePet" t-on-click="book">Objednat</button>
+                    <button type="button" class="btn btn-secondary btn-lg o_ev_select_for_order" t-on-click="selectForOrder">Vybrat k účtu</button>
+                </t>
+                <button type="button" class="btn btn-light btn-lg ms-md-auto o_ev_close" t-on-click="props.close">Zavřít</button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

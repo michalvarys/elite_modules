@@ -72,10 +72,11 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 | `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...]}` |
 | `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
 | `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče `name, species, breed, sex, birth_date, chip, note`; jméno a druh povinné, zvíře musí patřit majiteli |
+| `pet_options()` | `{"species": [{value, label}]}` – druhy pro formulář zvířete |
 | `match_reservation(reservation_id, partner_id, pet_id)` | `{reservation_id, time, partner_id, owner, pet_id, pet_name, needs_match}` – webová rezervace dostane majitele a zvíře (i její druhá ordinace), pak jde přijmout |
 
 - **pets** – všechna aktivní zvířata majitele (uhynulá na konci): `id, name, species, species_label, breed,
-  sex, birth_date, chip, alerts, next_vaccination, deceased` (`alerts` = souhrn upozornění,
+  sex, birth_date, chip, note, alerts, next_vaccination, deceased` (`alerts` = souhrn upozornění,
   `next_vaccination` = příští vakcinace z WinVetu).
 - **open_bills** – nezaplacené účty majitele, stejný tvar jako `to_pay` (`record_id, amount,
   payment_state_label, …`).
@@ -98,8 +99,44 @@ Den je `"YYYY-MM-DD"` v čase kliniky, `minute` = minuty od půlnoci.
 | `free_slots(procedure_id, day, doctor_id=False)` | `{"day", "slots": [{time, minute, room_id, room, doctor_id, doctor}], "next_free_day"}` – řádky průvodce (čas × ordinace); `next_free_day` = nejbližší další den s volným časem v horizontu recepce, jinak `None` |
 | `book(pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None)` | `{reservation_id, label}` – potvrzená rezervace pro zvíře a jeho majitele (kontakt z majitele), lékařka ve službě; potvrzovací e-mail jako v průvodci (když má majitel e-mail) |
 
+- Uhynulé zvíře objednat ani přijmout bez objednání nejde: „Zvíře je vedené jako uhynulé.“
+  Majitel musí projít pravidlem Kartotéky (ne personál, ne firma).
+- `next_free_day` se hledá jen pro den bez volného času; den za horizontem recepce vrátí prázdný
+  seznam bez výpočtu.
+- Když se rezervace po uložení nenajde, `book` skončí chybou (nikdy nevrací `reservation_id` False).
 - Před uložením se znovu ověří, že je čas volný; obsazený čas (i když ho odmítne až kontrola
   překryvu při uložení) skončí chybou „Termín 9:00 už mezitím někdo obsadil – vyberte jiný.“
+
+## Pokladna Recepce (frontend)
+
+Soubory `static/src/pos/` (bundle `point_of_sale._assets_pos`). Jen v pokladně Recepce
+(`pos.config.is_elite_vet_reception`, počítané z `elite_vet_sale.pos_config_reception`); ostatní
+pokladny zůstávají standardní.
+
+- **Lišta** (jediný patch navbaru, `navbar_patch/`): Dnes, Kartotéka…, Objednat, Pokladna
+  (standardní obrazovka produktů), Tabule (backendová tabule ve stejném okně).
+- **Dnes** (`ReceptionTodayScreen`): výchozí obrazovka po načtení pokladny i po přihlášení PINem
+  (patch `PosStore.firstScreen` a přesměrování ProductScreen → Dnes jen hned po přihlašovací
+  obrazovce, když předtím nebyla otevřená Pokladna). Tři sloupce z `today_data`, přepínání dní
+  ‹ Dnes ›; Přijmout jen pro dnešek (`check_in` se jménem přihlášeného zaměstnance), Spárovat
+  u nespárované webové rezervace (Kartotéka), Zaplatit (viz níže). Obnovení zprávou na sběrnici
+  `elite_vet_reservation/changed` a záložně každých 30 s. Nová relace se tu (jako na obrazovce
+  produktů) zeptá na počáteční stav hotovosti.
+- **Zaplatit** (`PosStore.payReceptionBill`): účet (nabídka) se načte stejně jako v pos_sale
+  „Vyrovnat objednávku“ (`_getSaleOrder` → zákazník → fiskální pozice → `settleSO`) bez výběrového
+  okna a otevře se platba. Účet dostane vždy vlastní pokladní objednávku, pokud ta otevřená není
+  prázdná a bez jiného zákazníka – dva klienti se nikdy nesmíchají na jedné účtence.
+- **Kartotéka** (`CardIndexDialog`, dialog nad pokladnou): hledání (Enter), výsledky (zvířata
+  a majitelé), karta majitele s otevřenými účty a zvířaty, formuláře majitele (nový klient
+  rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`), akce Přijmout bez objednání
+  (volitelně lékařka), Objednat, Vybrat k účtu (zákazník otevřené objednávky), Spárovat
+  s rezervací (otevřeno z Dnes), Zavřít.
+- **Objednat** (`ReceptionBookingScreen`): úkon, lékařka, den ‹ Dnes › / datum, další volný den,
+  volné časy (`free_slots`), poznámka, Objednat (`book`); po úspěchu i po chybě („mezitím
+  obsazeno“) se časy načtou znovu.
+- Chyby API (`UserError`) se ukazují jako upozornění pokladny česky.
+- Kdo pokladnu otevírá (počáteční stav hotovosti), musí mít u uživatele vyplněný e-mail – Odoo
+  při otevření relace zapisuje zprávu a bez adresy odesílatele otevření odmítne.
 
 ## Role, výchozí obrazovky a menu
 

@@ -99,7 +99,7 @@ class ReceptionCardIndex(models.AbstractModel):
             "id": pet.id, "name": pet.name, "species": pet.species or None,
             "species_label": self.env["elite.vet.clinical.record"]._species_label(pet),
             "breed": pet.breed or None, "sex": pet.sex or None, "birth_date": date_str(pet.birth_date),
-            "chip": pet.chip or None, "alerts": pet.alert_summary or None,
+            "chip": pet.chip or None, "note": pet.note or None, "alerts": pet.alert_summary or None,
             "next_vaccination": date_str(pet.next_vaccination), "deceased": pet.deceased,
         }
 

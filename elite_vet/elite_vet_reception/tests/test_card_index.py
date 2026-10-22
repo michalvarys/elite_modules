@@ -105,6 +105,7 @@ class TestCardIndex(ReceptionCase):
         data = reception.save_pet(partner.id, {"breed": "perská", "birth_date": ""}, pet_id=pet.id)
         self.assertEqual((pet.breed, pet.birth_date, pet.name), ("perská", False, "Micka"))
         self.assertEqual(data["pets"][0]["breed"], "perská")
+        self.assertEqual(data["pets"][0]["note"], "plachá")
 
         data = reception.save_owner({"city": "Praha"}, partner_id=partner.id)
         self.assertEqual((data["owner"]["city"], partner.name), ("Praha", "Nová Klientka Kartotéky"))

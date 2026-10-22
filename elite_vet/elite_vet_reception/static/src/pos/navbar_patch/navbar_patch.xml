@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_vet_reception.ReceptionTabs">
+        <div class="o_ev_tabs d-flex align-items-center gap-1 me-2">
+            <button t-foreach="tabs" t-as="tab" t-key="tab.key" type="button"
+                    class="btn btn-lg lh-lg text-nowrap"
+                    t-att-class="(isActive(tab) ? 'btn-primary' : 'btn-light') + ' o_ev_tab_' + tab.key"
+                    t-att-title="tab.label" t-on-click="() => this.onClick(tab)">
+                <i class="fa fa-fw" t-att-class="tab.icon"/>
+                <span class="d-none d-xl-inline ms-1" t-esc="tab.label"/>
+            </button>
+        </div>
+    </t>
+
+    <t t-inherit="point_of_sale.Navbar" t-inherit-mode="extension">
+        <xpath expr="//OrderTabs" position="before">
+            <ReceptionTabs t-if="pos.isReceptionPos"/>
+        </xpath>
+    </t>
+
+</templates>

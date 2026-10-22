@@ -184,3 +184,11 @@ class TestRoles(ReceptionCase):
     def test_manager_can_create_employees(self):
         employee = self.env["hr.employee"].with_user(self.manager).create({"name": "Recepční Testová PIN", "pin": "4321"})
         self.assertEqual(employee.pin, "4321")
+
+    def test_reception_tabs_only_in_recepce_till(self):
+        """The POS loads `is_elite_vet_reception` with the config: tabs and Dnes only in Recepce."""
+        self.assertTrue(self.pos_config.is_elite_vet_reception)
+        other = self.env["pos.config"].create({"name": "Jiná pokladna test recepce"})
+        self.assertFalse(other.is_elite_vet_reception)
+        self.assertIn("is_elite_vet_reception", self.pos_config._load_pos_data_fields(self.pos_config.id) or
+                      self.pos_config.fields_get())
