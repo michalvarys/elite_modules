@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Outside noupdate: existing users of the Elite Vet roles get the POS, sale and stock
+         rights on install and upgrade (spec, section "Role"). The chain
+         Recepce < Sestra < Lékařka < Správce rezervací passes them on upwards. -->
+    <record id="elite_vet_reservation.group_reservation_reception" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('point_of_sale.group_pos_user')),
+                                         (4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+    <record id="elite_vet_clinic.group_clinic_nurse" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
+    </record>
+    <record id="elite_vet_reservation.group_reservation_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('point_of_sale.group_pos_manager')),
+                                         (4, ref('stock.group_stock_manager')),
+                                         (4, ref('sales_team.group_sale_manager'))]"/>
+    </record>
+</odoo>
