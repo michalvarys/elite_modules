@@ -24,6 +24,8 @@ payments        sales     PLATBA
 bundles         templates SABLONA_VYKONU
 bundle_lines    templates SABLONA_VYKONU_POLOZKA
 phrases         templates FRAZE
+stock_lots      stock     DOKLAD_POLOZKA_SK (receipt lines, minus issues), DOKLAD (sales, supplier/date)
+stock_totals    stock     VARIANTA_SKLAD_STAV
 =============== ========= ==========================================
 
 Foreign keys (``*_id``, ``entered_by``) with WinVet's "no reference" values 0 / negative are sent as
@@ -296,6 +298,29 @@ def _phrases(r: dict) -> dict:
     }
 
 
+def _stock_lots(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_DOKLAD_POLOZKA"]),
+        "item_id": to_ref(r["ID_VARIANTA"]),
+        "lot": norm_value(r["VYROBNI_CISLO"]),
+        "expiry": norm_value(r["DATUM_EXPIRACE"]),
+        "received": norm_value(r["RECEIVED"]),
+        "quantity": to_float(r["QUANTITY"]),
+        "unit_cost": to_float(r["CENA_MJ"]),
+        "vat_rate": to_float(r["SAZBA_DPH"]),
+        "cost_includes_vat": flag_equals(r["S_DPH"], "A"),
+        "supplier": norm_value(r["PARTNER_NAZEV"]),
+    }
+
+
+def _stock_totals(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_VARIANTA_SKLAD_STAV"]),
+        "item_id": to_ref(r["ID_VARIANTA"]),
+        "total": to_float(r["STAV_CELKEM"]),
+    }
+
+
 # --------------------------------------------------------------------------- specs
 
 
@@ -521,6 +546,38 @@ _spec(
     id_expr="f.ID_FRAZE",
     mapper=_phrases,
     keys=("id", "name", "group", "text"),
+)
+_spec(
+    name="stock_lots",
+    group="stock",
+    tables=("DOKLAD_POLOZKA_SK", "DOKLAD"),
+    # receipt lines (ZNAMENKO = 1) of every document type; issued quantity = issue lines (ZNAMENKO = -1)
+    # pointing to the receipt line via ID_DOKLAD_POLOZKA_PRIJEM (correlated subquery in the SELECT)
+    sql=(
+        "select s.ID_DOKLAD_POLOZKA, s.ID_VARIANTA, s.VYROBNI_CISLO, s.DATUM_EXPIRACE, s.CENA_MJ, "
+        "s.SAZBA_DPH, s.S_DPH, d.DATUM_DOKLADU as RECEIVED, d.PARTNER_NAZEV, "
+        "s.MNOZSTVI - coalesce(("
+        "select sum(i.MNOZSTVI) from DOKLAD_POLOZKA_SK i "
+        "where i.ZNAMENKO = -1 and i.ID_DOKLAD_POLOZKA_PRIJEM = s.ID_DOKLAD_POLOZKA), 0) as QUANTITY "
+        "from DOKLAD_POLOZKA_SK s "
+        "left join DOKLAD d on d.ID_DOKLAD = s.ID_DOKLAD"
+    ),
+    where="s.ZNAMENKO = 1",
+    id_expr="s.ID_DOKLAD_POLOZKA",
+    mapper=_stock_lots,
+    keys=(
+        "id", "item_id", "lot", "expiry", "received", "quantity", "unit_cost", "vat_rate",
+        "cost_includes_vat", "supplier",
+    ),
+)
+_spec(
+    name="stock_totals",
+    group="stock",
+    tables=("VARIANTA_SKLAD_STAV",),
+    sql="select t.ID_VARIANTA_SKLAD_STAV, t.ID_VARIANTA, t.STAV_CELKEM from VARIANTA_SKLAD_STAV t",
+    id_expr="t.ID_VARIANTA_SKLAD_STAV",
+    mapper=_stock_totals,
+    keys=("id", "item_id", "total"),
 )
 
 assert tuple(SPECS) == ENTITY_ORDER

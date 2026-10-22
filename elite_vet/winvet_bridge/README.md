@@ -119,8 +119,9 @@ neblokuje. Žádná data v otisku nejsou.
 | owners | PARTNER, PARTNER_KONTAKT, TYP_KONTAKTU | owners, contacts |
 | patients | PACIENT, VAKCINACE_ODCERVENI | patients, vaccinations |
 | clinical | PRIPAD, DENNI_ZAZNAM, DENNI_ZAZNAM_HODNOTA | visits, vitals, sale_lines (datum řádku) |
-| sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments |
+| sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments, stock_lots (sloupec dodavatele) |
 | templates | SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA, FRAZE | bundles, bundle_lines, phrases |
+| stock | DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV | stock_lots (také DOKLAD ze skupiny sales), stock_totals |
 | journal | ZURNAL, VERZE | přírůstková synchronizace |
 
 Ověřené verze a jejich otisky jsou v `verified.json`.

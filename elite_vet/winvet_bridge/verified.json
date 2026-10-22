@@ -2,7 +2,7 @@
   "comment": "WinVet versions verified for the bridge: version -> schema fingerprints per group. Update with 'python -m winvet_bridge approve --yes' after checking a new WinVet version.",
   "versions": {
     "2603": {
-      "approved": "2026-10-15 21:33:24",
+      "approved": "2026-10-22 09:57:54",
       "engine": "5.0.1",
       "fingerprints": {
         "catalog": "cac72032339edbfa",
@@ -10,7 +10,8 @@
         "journal": "fbbdb23189da0d91",
         "owners": "2f9a2363f1b5e868",
         "patients": "0cb68af2ba80384d",
-        "sales": "7ee26f3c4206290b",
+        "sales": "c2bd7e0a2544b521",
+        "stock": "f2192ca5a59bc5b2",
         "templates": "e0b7163e7162f167"
       },
       "ods": "13.1"

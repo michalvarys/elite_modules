@@ -140,8 +140,8 @@ class SyncRunnerTest(unittest.TestCase):
         by_entity = {}
         for p in pushes:
             by_entity.setdefault(p["entity"], []).append(p)
-        # users, contacts, bundles, bundle_lines always full, others only when changed
-        self.assertEqual(set(by_entity), {"users", "contacts", "bundles", "bundle_lines", "owners", "sale_lines"})
+        # ALWAYS_FULL entities (users, contacts, bundles, bundle_lines, stock_*) always, others only when changed
+        self.assertEqual(set(by_entity), set(ALWAYS_FULL) | {"owners", "sale_lines"})
         self.assertTrue(all(p["mode"] == "full" for e in ALWAYS_FULL for p in by_entity[e]))
         owners = by_entity["owners"][0]
         self.assertEqual((owners["mode"], owners["records"], owners["deleted"]), ("incremental", [{"id": 2}], [3]))
@@ -232,14 +232,15 @@ class SyncRunnerTest(unittest.TestCase):
             report = self.runner(source, odoo).run()
             status = odoo.calls[0]["body"]["params"]
             pushed = {p["entity"] for p in odoo.pushes()}
-        self.assertEqual(status["blocked"], ["sale_documents", "sale_lines", "payments"])
+        blocked = ["sale_documents", "sale_lines", "payments", "stock_lots"]  # stock_lots reads DOKLAD
+        self.assertEqual(status["blocked"], blocked)
         self.assertIn("sales", status["message"])
-        self.assertTrue(pushed.isdisjoint({"sale_documents", "sale_lines", "payments"}))
-        self.assertFalse(any(e in ("sale_documents", "sale_lines", "payments") for e, _ in source.read_log))
+        self.assertTrue(pushed.isdisjoint(blocked))
+        self.assertFalse(any(e in blocked for e, _ in source.read_log))
         self.assertEqual([e.entity for e in report.entities if e.blocked], status["blocked"])
         state = self.store.load()
         self.assertEqual(state.journal_cursor, 10)
-        self.assertEqual(state.pending_full, ["sale_documents", "sale_lines", "payments"])
+        self.assertEqual(state.pending_full, blocked)
         # schema approved again -> those entities are pushed in full once
         source.fingerprints = dict(FPS)
         source.journal.append((11, "PARTNER", 1, "U"))

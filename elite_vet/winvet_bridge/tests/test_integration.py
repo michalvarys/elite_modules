@@ -101,6 +101,14 @@ class EntityIntegrationTest(IntegrationBase):
             ids = [r["id"] for r in records]
             self.assertEqual(len(ids), len(set(ids)), f"{name}: duplicate ids")
 
+    def test_stock_layers_sum_to_totals(self):
+        sums = {}
+        for lot in self.records["stock_lots"]:
+            sums[lot["item_id"]] = sums.get(lot["item_id"], 0.0) + lot["quantity"]
+        totals = self.records["stock_totals"]
+        matching = sum(1 for t in totals if abs(sums.get(t["item_id"], 0.0) - t["total"]) < 0.0005)
+        self.assertGreaterEqual(matching, 490, f"{matching} of {len(totals)} items match")
+
     def test_v2_values(self):
         visits = self.records["visits"]
         notes = [r for r in visits if r["notes"]]

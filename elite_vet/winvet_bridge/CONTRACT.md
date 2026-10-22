@@ -1,4 +1,4 @@
-# WinVet bridge ⇄ Odoo contract (v1)
+# WinVet bridge ⇄ Odoo contract (v1 + v2 + v3, see the sections below)
 
 The bridge (`elite_vet/winvet_bridge`, standalone Python) reads WinVet (Firebird, read-only) and
 pushes JSON to the Odoo module `elite_vet_winvet`. This file is the single source of truth for the
@@ -279,3 +279,34 @@ blobs passed through)`
    `ok: false` still stops the run (v1 clarification 11).
 9. Real dataset sizes v2 (analysis copy): items 715 (685 with price), visits 968 (922 with notes),
    vitals 365, bundles 12, bundle_lines 138, phrases 10.
+
+
+## Contract v3 additions (phase 2 – sales and stock)
+
+Bridge version 3.0.0. Two new entities, appended to the push order (v3): `users, items, owners,
+contacts, patients, vaccinations, visits, vitals, sale_documents, sale_lines, payments, bundles,
+bundle_lines, phrases, stock_lots, stock_totals`. Both are not journaled and always sent in full
+(`mode=full`, full reconciliation of ids). **v2 receivers answer `{"ok": false, "error": "unknown
+entity"}` -> the bridge skips the entity** (see v2 forward compatibility); nothing else changes.
+
+### stock_lots  [DOKLAD_POLOZKA_SK, DOKLAD] – stock layers (one per receipt line)
+One record for every line with `ZNAMENKO = 1` (all receipt lines of any document type, also the
+fully issued ones and lines whose document has no type; Odoo ignores `quantity` 0).
+`id` (ID_DOKLAD_POLOZKA of the receipt line), `item_id` (ID_VARIANTA, 0/negative -> `null`),
+`lot` (trimmed VYROBNI_CISLO, empty -> `null`), `expiry` (DATUM_EXPIRACE, `YYYY-MM-DD` or `null`),
+`received` (DATUM_DOKLADU of the receipt document, `YYYY-MM-DD` or `null`), `quantity` (float:
+MNOZSTVI minus the sum of MNOZSTVI of lines with `ZNAMENKO = -1` and
+`ID_DOKLAD_POLOZKA_PRIJEM = id`), `unit_cost` (CENA_MJ or `null`), `vat_rate` (SAZBA_DPH, e.g. `21.0`,
+or `null`), `cost_includes_vat` (bool, S_DPH = 'A': `unit_cost` includes VAT), `supplier`
+(DOKLAD.PARTNER_NAZEV or `null`).
+
+### stock_totals  [VARIANTA_SKLAD_STAV] – current stock per item
+`id` (ID_VARIANTA_SKLAD_STAV), `item_id` (ID_VARIANTA), `total` (float, STAV_CELKEM).
+On the analysis copy the sum of `stock_lots.quantity` per item equals `total` for 493 of 498 items.
+
+### Guard
+New fingerprint group `stock` (DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV). `stock_lots` also reads
+DOKLAD (column PARTNER_NAZEV), so a change of `sales` blocks it as well; adding the column to the
+used set changed the `sales` fingerprint once (re-approved with v3).
+
+Sizes v3 (analysis copy): stock_lots 836, stock_totals 498.

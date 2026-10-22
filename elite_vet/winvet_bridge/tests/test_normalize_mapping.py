@@ -39,6 +39,9 @@ CONTRACT_KEYS = {
     "bundles": {"id", "code", "name", "description"},
     "bundle_lines": {"id", "bundle_id", "item_id", "item_name", "quantity", "unit", "sequence"},
     "phrases": {"id", "name", "group", "text"},
+    "stock_lots": {"id", "item_id", "lot", "expiry", "received", "quantity", "unit_cost", "vat_rate",
+                   "cost_includes_vat", "supplier"},
+    "stock_totals": {"id", "item_id", "total"},
 }
 
 
@@ -54,10 +57,26 @@ class FakeBlob:
 
 
 def select_columns(sql: str):
-    """Column aliases of a reader SELECT (the part between SELECT and the first FROM)."""
-    head = sql[len("select "):sql.lower().index(" from ")]
+    """Column aliases of a reader SELECT (top-level part between SELECT and the first top-level FROM)."""
+    parts, depth, current, lower = [], 0, [], sql.lower()
+    i = len("select ")
+    while i < len(sql):
+        ch = sql[i]
+        if depth == 0 and lower.startswith(" from ", i):
+            break
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+        i += 1
+    parts.append("".join(current))
     out = []
-    for part in head.split(", "):
+    for part in parts:
         part = part.strip()
         if " as " in part.lower():
             out.append(part.split()[-1].upper())
@@ -206,6 +225,34 @@ class MappingTest(unittest.TestCase):
         self.assertEqual(rec, {"id": 1, "name": "Odčervení", "group": "Texty", "text": "Dávka: 1 tbl/10 kg"})
         row.update(TEXT="Vážený zákazníku,\r\nplain text")
         self.assertEqual(SPECS["phrases"].mapper(row)["text"], "Vážený zákazníku,\nplain text")
+
+    def test_stock_mapping(self):
+        row = {col: None for col in select_columns(SPECS["stock_lots"].sql)}
+        row.update(ID_DOKLAD_POLOZKA=7, ID_VARIANTA=3, VYROBNI_CISLO="  ", DATUM_EXPIRACE=dt.date(2027, 3, 31),
+                   RECEIVED=dt.date(2026, 1, 5), QUANTITY=Decimal("4.000"), CENA_MJ=Decimal("10.50"),
+                   SAZBA_DPH=Decimal("21"), S_DPH="A", PARTNER_NAZEV=" Fake Supplier s.r.o. ")
+        rec = SPECS["stock_lots"].mapper(row)
+        self.assertIsNone(rec["lot"])
+        self.assertEqual(rec, {"id": 7, "item_id": 3, "lot": None, "expiry": "2027-03-31",
+                               "received": "2026-01-05", "quantity": 4.0, "unit_cost": 10.5, "vat_rate": 21.0,
+                               "cost_includes_vat": True, "supplier": "Fake Supplier s.r.o."})
+        row.update(VYROBNI_CISLO=" L-1 ", S_DPH="N", ID_VARIANTA=0, DATUM_EXPIRACE=None, RECEIVED=None, PARTNER_NAZEV=None)
+        rec = SPECS["stock_lots"].mapper(row)
+        self.assertEqual((rec["lot"], rec["cost_includes_vat"], rec["item_id"], rec["expiry"], rec["supplier"]),
+                         ("L-1", False, None, None, None))
+        row = {col: None for col in select_columns(SPECS["stock_totals"].sql)}
+        row.update(ID_VARIANTA_SKLAD_STAV=1, ID_VARIANTA=2, STAV_CELKEM=Decimal("12.500"))
+        rec = SPECS["stock_totals"].mapper(row)
+        self.assertEqual(tuple(rec), ("id", "item_id", "total"))
+        self.assertEqual(rec, {"id": 1, "item_id": 2, "total": 12.5})
+
+    def test_stock_entities_are_always_full_group_stock(self):
+        from winvet_bridge.guard import GROUP_TABLES
+        from winvet_bridge.sync import ALWAYS_FULL
+        for name in ("stock_lots", "stock_totals"):
+            self.assertIn(name, ALWAYS_FULL)
+            self.assertEqual(SPECS[name].group, "stock")
+        self.assertEqual(tuple(GROUP_TABLES["stock"]), ("DOKLAD_POLOZKA_SK", "VARIANTA_SKLAD_STAV"))
 
     def test_build_sql(self):
         sql = build_sql(SPECS["sale_documents"], 3)

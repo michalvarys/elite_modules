@@ -19,7 +19,7 @@ from .schema_watch import SchemaReport, compare, read_snapshot
 log = logging.getLogger(__name__)
 
 #: Entities that are not in the change journal (or are small) and are pushed in full every run.
-ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines")
+ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines", "stock_lots", "stock_totals")
 
 
 class WinVetSource:
