@@ -51,7 +51,7 @@ Pokladna se otevře na záložce **Dnes**. Nahoře je lišta:
 | **Kartotéka…** | okno s klienty a zvířaty (hledání, nový klient, úpravy, přijetí bez objednání) |
 | **Objednat** | objednání termínu |
 | **Pokladna** | běžná obrazovka pokladny (prodej zboží, Akce, Nabídka/Objednávka …) |
-| **Tabule** | tabule rezervací (otevře se ve stejném okně) |
+| **Tabule** | denní tabule ordinací v okně nad pokladnou (kapitola 5) |
 | zámek | zamkne pokladnu (kapitola 7) |
 | ☰ | menu pokladny (uzávěrka, objednávky …) |
 
@@ -225,16 +225,69 @@ automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá 
 Když mezitím termín obsadil někdo jiný (web, kolegyně), objeví se „Termín … už mezitím někdo
 obsadil – vyberte jiný.“ a časy se načtou znovu. Uhynulé zvíře objednat nejde.
 
-**Otevřít tabuli** otevře tabuli rezervací (kapitola 5).
+**Otevřít tabuli** otevře tabuli vybraného dne v okně nad pokladnou (kapitola 5); vybraný
+klient zůstane.
 
 ## 5. Tabule
 
-Tlačítko **Tabule** v liště (nebo **Otevřít tabuli** na záložce Objednat) otevře tabuli rezervací
-ve stejném okně: celý den po ordinacích, žádosti z webu, přesuny a blokace, štítky
-**k pokladně** / **zaplaceno**. Popisuje ji [návod Rezervace](../../elite_vet_reservation/doc/recepce.md).
+Tlačítko **Tabule** v liště (nebo **Otevřít tabuli** na záložce Objednat) otevře velké okno
+s tabulí dne přímo nad pokladnou – pokladna ani rozepsaný účet pod ním se nemění a nic se
+nepřepíná do jiné stránky.
 
-Zpět do pokladny: šipka Zpět v prohlížeči, nebo **Prodejní místa → Recepce → Pokračovat
-v prodeji**.
+![Tabule v pokladně](img/tabule-v-pokladne.png)
+
+- **Sloupce** jsou ordinace (u každé lékařky ve službě s časem), vlevo časová osa, červená čára
+  je teď. Šrafované je mimo ordinační dobu, šedé šrafované pruhy jsou blokace („jen web“ jsou
+  světlé – recepce tam objednat smí).
+- Svislý barevný pruh u levého okraje sloupce je **služba lékařky** (iniciály a čas).
+- **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, iniciály lékařky, čas,
+  zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
+  jsou bledé.
+- **‹ Dnes ›** a pole s datem přepínají den. Při hodně ordinacích se tabule posouvá i do stran.
+- Tabule se sama obnovuje (změna z webu, od kolegyně nebo z backendu se ukáže hned, záložně
+  každých 30 s).
+- **Zavřít** (nebo křížek) vás vrátí tam, kde jste byli.
+
+### Klik na rezervaci
+
+Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas a ordinace, stav.
+
+![Detail rezervace](img/tabule-detail.png)
+
+- **Přijmout** – jen u dnešní rezervace, která ještě nemá návštěvu; zvíře je pak v čekárně
+  (stejně jako Přijmout na záložce Dnes). Webová rezervace bez spárovaného klienta se přijme až
+  po **Klient…**.
+- **Klient…** – Kartotéka pro tuto rezervaci (stejné jako Klient… na záložce Dnes, kapitola 2):
+  vyberte klienta a zvíře a **Přiřadit k rezervaci**. Tabule zůstane otevřená pod ním.
+- **Přesunout** – okno se zavře a otevře se záložka Objednat v režimu **Přesunout rezervaci**:
+  úkon a lékařka jsou předvyplněné, vyberte den a volný čas a klikněte **Přesunout na …**.
+  **Nepřesouvat** režim ukončí.
+- **Zrušit rezervaci** – zeptá se ještě v okně („Opravdu zrušit? Klientovi odejde e-mail
+  o zrušení.“, nebo bez e-mailu „Opravdu zrušit tuto rezervaci?“) a po **Ano, zrušit rezervaci**
+  rezervaci zruší. E-mail o zrušení odejde stejně jako při zrušení v backendu – jen když má
+  rezervace e-mail.
+
+Rezervace, která už má návštěvu (klient je přijatý), se přesunout ani zrušit nedá – Přesunout
+a Zrušit rezervaci se u ní neukážou.
+
+### Přetažení rezervace
+
+Potvrzenou rezervaci můžete myší přetáhnout na jiný čas nebo do jiné ordinace (na dotykové
+obrazovce použijte **Přesunout** v detailu). Platí stejná pravidla jako na backendové tabuli:
+v ordinaci musí sloužit lékařka, která úkon dělá (jinak se lékařka vymění za tu, která tam
+slouží), a čas musí být volný. Když to nejde, objeví se česká hláška (např. „Termín … je
+obsazený“) a rezervace zůstane, kde byla. Při změně času dostane klient e-mail o přesunu,
+pokud ho má.
+
+### Klik do volného místa
+
+Okno se zavře a otevře se **Objednat** s předvyplněným dnem a nahoře s pruhem „Z tabule:
+ordinace, den, čas“. Vyberte úkon: když je ten čas pro úkon volný, je hned vybraný („Čas je
+vybraný.“), jinak vyberte z volných časů dne. Vybraný klient (když jste přišli z Objednat)
+zůstane.
+
+Žádosti z webu, nové blokace a plánování dopředu zůstávají na backendové tabuli (vedení,
+[návod Rezervace](../../elite_vet_reservation/doc/recepce.md)).
 
 ## 6. Konec dne – uzávěrka
 
