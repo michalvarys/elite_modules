@@ -84,6 +84,23 @@ stav, oříznutí záporného stavu, souhrn neaktivních položek) se ukládají
 skladu“), ne do chyb pushe – jinak by po každém cyklu přepsala `last_error` a skryla
 skutečné chyby jiných oblastí.
 
+## Účet z karty pacienta → nabídka
+
+`action_done` (a `mark_done` z karty) po uzavření záznamu s položkami zavolá
+`_sync_sale_order()`: jedna **nabídka** (`sale.order` ve stavu draft, nepotvrzuje se) na záznam
+(`clinical_record_id`; na nabídce navíc uložené `pet_id`, `doctor_id`, `reservation_id`).
+Zákazník = majitel pacienta, `client_order_ref` = „<pacient> – D. M. RRRR“, řádky = řádky účtu
+(produkt položky ceníku – i archivovaný; bez produktu „Volná položka“ s názvem řádku), množství,
+cena s DPH z řádku (úprava ceny lékařkou platí), pořadí. Opětovné uzavření řádky nabídky
+přepíše (tatáž nabídka); záznam bez položek nabídku nemá (dřívější nezaplacenou smaže).
+Zápis nabídky běží přes `sudo()` až po kontrole práva zápisu do záznamu.
+
+`payment_state` (počítaný): **Bez účtu** / **Čeká na platbu** / **Zaplaceno** (některý `pos.order`
+s řádkem nabídky je zaplacený nebo fakturovaný) / **Zrušeno** (zrušený záznam nebo nabídka).
+Zaplacený záznam nejde znovu otevřít ani zrušit (`UserError` – vratka v pokladně); zrušení
+záznamu zruší nezaplacenou nabídku. API karty (`_record_data`) vrací navíc `payment_state`,
+`payment_state_label`, `sale_order_name`.
+
 ## Role
 
 Skupiny POS, Prodeje a Skladu se odvozují ze skupin rezervací (řada Recepce < Sestra <
@@ -105,4 +122,5 @@ docker compose start odoo
 ```
 
 `tests/common.py`: `SaleCase` (rozšiřuje `ClinicCase` z `elite_vet_clinic`) – spustí
-`ensure_setup()` a nabízí `pos_config`, `tax21`, `tax12`, `tax0`.
+`ensure_setup()` a nabízí `pos_config`, `tax21`, `tax12`, `tax0`; `settle(quotation, method="card",
+invoice=False)` vyrovná nabídku v pokladně Recepce jako `pos_sale` (`sync_from_ui`) a vrátí `pos.order`.

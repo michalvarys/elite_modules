@@ -30,6 +30,7 @@ bezpečně spustit znovu (elite.vet.sale.setup.ensure_setup). Popis je v README.
         "data/product_data.xml",
         "views/item_views.xml",
         "views/status_views.xml",
+        "views/sale_order_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

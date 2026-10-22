@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_clinic" model="ir.ui.view">
+        <field name="name">sale.order.form.elite.vet</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <field name="payment_term_id" position="after">
+                <field name="clinical_record_id" invisible="not clinical_record_id"/>
+                <field name="pet_id" invisible="not pet_id"/>
+                <field name="doctor_id" invisible="not doctor_id"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_sales_order_filter_clinic" model="ir.ui.view">
+        <field name="name">sale.order.search.elite.vet</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="pet_id"/>
+            </field>
+            <filter name="my_sale_orders_filter" position="before">
+                <filter string="Ze záznamů návštěv" name="from_clinical_record"
+                        domain="[('clinical_record_id', '!=', False)]"/>
+                <separator/>
+            </filter>
+        </field>
+    </record>
+    <record id="view_clinical_record_form_sale" model="ir.ui.view">
+        <field name="name">elite.vet.clinical.record.form.sale</field>
+        <field name="model">elite.vet.clinical.record</field>
+        <field name="inherit_id" ref="elite_vet_clinic.view_clinical_record_form"/>
+        <field name="arch" type="xml">
+            <field name="reservation_id" position="after">
+                <field name="sale_order_id" invisible="not sale_order_id"/>
+                <field name="payment_state" widget="badge" decoration-warning="payment_state == 'waiting'"
+                       decoration-success="payment_state == 'paid'" decoration-muted="payment_state == 'cancelled'"/>
+            </field>
+        </field>
+    </record>
+</odoo>
