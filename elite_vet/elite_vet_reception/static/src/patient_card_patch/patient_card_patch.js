@@ -3,7 +3,7 @@
 // V ordinaci, Objednaní – ještě nepřišli, Hotovo dnes. Items come from my_patients_today
 // (extended in models/patient_card.py with group, visit_stage, arrived_time, waiting_minutes).
 // Ruling R5: opening the card on today's waiting record calls the patient in (once).
-import { onWillUnmount } from "@odoo/owl";
+import { onWillUnmount, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
 import { PatientCard } from "@elite_vet_clinic/patient_card/patient_card";
@@ -25,7 +25,7 @@ patch(PatientCard.prototype, {
     setup() {
         super.setup(...arguments);
         this.calledRecords = new Set();   // R5: call_patient at most once per record
-        this.callingKey = null;
+        this.callState = useState({ key: null });   // row whose Zavolat is in flight
         this.busService = useService("bus_service");
         this.onReceptionChange = () => this.refreshToday();
         this.busService.subscribe(BUS_MESSAGE, this.onReceptionChange);
@@ -44,8 +44,18 @@ patch(PatientCard.prototype, {
         this.loadToday().catch(() => {});
     },
 
+    /** R17: walk-ins without a doctor, offered to every doctor (only in a filtered list). */
+    get unassignedItems() { return this.state.today?.unassigned || []; },
+
+    get todaySubtitle() {
+        const t = this.state.today;
+        if (!t) return "";
+        if (t.filtered_by_doctor) return "Pacienti na dnešek – " + t.doctor.name + " (objednaní i neobjednaní)";
+        return "Všichni pacienti na dnešek – váš účet není spárovaný s žádnou lékařkou";
+    },
+
     get todayGroups() {
-        const items = this.todayItems;
+        const items = [...this.todayItems, ...this.unassignedItems];
         return PATIENT_GROUPS.map((g) => {
             let list = items.filter((it) => (it.group || "arriving") === g.key);
             if (g.key === "waiting" || g.key === "in_room") {
@@ -58,31 +68,32 @@ patch(PatientCard.prototype, {
     stageLine(it) {
         const parts = [];
         if (it.walk_in) parts.push("bez objednání");
+        if (it.walk_in && !it.doctor && this.state.today?.filtered_by_doctor) parts.push("kterákoli lékařka");
         if (it.group === "waiting") {
-            if (it.arrived_time) parts.push("přišel " + it.arrived_time);
+            if (it.arrived_time) parts.push("příchod " + it.arrived_time);
             if (it.waiting_minutes !== null && it.waiting_minutes !== undefined) {
                 parts.push("čeká " + it.waiting_minutes + " min");
             }
         } else if (it.group === "in_room") {
             if (it.called_time) parts.push("od " + it.called_time);
-            else if (it.arrived_time) parts.push("přišel " + it.arrived_time);
+            else if (it.arrived_time) parts.push("příchod " + it.arrived_time);
         }
         return parts.join(" · ");
     },
 
     async callPatient(it) {
-        if (this.callingKey) return;
-        this.callingKey = it.key;
+        if (this.callState.key) return;
+        this.callState.key = it.key;
         try {
             await this.orm.call(RECEPTION, "call_patient", [it.record_id]);
             this.calledRecords.add(it.record_id);
         } catch (e) {
             this.notification.add(errorMessage(e), { type: "danger" });
-            this.callingKey = null;
             this.refreshToday();
             return;
+        } finally {
+            this.callState.key = null;
         }
-        this.callingKey = null;
         await this.loadToday().catch(() => {});
         await this.openReservation(it);
     },

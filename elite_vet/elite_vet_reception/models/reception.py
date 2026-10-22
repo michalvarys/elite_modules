@@ -235,6 +235,11 @@ class Reception(models.AbstractModel):
             raise UserError(_("Záznam návštěvy nebyl nalezen."))
         if record.state != "draft":
             raise UserError(_("Návštěva je už uzavřená."))
+        if not record.doctor_id:
+            # Ruling R17: an unassigned walk-in is taken by the doctor who calls it in
+            doctor = record._doctor_for_user()
+            if doctor:
+                record.doctor_id = doctor
         if record.visit_stage != "in_room":
             record.write({"visit_stage": "in_room", "called_at": fields.Datetime.now()})
         notify_board(self.env)

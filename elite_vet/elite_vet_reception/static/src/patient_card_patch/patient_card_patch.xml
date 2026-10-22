@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <!-- One row of the staged list (rendered inside PatientCard, `it` = item of my_patients_today). -->
+    <!-- One row of the staged list (rendered inside PatientCard, `it` = item of my_patients_today).
+         Copied from the row of elite_vet_clinic.PatientCard (start screen, ol.evpc-today-list > li);
+         keep both in step. -->
     <t t-name="elite_vet_reception.PatientRow">
         <div class="evrc-row" t-att-class="'evrc-row-' + group.key">
             <button type="button" class="evpc-today-row" t-on-click="() => this.openReservation(it)">
@@ -29,11 +31,16 @@
                 <i t-if="group.key !== 'waiting'" class="fa fa-angle-right evpc-today-go" aria-hidden="true"/>
             </button>
             <button t-if="group.key === 'waiting' and it.record_id" type="button" class="evpc-btn evpc-btn-primary evrc-call"
-                    t-on-click="() => this.callPatient(it)">Zavolat</button>
+                    t-att-disabled="!!callState.key" t-on-click="() => this.callPatient(it)">
+                <t t-if="callState.key === it.key">Volám…</t><t t-else="">Zavolat</t>
+            </button>
         </div>
     </t>
 
     <t t-inherit="elite_vet_clinic.PatientCard" t-inherit-mode="extension">
+        <xpath expr="//p[hasclass('evpc-empty')][@t-elif='!todayItems.length']" position="replace">
+            <p t-elif="!todayItems.length and !unassignedItems.length" class="evpc-empty">Dnes nikdo nečeká ani není objednaný. Pacienta najdete vyhledáním nahoře.</p>
+        </xpath>
         <xpath expr="//ol[hasclass('evpc-today-list')]" position="replace">
             <div t-else="" class="evrc-groups">
                 <section t-foreach="todayGroups" t-as="group" t-key="group.key" class="evrc-group"

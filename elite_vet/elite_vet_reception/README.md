@@ -153,13 +153,19 @@ pokladny zůstávají standardní.
   spárované lékařky vidí vše). Každá položka navíc nese:
   `key` (`r<rezervace>` / `w<záznam>`, unikátní), `group` (`waiting` / `in_room` / `arriving` / `done`),
   `visit_stage` (`waiting` / `in_room` / `False`), `arrived_time`, `called_time`, `waiting_minutes`
-  (u V ordinaci od příchodu do zavolání), `payment_state`, `walk_in`.
+  (jen u rozepsaného záznamu ve stavu Čeká / V ordinaci, u V ordinaci od příchodu do zavolání, jinak
+  `None`), `payment_state`, `walk_in`.
+- `unassigned` (nový klíč odpovědi, pravidlo R17): dnešní rozepsaní neobjednaní bez lékařky ve stavu
+  Čeká / V ordinaci, stejný tvar jako `items`. Plní se jen u filtrovaného seznamu lékařky (nefiltrovaný
+  je má v `items`); úvodní obrazovka je ukazuje v Čekají s poznámkou „kterákoli lékařka“.
 - Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „přišel 9:24 · čeká 6 min“,
   tlačítko Zavolat), **V ordinaci**, **Objednaní – ještě nepřišli** (rezervace bez záznamu nebo se
   záznamem bez stavu), **Hotovo dnes** (uzavřený záznam; také rezervace ve stavu Proběhlá bez záznamu).
 - Neobjednaní (dnešní záznamy se stavem návštěvy bez rezervace, `walk_in: true`, `reservation_id: None`)
-  jsou v seznamu také; neobjednaný bez lékařky vidí jen účet bez spárované lékařky (sestra).
-- **Zavolat** = `elite.vet.reception.call_patient(record_id)`, pak se otevře karta zvířete.
+  jsou v `items` podle lékařky záznamu; bez lékařky jsou v `unassigned`.
+- **Zavolat** = `elite.vet.reception.call_patient(record_id)`, pak se otevře karta zvířete. Záznam bez
+  lékařky dostane lékařku volajícího uživatele (když je spárovaný); tlačítko je během volání neaktivní.
+- Texty: „příchod 9:24 · čeká 6 min“, „od 9:30“ (zavoláno).
 - Pravidlo R5: když sestra nebo lékařka otevře kartu (ze seznamu, z tabule, z hledání …) a dnešní
   záznam je ve stavu Čeká, karta jednou zavolá `call_patient`; `card_data` zůstává jen pro čtení.
   Chyba (např. role recepce) se tiše ignoruje. `_record_data` proto nese i `visit_stage`.
