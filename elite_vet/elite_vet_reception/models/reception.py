@@ -131,13 +131,15 @@ class Reception(models.AbstractModel):
                 "paid_count": paid_count}
 
     @api.model
-    def _to_pay(self):
-        """Unpaid visit bills of any day (waiting / partially paid), oldest first."""
+    def _to_pay(self, partner=None):
+        """Unpaid visit bills of any day (waiting / partially paid), oldest first;
+        with `partner` only the bills of that owner."""
         today = clinic_today()
         labels = dict(PAYMENT_STATES)
-        candidates = self._records().search([
-            ("state", "=", "done"), ("sale_order_id", "!=", False), ("sale_order_id.state", "!=", "cancel")],
-            order="start, id")
+        domain = [("state", "=", "done"), ("sale_order_id", "!=", False), ("sale_order_id.state", "!=", "cancel")]
+        if partner is not None:
+            domain.append(("partner_id", "=", partner.id))
+        candidates = self._records().search(domain, order="start, id")
         to_pay = []
         for rec in candidates:
             state = rec.payment_state
