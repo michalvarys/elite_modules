@@ -18,7 +18,11 @@
                     <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.loading }"/>
                 </button>
             </div>
-            <div t-if="!state.data" class="text-muted p-3">Načítám…</div>
+            <div t-if="!state.data and state.error" class="alert alert-danger d-flex flex-wrap align-items-center gap-2 o_ev_load_error">
+                <span>Přehled dne se nepodařilo načíst: <t t-esc="state.error"/></span>
+                <button class="btn btn-danger" t-on-click="() => this.load()"><i class="fa fa-refresh me-1"/>Zkusit znovu</button>
+            </div>
+            <div t-elif="!state.data" class="text-muted p-3">Načítám…</div>
             <div t-else="" class="row g-3">
                 <!-- Přicházejí -->
                 <section class="col-12 col-lg-4 o_ev_col_arriving">

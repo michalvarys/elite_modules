@@ -190,5 +190,7 @@ class TestRoles(ReceptionCase):
         self.assertTrue(self.pos_config.is_elite_vet_reception)
         other = self.env["pos.config"].create({"name": "Jiná pokladna test recepce"})
         self.assertFalse(other.is_elite_vet_reception)
-        self.assertIn("is_elite_vet_reception", self.pos_config._load_pos_data_fields(self.pos_config.id) or
-                      self.pos_config.fields_get())
+        # pos.config loads all its fields into the POS ([] = every field), the flag included
+        self.assertEqual(self.pos_config._load_pos_data_fields(self.pos_config.id), [])
+        data = self.pos_config.read(self.pos_config._load_pos_data_fields(self.pos_config.id), load=False)[0]
+        self.assertIs(data["is_elite_vet_reception"], True)

@@ -29,6 +29,8 @@ export class ReceptionTodayScreen extends Component {
         this.state = useState({
             day: clinicToday(),
             data: null,
+            error: null, // message when the last load failed and there is nothing to show
+            followToday: true, // showing "today": roll over to the next day at midnight
             loading: false,
             busy: {}, // key -> true while an action of the row runs
         });
@@ -63,13 +65,26 @@ export class ReceptionTodayScreen extends Component {
     }
 
     async load() {
+        if (this.state.followToday && this.state.day !== clinicToday()) {
+            this.state.day = clinicToday(); // midnight passed while Dnes was open
+            this.state.data = null;
+        }
         const day = this.state.day;
         this.state.loading = true;
         try {
-            const data = await callReception(this.orm, this.notification, "today_data", [day]);
+            const data = await this.orm.call("elite.vet.reception", "today_data", [day]);
             // a slow answer for a day the user already left must not overwrite the view
-            if (data && day === this.state.day) {
+            if (day === this.state.day) {
                 this.state.data = data;
+                this.state.error = null;
+            }
+        } catch (error) {
+            if (day === this.state.day) {
+                if (this.state.data) {
+                    this.notification.add(errorMessage(error), { type: "danger" });
+                } else {
+                    this.state.error = errorMessage(error);
+                }
             }
         } finally {
             this.state.loading = false;
@@ -78,7 +93,9 @@ export class ReceptionTodayScreen extends Component {
 
     changeDay(delta) {
         this.state.day = delta ? shiftDay(this.state.day, delta) : clinicToday();
+        this.state.followToday = this.state.day === clinicToday();
         this.state.data = null;
+        this.state.error = null;
         this.load();
     }
 

@@ -59,7 +59,9 @@ Pravidla přijetí:
   a `received_by`.
 - `walk_in` použije dnešní rozepsaný záznam zvířete, jinak založí nový (i když už dnes jeden
   uzavřený má).
-- Každá změna pošle zprávu na tabuli (`notify_board`, kanál `elite_vet_reservation/changed`).
+- Každá změna pošle zprávu na tabuli (`notify_board`, kanál `elite_vet_reservation/changed`);
+  stejně i uzavření (Hotovo, k pokladně), znovuotevření a zrušení záznamu, takže sloupec
+  K pokladně v pokladně se mění hned.
 
 ## Kartotéka (majitelé a zvířata)
 
@@ -120,16 +122,19 @@ pokladny zůstávají standardní.
   obrazovce, když předtím nebyla otevřená Pokladna). Tři sloupce z `today_data`, přepínání dní
   ‹ Dnes ›; Přijmout jen pro dnešek (`check_in` se jménem přihlášeného zaměstnance), Spárovat
   u nespárované webové rezervace (Kartotéka), Zaplatit (viz níže). Obnovení zprávou na sběrnici
-  `elite_vet_reservation/changed` a záložně každých 30 s. Nová relace se tu (jako na obrazovce
+  `elite_vet_reservation/changed` a záložně každých 30 s; o půlnoci se „Dnes“ samo přepne na nový
+  den; když se první načtení nepovede, ukáže se chyba s tlačítkem „Zkusit znovu“. Nová relace se tu (jako na obrazovce
   produktů) zeptá na počáteční stav hotovosti.
 - **Zaplatit** (`PosStore.payReceptionBill`): účet (nabídka) se načte stejně jako v pos_sale
   „Vyrovnat objednávku“ (`_getSaleOrder` → zákazník → fiskální pozice → `settleSO`) bez výběrového
   okna a otevře se platba. Účet dostane vždy vlastní pokladní objednávku, pokud ta otevřená není
-  prázdná a bez jiného zákazníka – dva klienti se nikdy nesmíchají na jedné účtence.
+  prázdná a bez jiného zákazníka – dva klienti se nikdy nesmíchají na jedné účtence. Účet, který
+  už v některé otevřené objednávce je, se zaplatí v ní (vybere se) – nikdy ve dvou objednávkách.
 - **Kartotéka** (`CardIndexDialog`, dialog nad pokladnou): hledání (Enter), výsledky (zvířata
   a majitelé), karta majitele s otevřenými účty a zvířaty, formuláře majitele (nový klient
   rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`), akce Přijmout bez objednání
-  (volitelně lékařka), Objednat, Vybrat k účtu (zákazník otevřené objednávky), Spárovat
+  (volitelně lékařka), Objednat, Vybrat k účtu (zákazník otevřené objednávky; objednávka s položkami jiného klienta se
+  nepřepíše – vznikne nová), Spárovat
   s rezervací (otevřeno z Dnes), Zavřít.
 - **Objednat** (`ReceptionBookingScreen`): úkon, lékařka, den ‹ Dnes › / datum, další volný den,
   volné časy (`free_slots`), poznámka, Objednat (`book`); po úspěchu i po chybě („mezitím

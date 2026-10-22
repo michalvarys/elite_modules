@@ -11,6 +11,7 @@ import {
     BOOKING_SCREEN,
     TODAY_SCREEN,
     callReception,
+    errorMessage,
     shortDate,
 } from "@elite_vet_reception/pos/reception_api";
 
@@ -319,14 +320,21 @@ export class CardIndexDialog extends Component {
         const id = this.owner.id;
         let partner = this.pos.models["res.partner"].get(id);
         if (!partner) {
-            partner = (await this.pos.data.read("res.partner", [id]))[0];
+            try {
+                partner = (await this.pos.data.read("res.partner", [id]))[0];
+            } catch (error) {
+                this.notification.add(errorMessage(error), { type: "danger" });
+                return;
+            }
         }
         if (!partner) {
             this.notification.add("Klienta se nepodařilo načíst do pokladny.", { type: "danger" });
             return;
         }
         let order = this.pos.get_order();
-        if (!order || order.finalized) {
+        const current = order?.get_partner();
+        // an order with lines of another client (e.g. a loaded bill) is never handed to this one
+        if (!order || order.finalized || (order.get_orderlines().length && current?.id !== partner.id)) {
             order = this.pos.add_new_order();
         }
         order.set_partner(partner);

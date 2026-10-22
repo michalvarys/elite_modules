@@ -34,7 +34,7 @@ patch(PosStore.prototype, {
      * Load the visit bill (sale.order) into the till and open the payment screen.
      * Same as pos_sale `onClickSaleOrder` → "Settle the order", but the bill always gets an
      * order of its own unless the current order is empty and has no other customer, so two
-     * clients never end up on one receipt.
+     * clients never end up on one receipt; a bill already in an open order is paid in that order.
      */
     async payReceptionBill(saleOrderId) {
         if (this.shouldShowOpeningControl()) {
@@ -42,15 +42,20 @@ patch(PosStore.prototype, {
             this.openOpeningControl();
             return null;
         }
-        const saleOrder = await this._getSaleOrder(saleOrderId);
-        let order = this.get_order();
-        const lines = order ? order.get_orderlines() : [];
-        const alreadyLoaded =
-            lines.length > 0 && lines.every((line) => line.sale_order_origin_id?.id === saleOrder.id);
-        if (!alreadyLoaded) {
+        // A bill already loaded into an open order is paid there - never in a second order.
+        const loaded = this.models["pos.order"].filter(
+            (o) => !o.finalized && o.lines.some((line) => line.sale_order_origin_id?.id === saleOrderId)
+        )[0];
+        let order;
+        if (loaded) {
+            order = loaded;
+            this.set_order(order);
+        } else {
+            const saleOrder = await this._getSaleOrder(saleOrderId);
+            order = this.get_order();
             const partner = order?.get_partner();
             const otherClient = partner && partner.id !== saleOrder.partner_id?.id;
-            if (!order || order.finalized || lines.length || otherClient) {
+            if (!order || order.finalized || order.get_orderlines().length || otherClient) {
                 order = this.add_new_order();
             }
             if (saleOrder.partner_id) {

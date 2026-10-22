@@ -7,6 +7,8 @@ from odoo.tools import mute_logger
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
 
+from odoo.addons.elite_vet_reservation.models.live import PRECOMMIT_KEY
+
 from .common import ReceptionCase
 
 WEB_MESSAGE = "Rezervace z webu ještě není spárovaná s klientem a zvířetem – otevřete Kartotéku."
@@ -226,6 +228,18 @@ class TestToday(ReceptionCase):
         with self.assertRaisesRegex(UserError, "Zvíře je vedené jako uhynulé."):
             self.api(self.reception).walk_in(pet.id)
         self.assertFalse(self.Record.search([("pet_id", "=", pet.id)]))
+
+    def test_done_reopen_cancel_notify_the_till(self):
+        """Ruling R15: K pokladně updates live (bus message queued for the transaction)."""
+        nurse = self.as_user(self.nurse)
+        data = nurse.open_today_record(self.new_pet("Hotový živě").id, force_new=True)
+        record = self.Record.browse(data["id"])
+        precommit = self.env.cr.precommit.data
+        for action in ("action_done", "action_reopen", "action_cancel"):
+            precommit.pop(PRECOMMIT_KEY, None)
+            getattr(record, action)()
+            self.assertIn(PRECOMMIT_KEY, precommit, action)
+        precommit.pop(PRECOMMIT_KEY, None)
 
     # ---------------------------------------------------------------- call_patient
     def test_call_patient(self):

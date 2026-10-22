@@ -1,5 +1,7 @@
 from odoo import api, fields, models
 
+from odoo.addons.elite_vet_reservation.models.live import notify_board
+
 VISIT_STAGES = [("waiting", "Čeká"), ("in_room", "V ordinaci")]
 # Context key of the reception API: the record is created under sudo after the role check
 # (elite.vet.reception), so the clinic write check must let it through.
@@ -22,6 +24,22 @@ class ClinicalRecordVisitStage(models.Model):
         if self.env.su and self.env.context.get(RECEPTION_CONTEXT):
             return True
         return super()._can_write()
+
+    # Ruling R15: the till's "K pokladně" column follows finishing, reopening and cancelling live.
+    def action_done(self):
+        res = super().action_done()
+        notify_board(self.env)
+        return res
+
+    def action_reopen(self):
+        res = super().action_reopen()
+        notify_board(self.env)
+        return res
+
+    def action_cancel(self):
+        res = super().action_cancel()
+        notify_board(self.env)
+        return res
 
     def _call_in(self):
         """Move draft records that are waiting (or have no stage yet) into the room."""
