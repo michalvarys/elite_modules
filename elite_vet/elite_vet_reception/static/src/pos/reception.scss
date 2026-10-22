@@ -83,6 +83,17 @@
             color: $gray-600;
         }
     }
+    .o_ev_rooms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        .o_ev_room {
+            min-width: 9rem;
+            min-height: 3.25rem;
+            text-align: left;
+            border: 1px solid $gray-300;
+        }
+    }
     .o_ev_slots {
         display: flex;
         flex-wrap: wrap;

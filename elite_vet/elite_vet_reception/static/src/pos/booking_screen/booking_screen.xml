@@ -72,7 +72,26 @@
                     </label>
                 </div>
                 <div class="col-12 col-lg-7">
-                    <div class="o_ev_col_title"><span>Volné časy</span><i t-if="state.loading" class="fa fa-circle-o-notch fa-spin"/></div>
+                    <t t-set="freeRooms" t-value="rooms"/>
+                    <t t-set="shownRoom" t-value="activeRoom"/>
+                    <t t-if="state.procedureId and freeRooms.length > 1">
+                        <div class="o_ev_col_title"><span>Ordinace</span></div>
+                        <div class="o_ev_rooms mb-3">
+                            <button t-foreach="freeRooms" t-as="room" t-key="room.room_id" class="btn o_ev_room"
+                                    t-att-class="shownRoom and shownRoom.room_id === room.room_id ? 'btn-primary' : 'btn-light'"
+                                    t-on-click="() => this.selectRoom(room)">
+                                <b class="d-block o_ev_room_name" t-esc="room.room"/>
+                                <small class="d-block">
+                                    <t t-if="room.doctor"><t t-esc="room.doctor"/> · </t>
+                                    <t t-esc="freeLabel(room.slots.length)"/>
+                                </small>
+                            </button>
+                        </div>
+                    </t>
+                    <div class="o_ev_col_title">
+                        <span>Volné časy<t t-if="shownRoom"> · <t t-esc="shownRoom.room"/><t t-if="shownRoom.doctor"> · <t t-esc="shownRoom.doctor"/></t></t></span>
+                        <i t-if="state.loading" class="fa fa-circle-o-notch fa-spin"/>
+                    </div>
                     <div t-if="!state.procedureId" class="o_ev_empty">Nejdřív vyberte úkon.</div>
                     <t t-elif="state.slots">
                         <div t-if="!state.slots.length" class="o_ev_empty">
@@ -82,21 +101,22 @@
                             </button>
                             <span t-elif="!isPastDay"> V horizontu objednávek už není žádný volný den.</span>
                         </div>
-                        <div class="o_ev_slots">
-                            <button t-foreach="state.slots" t-as="slot" t-key="slotKey(slot)" class="btn o_ev_slot"
+                        <div t-elif="!shownRoom" class="o_ev_empty o_ev_pick_room">Vyberte ordinaci.</div>
+                        <div t-else="" class="o_ev_slots">
+                            <button t-foreach="shownRoom.slots" t-as="slot" t-key="slotKey(slot)" class="btn o_ev_slot"
                                     t-att-class="isSelected(slot) ? 'btn-primary' : 'btn-light'" t-on-click="() => this.selectSlot(slot)">
                                 <span class="o_ev_num" t-esc="slot.time"/>
-                                <small class="d-block"><t t-esc="slot.room"/><t t-if="slot.doctor"> · <t t-esc="slot.doctor"/></t></small>
+                                <small t-if="slot.doctor and !shownRoom.doctor" class="d-block" t-esc="slot.doctor"/>
                             </button>
                         </div>
                     </t>
                     <div class="d-flex flex-wrap gap-2 mt-3">
                         <button t-if="state.move" class="btn btn-primary btn-lg o_ev_move" t-att-disabled="!state.selected or state.saving" t-on-click="moveReservation">
-                            <t t-if="state.selected">Přesunout na <t t-esc="state.selected.time"/></t>
+                            <t t-if="state.selected">Přesunout na <t t-esc="state.selected.time"/>, <t t-esc="state.selected.room"/></t>
                             <t t-else="">Přesunout</t>
                         </button>
                         <button t-else="" class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
-                            <t t-if="state.selected">Objednat na <t t-esc="state.selected.time"/></t>
+                            <t t-if="state.selected">Objednat na <t t-esc="state.selected.time"/>, <t t-esc="state.selected.room"/></t>
                             <t t-else="">Objednat</t>
                         </button>
                         <button class="btn btn-light btn-lg" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Otevřít tabuli</button>

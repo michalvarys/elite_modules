@@ -170,7 +170,8 @@ pokladny zůstávají standardní.
   s poznámkou „Vyberte zvíře.“ (klient bez zvířat: „Přidejte zvíře (+ Nové zvíře).“)
 - **Objednat** (`ReceptionBookingScreen`): pole Klient a zvíře („Vybrat…“ / „Změnit“ – Kartotéka
   v režimu `booking`), úkon, lékařka, den ‹ Dnes › / datum, další volný den, volné časy
-  (`free_slots`), poznámka, Objednat (`book`). Po úspěchu se formulář vyprázdní (úkon, čas, klient
+  (`free_slots`; úkon → ordinace → čas: víc ordinací s volnem = nejdřív výběr ordinace `rooms`, jedna
+  se vybere sama `activeRoom`), poznámka, Objednat (`book`). Po úspěchu se formulář vyprázdní (úkon, čas, klient
   a zvíře, poznámka), den a lékařka zůstanou, upozornění „Objednáno: čt 22. 10. 2026 9:00 · Rex“;
   po chybě („mezitím obsazeno“) se časy načtou znovu. Vybraný klient je ve stavu obrazovky (prop
   `pet` jen jako počáteční hodnota). Props z tabule a lišty (POS obrazovku nepřipojuje znovu, jen

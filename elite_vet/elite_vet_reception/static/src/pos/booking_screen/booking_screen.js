@@ -51,6 +51,7 @@ export class ReceptionBookingScreen extends Component {
             day: clinicToday(),
             slots: null,
             nextFreeDay: null,
+            roomId: null, // chosen room (kept over day changes; shown only while it has free times)
             selected: null,
             note: "",
             loading: false,
@@ -122,6 +123,50 @@ export class ReceptionBookingScreen extends Component {
         return this.state.procedures.find((p) => p.id === Number(this.state.procedureId)) || null;
     }
 
+    /** Rooms with free times (natural name order), each with its `slots`; `doctor` is set when the
+     *  whole room has the same doctor. */
+    get rooms() {
+        const groups = new Map();
+        for (const slot of this.state.slots || []) {
+            if (!groups.has(slot.room_id)) {
+                groups.set(slot.room_id, { room_id: slot.room_id, room: slot.room, slots: [] });
+            }
+            groups.get(slot.room_id).slots.push(slot);
+        }
+        for (const group of groups.values()) {
+            // one doctor for the whole room: shown once in the heading, not on every time
+            const doctors = new Set(group.slots.map((slot) => slot.doctor || ""));
+            group.doctor = doctors.size === 1 ? group.slots[0].doctor : null;
+        }
+        return [...groups.values()].sort((a, b) =>
+            (a.room || "").localeCompare(b.room || "", "cs", { numeric: true })
+        );
+    }
+
+    /** The room whose times are shown: the only one, or the chosen one (null = choose first). */
+    get activeRoom() {
+        const rooms = this.rooms;
+        if (rooms.length === 1) {
+            return rooms[0];
+        }
+        return rooms.find((room) => room.room_id === this.state.roomId) || null;
+    }
+
+    freeLabel(count) {
+        const word = count === 1 ? "volný" : count >= 2 && count <= 4 ? "volné" : "volných";
+        return `${count} ${word}`;
+    }
+
+    selectRoom(room) {
+        this.state.roomId = room.room_id;
+        this.state.booked = null;
+        this.state.moved = null;
+        if (this.state.selected && this.state.selected.room_id !== room.room_id) {
+            this.state.selected = null;
+            this.state.prefill = null;
+        }
+    }
+
     slotKey(slot) {
         return `${slot.minute}-${slot.room_id}`;
     }
@@ -160,6 +205,9 @@ export class ReceptionBookingScreen extends Component {
         }
         const slot = this.state.slots.find((s) => s.minute === prefill.minute && s.room_id === prefill.room_id);
         prefill.found = Boolean(slot);
+        if (this.state.slots.some((s) => s.room_id === prefill.room_id)) {
+            this.state.roomId = prefill.room_id;
+        }
         if (slot) {
             this.state.selected = slot;
         }
@@ -225,6 +273,7 @@ export class ReceptionBookingScreen extends Component {
     /** After a booking: a fresh form for the next client; day and doctor stay. */
     resetForm() {
         this.state.procedureId = "";
+        this.state.roomId = null;
         this.state.selected = null;
         this.state.slots = null;
         this.state.nextFreeDay = null;
@@ -244,6 +293,7 @@ export class ReceptionBookingScreen extends Component {
     leaveMove() {
         if (this.state.move) {
             this.state.procedureId = "";
+            this.state.roomId = null;
             this.state.selected = null;
             this.state.slots = null;
             this.state.nextFreeDay = null;

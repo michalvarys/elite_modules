@@ -231,12 +231,15 @@ na zákazníka u faktury) otevře tuto Kartotéku se stejnými pravidly.
 3. **Lékařka** – nepovinné. „Kterákoli, která úkon dělá“ nabídne časy všech lékařek ve službě.
 4. **Den** – šipky **‹ Dnes ›** nebo datum. Když den nemá volný čas, objeví se tlačítko
    s **nejbližším dalším volným dnem**.
-5. **Volné časy** – čas, ordinace a lékařka. Počítají se stejně jako na tabuli a na webu.
-   Kliknutím čas vyberete (zvýrazní se).
-6. **Poznámka k rezervaci** – nepovinné.
-7. **Objednat na 18:15.** Objeví se potvrzení „Objednáno: čt 22. 10. 2026 18:15 · Rex“.
+5. **Ordinace** – když má úkon ten den volno ve více ordinacích, vyberte ordinaci (u každé je
+   lékařka, pokud ji má celý den jedna, a počet volných časů). Když je volno jen v jedné, vybere se
+   sama a tento krok se neukáže.
+6. **Volné časy** vybrané ordinace. Počítají se stejně jako na tabuli a na webu. Kliknutím čas
+   vyberete (zvýrazní se) a tlačítko ukáže čas i ordinaci („Objednat na 9:00, Ordinace 1“).
+7. **Poznámka k rezervaci** – nepovinné.
+8. **Objednat na 18:15, Ordinace 1.** Objeví se potvrzení „Objednáno: čt 22. 10. 2026 18:15 · Rex“.
    Rezervace je potvrzená a je na tabuli i v Přicházejí toho dne.
-8. **Formulář se vyprázdní** pro dalšího klienta: úkon, čas, klient a zvíře i poznámka zmizí,
+9. **Formulář se vyprázdní** pro dalšího klienta: úkon, ordinace, čas, klient a zvíře i poznámka zmizí,
    **den a lékařka zůstanou**. Zelené potvrzení zmizí, jakmile začnete další objednání (klient,
    úkon, lékařka, den nebo čas).
 
