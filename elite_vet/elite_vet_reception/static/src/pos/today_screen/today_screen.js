@@ -77,15 +77,21 @@ export class ReceptionTodayScreen extends Component {
             if (day === this.state.day) {
                 this.state.data = data;
                 this.state.error = null;
+                this.failing = false;
             }
         } catch (error) {
+            const firstFailure = !this.failing;
             if (day === this.state.day) {
                 if (this.state.data) {
-                    this.notification.add(errorMessage(error), { type: "danger" });
+                    // repeated poll / bus failures: tell once per failure streak
+                    if (firstFailure) {
+                        this.notification.add(errorMessage(error), { type: "danger" });
+                    }
                 } else {
                     this.state.error = errorMessage(error);
                 }
             }
+            this.failing = true;
         } finally {
             this.state.loading = false;
         }

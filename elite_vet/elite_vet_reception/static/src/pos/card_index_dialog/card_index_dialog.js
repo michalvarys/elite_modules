@@ -333,8 +333,9 @@ export class CardIndexDialog extends Component {
         }
         let order = this.pos.get_order();
         const current = order?.get_partner();
-        // an order with lines of another client (e.g. a loaded bill) is never handed to this one
-        if (!order || order.finalized || (order.get_orderlines().length && current?.id !== partner.id)) {
+        // an order with lines of another client (e.g. a loaded bill) is never handed to this one;
+        // items rung up without a customer stay and get this client
+        if (!order || order.finalized || (order.get_orderlines().length && current && current.id !== partner.id)) {
             order = this.pos.add_new_order();
         }
         order.set_partner(partner);
