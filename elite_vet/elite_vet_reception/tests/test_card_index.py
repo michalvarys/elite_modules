@@ -249,6 +249,16 @@ class TestCardIndex(ReceptionCase):
         self.assertEqual(err.exception.args[0], "Rezervace už má návštěvu jiného zvířete.")
         self.assertEqual(res.pet_id, self.pet)
 
+    def test_match_reservation_refuses_done(self):
+        reception = self.api(self.reception)
+        res = self.reservation(11, 0, pet=self.pet, state="done")
+        other_owner = self.env["res.partner"].create({"name": "Klient Proběhlé Rezervace", "is_vet_client": True})
+        other_pet = self.new_pet("Zvíře Proběhlé Rezervace", owner=other_owner)
+        with self.assertRaises(UserError) as err:
+            reception.match_reservation(res.id, other_owner.id, other_pet.id)
+        self.assertEqual(err.exception.args[0], "Proběhlou rezervaci nelze změnit.")
+        self.assertEqual((res.partner_id, res.pet_id), (self.pet.partner_id, self.pet))
+
     # ---------------------------------------------------------------- Task 8: any reservation (from Dnes / the board)
     def test_reassign_reservation_to_another_client(self):
         reception = self.api(self.reception)

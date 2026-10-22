@@ -4,7 +4,8 @@
  * selected once a procedure is chosen and the time is free) or with `move` (Přesunout: the free
  * times of the reservation's procedure, the chosen one moves it with `move_reservation`).
  * The client and pet are picked in the field "Klient a zvíře" (Kartotéka in the booking mode).
- * After a booking the form is emptied (procedure, time, client, pet); day and doctor stay.
+ * After a booking the form is emptied (procedure, time, client, pet); day and doctor stay. The
+ * "Objednáno" message stays until the next booking is started (client, procedure, doctor, day, time).
  */
 import { Component, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
@@ -172,24 +173,28 @@ export class ReceptionBookingScreen extends Component {
 
     onDoctorChange(ev) {
         this.state.doctorId = ev.target.value;
+        this.state.booked = null;
         this.loadSlots();
     }
 
     onDayInput(ev) {
         if (ev.target.value) {
             this.state.day = ev.target.value;
+            this.state.booked = null;
             this.loadSlots();
         }
     }
 
     changeDay(delta) {
         this.state.day = delta ? shiftDay(this.state.day, delta) : clinicToday();
+        this.state.booked = null;
         this.loadSlots();
     }
 
     goNextFreeDay() {
         if (this.state.nextFreeDay) {
             this.state.day = this.state.nextFreeDay;
+            this.state.booked = null;
             this.loadSlots();
         }
     }
@@ -232,7 +237,17 @@ export class ReceptionBookingScreen extends Component {
         this.dialog.add(BoardDialog, { day: this.state.day });
     }
 
+    /**
+     * Nepřesouvat / navbar Objednat: back to a plain booking form. The time and the procedure of
+     * the moved reservation are dropped, so a click cannot book a new reservation at the move slot.
+     */
     leaveMove() {
+        if (this.state.move) {
+            this.state.procedureId = "";
+            this.state.selected = null;
+            this.state.slots = null;
+            this.state.nextFreeDay = null;
+        }
         this.state.move = null;
         this.state.moved = null;
     }

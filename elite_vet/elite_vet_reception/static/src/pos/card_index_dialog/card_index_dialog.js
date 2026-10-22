@@ -401,15 +401,20 @@ export class CardIndexDialog extends Component {
         }
         let order = this.pos.get_order();
         const current = order?.get_partner();
+        let newOrder = false;
         // an order with lines of another client (e.g. a loaded bill) is never handed to this one;
         // items rung up without a customer stay and get this client
         if (!order || order.finalized || (order.get_orderlines().length && current && current.id !== partner.id)) {
             order = this.pos.add_new_order();
+            newOrder = true;
         }
         order.set_partner(partner);
         this.notification.add(`Zákazník účtu: ${partner.name}`, { type: "success" });
         this.props.close();
-        this.pos.showScreen("ProductScreen");
+        // opened from the payment screen (Zákazník, invoice) for the same order: payment goes on
+        if (newOrder || this.pos.mainScreen.component?.name !== "PaymentScreen") {
+            this.pos.showScreen("ProductScreen");
+        }
     }
 
     /** reservation: Přiřadit k rezervaci - the client and pet of the reservation. */

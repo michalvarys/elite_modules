@@ -90,7 +90,7 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 - Hodnoty formuláře se berou jako text (ořezaný); jiná data skončí chybou.
 - `match_reservation` u druhé ordinace páruje hlavní rezervaci; rezervace, která už má návštěvu
   jiného zvířete, skončí chybou „Rezervace už má návštěvu jiného zvířete.“ Rezervaci s jiným
-  zvířetem, která ještě návštěvu nemá, přepíše (změna klienta). Zrušená rezervace: chyba.
+  zvířetem, která ještě návštěvu nemá, přepíše (změna klienta). Zrušená rezervace: chyba; proběhlá (`done`): „Proběhlou rezervaci nelze změnit.“
 
 ## Objednání (záložka Objednat)
 
@@ -122,8 +122,13 @@ pokladny zůstávají standardní.
   (znovu stisknuté na Objednat ukončí režim Přesunout), Pokladna (standardní obrazovka produktů),
   Tabule (dialog `BoardDialog` nad pokladnou, viz níže).
 - **Pokladna** (obrazovka produktů): tlačítko **Klient** v ovládacích tlačítkách účtu
-  (`control_buttons_patch/`, `t-inherit` `point_of_sale.ControlButtons` – jen přidané tlačítko,
-  komponenta přes `patch` `ControlButtons.components`) otevře Kartotéku v režimu `order`.
+  (`control_buttons_patch/`, `t-inherit` `point_of_sale.ControlButtons`, na malé obrazovce
+  `point_of_sale.ActionpadWidget`; komponenta přes `patch` `components`) otevře Kartotéku v režimu
+  `order` a ukazuje zákazníka účtu („Klient: Jana Nováková“). Standardní `SelectPartnerButton`
+  je v pokladně Recepce skrytý a `PosStore.selectPartner` (Zákazník na obrazovce platby, dotaz
+  na zákazníka u faktury) otevře místo seznamu partnerů tutéž Kartotéku – pravidla úkolu 5 platí
+  vždy (vratka: standardní upozornění zůstává). Výběr z obrazovky platby pro tentýž účet na ní
+  zůstane, nový účet přepne na Pokladnu.
 - **Dnes** (`ReceptionTodayScreen`): výchozí obrazovka po načtení pokladny i po přihlášení PINem
   (patch `PosStore.firstScreen` a přesměrování ProductScreen → Dnes jen hned po přihlašovací
   obrazovce, když předtím nebyla otevřená Pokladna). Tři sloupce z `today_data`, přepínání dní
@@ -157,7 +162,7 @@ pokladny zůstávají standardní.
   partner_id, pet_id, pet_name}`, předvyplní klienta a zvíře), `client` (`{partner_id, pet_id}` –
   v režimu `booking` dosavadní výběr; v režimu `order` se bez něj ukáže zákazník otevřené
   objednávky). Tlačítka, která potřebují zvíře, jsou bez vybraného živého zvířete neaktivní
-  s poznámkou „Vyberte zvíře.“
+  s poznámkou „Vyberte zvíře.“ (klient bez zvířat: „Přidejte zvíře (+ Nové zvíře).“)
 - **Objednat** (`ReceptionBookingScreen`): pole Klient a zvíře („Vybrat…“ / „Změnit“ – Kartotéka
   v režimu `booking`), úkon, lékařka, den ‹ Dnes › / datum, další volný den, volné časy
   (`free_slots`), poznámka, Objednat (`book`). Po úspěchu se formulář vyprázdní (úkon, čas, klient

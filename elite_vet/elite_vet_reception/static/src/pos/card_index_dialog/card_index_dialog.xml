@@ -173,7 +173,8 @@
                             t-att-disabled="!canUsePet" t-on-click="matchReservation">Přiřadit k rezervaci</button>
                     <button t-elif="mode === 'walk_in'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_walk_in"
                             t-att-disabled="!canUsePet" t-on-click="walkIn">Přijmout</button>
-                    <span t-if="needsPet and !pet" class="text-muted align-self-center o_ev_need_pet">Vyberte zvíře.</span>
+                    <span t-if="needsPet and !pets.length" class="text-muted align-self-center o_ev_need_pet">Přidejte zvíře (+ Nové zvíře).</span>
+                    <span t-elif="needsPet and !pet" class="text-muted align-self-center o_ev_need_pet">Vyberte zvíře.</span>
                     <span t-elif="needsPet and pet.deceased" class="text-muted align-self-center o_ev_need_pet">Zvíře je vedené jako uhynulé.</span>
                 </t>
                 <button type="button" class="btn btn-light btn-lg ms-md-auto o_ev_close" t-on-click="props.close">Zavřít</button>

@@ -2,15 +2,30 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="elite_vet_reception.ReceptionClientButton">
-        <button type="button" class="btn btn-secondary btn-lg lh-lg o_ev_order_client"
-                title="Klient k účtu z Kartotéky" t-on-click="onClick">
-            <i class="fa fa-address-book-o me-1"/>Klient
+        <button type="button" class="btn btn-secondary btn-lg lh-lg text-truncate o_ev_order_client"
+                t-att-title="props.partner ? 'Klient k účtu: ' + props.partner.name : 'Klient k účtu z Kartotéky'"
+                t-on-click="onClick">
+            <i class="fa fa-address-book-o me-1"/><t t-if="props.partner">Klient: <t t-esc="props.partner.name"/></t><t t-else="">Klient</t>
         </button>
     </t>
 
+    <!-- reception till: "Klient" instead of the standard customer button -->
     <t t-inherit="point_of_sale.ControlButtons" t-inherit-mode="extension">
+        <xpath expr="//SelectPartnerButton" position="attributes">
+            <attribute name="t-if">!props.showRemainingButtons and !pos.isReceptionPos</attribute>
+        </xpath>
         <xpath expr="//SelectPartnerButton" position="before">
-            <ReceptionClientButton t-if="pos.isReceptionPos and !props.showRemainingButtons"/>
+            <ReceptionClientButton t-if="pos.isReceptionPos and !props.showRemainingButtons" partner="partner"/>
+        </xpath>
+    </t>
+
+    <!-- small screens: the customer button is in the action pad -->
+    <t t-inherit="point_of_sale.ActionpadWidget" t-inherit-mode="extension">
+        <xpath expr="//SelectPartnerButton" position="attributes">
+            <attribute name="t-if">!pos.isReceptionPos</attribute>
+        </xpath>
+        <xpath expr="//SelectPartnerButton" position="before">
+            <ReceptionClientButton t-if="pos.isReceptionPos" partner="props.partner"/>
         </xpath>
     </t>
 

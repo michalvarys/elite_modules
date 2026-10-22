@@ -209,6 +209,8 @@ class ReceptionCardIndex(models.AbstractModel):
             reservation = reservation.linked_reservation_id  # the client belongs to the main reservation
         if reservation.state in ("cancelled", "no_show"):
             raise UserError(_("Zrušenou rezervaci nelze spárovat."))
+        if reservation.state == "done":
+            raise UserError(_("Proběhlou rezervaci nelze změnit."))
         partner = self._get_owner(partner_id)
         pet = self._get_owner_pet(partner, pet_id)
         visit = self._records().search([("reservation_id", "=", reservation.id), ("state", "!=", "cancelled")],

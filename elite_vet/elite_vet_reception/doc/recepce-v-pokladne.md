@@ -50,7 +50,7 @@ Pokladna se otevře na záložce **Dnes**. Nahoře je lišta:
 | **Dnes** | přehled dne: kdo přichází, kdo čeká, co se platí |
 | **Kartotéka…** | okno s klienty a zvířaty – jen hledání, prohlížení, nový klient a úpravy |
 | **Objednat** | objednání termínu |
-| **Pokladna** | běžná obrazovka pokladny (prodej zboží, tlačítko **Klient** u účtu, Akce, Nabídka/Objednávka …) |
+| **Pokladna** | běžná obrazovka pokladny (prodej zboží, tlačítko **Klient** u účtu – ukazuje jméno zákazníka účtu, např. „Klient: Jana Nováková“; Akce, Nabídka/Objednávka …) |
 | **Tabule** | denní tabule ordinací v okně nad pokladnou (kapitola 5) |
 | zámek | zamkne pokladnu (kapitola 7) |
 | ☰ | menu pokladny (uzávěrka, objednávky …) |
@@ -170,7 +170,8 @@ vybíráte, a dole je nejvýš **jedno hlavní tlačítko** (a Zavřít):
 | **Dnes**, **+ Bez objednání** | Přijmout bez objednání | **Přijmout** – s výběrem lékařky; zvíře jde do čekárny (kapitola 2) |
 
 Tlačítka, která potřebují zvíře (Vybrat, Přiřadit k rezervaci, Přijmout), jsou šedá, dokud
-zvíře nevyberete („Vyberte zvíře.“); s uhynulým zvířetem nejdou.
+zvíře nevyberete („Vyberte zvíře.“, u klienta bez zvířat „Přidejte zvíře (+ Nové zvíře).“);
+s uhynulým zvířetem nejdou.
 
 ### Hledání
 
@@ -213,6 +214,10 @@ najděte klienta a klikněte **Vybrat k účtu**. Položky naúčtované bez zá
 tohoto klienta. Účet s položkami **jiného** klienta se nepřepíše – vznikne nový účet (dva klienti
 se nikdy nesmíchají na jedné účtence).
 
+Na tlačítku je jméno zákazníka účtu („Klient: Jana Nováková“), bez zákazníka jen „Klient“.
+Standardní tlačítko zákazníka pokladny Recepce nemá; i **Zákazník** na obrazovce platby (a dotaz
+na zákazníka u faktury) otevře tuto Kartotéku se stejnými pravidly.
+
 ![Klient k účtu v pokladně](img/recepce-klient-k-uctu.png)
 
 ## 4. Objednat
@@ -232,7 +237,8 @@ se nikdy nesmíchají na jedné účtence).
 7. **Objednat na 18:15.** Objeví se potvrzení „Objednáno: čt 22. 10. 2026 18:15 · Rex“.
    Rezervace je potvrzená a je na tabuli i v Přicházejí toho dne.
 8. **Formulář se vyprázdní** pro dalšího klienta: úkon, čas, klient a zvíře i poznámka zmizí,
-   **den a lékařka zůstanou**.
+   **den a lékařka zůstanou**. Zelené potvrzení zmizí, jakmile začnete další objednání (klient,
+   úkon, lékařka, den nebo čas).
 
 **E-mail klientovi:** když má majitel v kartotéce e-mail, dostane potvrzení rezervace
 automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá – termín mu řekněte.
@@ -244,7 +250,8 @@ obsadil – vyberte jiný.“ a časy se načtou znovu. Uhynulé zvíře objedna
 klient zůstane.
 
 V režimu **Přesunout rezervaci** (z tabule) vás zpět k běžnému objednání vrátí **Nepřesouvat**
-nebo znovu kliknutí na **Objednat** v liště.
+nebo znovu kliknutí na **Objednat** v liště. Úkon a čas přesouvané rezervace se přitom zruší –
+formulář začíná od výběru úkonu.
 
 ## 5. Tabule
 
