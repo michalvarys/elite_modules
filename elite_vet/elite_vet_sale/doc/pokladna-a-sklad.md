@@ -34,8 +34,8 @@ Na konci návštěvy klikne **Hotovo, k pokladně** a potvrdí:
 Od té chvíle:
 
 - záznam je uzavřený a v kartě je štítek **Čeká na platbu · S00400** (číslo objednávky,
-  pod kterým účet najdete v pokladně) s poznámkou „Recepce účet najde v pokladně pod
-  tlačítkem Objednávka“,
+  pod kterým účet najdete v pokladně) s poznámkou pro recepci, kde účet v pokladně najde
+  (**Akce → Nabídka/Objednávka**),
 - na **tabuli** má rezervace žlutý štítek **k pokladně**.
 
 ![Karta po Hotovo](img/karta-k-pokladne.png)
@@ -43,11 +43,13 @@ Od té chvíle:
 ![Štítek k pokladně na tabuli](img/tabule-k-pokladne.png)
 
 Když lékařka záznam znovu otevře a doplní, nové **Hotovo** účet přepíše – pořád je to tatáž
-objednávka, nic se nezdvojí.
+objednávka, nic se nezdvojí. Má-li ale recepce účet právě rozpracovaný v pokladně, **Hotovo** skončí
+hláškou „Recepce účet právě vyřizuje v pokladně – počkejte na dokončení platby.“ – počkejte,
+až recepce platbu dokončí (nebo objednávku v pokladně zruší), a zkuste to znovu.
 
 ## 2. Zaplacení účtu (vyrovnání objednávky)
 
-1. V pokladně klikněte vlevo dole na **Akce** a pak na **Objednávka**.
+1. V pokladně klikněte vlevo dole na **Akce** a pak na **Nabídka/Objednávka**.
 
    ![Akce v pokladně](img/pokladna-akce.png)
 
@@ -96,20 +98,20 @@ Po zaplacení:
 
 ## 3. Faktura
 
-Na platební obrazovce klikněte na **Faktura** (zaškrtávátko se zapne). Faktura se vystaví na
+Na platební obrazovce klikněte na **Faktura** (zaškrtávací políčko se zapne). Faktura se vystaví na
 zákazníka z objednávky, tedy majitele pacienta. Po **Potvrdit** se faktura vytvoří jako
 zaplacená (číslo INV/…); najdete ji i v Odoo v **Fakturace → Zákazníci → Faktury**. Má-li být faktura na firmu, vyberte před platbou
 zákazníka (tlačítko se jménem majitele) a firmu.
 
 ## 4. Záloha
 
-1. **Akce → Objednávka** → účet → místo „Vyrovnat objednávku“ zvolte **Zaplatit zálohu
+1. **Akce → Nabídka/Objednávka** → účet → místo „Vyrovnat objednávku“ zvolte **Zaplatit zálohu
    (fixní částkou)** nebo **Zaplatit zálohu (v procentech)**.
 2. Zadejte částku (nebo procento), **Platba**, způsob platby, **Potvrdit**.
 
 Záznam má potom stav **Částečně zaplaceno** a na tabuli zůstává štítek **k pokladně**
 (po najetí myší „Částečně zaplaceno“). Zbytek doplatíte stejně jako celý účet
-(**Akce → Objednávka → Vyrovnat objednávku**) – zaplacená záloha se odečte sama.
+(**Akce → Nabídka/Objednávka → Vyrovnat objednávku**) – zaplacená záloha se odečte sama.
 
 Na účet se zálohou už lékařka nemůže záznam znovu otevřít („Na účet už je zaplacená
 záloha…“) – změny je třeba vyřešit v pokladně.
@@ -119,7 +121,8 @@ záloha…“) – změny je třeba vyřešit v pokladně.
 Zaplacený záznam už nejde znovu otevřít ani zrušit. Když je potřeba vrátit peníze (vrácený lék,
 chyba v účtu), udělejte **vratku v pokladně**:
 
-1. Menu pokladny (☰ vpravo nahoře) → **Objednávky**, v hledání přepněte na zaplacené.
+1. Menu pokladny (☰ vpravo nahoře) → **Objednávky**, v hledání přepněte na zaplacené –
+   nebo vlevo dole **Akce → Refundace** (otevře rovnou seznam zaplacených objednávek).
 2. Najděte objednávku, vyberte řádky, které se vracejí, a klikněte na **Refundace**.
 3. Zaplaťte vratku stejným způsobem, jakým klient platil (u karty vraťte peníze v terminálu).
 
@@ -188,7 +191,7 @@ dál přijímejte i ve WinVetu.
 
 ## 10. Přehled skladu
 
-**Sklady → Přehled skladu** ukazuje, co je na skladě, po šaržích: produkt, šarže, expirace
+**Sklady → Přehled skladu** (recepce: **Ordinace → Přehled skladu**, jen ke čtení) ukazuje, co je na skladě, po šaržích: produkt, šarže, expirace
 a množství. Řádky jsou seskupené podle produktu – kliknutím na produkt uvidíte jeho šarže.
 
 ![Přehled skladu](img/prehled-skladu.png)
