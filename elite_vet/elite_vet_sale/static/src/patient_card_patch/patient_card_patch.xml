@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="elite_vet_clinic.PatientCard" t-inherit-mode="extension">
+        <xpath expr="//span[@t-if=&quot;rec.state !== 'draft'&quot;][hasclass('evpc-st-done')]" position="after">
+            <span t-if="rec.payment_state and rec.payment_state !== 'none'" class="evsl-pay"
+                  t-att-class="'evsl-pay-' + rec.payment_state">
+                <t t-esc="rec.payment_state_label"/><t t-if="rec.sale_order_name"> · <span class="evpc-num" t-esc="rec.sale_order_name"/></t>
+            </span>
+            <span t-if="rec.payment_state === 'waiting'" class="evsl-pay-hint">Recepce účet najde v pokladně pod tlačítkem Objednávka</span>
+        </xpath>
+    </t>
+</templates>

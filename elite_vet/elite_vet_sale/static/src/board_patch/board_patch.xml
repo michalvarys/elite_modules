@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="elite_vet_reservation.Board" t-inherit-mode="extension">
+        <xpath expr="//div[@t-foreach='otherEventsFor(room)']/div[hasclass('evb-ev-line')]" position="inside">
+            <t t-set="payChip" t-value="paymentChip(e)"/>
+            <span t-if="payChip" class="evsl-chip" t-att-class="payChip.cls" t-att-title="payChip.title" t-esc="payChip.text"/>
+        </xpath>
+    </t>
+</templates>

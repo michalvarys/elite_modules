@@ -1,0 +1,6 @@
+.evsl-chip {
+    flex-shrink: 0; margin-left: 3px; padding: 0 5px; border-radius: 8px; font-size: 10px; line-height: 15px;
+    font-weight: 600; white-space: nowrap;
+}
+.evsl-chip-waiting { background: #fde9b8; color: #7a4b00; }
+.evsl-chip-paid { background: #d3efdc; color: #14663a; }

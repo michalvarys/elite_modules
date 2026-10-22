@@ -5,4 +5,5 @@ from . import stock_layer
 from . import sync
 from . import sale_order
 from . import clinical_record
+from . import reservation
 from . import pos_order

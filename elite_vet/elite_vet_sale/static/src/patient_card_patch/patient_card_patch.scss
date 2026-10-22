@@ -1,0 +1,5 @@
+.evsl-pay { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+.evsl-pay-waiting, .evsl-pay-partial { background: #fde9b8; color: #7a4b00; }
+.evsl-pay-paid { background: #d3efdc; color: #14663a; }
+.evsl-pay-cancelled { background: #e8e8e8; color: #555; }
+.evsl-pay-hint { font-size: 12px; color: #7a4b00; }
