@@ -6,9 +6,12 @@ but has no write access to the record itself. Shapes are documented in README.md
 """
 from datetime import date as date_type
 
+import psycopg2
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from odoo.addons.elite_vet_clinic.models.clinical_record import local_date
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
 from odoo.addons.elite_vet_reservation.models.live import notify_board
 from odoo.addons.elite_vet_sale.models.clinical_record import PAYMENT_STATES
@@ -123,22 +126,31 @@ class Reception(models.AbstractModel):
                 "waiting_minutes": max(0, int((until - since).total_seconds() // 60)) if since else None,
             })
 
-        to_pay = []
-        paid_count = 0
-        labels = dict(PAYMENT_STATES)
-        for rec in records.filtered(lambda r: r.state == "done").sorted(lambda r: (r.start, r.id)):
-            state = rec.payment_state
-            if state == "paid":
-                paid_count += 1
-            elif state in TO_PAY_STATES:
-                to_pay.append({
-                    "record_id": rec.id, "sale_order_id": rec.sale_order_id.id, "pet_name": rec.pet_id.name,
-                    "owner": rec.partner_id.name or None, "partner_id": rec.partner_id.id or None,
-                    "amount": self._amount_to_pay(rec), "payment_state": state,
-                    "payment_state_label": labels[state],
-                })
-        return {"date": date_str(day), "arriving": arriving, "waiting": waiting, "to_pay": to_pay,
+        paid_count = len(records.filtered(lambda r: r.state == "done" and r.payment_state == "paid"))
+        return {"date": date_str(day), "arriving": arriving, "waiting": waiting, "to_pay": self._to_pay(),
                 "paid_count": paid_count}
+
+    @api.model
+    def _to_pay(self):
+        """Unpaid visit bills of any day (waiting / partially paid), oldest first."""
+        today = clinic_today()
+        labels = dict(PAYMENT_STATES)
+        candidates = self._records().search([
+            ("state", "=", "done"), ("sale_order_id", "!=", False), ("sale_order_id.state", "!=", "cancel")],
+            order="start, id")
+        to_pay = []
+        for rec in candidates:
+            state = rec.payment_state
+            if state not in TO_PAY_STATES:
+                continue
+            to_pay.append({
+                "record_id": rec.id, "sale_order_id": rec.sale_order_id.id, "pet_name": rec.pet_id.name,
+                "owner": rec.partner_id.name or None, "partner_id": rec.partner_id.id or None,
+                "amount": self._amount_to_pay(rec), "payment_state": state,
+                "payment_state_label": labels[state], "date": date_str(rec.date),
+                "date_label": "dnes" if rec.date == today else "%d. %d." % (rec.date.day, rec.date.month),
+            })
+        return to_pay
 
     # ------------------------------------------------------------------ write API
 
@@ -151,6 +163,8 @@ class Reception(models.AbstractModel):
             raise UserError(_("Rezervace nebyla nalezena."))
         if reservation.state not in ("confirmed", "done"):
             raise UserError(_("Přijmout lze jen potvrzenou rezervaci."))
+        if local_date(reservation.start) != clinic_today():
+            raise UserError(_("Rezervace není na dnešek – přijmout jde jen dnešní návštěvu."))
         if not reservation.pet_id:
             raise UserError(_("Rezervace z webu ještě není spárovaná s klientem a zvířetem – otevřete Kartotéku."))
         Records = self._records()
@@ -163,10 +177,19 @@ class Reception(models.AbstractModel):
         else:
             candidate = Records._today_record(reservation.pet_id, reservation)
             force_new = not candidate or candidate.state != "draft"
-            data = Records.open_today_record(reservation.pet_id.id, reservation.id, force_new=force_new)
-            record = Records.browse(data["id"])
-            if force_new:
-                record.doctor_id = reservation.doctor_id
+            try:
+                with self.env.cr.savepoint():
+                    data = Records.open_today_record(reservation.pet_id.id, reservation.id, force_new=force_new)
+            except psycopg2.IntegrityError:
+                # Concurrent check-in (two tills): the other one created the reservation's record.
+                self.env.invalidate_all()
+                record = Records.search([("reservation_id", "=", reservation.id)], limit=1)
+                if not record:
+                    raise
+            else:
+                record = Records.browse(data["id"])
+                if force_new:
+                    record.doctor_id = reservation.doctor_id
         self._mark_arrived(record, employee_name)
         notify_board(self.env)
         return self._record_dict(record)

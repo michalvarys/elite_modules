@@ -1,5 +1,9 @@
+from datetime import timedelta
+from unittest.mock import patch
+
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
+from odoo.tools import mute_logger
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
 
@@ -15,9 +19,13 @@ class TestToday(ReceptionCase):
     def by_key(self, items, key, value):
         return [item for item in items if item[key] == value]
 
-    def done_with_bill(self, pet):
+    def done_with_bill(self, pet, days_ago=0):
         nurse = self.as_user(self.nurse)
-        data = nurse.open_today_record(pet.id, force_new=True)
+        if days_ago:
+            data = {"id": self.Record.create({
+                "pet_id": pet.id, "start": self.today_utc(10) - timedelta(days=days_ago)}).id}
+        else:
+            data = nurse.open_today_record(pet.id, force_new=True)
         nurse.add_item(data["id"], self.exam.id)
         nurse.mark_done(data["id"])
         return self.Record.browse(data["id"])
@@ -72,8 +80,28 @@ class TestToday(ReceptionCase):
                          ("waiting", "Čeká na platbu"))
         self.assertAlmostEqual(to_pay[0]["amount"], 450.0, places=2)
         self.assertEqual(to_pay[0]["partner_id"], self.owner.id)
+        self.assertEqual((to_pay[0]["date"], to_pay[0]["date_label"]), (clinic_today().isoformat(), "dnes"))
         self.assertFalse(self.by_key(data["to_pay"], "record_id", paid.id), "paid bill not in to_pay")
         self.assertEqual(data["paid_count"], baseline_paid + 1)
+
+    def test_to_pay_lists_unpaid_bills_of_earlier_days(self):
+        """Ruling R3: every unpaid bill, oldest first; paid_count only for the selected day."""
+        reception = self.api(self.reception)
+        baseline_paid = reception.today_data()["paid_count"]
+        old_unpaid = self.done_with_bill(self.new_pet("Včerejší dlužník"), days_ago=1)
+        old_paid = self.done_with_bill(self.new_pet("Včerejší zaplacený"), days_ago=1)
+        self.settle(old_paid.sale_order_id)
+        today_bill = self.done_with_bill(self.new_pet("Dnešní dlužník"))
+        data = reception.today_data()
+        ids = [item["record_id"] for item in data["to_pay"]]
+        self.assertIn(old_unpaid.id, ids)
+        self.assertNotIn(old_paid.id, ids)
+        self.assertLess(ids.index(old_unpaid.id), ids.index(today_bill.id), "oldest first")
+        item = self.by_key(data["to_pay"], "record_id", old_unpaid.id)[0]
+        yesterday = clinic_today() - timedelta(days=1)
+        self.assertEqual(item["date"], yesterday.isoformat())
+        self.assertEqual(item["date_label"], "%d. %d." % (yesterday.day, yesterday.month))
+        self.assertEqual(data["paid_count"], baseline_paid, "yesterday's payment not counted today")
 
     def test_today_data_requires_reception(self):
         outsider = self.env["res.users"].with_context(no_reset_password=True).create({
@@ -125,6 +153,45 @@ class TestToday(ReceptionCase):
         res.write({"pet_id": pet.id, "partner_id": pet.partner_id.id})
         data = self.api(self.reception).check_in(res.id)
         self.assertEqual(self.Record.browse(data["record_id"]).pet_id, pet)
+
+    def test_check_in_record_created_by_another_path(self):
+        pet = self.new_pet("Jinou cestou")
+        res = self.reservation(9, 0, pet=pet)
+        other = self.Record.create({"pet_id": pet.id, "reservation_id": res.id})
+        data = self.api(self.reception).check_in(res.id)
+        self.assertEqual(data["record_id"], other.id)
+        self.assertEqual(data["stage"], "waiting")
+
+    @mute_logger("odoo.sql_db")
+    def test_check_in_concurrent_creation(self):
+        """Another till creates the reservation's record meanwhile: the unique constraint is
+        caught and that record is returned."""
+        pet = self.new_pet("Souběžný")
+        res = self.reservation(9, 0, pet=pet)
+        Model = type(self.Record)
+        competitor = []
+        original_today_record = Model._today_record
+
+        def today_record_with_competitor(model, pet_arg, reservation=None):
+            if not competitor:
+                competitor.append(self.Record.sudo().create({"pet_id": pet.id, "reservation_id": res.id}))
+            return model.browse()
+
+        with patch.object(Model, "_today_record", today_record_with_competitor), \
+                patch.object(Model, "search_count", lambda model, domain, limit=None: 0):
+            data = self.api(self.reception).check_in(res.id)
+        self.assertTrue(original_today_record)
+        self.assertEqual(data["record_id"], competitor[0].id)
+        self.assertEqual(self.Record.search_count([("reservation_id", "=", res.id)]), 1)
+
+    def test_check_in_only_today(self):
+        pet = self.new_pet("Zítřejší")
+        res = self.reservation(9, 0, pet=pet, start=self.today_utc(9) + timedelta(days=1),
+                               stop=self.today_utc(9, 20) + timedelta(days=1))
+        with self.assertRaises(UserError) as err:
+            self.api(self.reception).check_in(res.id)
+        self.assertEqual(str(err.exception), "Rezervace není na dnešek – přijmout jde jen dnešní návštěvu.")
+        self.assertFalse(self.Record.search_count([("pet_id", "=", pet.id)]))
 
     def test_check_in_requires_reception(self):
         outsider = self.env["res.users"].with_context(no_reset_password=True).create({

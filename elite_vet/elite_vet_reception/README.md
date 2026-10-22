@@ -38,15 +38,19 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 - **waiting** – rozepsané záznamy dne se stavem návštěvy, podle příchodu:
   `record_id, pet_name, owner, doctor, room, stage, stage_label, arrived_time, waiting_minutes`
   (u V ordinaci minuty od příchodu do zavolání).
-- **to_pay** – uzavřené záznamy dne se stavem platby Čeká na platbu / Částečně zaplaceno:
-  `record_id, sale_order_id, pet_name, owner, partner_id, amount, payment_state, payment_state_label`
-  (`amount` = zbývá zaplatit).
+- **to_pay** – všechny nezaplacené účty návštěv (Čeká na platbu / Částečně zaplaceno) bez ohledu
+  na den, nejstarší první:
+  `record_id, sale_order_id, pet_name, owner, partner_id, amount, payment_state, payment_state_label,
+  date, date_label` (`amount` = zbývá zaplatit, `date_label` = „dnes“ nebo „D. M.“).
 - **paid_count** – počet dnes zaplacených záznamů.
 - Záznam (`check_in` / `walk_in` / `call_patient`): `record_id, stage, stage_label, state, pet_id,
   pet_name, reservation_id, doctor, arrived_time, received_by`.
 
 Pravidla přijetí:
 
+- Přijmout jde jen rezervaci na dnešek (den kliniky): „Rezervace není na dnešek – přijmout jde jen
+  dnešní návštěvu.“
+- Souběžné přijetí ze dvou pokladen: druhé narazí na unikátnost rezervace a vrátí už založený záznam.
 - Rezervace, která už záznam má (lékařka otevřela kartu dřív), vrátí tento záznam; nový nevznikne
   a stav V ordinaci zůstane.
 - Webová rezervace bez zvířete skončí chybou „Rezervace z webu ještě není spárovaná s klientem
