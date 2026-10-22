@@ -1,1 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_winvet_stock_layer_manager,elite.vet.winvet.stock.layer.manager,model_elite_vet_winvet_stock_layer,elite_vet_reservation.group_reservation_manager,1,0,0,0
+access_winvet_stock_total_manager,elite.vet.winvet.stock.total.manager,model_elite_vet_winvet_stock_total,elite_vet_reservation.group_reservation_manager,1,0,0,0

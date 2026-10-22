@@ -128,6 +128,10 @@ class WinvetSync(models.AbstractModel):
     def _winvet_fixups(self):
         return list(FIXUPS)
 
+    def _after_full_run(self, entity, stats, errors):
+        """Called after the last batch of a complete full run of `entity` was reconciled and
+        linked; messages appended to `errors` show in the sync status."""
+
     # ------------------------------------------------------------------ entry points
 
     @api.model
@@ -178,6 +182,7 @@ class WinvetSync(models.AbstractModel):
         if deleted:
             self._remove(entity, deleted, stats)
 
+        full_run_done = False
         if mode == "full":
             if not run_id:
                 errors.append("plná synchronizace bez run_id – sesouhlasení přeskočeno")
@@ -190,9 +195,12 @@ class WinvetSync(models.AbstractModel):
                         errors.append("běh %s nemá všechny dávky – sesouhlasení přeskočeno" % run_id)
                     else:
                         self._reconcile(entity, seen, stats)
+                        full_run_done = True
                     Run.cleanup(run_id, entity)
 
         self._fixups()
+        if full_run_done:
+            self._after_full_run(entity, stats, errors)
         self.env["elite.vet.winvet.status"].get_status().record_push(
             entity, mode, run_id, stats, "; ".join(errors[:5]) if errors else None)
         result = {"ok": True}

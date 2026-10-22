@@ -52,6 +52,30 @@ nová daň to má nastavené sama).
 Dokud je `1`, WinVet vede ceník, ceny a stav skladu a Odoo je jen zrcadlí. Po přepnutí
 z WinVetu se nastaví na `0`.
 
+## Stav skladu ze WinVetu
+
+Most (kontrakt v3) posílá vždy plně entity `stock_lots` (vrstvy příjmu: řádek příjemky minus
+výdeje na něj navázané) a `stock_totals` (stav položky z `VARIANTA_SKLAD_STAV`). Ukládají se
+do `elite.vet.winvet.stock.layer` a `elite.vet.winvet.stock.total` (čtení pro správce);
+řádky bez položky se přeskočí, záporné množství vrstvy (přeskladněný příjem) se uloží, jak je.
+
+Po poslední dávce plného běhu `stock_totals` (a jen když `is_winvet_master()`) spustí
+`elite.vet.winvet.sync._after_full_run` zrcadlo `stock.layer._apply_mirror()` pro každý
+skladový produkt položky ceníku:
+
+1. **Šarže:** vrstva → `stock.lot` (název = šarže, bez šarže `WV-<id vrstvy>`; expirace =
+   datum expirace ve 12:00). Vrstvy se stejnou šarží se sečtou; záporná vrstva se počítá jako 0.
+2. **Dorovnání:** rozdíl `stav − součet vrstev` se přidá na šarži s nejpozdější expirací
+   (stav bez vrstev dostane šarži `WV-P<id položky>`); chybějící množství se ubírá od nejpozdější
+   expirace dolů. Záporný stav WinVetu se ořízne na 0.
+3. **Stav:** `stock.quant` na skladové lokaci skladu se nastaví inventurou
+   (`inventory_quantity` + `action_apply_inventory`) přesně na tyto množství; šarže, které už
+   ve vrstvách nejsou (a kvanty v podlokacích), se vynulují. Pohyby z Odoo plný běh přepíše.
+4. **Nákupní cena** produktu = cena za MJ nejnovější vrstvy bez DPH.
+
+Upozornění („Položka X: rozdíl Y proti stavu WinVetu“, když vrstvy WinVetu nesedí na jeho
+stav, a oříznutí záporného stavu) jdou do chyb pushe, tedy do Stavu synchronizace.
+
 ## Role
 
 Skupiny POS, Prodeje a Skladu se odvozují ze skupin rezervací (řada Recepce < Sestra <
