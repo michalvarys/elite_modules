@@ -4,7 +4,16 @@
     <t t-name="elite_vet_reception.BookingScreen">
         <div class="o_ev_booking screen h-100 w-100 overflow-auto bg-100 p-2 p-md-3">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                <h2 class="o_ev_title mb-0 me-2">Objednat</h2>
+                <h2 class="o_ev_title mb-0 me-2"><t t-if="state.move">Přesunout rezervaci</t><t t-else="">Objednat</t></h2>
+                <t t-if="state.move">
+                    <div class="o_ev_client fs-5 o_ev_move_info">
+                        <i class="fa fa-arrows me-1"/><b t-esc="state.move.pet_name or state.move.owner or 'Rezervace'"/>
+                        <span t-if="state.move.owner and state.move.pet_name" class="text-muted"> · <t t-esc="state.move.owner"/></span>
+                        <span class="text-muted"> · teď <t t-esc="state.move.label"/></span>
+                    </div>
+                    <button class="btn btn-light btn-lg o_ev_move_leave" t-on-click="leaveMove">Nepřesouvat</button>
+                </t>
+                <t t-else="">
                 <div t-if="pet" class="o_ev_client fs-5">
                     <i class="fa fa-paw me-1"/><b class="o_ev_booking_pet" t-esc="pet.name"/>
                     <span t-if="pet.owner" class="text-muted"> · <t t-esc="pet.owner"/></span>
@@ -13,6 +22,14 @@
                 <button class="btn btn-light btn-lg" t-on-click="pickClient">
                     <i class="fa fa-address-book-o me-1"/><t t-if="pet">Jiný klient…</t><t t-else="">Kartotéka…</t>
                 </button>
+                </t>
+            </div>
+            <div t-if="state.prefill" class="alert mb-3 o_ev_prefill"
+                 t-att-class="state.prefill.found === false ? 'alert-warning' : 'alert-info'">
+                Z tabule: <b><t t-esc="state.prefill.room"/>, <t t-esc="dayLabel(state.prefill.day)"/>, <t t-esc="state.prefill.label"/></b>.
+                <t t-if="!state.procedureId"> Vyberte úkon – čas se vybere, pokud je pro něj volný.</t>
+                <t t-elif="state.prefill.found === false"> Tento čas pro vybraný úkon volný není – vyberte z volných časů dne.</t>
+                <t t-elif="state.prefill.found"> Čas je vybraný.</t>
             </div>
             <div class="row g-3">
                 <div class="col-12 col-lg-5 d-flex flex-column gap-2">
@@ -46,7 +63,7 @@
                             <input type="date" class="form-control form-control-lg w-auto" t-att-value="state.day" t-on-change="onDayInput"/>
                         </div>
                     </div>
-                    <label class="o_ev_field">
+                    <label t-if="!state.move" class="o_ev_field">
                         <b>Poznámka k rezervaci</b>
                         <input type="text" class="form-control form-control-lg" t-model="state.note" placeholder="nepovinné"/>
                     </label>
@@ -71,13 +88,20 @@
                         </div>
                     </t>
                     <div class="d-flex flex-wrap gap-2 mt-3">
-                        <button class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
+                        <button t-if="state.move" class="btn btn-primary btn-lg o_ev_move" t-att-disabled="!state.selected or state.saving" t-on-click="moveReservation">
+                            <t t-if="state.selected">Přesunout na <t t-esc="state.selected.time"/></t>
+                            <t t-else="">Přesunout</t>
+                        </button>
+                        <button t-else="" class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
                             <t t-if="state.selected">Objednat na <t t-esc="state.selected.time"/></t>
                             <t t-else="">Objednat</t>
                         </button>
                         <button class="btn btn-light btn-lg" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Otevřít tabuli</button>
                     </div>
-                    <div t-if="state.selected and !pet" class="text-warning mt-2">Pro objednání vyberte zvíře v Kartotéce.</div>
+                    <div t-if="state.selected and !pet and !state.move" class="text-warning mt-2">Pro objednání vyberte zvíře v Kartotéce.</div>
+                    <div t-if="state.moved" class="alert alert-success mt-3 o_ev_moved">
+                        Přesunuto na <b t-esc="state.moved"/>. Při změně času dostane klient e-mail, pokud ho má vyplněný.
+                    </div>
                     <div t-if="state.booked" class="alert alert-success mt-3 o_ev_booked">
                         Objednáno: <b t-esc="state.booked"/>. Potvrzení dostane klient e-mailem, pokud ho má vyplněný.
                     </div>

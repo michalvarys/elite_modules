@@ -6,7 +6,6 @@ const MODEL = "elite.vet.reception";
 // (pos_hr returns to it after the PIN login).
 export const TODAY_SCREEN = "ReceptionTodayScreen";
 export const BOOKING_SCREEN = "ReceptionBookingScreen";
-export const BOARD_URL = "/odoo/action-elite_vet_reservation.action_board";
 export const CLINIC_TZ = "Europe/Prague";
 
 /** Today in the clinic as "YYYY-MM-DD". */

@@ -3,3 +3,4 @@ from . import test_card_index
 from . import test_booking
 from . import test_roles
 from . import test_patient_list
+from . import test_board

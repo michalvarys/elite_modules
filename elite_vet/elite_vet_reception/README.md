@@ -120,7 +120,7 @@ Soubory `static/src/pos/` (bundle `point_of_sale._assets_pos`). Jen v pokladně 
 pokladny zůstávají standardní.
 
 - **Lišta** (jediný patch navbaru, `navbar_patch/`): Dnes, Kartotéka…, Objednat, Pokladna
-  (standardní obrazovka produktů), Tabule (backendová tabule ve stejném okně).
+  (standardní obrazovka produktů), Tabule (dialog `BoardDialog` nad pokladnou, viz níže).
 - **Dnes** (`ReceptionTodayScreen`): výchozí obrazovka po načtení pokladny i po přihlášení PINem
   (patch `PosStore.firstScreen` a přesměrování ProductScreen → Dnes jen hned po přihlašovací
   obrazovce, když předtím nebyla otevřená Pokladna). Tři sloupce z `today_data`, přepínání dní
@@ -144,10 +144,48 @@ pokladny zůstávají standardní.
   Zavřít. Po přiřazení se Dnes obnoví.
 - **Objednat** (`ReceptionBookingScreen`): úkon, lékařka, den ‹ Dnes › / datum, další volný den,
   volné časy (`free_slots`), poznámka, Objednat (`book`); po úspěchu i po chybě („mezitím
-  obsazeno“) se časy načtou znovu.
+  obsazeno“) se časy načtou znovu. Props z tabule (POS obrazovku nepřipojuje znovu, jen mění
+  props – `onWillUpdateProps`, rozlišení podle `key`): `prefill` `{day, minute, room_id, room, key}`
+  (klik do volného místa: den, po výběru úkonu se vybere čas v té ordinaci, když je volný, jinak
+  upozornění), `move` `{reservation_id, procedure_id, doctor_id, day, label, pet_name, owner,
+  procedure, key}` (režim Přesunout rezervaci: úkon a lékařka předvyplněné, tlačítko
+  „Přesunout na …“ = `move_reservation`). „Otevřít tabuli“ otevře `BoardDialog` na vybraném dni.
+- **Tabule** (`board_dialog/`, `BoardDialog`, velikost dialogu `fs`): data z
+  `elite.vet.reservation.board_data(day)` (stejná jako backendová tabule, `payment_state`
+  z elite_vet_sale) ve vlastní šabloně a SCSS (třídy `o_ev_board_*`, geometrie jako backend:
+  1,6 px/min, pruhy služeb lékařek, události s barvou úkonu a proužkem lékařky, blokace, štítek
+  k pokladně / zaplaceno, čára „teď“ v čase kliniky). Den ‹ Dnes › a datum; obnovení zprávou
+  `elite_vet_reservation/changed` a každých 30 s, časovače se ruší při zavření. Klik na rezervaci
+  → `BoardEventDialog` (`board_reservation`): Přijmout (`check_in` hlavní rezervace), Klient…
+  (Kartotéka v režimu rezervace nad tabulí; když Kartotéka přepne obrazovku, tabule se zavře),
+  Přesunout (Objednat s `move`), Zrušit rezervaci (potvrzení v dialogu, `cancel_reservation`).
+  Přetažení (HTML5 drag & drop, jen potvrzené rezervace) → `move_reservation`. Klik do volného
+  místa (i přes blokaci „jen web“) → dialog se zavře, Objednat s `prefill` (vybrané zvíře
+  z Objednat zůstává). Blokace jsou jen ke čtení.
 - Chyby API (`UserError`) se ukazují jako upozornění pokladny česky.
 - Kdo pokladnu otevírá (počáteční stav hotovosti), musí mít u uživatele vyplněný e-mail – Odoo
   při otevření relace zapisuje zprávu a bez adresy odesílatele otevření odmítne.
+
+## Tabule v pokladně – API
+
+Stejné API `elite.vet.reception`, stejná kontrola role. Den tabule čte pokladna přímo
+`elite.vet.reservation.board_data` (recepce má na rezervace práva čtení i zápisu). Přesun
+a zrušení jdou s právy volajícího přes existující metody rezervace – žádná vlastní pravidla
+dostupnosti.
+
+| Metoda | Vrací |
+|---|---|
+| `board_reservation(reservation_id)` | detail: `reservation_id, main_id, state, state_label, source, date, date_label, is_today, time, time_label, room_id, room, procedure_id, procedure, doctor_id, doctor, partner_id, owner, pet_id, pet_name, phone, email, problem, note, linked, is_second_room, needs_match, has_record, visit_label, payment_state, payment_state_label, can_check_in, can_move, can_cancel, cancel_sends_email` |
+| `move_reservation(reservation_id, day, minute, room_id=False)` | `board_reservation` po přesunu přes `board_move` (lékařka ve službě, ordinace úkonu, kontrola překryvu při zápisu) |
+| `cancel_reservation(reservation_id)` | `{reservation_id, state, email_sent}` – `action_cancel("clinic")` hlavní rezervace (e-mail o zrušení jako v backendu, jen s `contact_email`) |
+
+- U druhé ordinace společného zákroku (`is_second_room`) patří klient, návštěva a zrušení hlavní
+  rezervaci (`main_id`); přesun se provede u kliknuté rezervace (čas se synchronizuje).
+- `can_check_in`: dnešní potvrzená rezervace se spárovaným zvířetem bez návštěvy;
+  `can_move` / `can_cancel`: potvrzená (zrušit i čekající z webu) a bez návštěvy.
+- Přesun i zrušení rezervace, která už má návštěvu: „Klient už je přijatý (návštěva je založená)
+  – rezervaci nejde přesunout / zrušit.“ Přesunout jde jen potvrzenou rezervaci, zrušit jen
+  potvrzenou nebo čekající. Blokace: „Rezervace nebyla nalezena.“
 
 ## Ordinace: Moji pacienti dnes (karta pacienta)
 

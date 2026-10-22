@@ -5,7 +5,8 @@ import { patch } from "@web/core/utils/patch";
 import { Navbar } from "@point_of_sale/app/navbar/navbar";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
-import { BOARD_URL, BOOKING_SCREEN, TODAY_SCREEN } from "@elite_vet_reception/pos/reception_api";
+import { BoardDialog } from "@elite_vet_reception/pos/board_dialog/board_dialog";
+import { BOOKING_SCREEN, TODAY_SCREEN } from "@elite_vet_reception/pos/reception_api";
 
 export class ReceptionTabs extends Component {
     static template = "elite_vet_reception.ReceptionTabs";
@@ -35,7 +36,7 @@ export class ReceptionTabs extends Component {
         if (tab.key === "card") {
             this.dialog.add(CardIndexDialog, {});
         } else if (tab.key === "board") {
-            window.location = BOARD_URL;
+            this.dialog.add(BoardDialog, {});
         } else {
             this.pos.showScreen(tab.screen);
         }

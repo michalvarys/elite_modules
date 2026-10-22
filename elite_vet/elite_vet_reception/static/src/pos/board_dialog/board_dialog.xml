@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_vet_reception.BoardDialog">
+        <Dialog title="title" size="'fs'" contentClass="'o_ev_board_dialog'" bodyClass="'o_ev_board_body'" withBodyPadding="false">
+            <div class="o_ev_board">
+                <div class="o_ev_board_toolbar">
+                    <div class="btn-group">
+                        <button class="btn btn-light btn-lg o_ev_board_prev" title="Předchozí den" t-on-click="() => this.changeDay(-1)"><i class="fa fa-chevron-left"/></button>
+                        <button class="btn btn-light btn-lg o_ev_board_today" t-on-click="() => this.changeDay(0)">Dnes</button>
+                        <button class="btn btn-light btn-lg o_ev_board_next" title="Další den" t-on-click="() => this.changeDay(1)"><i class="fa fa-chevron-right"/></button>
+                    </div>
+                    <input type="date" class="form-control form-control-lg w-auto o_ev_board_date" t-att-value="state.day" t-on-change="onDayInput"/>
+                    <h3 class="o_ev_board_day mb-0" t-esc="dayTitle"/>
+                    <span t-if="state.data and state.data.day_note" class="o_ev_board_day_note"
+                          t-att-title="state.data.day_note + ' – recepce v tento den objednává normálně.'" t-esc="state.data.day_note"/>
+                    <i t-if="state.loading or state.moving" class="fa fa-circle-o-notch fa-spin text-muted"/>
+                    <span class="flex-grow-1"/>
+                    <span class="o_ev_board_hint d-none d-lg-inline">Klik na rezervaci = detail · klik do volného místa = Objednat · rezervaci lze přetáhnout</span>
+                </div>
+                <div t-if="state.error" class="alert alert-danger m-3">
+                    <t t-esc="state.error"/>
+                    <button class="btn btn-light ms-2" t-on-click="load">Zkusit znovu</button>
+                </div>
+                <div t-elif="!state.data" class="p-4 text-muted">Načítám…</div>
+                <div t-else="" class="o_ev_board_grid" t-ref="grid">
+                    <div class="o_ev_board_axis">
+                        <div class="o_ev_board_head"/>
+                        <div class="o_ev_board_axis_body" t-att-style="'height:' + bodyHeight + 'px'">
+                            <div t-foreach="rows" t-as="m" t-key="m" class="o_ev_board_tick" t-att-style="'top:' + top(m) + 'px'">
+                                <span t-if="m % 60 === 0" t-esc="hhmm(m)"/>
+                            </div>
+                            <div t-if="showNow" class="o_ev_board_now o_ev_board_now_axis" t-att-style="'top:' + top(state.now) + 'px'">
+                                <span t-esc="hhmm(state.now)"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div t-if="!state.data.rooms.length" class="p-4 text-muted">Žádné ordinace.</div>
+                    <div t-foreach="state.data.rooms" t-as="room" t-key="room.id" class="o_ev_board_col" t-att-data-room-id="room.id">
+                        <div class="o_ev_board_head" t-att-style="'border-top: 4px solid ' + (room.color_hex or '#94a3b8')">
+                            <div class="o_ev_board_room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
+                            <div class="o_ev_board_doctors">
+                                <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge o_ev_board_overlap" t-esc="o.label"/>
+                                <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge o_ev_board_doctor_chip"
+                                      t-att-style="'background:' + d.color" t-att-title="d.name + ' ' + d.time_label">
+                                    <t t-esc="d.name"/> <t t-esc="d.time_label"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="o_ev_board_col_body" t-att-style="'height:' + bodyHeight + 'px'"
+                             t-on-click="(ev) => this.onColumnClick(ev, room)"
+                             t-on-dragover="onDragOver" t-on-drop="(ev) => this.onDrop(ev, room)">
+                            <div t-foreach="rows" t-as="m" t-key="m" class="o_ev_board_cell"
+                                 t-att-class="{'o_ev_board_closed': !isOpen(room, m), 'o_ev_board_hour': m % 60 === 0}"
+                                 t-att-style="'top:' + top(m) + 'px;height:' + height(m, m + state.data.step) + 'px'"/>
+                            <div t-foreach="room.doctors" t-as="d" t-key="'d' + d.id" class="o_ev_board_band"
+                                 t-att-style="bandStyle(d)" t-att-title="d.name + ' ' + d.time_label">
+                                <span class="o_ev_board_band_text"><t t-esc="d.initials"/> <t t-esc="d.time_label"/></span>
+                            </div>
+                            <div t-foreach="globalBlocks" t-as="b" t-key="'g' + b.id" class="o_ev_board_event"
+                                 t-att-class="eventClass(b)" t-att-style="eventStyle(room, b)" t-att-title="eventTitle(b)">
+                                <span class="o_ev_board_block_tag"><t t-if="isWebBlock(b)">jen web · </t><t t-esc="b.name"/></span>
+                            </div>
+                            <div t-foreach="eventsFor(room)" t-as="e" t-key="e.id" class="o_ev_board_event"
+                                 t-att-class="eventClass(e)" t-att-style="eventStyle(room, e)" t-att-title="eventTitle(e)"
+                                 t-att-data-id="e.id" t-att-draggable="isMovable(e) ? 'true' : 'false'"
+                                 t-on-dragstart="(ev) => this.onDragStart(ev, e)" t-on-dragend="onDragEnd"
+                                 t-on-click.stop="() => this.openEvent(e)">
+                                <t t-if="e.kind === 'block'">
+                                    <span class="o_ev_board_block_tag"><t t-if="isWebBlock(e)">jen web · </t><t t-esc="e.name"/></span>
+                                </t>
+                                <t t-else="">
+                                    <div class="o_ev_board_ev_line">
+                                        <span t-if="e.doctor_initials" class="o_ev_board_initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
+                                        <span class="o_ev_board_ev_text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
+                                        <i t-if="e.source === 'web'" class="fa fa-globe o_ev_board_icon" title="Z webu"/>
+                                        <i t-if="e.linked" class="fa fa-link o_ev_board_icon" t-att-title="'Společný zákrok, také v: ' + e.linked"/>
+                                        <span t-if="e.symbol" class="o_ev_board_symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
+                                        <t t-set="chip" t-value="paymentChip(e)"/>
+                                        <span t-if="chip" class="o_ev_board_chip" t-att-class="chip.cls" t-att-title="chip.title" t-esc="chip.text"/>
+                                    </div>
+                                    <div t-if="!isShort(e) and e.procedure" class="o_ev_board_ev_proc" t-esc="e.procedure"/>
+                                </t>
+                            </div>
+                            <div t-if="showNow" class="o_ev_board_now" t-att-style="'top:' + top(state.now) + 'px'"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-secondary btn-lg o_ev_board_close" t-on-click="props.close">Zavřít</button>
+            </t>
+        </Dialog>
+    </t>
+
+    <t t-name="elite_vet_reception.BoardEventDialog">
+        <Dialog title="title" size="'md'" contentClass="'o_ev_board_detail'">
+            <div t-if="!detail" class="text-muted">Načítám…</div>
+            <t t-else="">
+                <dl class="o_ev_board_facts mb-0">
+                    <dt>Klient</dt>
+                    <dd class="o_ev_board_detail_owner"><t t-esc="detail.owner or 'bez jména'"/>
+                        <span t-if="detail.phone" class="text-muted"> · <t t-esc="detail.phone"/></span></dd>
+                    <dt>Zvíře</dt>
+                    <dd class="o_ev_board_detail_pet">
+                        <t t-esc="detail.pet_name or '–'"/>
+                        <span t-if="detail.needs_match" class="o_ev_board_badge o_ev_board_badge_warn ms-1">nespárováno</span>
+                    </dd>
+                    <dt>Úkon</dt>
+                    <dd t-esc="detail.procedure or '–'"/>
+                    <dt>Lékařka</dt>
+                    <dd t-esc="detail.doctor or '–'"/>
+                    <dt>Čas</dt>
+                    <dd><t t-esc="detail.date_label"/>, <t t-esc="detail.time_label"/><t t-if="detail.room"> · <t t-esc="detail.room"/></t></dd>
+                    <dt>Stav</dt>
+                    <dd>
+                        <span class="o_ev_board_badge o_ev_board_detail_state" t-esc="stateLabel"/>
+                        <span t-if="detail.payment_state_label and detail.payment_state !== 'none'" class="o_ev_board_badge ms-1" t-esc="detail.payment_state_label"/>
+                        <span t-if="detail.source === 'web'" class="text-muted ms-1">z webu</span>
+                    </dd>
+                    <t t-if="detail.linked">
+                        <dt>Společně s</dt>
+                        <dd t-esc="detail.linked"/>
+                    </t>
+                    <t t-if="detail.problem">
+                        <dt>Popis problému</dt>
+                        <dd class="o_ev_board_pre" t-esc="detail.problem"/>
+                    </t>
+                    <t t-if="detail.note">
+                        <dt>Poznámka</dt>
+                        <dd class="o_ev_board_pre" t-esc="detail.note"/>
+                    </t>
+                </dl>
+                <div t-if="detail.is_today and detail.state === 'confirmed' and !detail.has_record and detail.needs_match" class="text-warning mt-2">
+                    Rezervace z webu ještě není spárovaná – přijmout půjde po přiřazení klienta (Klient…).
+                </div>
+                <div t-if="state.confirmCancel" class="alert alert-warning mt-3 mb-0 o_ev_board_confirm">
+                    <div class="mb-2" t-esc="cancelQuestion"/>
+                    <button class="btn btn-danger btn-lg me-2 o_ev_board_cancel_yes" t-att-disabled="state.busy" t-on-click="cancel">Ano, zrušit rezervaci</button>
+                    <button class="btn btn-light btn-lg" t-att-disabled="state.busy" t-on-click="keep">Ne</button>
+                </div>
+            </t>
+            <t t-set-slot="footer">
+                <t t-if="detail and !state.confirmCancel">
+                    <button t-if="detail.can_check_in" class="btn btn-primary btn-lg o_ev_board_check_in" t-att-disabled="state.busy" t-on-click="checkIn">Přijmout</button>
+                    <button t-if="detail.state !== 'cancelled'" class="btn btn-light btn-lg o_ev_board_client" t-att-disabled="state.busy" t-on-click="openClient">
+                        <i class="fa fa-address-book-o me-1"/>Klient…
+                    </button>
+                    <button t-if="detail.can_move" class="btn btn-light btn-lg o_ev_board_move" t-att-disabled="state.busy" t-on-click="move">
+                        <i class="fa fa-arrows me-1"/>Přesunout
+                    </button>
+                    <button t-if="detail.can_cancel" class="btn btn-outline-danger btn-lg o_ev_board_cancel" t-att-disabled="state.busy" t-on-click="askCancel">Zrušit rezervaci</button>
+                </t>
+                <button class="btn btn-secondary btn-lg" t-on-click="props.close">Zavřít</button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

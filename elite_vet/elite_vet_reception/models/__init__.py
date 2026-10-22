@@ -2,6 +2,7 @@ from . import clinical_record
 from . import reception
 from . import card_index
 from . import booking
+from . import board
 from . import setup
 from . import ir_ui_menu
 from . import res_users
