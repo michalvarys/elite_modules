@@ -17,7 +17,7 @@ Cesta návštěvy:
 | Stav | Kdo | Kde |
 |---|---|---|
 | Objednáno | web nebo recepce | rezervace (záložka **Objednat**, tabule, web) |
-| Čeká | recepce | **Přijmout** v záložce Dnes, nebo **Přijmout bez objednání** v Kartotéce |
+| Čeká | recepce | **Přijmout** v záložce Dnes, nebo **+ Bez objednání** v záložce Dnes |
 | V ordinaci | lékařka / sestra | **Zavolat** v Moji pacienti dnes, nebo otevření karty pacienta |
 | K pokladně | lékařka | **Hotovo, k pokladně** v kartě pacienta |
 | Zaplaceno | recepce | **Zaplatit** v záložce Dnes |
@@ -48,9 +48,9 @@ Pokladna se otevře na záložce **Dnes**. Nahoře je lišta:
 | Tlačítko | Co dělá |
 |---|---|
 | **Dnes** | přehled dne: kdo přichází, kdo čeká, co se platí |
-| **Kartotéka…** | okno s klienty a zvířaty (hledání, nový klient, úpravy, přijetí bez objednání) |
+| **Kartotéka…** | okno s klienty a zvířaty – jen hledání, prohlížení, nový klient a úpravy |
 | **Objednat** | objednání termínu |
-| **Pokladna** | běžná obrazovka pokladny (prodej zboží, Akce, Nabídka/Objednávka …) |
+| **Pokladna** | běžná obrazovka pokladny (prodej zboží, tlačítko **Klient** u účtu, Akce, Nabídka/Objednávka …) |
 | **Tabule** | denní tabule ordinací v okně nad pokladnou (kapitola 5) |
 | zámek | zamkne pokladnu (kapitola 7) |
 | ☰ | menu pokladny (uzávěrka, objednávky …) |
@@ -72,8 +72,8 @@ Přehled se obnovuje sám: když lékařka zavolá pacienta nebo uzavře účet,
 během pár vteřin (pro jistotu se navíc obnoví každých 30 s). Ručně ho obnoví šipka vpravo nahoře.
 
 Šipky **‹ ›** vedle data ukážou předchozí / další den (např. kdo je objednaný zítra),
-**Dnes** vás vrátí. U jiného dne než dneška tlačítko Přijmout není – přijmout jde jen dnešní
-návštěvu.
+**Dnes** vás vrátí. U jiného dne než dneška tlačítka Přijmout a + Bez objednání nejsou – přijmout
+jde jen dnešní návštěvu.
 
 ### Přijmout objednaného klienta
 
@@ -87,6 +87,19 @@ návštěvu.
 Když lékařka kartu otevřela dřív, než jste klienta přijali, Přijmout nic nezdvojí – použije se
 záznam, který už existuje.
 
+### Přijmout bez objednání (+ Bez objednání)
+
+Klient přišel bez rezervace:
+
+1. Klikněte **+ Bez objednání** u nadpisu **Přicházejí**. Otevře se Kartotéka s nadpisem
+   „Přijmout bez objednání“.
+2. Najděte klienta (nebo ho založte tlačítkem **+ Nový klient**, kapitola 3) a klikněte na zvíře.
+3. Vyberte **Lékařku**: konkrétní, nebo **kterákoli** – takového pacienta vidí v Čekají všechny
+   lékařky s poznámkou „kterákoli lékařka“ a ujme se ho ta, která ho zavolá.
+4. Klikněte **Přijmout**. Okno se zavře a zvíře je v **Čekárně a ordinaci** se štítkem **Čeká**.
+
+   ![Přijmout bez objednání](img/recepce-bez-objednani.png)
+
 ### Klient k rezervaci: Klient… a Spárovat
 
 Každá rezervace v **Přicházejí** má tlačítko **Klient…** – když přijde jiné zvíře nebo jiný
@@ -94,8 +107,9 @@ majitel, než je v rezervaci, opravíte to tady. Rezervace z webu, kterou ješt�
 ke klientovi v kartotéce, má poznámku **nespárováno** a místo Klient… a Přijmout tlačítko
 **Spárovat**.
 
-1. Klikněte **Klient…** (nebo **Spárovat**). Otevře se Kartotéka s nadpisem „rezervace 21:15
-   (…)“. U rezervace s klientem je rovnou otevřená jeho karta s vybraným zvířetem z rezervace:
+1. Klikněte **Klient…** (nebo **Spárovat**). Otevře se Kartotéka s nadpisem „Klient k rezervaci
+   21:00 Kontrola“ (čas a úkon rezervace). U rezervace s klientem je rovnou otevřená jeho karta
+   s vybraným zvířetem z rezervace:
 
    ![Klient… u rezervace](img/recepce-klient-rezervace.png)
 
@@ -105,7 +119,7 @@ ke klientovi v kartotéce, má poznámku **nespárováno** a místo Klient… a 
 
 2. Vyberte správné zvíře – jiné zvíře majitele kliknutím, jiného klienta hledáním. Když klient
    v kartotéce není, založte ho tlačítkem **+ Nový klient** (kapitola 3).
-3. Klikněte **Přiřadit k rezervaci**. Zobrazí se „Klient je přiřazený k rezervaci …“, okno se
+3. Klikněte **Přiřadit k rezervaci** (jediné hlavní tlačítko okna). Zobrazí se „Klient je přiřazený k rezervaci …“, okno se
    zavře a Dnes ukáže rezervaci s novým klientem a zvířetem (webová už má **Přijmout**).
 
 Rezervaci, ke které už je návštěva (klient je přijatý nebo lékařka otevřela kartu), nejde přiřadit
@@ -143,7 +157,20 @@ Dobré vědět:
 
 ## 3. Kartotéka
 
-Tlačítko **Kartotéka…** otevře okno nad pokladnou. Rozdělaný nákup v pokladně zůstává, jak byl.
+Kartotéka je okno nad pokladnou (rozdělaný nákup v pokladně zůstává, jak byl). Vždy dělá jen
+**jednu věc** – podle toho, odkud ho otevřete. Nahoře v okně je napsané, k čemu klienta
+vybíráte, a dole je nejvýš **jedno hlavní tlačítko** (a Zavřít):
+
+| Odkud otevřete | Nadpis okna | Hlavní tlačítko – co udělá |
+|---|---|---|
+| lišta **Kartotéka…** | Kartotéka | žádné – jen hledání, prohlížení, nový klient a úpravy |
+| **Objednat**, pole Klient a zvíře › **Vybrat…** / **Změnit** | Vybrat klienta a zvíře pro objednání | **Vybrat** – klient a zvíře se zapíšou do formuláře Objednat (kapitola 4) |
+| **Pokladna**, tlačítko **Klient** u účtu | Klient k účtu v pokladně | **Vybrat k účtu** – klient bude zákazníkem rozdělaného účtu |
+| **Dnes**, **Klient…** / **Spárovat** u rezervace; detail na **tabuli** › **Klient…** | Klient k rezervaci 21:00 Kontrola | **Přiřadit k rezervaci** – klient a zvíře se zapíšou k té rezervaci (kapitola 2) |
+| **Dnes**, **+ Bez objednání** | Přijmout bez objednání | **Přijmout** – s výběrem lékařky; zvíře jde do čekárny (kapitola 2) |
+
+Tlačítka, která potřebují zvíře (Vybrat, Přiřadit k rezervaci, Přijmout), jsou šedá, dokud
+zvíře nevyberete („Vyberte zvíře.“); s uhynulým zvířetem nejdou.
 
 ### Hledání
 
@@ -159,7 +186,8 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
   **Upravit**.
 - Vpravo **zvířata**: druh, plemeno, pohlaví, narození, čip, upozornění (oranžový štítek)
   a příští očkování. Uhynulá zvířata jsou na konci, vybledlá; s nimi nejde nic dělat.
-- Kliknutím vyberete zvíře (rámeček) – pod ním je **Upravit <jméno>** a výběr **Lékařka**.
+- Kliknutím vyberete zvíře (rámeček) – pod ním je **Upravit <jméno>** (při Přijmout bez
+  objednání i výběr **Lékařka**).
 - **‹ Zpět na výsledky** vás vrátí k hledání.
 
 ### Nový klient, nové zvíře, úpravy
@@ -177,38 +205,23 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
 Stejný telefon nebo e-mail jako jiný klient nevadí – nic se neslučuje. Kontakty zaměstnanců
 a firem v kartotéce upravit nejde („Tento kontakt není klient kliniky.“).
 
-### Tlačítka dole
+### Vybrat k účtu (Pokladna › Klient)
 
-| Tlačítko | Co dělá |
-|---|---|
-| **Přijmout bez objednání** | vybrané zvíře jde rovnou do čekárny (bez rezervace). Lékařka podle výběru **Lékařka**: konkrétní, nebo **kterákoli** – takového pacienta vidí v Čekají všechny lékařky s poznámkou „kterákoli lékařka“ a ujme se ho ta, která ho zavolá. Pak se vrátíte na Dnes. |
-| **Objednat** | přepne na záložku Objednat s vybraným zvířetem (kapitola 4) |
-| **Vybrat k účtu** | majitel se stane zákazníkem objednávky v pokladně (např. prodej krmiva). Nákup s položkami jiného klienta se nepřepíše – vznikne nová objednávka. |
-| **Přiřadit k rezervaci…** | vybraného klienta a zvíře přiřadí k rezervaci na dnešek nebo příštích 7 dní (viz níže) |
-| **Přiřadit k rezervaci** | jen při otevření z Klient… / Spárovat (kapitola 2); místo Přijmout bez objednání |
-| **Zavřít** | zavře okno |
+Prodej bez návštěvy (např. krmivo) na jméno klienta: na záložce **Pokladna** naúčtujte zboží
+a klikněte **Klient** u účtu. Kartotéka ukáže dosavadního zákazníka účtu (když nějaký je);
+najděte klienta a klikněte **Vybrat k účtu**. Položky naúčtované bez zákazníka zůstanou a dostanou
+tohoto klienta. Účet s položkami **jiného** klienta se nepřepíše – vznikne nový účet (dva klienti
+se nikdy nesmíchají na jedné účtence).
 
-### Přiřadit k rezervaci…
-
-Když klient zavolá, že na rezervaci (třeba zítřejší) přijde s jiným zvířetem, nebo když chcete
-webovou rezervaci spárovat odjinud než z Dnes:
-
-1. V Kartotéce otevřete klienta a vyberte zvíře.
-2. Klikněte **Přiřadit k rezervaci…**. Okno ukáže rezervace na dnešek a příštích 7 dní: den
-   a čas, dosavadní zvíře a klient (nebo **nespárováno**), úkon a lékařka. Rezervace, které už
-   mají návštěvu, jsou šedé se štítkem **už má návštěvu** a vybrat nejdou.
-
-   ![Přiřadit k rezervaci](img/recepce-priradit.png)
-
-3. Klikněte na rezervaci. Zobrazí se „Klient je přiřazený k rezervaci …“ a okno se zavře.
-   **‹ Zpět ke klientovi** vás vrátí na kartu bez změny.
+![Klient k účtu v pokladně](img/recepce-klient-k-uctu.png)
 
 ## 4. Objednat
 
 ![Objednat](img/recepce-objednat.png)
 
-1. Vyberte klienta a zvíře: v Kartotéce **Objednat**, nebo na záložce Objednat tlačítko
-   **Kartotéka…** / **Jiný klient…**. Nahoře je pak vidět zvíře a majitel.
+1. **Klient a zvíře** – klikněte **Vybrat…**, v Kartotéce najděte (nebo založte) klienta,
+   klikněte na zvíře a **Vybrat**. Okno se zavře a v poli je zvíře a majitel; **Změnit** vybere
+   jiného.
 2. **Úkon** – povinné (u každého je délka).
 3. **Lékařka** – nepovinné. „Kterákoli, která úkon dělá“ nabídne časy všech lékařek ve službě.
 4. **Den** – šipky **‹ Dnes ›** nebo datum. Když den nemá volný čas, objeví se tlačítko
@@ -216,8 +229,10 @@ webovou rezervaci spárovat odjinud než z Dnes:
 5. **Volné časy** – čas, ordinace a lékařka. Počítají se stejně jako na tabuli a na webu.
    Kliknutím čas vyberete (zvýrazní se).
 6. **Poznámka k rezervaci** – nepovinné.
-7. **Objednat na 18:15.** Objeví se zelené potvrzení „Objednáno: …“. Rezervace je potvrzená
-   a je na tabuli i v Přicházejí toho dne.
+7. **Objednat na 18:15.** Objeví se potvrzení „Objednáno: čt 22. 10. 2026 18:15 · Rex“.
+   Rezervace je potvrzená a je na tabuli i v Přicházejí toho dne.
+8. **Formulář se vyprázdní** pro dalšího klienta: úkon, čas, klient a zvíře i poznámka zmizí,
+   **den a lékařka zůstanou**.
 
 **E-mail klientovi:** když má majitel v kartotéce e-mail, dostane potvrzení rezervace
 automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá – termín mu řekněte.
@@ -227,6 +242,9 @@ obsadil – vyberte jiný.“ a časy se načtou znovu. Uhynulé zvíře objedna
 
 **Otevřít tabuli** otevře tabuli vybraného dne v okně nad pokladnou (kapitola 5); vybraný
 klient zůstane.
+
+V režimu **Přesunout rezervaci** (z tabule) vás zpět k běžnému objednání vrátí **Nepřesouvat**
+nebo znovu kliknutí na **Objednat** v liště.
 
 ## 5. Tabule
 
@@ -243,7 +261,8 @@ nepřepíná do jiné stránky.
 - **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, iniciály lékařky, čas,
   zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
   jsou bledé.
-- **‹ Dnes ›** a pole s datem přepínají den. Při hodně ordinacích se tabule posouvá i do stran.
+- **‹ Dnes ›** a pole s datem přepínají den; tabule se posune na „teď“ (dnes), u jiného dne na
+  začátek. Při hodně ordinacích se tabule posouvá i do stran.
 - Tabule se sama obnovuje (změna z webu, od kolegyně nebo z backendu se ukáže hned, záložně
   každých 30 s).
 - **Zavřít** (nebo křížek) vás vrátí tam, kde jste byli.
@@ -259,6 +278,7 @@ Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas 
   po **Klient…**.
 - **Klient…** – Kartotéka pro tuto rezervaci (stejné jako Klient… na záložce Dnes, kapitola 2):
   vyberte klienta a zvíře a **Přiřadit k rezervaci**. Tabule zůstane otevřená pod ním.
+  U proběhlé a nedorazivší rezervace Klient… není.
 - **Přesunout** – okno se zavře a otevře se záložka Objednat v režimu **Přesunout rezervaci**:
   úkon a lékařka jsou předvyplněné, vyberte den a volný čas a klikněte **Přesunout na …**.
   **Nepřesouvat** režim ukončí.
@@ -268,7 +288,8 @@ Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas 
   rezervace e-mail.
 
 Rezervace, která už má návštěvu (klient je přijatý), se přesunout ani zrušit nedá – Přesunout
-a Zrušit rezervaci se u ní neukážou.
+a Zrušit rezervaci se u ní neukážou. U společného zákroku dvou lékařek se přesouvá jen hlavní
+rezervace – kopie ve druhé ordinaci se posune s ní (u kopie Přesunout ani přetažení nejsou).
 
 ### Přetažení rezervace
 
