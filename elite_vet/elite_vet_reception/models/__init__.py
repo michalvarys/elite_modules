@@ -6,3 +6,4 @@ from . import setup
 from . import ir_ui_menu
 from . import res_users
 from . import pos_config
+from . import patient_card

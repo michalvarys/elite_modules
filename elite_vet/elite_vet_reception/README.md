@@ -143,6 +143,29 @@ pokladny zůstávají standardní.
 - Kdo pokladnu otevírá (počáteční stav hotovosti), musí mít u uživatele vyplněný e-mail – Odoo
   při otevření relace zapisuje zprávu a bez adresy odesílatele otevření odmítne.
 
+## Ordinace: Moji pacienti dnes (karta pacienta)
+
+Úvodní obrazovka karty pacienta (`elite_vet_clinic`) se rozšiřuje odsud: `models/patient_card.py`
+(`_inherit`) a `static/src/patient_card_patch/` (JS `patch`, XML `t-inherit`, bundle
+`web.assets_backend`).
+
+- `my_patients_today()` – filtr podle lékařky zůstává (rezervace i neobjednaní jen její; účet bez
+  spárované lékařky vidí vše). Každá položka navíc nese:
+  `key` (`r<rezervace>` / `w<záznam>`, unikátní), `group` (`waiting` / `in_room` / `arriving` / `done`),
+  `visit_stage` (`waiting` / `in_room` / `False`), `arrived_time`, `called_time`, `waiting_minutes`
+  (u V ordinaci od příchodu do zavolání), `payment_state`, `walk_in`.
+- Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „přišel 9:24 · čeká 6 min“,
+  tlačítko Zavolat), **V ordinaci**, **Objednaní – ještě nepřišli** (rezervace bez záznamu nebo se
+  záznamem bez stavu), **Hotovo dnes** (uzavřený záznam; také rezervace ve stavu Proběhlá bez záznamu).
+- Neobjednaní (dnešní záznamy se stavem návštěvy bez rezervace, `walk_in: true`, `reservation_id: None`)
+  jsou v seznamu také; neobjednaný bez lékařky vidí jen účet bez spárované lékařky (sestra).
+- **Zavolat** = `elite.vet.reception.call_patient(record_id)`, pak se otevře karta zvířete.
+- Pravidlo R5: když sestra nebo lékařka otevře kartu (ze seznamu, z tabule, z hledání …) a dnešní
+  záznam je ve stavu Čeká, karta jednou zavolá `call_patient`; `card_data` zůstává jen pro čtení.
+  Chyba (např. role recepce) se tiše ignoruje. `_record_data` proto nese i `visit_stage`.
+- Seznam se obnovuje zprávou na kanálu `elite_vet_reservation/changed` a záložně každých 30 s,
+  dokud je vidět úvodní obrazovka.
+
 ## Role, výchozí obrazovky a menu
 
 | Role | Výchozí obrazovka (`res.users.action_id`) | Menu |

@@ -24,6 +24,9 @@ Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných k
         "views/res_users_views.xml",
     ],
     "assets": {
+        "web.assets_backend": [
+            "elite_vet_reception/static/src/patient_card_patch/*",
+        ],
         "point_of_sale._assets_pos": [
             "elite_vet_reception/static/src/pos/**/*",
         ],

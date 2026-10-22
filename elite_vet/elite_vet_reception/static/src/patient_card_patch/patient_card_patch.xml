@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- One row of the staged list (rendered inside PatientCard, `it` = item of my_patients_today). -->
+    <t t-name="elite_vet_reception.PatientRow">
+        <div class="evrc-row" t-att-class="'evrc-row-' + group.key">
+            <button type="button" class="evpc-today-row" t-on-click="() => this.openReservation(it)">
+                <span class="evpc-today-time evpc-num">
+                    <t t-if="it.walk_in">–</t>
+                    <t t-else=""><t t-esc="it.time"/><small t-if="it.time_end">–<t t-esc="it.time_end"/></small></t>
+                </span>
+                <span class="evpc-dot" t-att-style="'background:' + (it.room_color or '#94a3b8')" t-att-title="it.room"/>
+                <span class="evpc-today-main">
+                    <span class="evpc-today-pet">
+                        <t t-esc="it.pet_name or 'Bez mazlíčka'"/>
+                        <span t-if="it.species_label" class="evpc-opt-meta" t-esc="it.species_label"/>
+                    </span>
+                    <span class="evpc-today-sub2">
+                        <t t-set="stage" t-value="stageLine(it)"/>
+                        <b t-if="stage" class="evrc-stage" t-esc="stage"/><t t-if="stage and (it.owner or it.procedure)"> · </t>
+                        <t t-esc="it.owner or ''"/><t t-if="it.procedure"> · <t t-esc="it.procedure"/></t><t t-if="it.room"> · <t t-esc="it.room"/></t>
+                        <t t-if="!state.today.filtered_by_doctor and it.doctor"> · <t t-esc="it.doctor"/></t>
+                    </span>
+                    <span t-if="it.alerts" class="evpc-opt-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
+                </span>
+                <t t-if="group.key === 'done' or group.key === 'arriving'">
+                    <t t-set="badge" t-value="recordBadge(it)"/>
+                    <span class="evpc-st" t-att-class="badge.cls" t-esc="badge.label"/>
+                </t>
+                <i t-if="group.key !== 'waiting'" class="fa fa-angle-right evpc-today-go" aria-hidden="true"/>
+            </button>
+            <button t-if="group.key === 'waiting' and it.record_id" type="button" class="evpc-btn evpc-btn-primary evrc-call"
+                    t-on-click="() => this.callPatient(it)">Zavolat</button>
+        </div>
+    </t>
+
+    <t t-inherit="elite_vet_clinic.PatientCard" t-inherit-mode="extension">
+        <xpath expr="//ol[hasclass('evpc-today-list')]" position="replace">
+            <div t-else="" class="evrc-groups">
+                <section t-foreach="todayGroups" t-as="group" t-key="group.key" class="evrc-group"
+                         t-att-class="'evrc-group-' + group.key" t-att-aria-label="group.title">
+                    <h3 class="evrc-group-title"><t t-esc="group.title"/><span class="evrc-count evpc-num" t-esc="group.items.length"/></h3>
+                    <p t-if="!group.items.length" class="evpc-empty evpc-empty-sm" t-esc="group.empty"/>
+                    <ol t-else="" class="evpc-today-list">
+                        <li t-foreach="group.items" t-as="it" t-key="it.key">
+                            <t t-call="elite_vet_reception.PatientRow"/>
+                        </li>
+                    </ol>
+                </section>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('evpc-tabs')]/button" position="attributes">
+            <attribute name="t-key">it.key</attribute>
+        </xpath>
+    </t>
+</templates>
