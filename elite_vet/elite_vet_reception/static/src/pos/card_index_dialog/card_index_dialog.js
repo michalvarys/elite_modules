@@ -1,23 +1,38 @@
 /**
  * Kartotéka: a dialog above the till (the open order stays below it). One search, the owner with
- * the pets, forms to create / edit both, and the actions walk-in, book, customer of the order
- * and assigning the client to a reservation (opened from a Dnes row: that reservation; from the
- * toolbar: a pick from `reservations_to_assign`).
+ * the pets and forms to create / edit both. The dialog has one task given by the place it is
+ * opened from (`mode`), stated in its title, and exactly one primary action for it:
+ * - `browse` (navbar Kartotéka…): search, view, create and edit only - no assignment;
+ * - `booking` (Objednat, field Klient a zvíře): Vybrat → `onSelect(pet)` fills the booking form;
+ * - `order` (Pokladna, button Klient): Vybrat k účtu → customer of the open order;
+ * - `reservation` (Dnes Klient… / Spárovat, board detail Klient…): Přiřadit k rezervaci;
+ * - `walk_in` (Dnes + Bez objednání): Přijmout with a doctor (any / a specific one).
  */
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
-import {
-    BOOKING_SCREEN,
-    TODAY_SCREEN,
-    callReception,
-    errorMessage,
-    shortDate,
-} from "@elite_vet_reception/pos/reception_api";
+import { callReception, errorMessage, shortDate } from "@elite_vet_reception/pos/reception_api";
 
 const OWNER_FIELDS = ["name", "phone", "mobile", "email", "street", "city", "zip"];
 const PET_FIELDS = ["name", "species", "breed", "sex", "birth_date", "chip", "note"];
+
+export const CARD_INDEX_MODES = ["browse", "booking", "order", "reservation", "walk_in"];
+
+const MODE_TITLES = {
+    browse: "Kartotéka",
+    booking: "Vybrat klienta a zvíře pro objednání",
+    order: "Klient k účtu v pokladně",
+    walk_in: "Přijmout bez objednání",
+};
+
+const MODE_HINTS = {
+    browse: "Hledání, prohlížení, založení a úprava klientů a zvířat.",
+    booking: "Najděte nebo založte klienta, vyberte zvíře a stiskněte Vybrat – zapíše se do formuláře Objednat.",
+    order: "Najděte nebo založte klienta a stiskněte Vybrat k účtu – bude zákazníkem rozdělaného účtu.",
+    reservation: "Najděte nebo založte klienta, vyberte zvíře a stiskněte Přiřadit k rezervaci.",
+    walk_in: "Najděte nebo založte klienta, vyberte zvíře a lékařku a stiskněte Přijmout – půjde do čekárny.",
+};
 
 function formValues(source, fields) {
     const values = {};
@@ -32,19 +47,25 @@ export class CardIndexDialog extends Component {
     static components = { Dialog };
     static props = {
         close: Function,
-        // the reservation to assign a client to: {reservation_id, time, owner, partner_id, pet_id,
-        // pet_name, ...} (today_data row); its client and pet are preloaded
+        mode: { validate: (m) => CARD_INDEX_MODES.includes(m), optional: true },
+        // reservation mode: {reservation_id, time, procedure, owner, partner_id, pet_id, pet_name}
+        // (today_data row / board detail); its client and pet are preloaded
         reservation: { type: Object, optional: true },
+        // booking / order mode: the client shown first {partner_id, pet_id}
+        client: { type: Object, optional: true },
+        // booking mode: (pet: {id, name, owner, partner_id}) => void
+        onSelect: { type: Function, optional: true },
         // called after a change the caller shows (match, walk-in)
         onChanged: { type: Function, optional: true },
     };
+    static defaultProps = { mode: "browse" };
 
     setup() {
         this.pos = usePos();
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.state = useState({
-            term: this.props.reservation?.owner || "",
+            term: (this.props.mode === "reservation" && this.props.reservation?.owner) || "",
             results: null,
             searching: false,
             data: null, // owner_data()
@@ -55,18 +76,18 @@ export class CardIndexDialog extends Component {
             doctors: [],
             walkInDoctorId: "",
             species: [],
-            assign: null, // toolbar "Přiřadit k rezervaci…": {rows: reservations_to_assign() | null}
         });
         onWillStart(async () => {
+            const walkIn = this.mode === "walk_in";
             const [options, booking] = await Promise.all([
                 callReception(this.orm, this.notification, "pet_options"),
-                callReception(this.orm, this.notification, "booking_options"),
+                walkIn ? callReception(this.orm, this.notification, "booking_options") : null,
             ]);
             this.state.species = options?.species || [];
             this.state.doctors = booking?.doctors || [];
-            const res = this.props.reservation;
-            if (res?.partner_id) {
-                await this.loadOwner(res.partner_id, res.pet_id || null);
+            const preset = this.preset;
+            if (preset?.partner_id) {
+                await this.loadOwner(preset.partner_id, preset.pet_id || null);
                 if (this.state.data) {
                     return;
                 }
@@ -79,9 +100,40 @@ export class CardIndexDialog extends Component {
 
     // ------------------------------------------------------------------ getters
 
+    get mode() {
+        return this.props.mode;
+    }
+
     get title() {
-        const res = this.props.reservation;
-        return res ? `Kartotéka – rezervace ${res.time} (${res.owner || "bez jména"})` : "Kartotéka";
+        if (this.mode === "reservation") {
+            const res = this.props.reservation || {};
+            return ["Klient k rezervaci", res.time, res.procedure].filter(Boolean).join(" ");
+        }
+        return MODE_TITLES[this.mode];
+    }
+
+    get hint() {
+        return MODE_HINTS[this.mode];
+    }
+
+    /** The client shown when the dialog opens. */
+    get preset() {
+        if (this.mode === "reservation") {
+            return this.props.reservation;
+        }
+        if (this.props.client) {
+            return this.props.client;
+        }
+        if (this.mode === "order") {
+            const partner = this.pos.get_order()?.get_partner();
+            return partner ? { partner_id: partner.id } : null;
+        }
+        return null;
+    }
+
+    /** The primary action needs a selected (live) pet; Vybrat k účtu needs the owner only. */
+    get needsPet() {
+        return ["booking", "reservation", "walk_in"].includes(this.mode);
     }
 
     get owner() {
@@ -112,7 +164,7 @@ export class CardIndexDialog extends Component {
     }
 
     get editing() {
-        return Boolean(this.state.ownerForm || this.state.petForm || this.state.assign);
+        return Boolean(this.state.ownerForm || this.state.petForm);
     }
 
     formatAmount(amount) {
@@ -144,7 +196,6 @@ export class CardIndexDialog extends Component {
                 this.state.petId = null;
                 this.state.ownerForm = null;
                 this.state.petForm = null;
-                this.state.assign = null;
             }
         } finally {
             this.state.searching = false;
@@ -182,7 +233,6 @@ export class CardIndexDialog extends Component {
         this.state.petId = null;
         this.state.ownerForm = null;
         this.state.petForm = null;
-        this.state.assign = null;
     }
 
     selectPet(pet) {
@@ -192,9 +242,8 @@ export class CardIndexDialog extends Component {
     // ------------------------------------------------------------------ forms
 
     newOwner() {
-        const res = this.props.reservation;
+        const res = this.mode === "reservation" ? this.props.reservation : null;
         this.state.petForm = null;
-        this.state.assign = null;
         this.state.ownerForm = {
             isNew: true,
             values: formValues({ name: res?.owner || "" }, OWNER_FIELDS),
@@ -293,8 +342,9 @@ export class CardIndexDialog extends Component {
         }
     }
 
-    // ------------------------------------------------------------------ actions
+    // ------------------------------------------------------------------ primary actions
 
+    /** walk_in: Přijmout - the pet goes to the waiting room (Dnes reloads). */
     async walkIn() {
         if (!this.canUsePet) {
             return;
@@ -310,22 +360,27 @@ export class CardIndexDialog extends Component {
                 this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });
                 this.props.onChanged?.();
                 this.props.close();
-                this.pos.showScreen(TODAY_SCREEN);
             }
         } finally {
             this.state.saving = false;
         }
     }
 
-    book() {
+    /** booking: Vybrat - the owner and pet go into the Objednat form. */
+    pickForBooking() {
         if (!this.canUsePet) {
             return;
         }
-        const pet = { id: this.pet.id, name: this.pet.name, owner: this.owner.name, partner_id: this.owner.id };
+        this.props.onSelect?.({
+            id: this.pet.id,
+            name: this.pet.name,
+            owner: this.owner.name,
+            partner_id: this.owner.id,
+        });
         this.props.close();
-        this.pos.showScreen(BOOKING_SCREEN, { pet });
     }
 
+    /** order: Vybrat k účtu - customer of the open order (Task 5 rules). */
     async selectForOrder() {
         if (!this.owner) {
             return;
@@ -357,7 +412,9 @@ export class CardIndexDialog extends Component {
         this.pos.showScreen("ProductScreen");
     }
 
-    async assignTo(reservation) {
+    /** reservation: Přiřadit k rezervaci - the client and pet of the reservation. */
+    async matchReservation() {
+        const reservation = this.props.reservation;
         if (!reservation || !this.canUsePet) {
             return;
         }
@@ -369,9 +426,8 @@ export class CardIndexDialog extends Component {
                 this.pet.id,
             ]);
             if (result) {
-                const when = [reservation.date_label, result.time].filter(Boolean).join(" ");
                 this.notification.add(
-                    `Klient je přiřazený k rezervaci ${when}: ${result.pet_name} (${result.owner}).`,
+                    `Klient je přiřazený k rezervaci ${result.time}: ${result.pet_name} (${result.owner}).`,
                     { type: "success" }
                 );
                 this.props.onChanged?.();
@@ -380,38 +436,5 @@ export class CardIndexDialog extends Component {
         } finally {
             this.state.saving = false;
         }
-    }
-
-    /** Reservation mode: the reservation the dialog was opened for. */
-    matchReservation() {
-        return this.assignTo(this.props.reservation);
-    }
-
-    /** Toolbar mode: list today's and the next 7 days' reservations to pick from. */
-    async openAssign() {
-        if (!this.canUsePet) {
-            return;
-        }
-        this.state.assign = { rows: null };
-        const rows = await callReception(this.orm, this.notification, "reservations_to_assign");
-        if (!this.state.assign) {
-            return; // closed meanwhile
-        }
-        if (rows) {
-            this.state.assign.rows = rows;
-        } else {
-            this.state.assign = null;
-        }
-    }
-
-    closeAssign() {
-        this.state.assign = null;
-    }
-
-    assignLine(row) {
-        const client = row.needs_match
-            ? `${[row.pet_name, row.owner || "bez jména"].filter(Boolean).join(", ")} · nespárováno`
-            : `${row.pet_name || "bez zvířete"} (${row.owner || "bez jména"})`;
-        return [client, row.procedure, row.doctor].filter(Boolean).join(" · ");
     }
 }

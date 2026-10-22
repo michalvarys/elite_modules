@@ -80,6 +80,13 @@ class TestBoard(ReceptionCase):
         self.assertEqual(data["main_id"], res.id)
         self.assertTrue(data["is_second_room"])
         self.assertEqual(data["pet_id"], pet.id)
+        self.assertFalse(data["can_move"], "the copy moves with the main reservation")
+        self.assertTrue(self.api(self.reception).board_reservation(res.id)["can_move"])
+        with self.assertRaises(UserError):
+            self.api(self.reception).move_reservation(second.id, str(clinic_today()), 11 * 60, self.room2.id)
+        events = {e["id"]: e for e in self.env["elite.vet.reservation"].board_data(str(clinic_today()))["events"]}
+        self.assertTrue(events[second.id]["is_second_room"])
+        self.assertFalse(events[res.id]["is_second_room"])
 
     def test_detail_of_a_block_is_refused(self):
         block = self.env["elite.vet.reservation"].create({

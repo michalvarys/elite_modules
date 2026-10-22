@@ -5,7 +5,7 @@
  * reservation opens its detail, a click into a free place opens Objednat prefilled, a reservation
  * can be dragged to another time / room (`move_reservation` → the board's `board_move`).
  */
-import { Component, onMounted, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
@@ -83,6 +83,13 @@ export class BoardDialog extends Component {
             }, POLL_MS);
             this.scrollToNow();
         });
+        // after a day change the new day starts at "now" (today) or at its start
+        onPatched(() => {
+            if (this.scrollPending && this.state.data && this.gridRef.el) {
+                this.scrollPending = false;
+                this.scrollToNow();
+            }
+        });
         onWillUnmount(() => {
             this.pos.bus?.unsubscribe(BUS_MESSAGE, this.onBusChange);
             clearInterval(this.timer);
@@ -124,6 +131,7 @@ export class BoardDialog extends Component {
         this.state.day = day;
         this.state.data = null;
         this.state.error = null;
+        this.scrollPending = true;
         this.load();
     }
 
@@ -212,8 +220,9 @@ export class BoardDialog extends Component {
         return e.kind !== "block";
     }
 
+    /** Only the main reservation moves; its second-room copy follows it. */
     isMovable(e) {
-        return this.isReservation(e) && e.state === "confirmed";
+        return this.isReservation(e) && e.state === "confirmed" && !e.is_second_room;
     }
 
     isShort(e) {
@@ -308,11 +317,9 @@ export class BoardDialog extends Component {
             return;
         }
         const minute = this.minuteAt(ev, ev.currentTarget, true);
-        const current = this.pos.mainScreen;
-        const pet = current?.component?.name === BOOKING_SCREEN ? current.props?.pet : undefined;
         this.props.close();
+        // the client picked in Objednat stays (the screen keeps its state)
         this.pos.showScreen(BOOKING_SCREEN, {
-            ...(pet ? { pet } : {}),
             prefill: { day: this.state.day, minute, room_id: room.id, room: room.name, key: Date.now() },
         });
     }
@@ -329,30 +336,21 @@ export class BoardDialog extends Component {
         });
     }
 
-    /** Kartotéka for the reservation; when it moves the till to another screen, the board closes. */
+    /** Kartotéka for the reservation ("Přiřadit k rezervaci"); the board stays open. */
     openClient(detail) {
-        const screenBefore = this.pos.mainScreen.component;
-        this.dialog.add(
-            CardIndexDialog,
-            {
-                reservation: {
-                    reservation_id: detail.main_id,
-                    time: detail.time,
-                    owner: detail.owner,
-                    partner_id: detail.partner_id,
-                    pet_id: detail.pet_id,
-                    pet_name: detail.pet_name,
-                },
-                onChanged: () => this.load(),
+        this.dialog.add(CardIndexDialog, {
+            mode: "reservation",
+            reservation: {
+                reservation_id: detail.main_id,
+                time: detail.time,
+                procedure: detail.procedure,
+                owner: detail.owner,
+                partner_id: detail.partner_id,
+                pet_id: detail.pet_id,
+                pet_name: detail.pet_name,
             },
-            {
-                onClose: () => {
-                    if (this.pos.mainScreen.component !== screenBefore) {
-                        this.props.close();
-                    }
-                },
-            }
-        );
+            onChanged: () => this.load(),
+        });
     }
 
     /** Přesunout: Objednat in the move mode (free times of the reservation's procedure). */

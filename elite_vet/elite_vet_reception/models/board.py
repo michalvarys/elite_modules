@@ -94,7 +94,8 @@ class ReceptionBoard(models.AbstractModel):
             "payment_state": payment_state or False,
             "payment_state_label": dict(PAYMENT_STATES).get(payment_state) if payment_state else None,
             "can_check_in": day == today and state == "confirmed" and not visit and bool(main.pet_id),
-            "can_move": state in MOVABLE_STATES and not visit,
+            # the second-room copy follows the main reservation (time sync main -> copy only)
+            "can_move": state in MOVABLE_STATES and not visit and not reservation.is_second_room,
             "can_cancel": main.state in CANCELLABLE_STATES and not visit,
             # the backend sends the client an e-mail about the cancellation when it has one
             "cancel_sends_email": bool(main.contact_email),
@@ -108,6 +109,8 @@ class ReceptionBoard(models.AbstractModel):
         reservation = self._board_reservation(reservation_id)
         if reservation.state not in MOVABLE_STATES:
             raise UserError(_("Přesunout jde jen potvrzenou rezervaci."))
+        if reservation.is_second_room:
+            raise UserError(_("Druhá ordinace se přesouvá s hlavní rezervací – přesuňte hlavní rezervaci."))
         if self._reservation_visit(self._main_reservation(reservation)):
             raise UserError(_("Klient už je přijatý (návštěva je založená) – rezervaci nejde přesunout."))
         day = self._day(day)
@@ -135,3 +138,18 @@ class ReceptionBoard(models.AbstractModel):
             raise UserError(_("Klient už je přijatý (návštěva je založená) – rezervaci nejde zrušit."))
         main.action_cancel("clinic")
         return {"reservation_id": main.id, "state": main.state, "email_sent": bool(main.contact_email)}
+
+
+class ReservationBoardSecondRoom(models.Model):
+    _inherit = "elite.vet.reservation"
+
+    @api.model
+    def board_data(self, day_str):
+        """Marks the second-room copies of two-doctor procedures (`is_second_room`): the till's
+        board offers dragging only for the main reservation."""
+        data = super().board_data(day_str)
+        ids = [e["id"] for e in data["events"] if e.get("kind") != "block"]
+        second = set(self.browse(ids).filtered("is_second_room").ids) if ids else set()
+        for event in data["events"]:
+            event["is_second_room"] = event["id"] in second
+        return data

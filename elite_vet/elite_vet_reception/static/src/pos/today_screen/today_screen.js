@@ -137,7 +137,16 @@ export class ReceptionTodayScreen extends Component {
     /** Kartotéka for the reservation: its client and pet preloaded, "Přiřadit k rezervaci". */
     openClient(row) {
         this.dialog.add(CardIndexDialog, {
+            mode: "reservation",
             reservation: row,
+            onChanged: () => this.load(),
+        });
+    }
+
+    /** + Bez objednání: Kartotéka in the walk-in mode, "Přijmout" with a doctor. */
+    openWalkIn() {
+        this.dialog.add(CardIndexDialog, {
+            mode: "walk_in",
             onChanged: () => this.load(),
         });
     }

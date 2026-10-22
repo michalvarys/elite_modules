@@ -143,7 +143,7 @@
             <t t-set-slot="footer">
                 <t t-if="detail and !state.confirmCancel">
                     <button t-if="detail.can_check_in" class="btn btn-primary btn-lg o_ev_board_check_in" t-att-disabled="state.busy" t-on-click="checkIn">Přijmout</button>
-                    <button t-if="detail.state !== 'cancelled'" class="btn btn-light btn-lg o_ev_board_client" t-att-disabled="state.busy" t-on-click="openClient">
+                    <button t-if="canChangeClient" class="btn btn-light btn-lg o_ev_board_client" t-att-disabled="state.busy" t-on-click="openClient">
                         <i class="fa fa-address-book-o me-1"/>Klient…
                     </button>
                     <button t-if="detail.can_move" class="btn btn-light btn-lg o_ev_board_move" t-att-disabled="state.busy" t-on-click="move">

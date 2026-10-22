@@ -1,9 +1,7 @@
-from datetime import date, timedelta
+from datetime import date
 
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
-
-from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
 
 from .common import ReceptionCase
 
@@ -251,53 +249,7 @@ class TestCardIndex(ReceptionCase):
         self.assertEqual(err.exception.args[0], "Rezervace už má návštěvu jiného zvířete.")
         self.assertEqual(res.pet_id, self.pet)
 
-    # ---------------------------------------------------------------- Task 8: any reservation
-    def at_day(self, days, hour, minute=0):
-        return self.today_utc(hour, minute) + timedelta(days=days)
-
-    def test_reservations_to_assign(self):
-        reception = self.api(self.reception)
-        other_owner = self.env["res.partner"].create({"name": "Přiřazení Majitel", "is_vet_client": True})
-        matched = self.reservation(8, 0, pet=self.pet)
-        web = self.reservation(9, 0, state="web_new", contact_name="Web Přiřazení", pet_name="Webík")
-        with_record = self.reservation(11, 0, pet=self.new_pet("Návštěvník Přiřazení"))
-        reception.check_in(with_record.id)
-        cancelled = self.reservation(12, 0, state="cancelled", contact_name="Zrušená Přiřazení")
-        room2 = self.env["elite.vet.room"].create({"name": "Ordinace 2 přiřazení"})
-        second = matched.add_second_room(room2)
-        tomorrow = self.reservation(0, 0, start=self.at_day(1, 10), stop=self.at_day(1, 10, 20),
-                                    contact_name="Zítřejší Přiřazení", partner_id=other_owner.id)
-        last_day = self.reservation(0, 0, start=self.at_day(7, 10), stop=self.at_day(7, 10, 20),
-                                    contact_name="Sedmý Den Přiřazení")
-        too_late = self.reservation(0, 0, start=self.at_day(8, 10), stop=self.at_day(8, 10, 20),
-                                    contact_name="Osmý Den Přiřazení")
-        yesterday = self.reservation(0, 0, start=self.at_day(-1, 10), stop=self.at_day(-1, 10, 20),
-                                     contact_name="Včerejší Přiřazení")
-        mine = {r.id for r in (matched, web, with_record, cancelled, second, tomorrow, last_day,
-                                too_late, yesterday)}
-
-        rows = [r for r in reception.reservations_to_assign() if r["reservation_id"] in mine]
-        self.assertEqual([r["reservation_id"] for r in rows],
-                         [matched.id, web.id, with_record.id, tomorrow.id, last_day.id])
-        by_id = {r["reservation_id"]: r for r in rows}
-        self.assertEqual(by_id[matched.id]["pet_name"], self.pet.name)
-        self.assertEqual(by_id[matched.id]["owner"], self.owner.name)
-        self.assertEqual(by_id[matched.id]["time"], "08:00")
-        self.assertEqual(by_id[matched.id]["date_label"], "dnes")
-        self.assertEqual(by_id[tomorrow.id]["date_label"], "zítra")
-        self.assertEqual(by_id[tomorrow.id]["owner"], other_owner.name)
-        self.assertEqual(by_id[web.id]["pet_name"], "Webík")
-        self.assertTrue(by_id[web.id]["needs_match"])
-        self.assertFalse(by_id[matched.id]["needs_match"])
-        self.assertTrue(by_id[with_record.id]["has_record"])
-        self.assertFalse(by_id[matched.id]["has_record"])
-        self.assertEqual(by_id[matched.id]["doctor"], self.doctor.name)
-        self.assertEqual(by_id[tomorrow.id]["date"], str(clinic_today() + timedelta(days=1)))
-        self.assertEqual(len([r for r in reception.reservations_to_assign(days=1)
-                              if r["reservation_id"] in mine]), 4)
-        with self.assertRaises(AccessError):
-            self.api(self.outsider).reservations_to_assign()
-
+    # ---------------------------------------------------------------- Task 8: any reservation (from Dnes / the board)
     def test_reassign_reservation_to_another_client(self):
         reception = self.api(self.reception)
         res = self.reservation(9, 0, pet=self.pet)

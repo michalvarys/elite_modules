@@ -56,6 +56,11 @@ export class BoardEventDialog extends Component {
         return d.state_label;
     }
 
+    /** Klient… only while the client can still change (not cancelled, done or no-show). */
+    get canChangeClient() {
+        return !["cancelled", "done", "no_show"].includes(this.detail.state);
+    }
+
     get cancelQuestion() {
         return this.detail.cancel_sends_email
             ? "Opravdu zrušit? Klientovi odejde e-mail o zrušení."

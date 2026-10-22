@@ -13,16 +13,6 @@
                     </div>
                     <button class="btn btn-light btn-lg o_ev_move_leave" t-on-click="leaveMove">Nepřesouvat</button>
                 </t>
-                <t t-else="">
-                <div t-if="pet" class="o_ev_client fs-5">
-                    <i class="fa fa-paw me-1"/><b class="o_ev_booking_pet" t-esc="pet.name"/>
-                    <span t-if="pet.owner" class="text-muted"> · <t t-esc="pet.owner"/></span>
-                </div>
-                <div t-else="" class="text-muted">Vyberte klienta a zvíře v Kartotéce.</div>
-                <button class="btn btn-light btn-lg" t-on-click="pickClient">
-                    <i class="fa fa-address-book-o me-1"/><t t-if="pet">Jiný klient…</t><t t-else="">Kartotéka…</t>
-                </button>
-                </t>
             </div>
             <div t-if="state.prefill" class="alert mb-3 o_ev_prefill"
                  t-att-class="state.prefill.found === false ? 'alert-warning' : 'alert-info'">
@@ -33,6 +23,19 @@
             </div>
             <div class="row g-3">
                 <div class="col-12 col-lg-5 d-flex flex-column gap-2">
+                    <div t-if="!state.move" class="o_ev_field o_ev_booking_client">
+                        <b>Klient a zvíře</b>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <div t-if="pet" class="fs-5 o_ev_grow">
+                                <i class="fa fa-paw me-1"/><b class="o_ev_booking_pet" t-esc="pet.name"/>
+                                <span t-if="pet.owner" class="text-muted o_ev_booking_owner"> · <t t-esc="pet.owner"/></span>
+                            </div>
+                            <div t-else="" class="text-muted o_ev_grow o_ev_booking_no_pet">nevybráno</div>
+                            <button class="btn btn-secondary btn-lg o_ev_pick_client" t-on-click="pickClient">
+                                <i class="fa fa-address-book-o me-1"/><t t-if="pet">Změnit</t><t t-else="">Vybrat…</t>
+                            </button>
+                        </div>
+                    </div>
                     <label class="o_ev_field">
                         <b>Úkon</b>
                         <select class="form-select form-select-lg o_ev_procedure" t-on-change="onProcedureChange">
@@ -98,7 +101,7 @@
                         </button>
                         <button class="btn btn-light btn-lg" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Otevřít tabuli</button>
                     </div>
-                    <div t-if="state.selected and !pet and !state.move" class="text-warning mt-2">Pro objednání vyberte zvíře v Kartotéce.</div>
+                    <div t-if="state.selected and !pet and !state.move" class="text-warning mt-2">Pro objednání vyberte klienta a zvíře (Klient a zvíře › Vybrat…).</div>
                     <div t-if="state.moved" class="alert alert-success mt-3 o_ev_moved">
                         Přesunuto na <b t-esc="state.moved"/>. Při změně času dostane klient e-mail, pokud ho má vyplněný.
                     </div>

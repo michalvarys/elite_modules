@@ -78,7 +78,6 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 | `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče `name, species, breed, sex, birth_date, chip, note`; jméno a druh povinné, zvíře musí patřit majiteli |
 | `pet_options()` | `{"species": [{value, label}]}` – druhy pro formulář zvířete |
 | `match_reservation(reservation_id, partner_id, pet_id)` | `{reservation_id, time, partner_id, owner, pet_id, pet_name, needs_match}` – rezervace (webová i už spárovaná) dostane majitele a zvíře (i její druhá ordinace); webová pak jde přijmout |
-| `reservations_to_assign(days=7)` | potvrzené a webové rezervace od dneška do `days` dní dopředu (bez druhých ordinací), podle začátku: `reservation_id, date, date_label, time, pet_id, pet_name, partner_id, owner, procedure, doctor, needs_match, has_record` (`date_label` = „dnes“, „zítra“ nebo „čt 29. 10.“; `has_record` = už má nezrušenou návštěvu) |
 
 - **pets** – všechna aktivní zvířata majitele (uhynulá na konci): `id, name, species, species_label, breed,
   sex, birth_date, chip, note, alerts, next_vaccination, deceased` (`alerts` = souhrn upozornění,
@@ -119,14 +118,19 @@ Soubory `static/src/pos/` (bundle `point_of_sale._assets_pos`). Jen v pokladně 
 (`pos.config.is_elite_vet_reception`, počítané z `elite_vet_sale.pos_config_reception`); ostatní
 pokladny zůstávají standardní.
 
-- **Lišta** (jediný patch navbaru, `navbar_patch/`): Dnes, Kartotéka…, Objednat, Pokladna
-  (standardní obrazovka produktů), Tabule (dialog `BoardDialog` nad pokladnou, viz níže).
+- **Lišta** (jediný patch navbaru, `navbar_patch/`): Dnes, Kartotéka… (režim `browse`), Objednat
+  (znovu stisknuté na Objednat ukončí režim Přesunout), Pokladna (standardní obrazovka produktů),
+  Tabule (dialog `BoardDialog` nad pokladnou, viz níže).
+- **Pokladna** (obrazovka produktů): tlačítko **Klient** v ovládacích tlačítkách účtu
+  (`control_buttons_patch/`, `t-inherit` `point_of_sale.ControlButtons` – jen přidané tlačítko,
+  komponenta přes `patch` `ControlButtons.components`) otevře Kartotéku v režimu `order`.
 - **Dnes** (`ReceptionTodayScreen`): výchozí obrazovka po načtení pokladny i po přihlášení PINem
   (patch `PosStore.firstScreen` a přesměrování ProductScreen → Dnes jen hned po přihlašovací
   obrazovce, když předtím nebyla otevřená Pokladna). Tři sloupce z `today_data`, přepínání dní
   ‹ Dnes ›; Přijmout jen pro dnešek (`check_in` se jménem přihlášeného zaměstnance), u každé
-  rezervace Klient… (u nespárované webové „Spárovat“) – Kartotéka v režimu rezervace s jejím
-  majitelem a zvířetem, Zaplatit (viz níže). Obnovení zprávou na sběrnici
+  rezervace Klient… (u nespárované webové „Spárovat“) – Kartotéka v režimu `reservation` s jejím
+  majitelem a zvířetem, „+ Bez objednání“ u Přicházejí (jen dnešek) – Kartotéka v režimu
+  `walk_in`, Zaplatit (viz níže). Obnovení zprávou na sběrnici
   `elite_vet_reservation/changed` a záložně každých 30 s; o půlnoci se „Dnes“ samo přepne na nový
   den; když se první načtení nepovede, ukáže se chyba s tlačítkem „Zkusit znovu“. Nová relace se tu (jako na obrazovce
   produktů) zeptá na počáteční stav hotovosti.
@@ -137,17 +141,32 @@ pokladny zůstávají standardní.
   už v některé otevřené objednávce je, se zaplatí v ní (vybere se) – nikdy ve dvou objednávkách.
 - **Kartotéka** (`CardIndexDialog`, dialog nad pokladnou): hledání (Enter), výsledky (zvířata
   a majitelé), karta majitele s otevřenými účty a zvířaty, formuláře majitele (nový klient
-  rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`), akce Přijmout bez objednání
-  (volitelně lékařka), Objednat, Vybrat k účtu (zákazník otevřené objednávky; objednávka s položkami jiného klienta se
-  nepřepíše – vznikne nová), Přiřadit k rezervaci (otevřeno z Dnes: ta rezervace; z lišty
-  „Přiřadit k rezervaci…“: výběr z `reservations_to_assign`, rezervace s návštěvou neaktivní),
-  Zavřít. Po přiřazení se Dnes obnoví.
-- **Objednat** (`ReceptionBookingScreen`): úkon, lékařka, den ‹ Dnes › / datum, další volný den,
-  volné časy (`free_slots`), poznámka, Objednat (`book`); po úspěchu i po chybě („mezitím
-  obsazeno“) se časy načtou znovu. Props z tabule (POS obrazovku nepřipojuje znovu, jen mění
-  props – `onWillUpdateProps`, rozlišení podle `key`): `prefill` `{day, minute, room_id, room, key}`
+  rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`). Prop `mode` určuje jediný úkol
+  okna: nadpis okna říká, k čemu se klient vybírá, pod ním je krátká nápověda a v patičce je
+  nejvýš jedno hlavní tlačítko (vedle Zavřít):
+
+  | `mode` | Odkud | Nadpis | Hlavní tlačítko |
+  |---|---|---|---|
+  | `browse` (výchozí) | lišta Kartotéka… | Kartotéka | žádné (jen hledání, prohlížení, založení a úprava) |
+  | `booking` | Objednat, pole „Klient a zvíře“ | Vybrat klienta a zvíře pro objednání | Vybrat → `onSelect({id, name, owner, partner_id})`, okno se zavře |
+  | `order` | Pokladna, tlačítko Klient | Klient k účtu v pokladně | Vybrat k účtu – zákazník otevřené objednávky; objednávka s položkami jiného klienta se nepřepíše – vznikne nová (úkol 5) |
+  | `reservation` | Dnes Klient… / Spárovat, detail na tabuli Klient… | Klient k rezervaci 9:00 Očkování | Přiřadit k rezervaci (`match_reservation`), pak `onChanged` |
+  | `walk_in` | Dnes + Bez objednání | Přijmout bez objednání | Přijmout (`walk_in`) s výběrem lékařky kterákoli / konkrétní, pak `onChanged` |
+
+  Další props: `reservation` (režim `reservation`: `{reservation_id, time, procedure, owner,
+  partner_id, pet_id, pet_name}`, předvyplní klienta a zvíře), `client` (`{partner_id, pet_id}` –
+  v režimu `booking` dosavadní výběr; v režimu `order` se bez něj ukáže zákazník otevřené
+  objednávky). Tlačítka, která potřebují zvíře, jsou bez vybraného živého zvířete neaktivní
+  s poznámkou „Vyberte zvíře.“
+- **Objednat** (`ReceptionBookingScreen`): pole Klient a zvíře („Vybrat…“ / „Změnit“ – Kartotéka
+  v režimu `booking`), úkon, lékařka, den ‹ Dnes › / datum, další volný den, volné časy
+  (`free_slots`), poznámka, Objednat (`book`). Po úspěchu se formulář vyprázdní (úkon, čas, klient
+  a zvíře, poznámka), den a lékařka zůstanou, upozornění „Objednáno: čt 22. 10. 2026 9:00 · Rex“;
+  po chybě („mezitím obsazeno“) se časy načtou znovu. Vybraný klient je ve stavu obrazovky (prop
+  `pet` jen jako počáteční hodnota). Props z tabule a lišty (POS obrazovku nepřipojuje znovu, jen
+  mění props – `onWillUpdateProps`, rozlišení podle `key`): `prefill` `{day, minute, room_id, room, key}`
   (klik do volného místa: den, po výběru úkonu se vybere čas v té ordinaci, když je volný, jinak
-  upozornění), `move` `{reservation_id, procedure_id, doctor_id, day, label, pet_name, owner,
+  upozornění), `reset` `{key}` (lišta Objednat znovu: konec režimu Přesunout), `move` `{reservation_id, procedure_id, doctor_id, day, label, pet_name, owner,
   procedure, key}` (režim Přesunout rezervaci: úkon a lékařka předvyplněné, tlačítko
   „Přesunout na …“ = `move_reservation`). „Otevřít tabuli“ otevře `BoardDialog` na vybraném dni.
 - **Tabule** (`board_dialog/`, `BoardDialog`, velikost dialogu `fs`): data z
@@ -157,9 +176,11 @@ pokladny zůstávají standardní.
   k pokladně / zaplaceno, čára „teď“ v čase kliniky). Den ‹ Dnes › a datum; obnovení zprávou
   `elite_vet_reservation/changed` a každých 30 s, časovače se ruší při zavření. Klik na rezervaci
   → `BoardEventDialog` (`board_reservation`): Přijmout (`check_in` hlavní rezervace), Klient…
-  (Kartotéka v režimu rezervace nad tabulí; když Kartotéka přepne obrazovku, tabule se zavře),
-  Přesunout (Objednat s `move`), Zrušit rezervaci (potvrzení v dialogu, `cancel_reservation`).
-  Přetažení (HTML5 drag & drop, jen potvrzené rezervace) → `move_reservation`. Klik do volného
+  (Kartotéka v režimu `reservation` nad tabulí, tabule zůstane otevřená; ne u zrušené, proběhlé
+  a nedorazivší), Přesunout (Objednat s `move`; jen `can_move`), Zrušit rezervaci (potvrzení
+  v dialogu, `cancel_reservation`). Přetažení (HTML5 drag & drop, jen potvrzené hlavní rezervace,
+  ne kopie druhé ordinace – `is_second_room` v událostech `board_data`) → `move_reservation`.
+  Po změně dne se tabule posune na „teď“ (dnešek), jinak na začátek dne. Klik do volného
   místa (i přes blokaci „jen web“) → dialog se zavře, Objednat s `prefill` (vybrané zvíře
   z Objednat zůstává). Blokace jsou jen ke čtení.
 - Chyby API (`UserError`) se ukazují jako upozornění pokladny česky.
@@ -180,9 +201,13 @@ dostupnosti.
 | `cancel_reservation(reservation_id)` | `{reservation_id, state, email_sent}` – `action_cancel("clinic")` hlavní rezervace (e-mail o zrušení jako v backendu, jen s `contact_email`) |
 
 - U druhé ordinace společného zákroku (`is_second_room`) patří klient, návštěva a zrušení hlavní
-  rezervaci (`main_id`); přesun se provede u kliknuté rezervace (čas se synchronizuje).
+  rezervaci (`main_id`). Přesouvá se jen hlavní rezervace (čas se do kopie synchronizuje):
+  u kopie je `can_move` False a `move_reservation` skončí chybou „Druhá ordinace se přesouvá
+  s hlavní rezervací – přesuňte hlavní rezervaci.“
+- `board_data` (patch `elite.vet.reservation` odsud) přidává ke každé události `is_second_room`.
 - `can_check_in`: dnešní potvrzená rezervace se spárovaným zvířetem bez návštěvy;
-  `can_move` / `can_cancel`: potvrzená (zrušit i čekající z webu) a bez návštěvy.
+  `can_move` / `can_cancel`: potvrzená (zrušit i čekající z webu) a bez návštěvy; `can_move`
+  navíc ne u kopie druhé ordinace.
 - Přesun i zrušení rezervace, která už má návštěvu: „Klient už je přijatý (návštěva je založená)
   – rezervaci nejde přesunout / zrušit.“ Přesunout jde jen potvrzenou rezervaci, zrušit jen
   potvrzenou nebo čekající. Blokace: „Rezervace nebyla nalezena.“

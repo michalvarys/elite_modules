@@ -34,9 +34,13 @@ export class ReceptionTabs extends Component {
 
     onClick(tab) {
         if (tab.key === "card") {
-            this.dialog.add(CardIndexDialog, {});
+            // R21: from the toolbar only search, view, create and edit - no assignment
+            this.dialog.add(CardIndexDialog, { mode: "browse" });
         } else if (tab.key === "board") {
             this.dialog.add(BoardDialog, {});
+        } else if (tab.key === "booking" && this.isActive(tab)) {
+            // Objednat pressed again: back to a plain booking (leaves the move mode)
+            this.pos.showScreen(tab.screen, { reset: { key: Date.now() } });
         } else {
             this.pos.showScreen(tab.screen);
         }

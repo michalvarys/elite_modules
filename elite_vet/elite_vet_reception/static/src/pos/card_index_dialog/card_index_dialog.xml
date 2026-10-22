@@ -2,7 +2,8 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="elite_vet_reception.CardIndexDialog">
-        <Dialog title="title" size="'xl'" contentClass="'o_ev_card_index'">
+        <Dialog title="title" size="'xl'" contentClass="'o_ev_card_index o_ev_card_index_' + mode">
+            <p class="text-muted mb-2 o_ev_purpose" t-esc="hint"/>
             <form class="d-flex gap-2 mb-3" t-on-submit="onSearchSubmit">
                 <input type="search" class="form-control form-control-lg o_ev_search" t-model="state.term"
                        placeholder="Hledat: jméno, telefon, čip, zvíře …" autofocus="autofocus"/>
@@ -80,25 +81,6 @@
                 </div>
             </form>
 
-            <!-- Toolbar "Přiřadit k rezervaci…": pick a reservation for the selected pet -->
-            <div t-elif="state.assign and state.data" class="d-flex flex-column gap-2 o_ev_assign">
-                <div class="o_ev_col_title">
-                    <span>Přiřadit <t t-esc="pet ? pet.name : ''"/> (<t t-esc="owner.name"/>) k rezervaci</span>
-                    <button type="button" class="btn btn-link p-0 o_ev_assign_back" t-on-click="closeAssign">‹ Zpět ke klientovi</button>
-                </div>
-                <small class="text-muted">Rezervace na dnešek a příštích 7 dní. Rezervaci, která už má návštěvu, změnit nejde.</small>
-                <div t-if="!state.assign.rows" class="o_ev_empty">Načítám…</div>
-                <div t-elif="!state.assign.rows.length" class="o_ev_empty">Na dnešek a příštích 7 dní nejsou žádné rezervace.</div>
-                <button t-foreach="state.assign.rows or []" t-as="row" t-key="row.reservation_id" type="button"
-                        class="o_ev_row o_ev_assign_row btn btn-light text-start"
-                        t-att-disabled="row.has_record or state.saving"
-                        t-on-click="() => this.assignTo(row)">
-                    <span class="o_ev_num o_ev_time text-nowrap"><t t-esc="row.date_label"/> <t t-esc="row.time"/></span>
-                    <span class="o_ev_grow" t-esc="assignLine(row)"/>
-                    <span t-if="row.has_record" class="o_ev_badge">už má návštěvu</span>
-                </button>
-            </div>
-
             <!-- Owner with pets -->
             <div t-elif="state.data" class="row g-3 o_ev_owner_card">
                 <div class="col-12 col-lg-5 d-flex flex-column gap-2">
@@ -146,7 +128,7 @@
                     <div t-if="pet" class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-secondary o_ev_edit_pet" t-on-click="editPet">Upravit <t t-esc="pet.name"/></button>
                     </div>
-                    <div t-if="pet and !pet.deceased" class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                    <div t-if="mode === 'walk_in' and pet and !pet.deceased" class="d-flex flex-wrap align-items-center gap-2 mt-2">
                         <label class="d-flex align-items-center gap-2">
                             <span class="text-muted text-nowrap">Lékařka</span>
                             <select class="form-select o_ev_walk_in_doctor" t-model="state.walkInDoctorId">
@@ -181,17 +163,18 @@
             <div t-else="" class="o_ev_empty">Zadejte jméno, telefon, číslo čipu nebo jméno zvířete a stiskněte Enter.</div>
 
             <t t-set-slot="footer">
+                <!-- exactly one primary action, given by the place the dialog is opened from -->
                 <t t-if="state.data and !editing">
-                    <button t-if="props.reservation" type="button" class="btn btn-primary btn-lg o_ev_match_reservation"
+                    <button t-if="mode === 'booking'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_pick_for_booking"
+                            t-att-disabled="!canUsePet" t-on-click="pickForBooking">Vybrat</button>
+                    <button t-elif="mode === 'order'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_select_for_order"
+                            t-on-click="selectForOrder">Vybrat k účtu</button>
+                    <button t-elif="mode === 'reservation'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_match_reservation"
                             t-att-disabled="!canUsePet" t-on-click="matchReservation">Přiřadit k rezervaci</button>
-                    <t t-else="">
-                        <button type="button" class="btn btn-primary btn-lg o_ev_walk_in"
-                                t-att-disabled="!canUsePet" t-on-click="walkIn">Přijmout bez objednání</button>
-                        <button type="button" class="btn btn-secondary btn-lg o_ev_assign_reservation"
-                                t-att-disabled="!canUsePet" t-on-click="openAssign">Přiřadit k rezervaci…</button>
-                    </t>
-                    <button type="button" class="btn btn-secondary btn-lg o_ev_book_pet" t-att-disabled="!canUsePet" t-on-click="book">Objednat</button>
-                    <button type="button" class="btn btn-secondary btn-lg o_ev_select_for_order" t-on-click="selectForOrder">Vybrat k účtu</button>
+                    <button t-elif="mode === 'walk_in'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_walk_in"
+                            t-att-disabled="!canUsePet" t-on-click="walkIn">Přijmout</button>
+                    <span t-if="needsPet and !pet" class="text-muted align-self-center o_ev_need_pet">Vyberte zvíře.</span>
+                    <span t-elif="needsPet and pet.deceased" class="text-muted align-self-center o_ev_need_pet">Zvíře je vedené jako uhynulé.</span>
                 </t>
                 <button type="button" class="btn btn-light btn-lg ms-md-auto o_ev_close" t-on-click="props.close">Zavřít</button>
             </t>

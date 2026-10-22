@@ -3,6 +3,8 @@
  * Opened from the board with `prefill` (a click into a free place: day, room, time - the time is
  * selected once a procedure is chosen and the time is free) or with `move` (Přesunout: the free
  * times of the reservation's procedure, the chosen one moves it with `move_reservation`).
+ * The client and pet are picked in the field "Klient a zvíře" (Kartotéka in the booking mode).
+ * After a booking the form is emptied (procedure, time, client, pet); day and doctor stay.
  */
 import { Component, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
@@ -21,8 +23,10 @@ import {
 export class ReceptionBookingScreen extends Component {
     static template = "elite_vet_reception.BookingScreen";
     static props = {
-        // {id, name, owner, partner_id} of the pet to book for (from the card index)
+        // {id, name, owner, partner_id} of the pet to book for (initial value of the field)
         pet: { type: Object, optional: true },
+        // navbar Objednat pressed while the screen is shown: {key} - leaves the move mode
+        reset: { type: Object, optional: true },
         // from the board, a click into a free place: {day, minute, room_id, room, key}
         prefill: { type: Object, optional: true },
         // from the board, Přesunout: {reservation_id, procedure_id, doctor_id, day, label, pet_name,
@@ -40,6 +44,7 @@ export class ReceptionBookingScreen extends Component {
         this.state = useState({
             procedures: [],
             doctors: [],
+            pet: this.props.pet || null, // {id, name, owner, partner_id}
             procedureId: "",
             doctorId: "",
             day: clinicToday(),
@@ -67,6 +72,9 @@ export class ReceptionBookingScreen extends Component {
             const changed = (key) => next[key] && next[key].key !== this.props[key]?.key;
             if (changed("prefill") || changed("move")) {
                 this.applyBoardProps(next);
+            } else if (changed("reset")) {
+                this.leaveMove();
+                this.state.prefill = null;
             }
         });
     }
@@ -98,7 +106,7 @@ export class ReceptionBookingScreen extends Component {
     }
 
     get pet() {
-        return this.props.pet || null;
+        return this.state.pet;
     }
 
     get dayTitle() {
@@ -196,8 +204,28 @@ export class ReceptionBookingScreen extends Component {
         }
     }
 
+    /** Field "Klient a zvíře": Kartotéka in the booking mode, Vybrat fills the field. */
     pickClient() {
-        this.dialog.add(CardIndexDialog, {});
+        const pet = this.pet;
+        this.dialog.add(CardIndexDialog, {
+            mode: "booking",
+            ...(pet ? { client: { partner_id: pet.partner_id, pet_id: pet.id } } : {}),
+            onSelect: (picked) => {
+                this.state.pet = picked;
+                this.state.booked = null;
+            },
+        });
+    }
+
+    /** After a booking: a fresh form for the next client; day and doctor stay. */
+    resetForm() {
+        this.state.procedureId = "";
+        this.state.selected = null;
+        this.state.slots = null;
+        this.state.nextFreeDay = null;
+        this.state.pet = null;
+        this.state.note = "";
+        this.state.prefill = null;
     }
 
     openBoard() {
@@ -254,15 +282,16 @@ export class ReceptionBookingScreen extends Component {
                 this.state.note,
             ]);
             if (result) {
-                this.state.booked = result.label;
-                this.state.note = "";
-                this.state.prefill = null;
-                this.notification.add(`Objednáno: ${this.pet.name}, ${result.label}.`, { type: "success" });
+                const text = `${dayLabel(this.state.day)} ${slot.time} · ${this.pet.name}`;
+                this.resetForm();
+                this.state.booked = text;
+                this.notification.add(`Objednáno: ${text}`, { type: "success" });
+                return;
             }
         } finally {
             this.state.saving = false;
         }
-        // booked or taken in the meantime: the list must show the current state
+        // taken in the meantime: the list must show the current state
         await this.loadSlots();
     }
 }
