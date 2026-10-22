@@ -86,6 +86,21 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 - `match_reservation` u druhé ordinace páruje hlavní rezervaci; rezervace, která už má návštěvu
   jiného zvířete, skončí chybou „Rezervace už má návštěvu jiného zvířete.“
 
+## Objednání (záložka Objednat)
+
+Stejné API `elite.vet.reception`, stejná kontrola role. Volné časy i uložení jdou přes průvodce
+rezervací (`elite.vet.reservation.wizard`, s právy volajícího) – stejný výpočet jako tabule.
+Den je `"YYYY-MM-DD"` v čase kliniky, `minute` = minuty od půlnoci.
+
+| Metoda | Vrací |
+|---|---|
+| `booking_options()` | `{"procedures": [{id, name, duration}], "doctors": [{id, name}]}` (lékařky přijímající objednávky) |
+| `free_slots(procedure_id, day, doctor_id=False)` | `{"day", "slots": [{time, minute, room_id, room, doctor_id, doctor}], "next_free_day"}` – řádky průvodce (čas × ordinace); `next_free_day` = nejbližší další den s volným časem v horizontu recepce, jinak `None` |
+| `book(pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None)` | `{reservation_id, label}` – potvrzená rezervace pro zvíře a jeho majitele (kontakt z majitele), lékařka ve službě; potvrzovací e-mail jako v průvodci (když má majitel e-mail) |
+
+- Před uložením se znovu ověří, že je čas volný; obsazený čas (i když ho odmítne až kontrola
+  překryvu při uložení) skončí chybou „Termín 9:00 už mezitím někdo obsadil – vyberte jiný.“
+
 ## Testy
 
 ```bash
