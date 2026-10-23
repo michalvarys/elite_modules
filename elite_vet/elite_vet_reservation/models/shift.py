@@ -2,11 +2,12 @@
 
 The clinic enters a doctor's shift once, in Rozpis služeb. A shift with a room
 (`room_id`) keeps exactly one linked elite.vet.doctor.assignment (assignment.shift_id):
-date and doctor from the shift, hours from the shift type. Without a room (a nurse,
+date, doctor and hours (`hour_from` / `hour_to`, prefilled from the shift type, changeable
+per shift) from the shift. Without a room (a nurse,
 a doctor not working in a room that day, a full-day note) there is no assignment.
 
 The sync runs on create / write / unlink of a shift and when a shift type's time
-changes (only shifts of today and later). An existing manual assignment of the same
+changes (only shifts of today and later that still have the type's old time). An existing manual assignment of the same
 doctor on the same day that overlaps is taken over (linked and updated) instead of
 creating a duplicate. elite_vet_calendar itself stays untouched.
 """
@@ -17,10 +18,9 @@ from .doctor_assignment import ROSTER_SYNC
 from .live import notify_board
 
 
-def roster_hours(shift_type):
-    """(hour_from, hour_to) of an assignment for a shift type. A night shift ends the
+def roster_hours(h_from, h_to):
+    """(hour_from, hour_to) of an assignment for a shift's time. A night shift ends the
     next morning (20:00–8:00); the assignment lives on one day, so it ends at midnight."""
-    h_from, h_to = shift_type.time_from, shift_type.time_to
     if h_to <= h_from:
         h_to = 24.0
     return h_from, h_to
@@ -35,9 +35,27 @@ class VetShift(models.Model):
              "(Rezervace → Rozpis lékařů, tabule, volné termíny). Prázdné = směna se do rezervací "
              "nepropíše (např. sestra). Předvyplní se výchozí ordinace lékařky.")
     accepts_bookings = fields.Boolean(related="doctor_id.accepts_bookings")
+    # The shift's own time: prefilled from the shift type (again when the type changes),
+    # changeable per shift. The website keeps showing the type's time.
+    hour_from = fields.Float(string="Od", compute="_compute_hours", store=True, readonly=False,
+                             precompute=True, aggregator=None)
+    hour_to = fields.Float(string="Do", compute="_compute_hours", store=True, readonly=False,
+                           precompute=True, aggregator=None,
+                           help="Noční služba může končit druhý den ráno (20:00–8:00).")
     assignment_ids = fields.One2many("elite.vet.doctor.assignment", "shift_id", string="Služba v rezervacích")
 
     # ---------- defaults and validation ----------
+    @api.depends("type_id")
+    def _compute_hours(self):
+        for shift in self:
+            shift.hour_from, shift.hour_to = shift.type_id.time_from, shift.type_id.time_to
+
+    @api.constrains("hour_from", "hour_to", "type_id")
+    def _check_hours(self):
+        for shift in self.filtered(lambda s: not s.type_id.is_note):
+            if not (0 <= shift.hour_from < 24 and 0 < shift.hour_to <= 24) or shift.hour_from == shift.hour_to:
+                raise ValidationError(_("Čas služby „Od“ a „Do“ musí být mezi 0:00 a 24:00 a nesmí být stejný."))
+
     @api.onchange("doctor_id")
     def _onchange_doctor_room(self):
         """Another doctor = her default room (empty for a nurse / a doctor without one).
@@ -87,7 +105,7 @@ class VetShift(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if any(f in vals for f in ("room_id", "doctor_id", "date", "type_id")):
+        if any(f in vals for f in ("room_id", "doctor_id", "date", "type_id", "hour_from", "hour_to")):
             self._sync_assignments()
         return res
 
@@ -104,7 +122,7 @@ class VetShift(models.Model):
 
     def _assignment_vals(self):
         self.ensure_one()
-        h_from, h_to = roster_hours(self.type_id)
+        h_from, h_to = roster_hours(self.hour_from, self.hour_to)
         return {"doctor_id": self.doctor_id.id, "room_id": self.room_id.id, "date": self.date,
                 "hour_from": h_from, "hour_to": h_to}
 
@@ -185,6 +203,7 @@ class VetShiftType(models.Model):
     _inherit = "elite.vet.shift.type"
 
     def write(self, vals):
+        old_hours = {t.id: (t.time_from, t.time_to) for t in self}
         res = super().write(vals)
         if any(f in vals for f in ("time_from", "time_to", "is_note")):
             today = fields.Date.context_today(self)
@@ -193,5 +212,9 @@ class VetShiftType(models.Model):
                 # A full-day note has no room (and so no assignment).
                 shifts.filtered("room_id").write({"room_id": False})
             else:
-                shifts.filtered("room_id")._sync_assignments()
+                # The new time for shifts that kept the type's time; a time changed by hand stays.
+                for shift_type in self:
+                    same = shifts.filtered(lambda s: s.type_id == shift_type
+                                           and (s.hour_from, s.hour_to) == old_hours[shift_type.id])
+                    same.write({"hour_from": shift_type.time_from, "hour_to": shift_type.time_to})
         return res

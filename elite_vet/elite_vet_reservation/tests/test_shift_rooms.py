@@ -99,6 +99,24 @@ class TestShiftRooms(ReservationCase):
         self.assertEqual((a_future.hour_from, a_future.hour_to), (7.0, 13.0))
         self.assertEqual((a_past.hour_from, a_past.hour_to), (8.0, 14.0))
 
+    def test_own_time_of_a_shift(self):
+        s = self.shift()
+        self.assertEqual((s.hour_from, s.hour_to), (8.0, 14.0), "prefilled from the shift type")
+        s.write({"hour_from": 9.5, "hour_to": 12.0})
+        a = self.linked(s)
+        self.assertEqual((a.hour_from, a.hour_to), (9.5, 12.0))
+        # a change of the type's time leaves a time changed by hand alone
+        other = self.shift(doctor=self.dr_b, room_id=self.room2.id)
+        self.morning.write({"time_from": 7.0, "time_to": 13.0})
+        self.assertEqual((s.hour_from, s.hour_to), (9.5, 12.0))
+        self.assertEqual((other.hour_from, other.hour_to), (7.0, 13.0))
+        self.assertEqual((self.linked(other).hour_from, self.linked(other).hour_to), (7.0, 13.0))
+        # another shift type = its time again
+        s.type_id = self.night
+        self.assertEqual((s.hour_from, s.hour_to), (self.night.time_from, self.night.time_to))
+        with self.assertRaises(ValidationError):
+            s.write({"hour_from": 10.0, "hour_to": 10.0})
+
     def test_takeover_of_overlapping_manual_assignment(self):
         manual = self.assign(self.dr_a, self.room2, self.day, 9.0, 12.0, procedures=self.derm)
         s = self.shift()

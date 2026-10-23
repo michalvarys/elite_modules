@@ -163,10 +163,12 @@ Služby se nezadávají dvakrát. Směna lékařky v aplikaci **Rozpis služeb �
 1. Zadejte směnu jako dosud: **Datum**, **Lékařka**, **Směna**.
 2. **Ordinace** se předvyplní z **Výchozí ordinace** lékařky (Rozpis služeb → Lékařky).
    Jde ji změnit, nebo smazat.
-3. Směna s ordinací se **sama propíše** do Rezervace → Rozpis lékařů: datum a lékařka
-   ze směny, čas **Od–Do** z typu směny (Rozpis služeb → Typy směn). Noční služba
-   (20:00–8:00) se do rezervací propíše do půlnoci.
-4. Bez ordinace se směna do rezervací nepropíše – tak to zůstane u sester a recepce
+3. **Čas Od–Do** se předvyplní z typu směny (Rozpis služeb → Typy směn) a u každé směny
+   jde změnit (třeba 9:00–13:00 místo celé ranní). Po změně typu směny se čas nastaví
+   znovu podle nového typu. Web dál ukazuje u směny čas jejího typu.
+4. Směna s ordinací se **sama propíše** do Rezervace → Rozpis lékařů: datum, lékařka a čas
+   ze směny. Noční služba (20:00–8:00) se do rezervací propíše do půlnoci.
+5. Bez ordinace se směna do rezervací nepropíše – tak to zůstane u sester a recepce
    (u nich ordinace ani nejde vyplnit) a u lékařky, která ten den v ordinaci nepracuje.
 
 Z kalendáře Rozpisu služeb: klikněte na den → malý formulář s datem, směnou, lékařkou
@@ -175,7 +177,7 @@ a ordinací. Klik na existující směnu → **Upravit** otevře směnu i s ordi
 Přímo z **Tabule** (Rezervace → Tabule), když máte právo upravovat Rozpis služeb:
 
 - **Klik na jméno lékařky** v hlavičce ordinace (nebo na její barevný pruh ve sloupci)
-  otevře její směnu z Rozpisu služeb – změníte lékařku, směnu nebo ordinaci a po uložení
+  otevře její směnu z Rozpisu služeb – změníte lékařku, směnu, čas Od–Do nebo ordinaci a po uložení
   se to propíše do rozpisu na webu i na tabuli. Ručně zadaná služba (vlastní čas) otevře
   svůj formulář z Rozpisu lékařů.
 - **+ služba** v hlavičce ordinace přidá novou směnu do Rozpisu služeb s předvyplněným
@@ -187,8 +189,8 @@ Co se děje dál:
 - **Změna** ordinace, lékařky, data nebo typu směny se hned promítne do služby v rezervacích.
 - **Smazání** ordinace, smazání směny nebo změna na celodenní poznámku (Zavřeno) službu
   v rezervacích smaže.
-- **Změna času typu směny** (Typy směn → Od/Do) přepíše služby z rozpisu **od dneška dál**;
-  odsloužené dny zůstanou, jak byly.
+- **Změna času typu směny** (Typy směn → Od/Do) přepíše čas směn **od dneška dál**, které
+  měly čas typu; směny s ručně změněným časem a odsloužené dny zůstanou, jak byly.
 - Měla-li lékařka ten den už ručně zadanou službu, která se se směnou překrývá, směna ji
   **převezme** (propojí a přepíše na ordinaci a čas ze směny) – žádný duplikát nevznikne.
   „Jen tyto úkony“ a poznámka u ní zůstanou.

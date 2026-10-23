@@ -26,8 +26,9 @@ Snímky obrazovek jsou v `doc/img/`.
   který úkon, plyne ze specializací na kartě v Náš tým.
 - **Směny se zadávají jednou, v Rozpisu služeb.** Směna lékařky s **Ordinací**
   (předvyplní se z **Výchozí ordinace** lékařky) se sama propíše do Rezervace → Rozpis
-  lékařů (čas z typu směny); změna / smazání směny nebo ordinace ji upraví / smaže,
-  změna času typu směny přepíše služby od dneška dál. Takové služby jsou označené
+  lékařů s časem směny (`hour_from` / `hour_to`, předvyplní se z typu směny, jde změnit u každé
+  směny); změna / smazání směny nebo ordinace ji upraví / smaže, změna času typu směny přepíše
+  od dneška dál směny, které měly čas typu (ručně změněný čas zůstane). Takové služby jsou označené
   **Z rozpisu služeb** a lékařka, ordinace, datum a čas se u nich mění jen v Rozpisu
   služeb. Ruční služby (vlastní čas, půl směny) se dál zadávají v Rozpisu lékařů;
   překrývající se ruční službu téže lékařky směna převezme. **Zkopírovat na další
