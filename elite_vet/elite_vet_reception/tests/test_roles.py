@@ -115,9 +115,11 @@ class TestRoles(ReceptionCase):
     def test_apps_menu_back_to_administrators_on_update(self):
         """Final review M-1: an earlier version gave Apps to Vedení; the update restores the stock group."""
         apps = self.env.ref("base.menu_management")
-        apps.groups_id = [(6, 0, [self.env.ref(MANAGER).id])]
-        self.env["ir.ui.menu"]._elite_vet_apply_role_menus()
-        self.assertEqual(apps.groups_id, self.env.ref("base.group_system"))
+        # an earlier version gave it to Vedení; base_install_request opens it to everyone
+        for groups in ([self.env.ref(MANAGER).id], []):
+            apps.groups_id = [(6, 0, groups)]
+            self.env["ir.ui.menu"]._elite_vet_apply_role_menus()
+            self.assertEqual(apps.groups_id, self.env.ref("base.group_system"))
         if not self.manager.has_group("base.group_system"):
             self.assertNotIn(apps.id, self.visible(self.manager))
 

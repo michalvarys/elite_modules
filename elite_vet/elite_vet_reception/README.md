@@ -288,8 +288,8 @@ dostupnosti.
   aktualizaci modulu a v `elite.vet.sale.setup.ensure_setup()`.
 - Menu (`ir.ui.menu._elite_vet_apply_role_menus`, `data/menus.xml`, běží při každé aktualizaci):
   Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy (Dashboards)
-  jen vedení; Aplikace zůstávají správci systému (standard Odoo; starší verze je dávala vedení, aktualizace
-  to vrátí); Ordinace od sestry; Pokladna od recepce; Diskuze všem;
+  jen vedení; Aplikace jen správci systému (`base.group_system` při každé aktualizaci – `base_install_request`
+  je jinak otevře všem, starší verze je dávala vedení); Ordinace od sestry; Pokladna od recepce; Diskuze všem;
   ve Skladu zůstanou sestře a lékařce jen Přehled skladu a Příjem zboží (přesunutý z Operací přímo
   pod Sklad hned za Přehled skladu), ostatní položky, které by viděla, jsou jen pro vedení. Obě položky jsou i v Ordinaci.
   Menu patří jiným modulům: samostatná aktualizace takového modulu vrátí jeho skupiny, další

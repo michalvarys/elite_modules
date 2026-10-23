@@ -18,9 +18,10 @@ MANAGER_ROOTS = (
     "website.menu_website_configuration",
     "spreadsheet_dashboard.spreadsheet_dashboard_menu_root",
 )
-# Stock menus an earlier version of this module gave to Vedení: their stock groups are restored
-# (only while they still carry exactly the Vedení group, i.e. nobody changed them since).
-RESTORED_STOCK = {"base.menu_management": "base.group_system"}
+# Menus for the system administrator only. Apps is base.group_system in base, but
+# base_install_request (auto-installed) opens it to every user, and an earlier version of this
+# module gave it to Vedení.
+ADMIN_ROOTS = ("base.menu_management",)
 # Ordinace (with its copies of Příjem zboží and Přehled skladu) from the nurse up (ruling R11).
 NURSE_ROOTS = ("elite_vet_clinic.menu_clinic_root",)
 RECEPTION_ROOTS = ("point_of_sale.menu_point_root",)
@@ -38,10 +39,8 @@ class IrUiMenu(models.Model):
         Menu = self.with_context(**{"ir.ui.menu.full_list": True, "active_test": False})
         for xmlid in MANAGER_ROOTS:
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), manager)
-        for xmlid, group_xmlid in RESTORED_STOCK.items():
-            menu = self.env.ref(xmlid, raise_if_not_found=False)
-            if menu and menu.groups_id == manager:
-                self._elite_vet_set_groups(menu, self.env.ref(group_xmlid))
+        for xmlid in ADMIN_ROOTS:
+            self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), self.env.ref("base.group_system"))
         for xmlid in NURSE_ROOTS:
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), self.env.ref(NURSE))
         for xmlid in RECEPTION_ROOTS:
