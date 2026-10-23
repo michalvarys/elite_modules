@@ -84,7 +84,12 @@
                     </div>
                     <div t-foreach="state.data.rooms" t-as="room" t-key="room.id" class="evb-col">
                         <div class="evb-head" t-att-style="'border-top: 4px solid ' + room.color_hex">
-                            <div class="evb-room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
+                            <div class="evb-room">
+                                <span class="evb-room-name"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></span>
+                                <button t-if="state.data.can_edit_shifts" type="button" class="btn btn-link btn-sm p-0 evb-add-shift"
+                                        title="Přidat službu do Rozpisu služeb (den a ordinace jsou předvyplněné)"
+                                        t-on-click="() => this.addShift(room)">+ služba</button>
+                            </div>
                             <div class="evb-doctors">
                                 <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge evb-overlap"
                                       title="Dvě lékařky v jedné ordinaci: pacient je ale vždy jen jeden naráz.">
@@ -96,9 +101,6 @@
                                       t-on-click="() => this.editShift(d)">
                                     <t t-esc="d.name"/> <t t-esc="d.time_label"/>
                                 </span>
-                                <button t-if="state.data.can_edit_shifts" type="button" class="btn btn-link btn-sm p-0 evb-add-shift"
-                                        title="Přidat službu do Rozpisu služeb (den a ordinace jsou předvyplněné)"
-                                        t-on-click="() => this.addShift(room)">+ služba</button>
 
                             </div>
                         </div>

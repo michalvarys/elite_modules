@@ -89,7 +89,10 @@
 }
 .evb-doctor-chip.evb-editable, .evb-band.evb-editable { cursor: pointer; }
 .evb-band.evb-editable:hover { opacity: 1; box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
-.evb-add-shift { font-size: 12px; vertical-align: middle; }
+// "+ služba" stays on the room's line: the doctor chips below may scroll in the fixed-height head.
+.evb-room { display: flex; align-items: baseline; gap: 6px; }
+.evb-room-name { flex: 1 1 auto; min-width: 0; }
+.evb-add-shift { flex: none; font-size: 12px; white-space: nowrap; }
 .evb-event { z-index: 2; }
 
 // ---------- web-only blocks: light and dashed, clicks pass through to the column ----------
