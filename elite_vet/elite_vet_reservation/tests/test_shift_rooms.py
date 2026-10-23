@@ -137,6 +137,15 @@ class TestShiftRooms(ReservationCase):
             f.room_id = self.room2      # changeable
         self.assertEqual(self.linked(f.record).room_id, self.room2)
 
+    def test_onchange_keeps_room_chosen_on_the_board(self):
+        """+ služba on the board: the room of the column stays when the doctor is picked."""
+        with Form(self.Shift.with_context(default_room_id=self.room2.id, default_date=self.day,
+                                          ev_keep_room=True)) as f:
+            f.type_id = self.morning
+            f.doctor_id = self.dr_a
+            self.assertEqual(f.room_id, self.room2)
+        self.assertEqual(self.linked(f.record).room_id, self.room2)
+
     # ---------- linked assignments are owned by the roster ----------
     def test_linked_assignment_is_protected(self):
         a = self.linked(self.shift())
@@ -180,6 +189,10 @@ class TestShiftRooms(ReservationCase):
         data = self.env["elite.vet.reservation"].board_data(fields.Date.to_string(self.day))
         flags = {d["doctor_id"]: d["from_roster"] for r in data["rooms"] for d in r["doctors"]}
         self.assertEqual(flags, {self.dr_a.id: True, self.dr_b.id: False})
+        shift_ids = {d["doctor_id"]: d["shift_id"] for r in data["rooms"] for d in r["doctors"]}
+        self.assertEqual(shift_ids[self.dr_b.id], False)
+        self.assertTrue(shift_ids[self.dr_a.id])
+        self.assertIn("can_edit_shifts", data)
 
     def test_calendar_manager_without_reservation_rights_syncs(self):
         user = self.env["res.users"].with_context(no_reset_password=True).create({

@@ -91,10 +91,15 @@
                                     <t t-esc="o.label"/>
                                 </span>
                                 <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge evb-doctor-chip"
-                                      t-att-style="'background:' + d.color" t-att-title="bandTitle(d)">
+                                      t-att-class="{'evb-editable': state.data.can_edit_shifts}"
+                                      t-att-style="'background:' + d.color" t-att-title="bandTitle(d) + (state.data.can_edit_shifts ? '\nKlik = upravit službu' : '')"
+                                      t-on-click="() => this.editShift(d)">
                                     <t t-esc="d.name"/> <t t-esc="d.time_label"/>
                                 </span>
-                                
+                                <button t-if="state.data.can_edit_shifts" type="button" class="btn btn-link btn-sm p-0 evb-add-shift"
+                                        title="Přidat službu do Rozpisu služeb (den a ordinace jsou předvyplněné)"
+                                        t-on-click="() => this.addShift(room)">+ služba</button>
+
                             </div>
                         </div>
                         <div class="evb-col-body" t-att-style="'height:' + height(axis.from, axis.to) + 'px'"
@@ -104,7 +109,9 @@
                                  t-att-class="{'evb-closed': !isOpen(room, m), 'evb-hour': m % 60 === 0}"
                                  t-att-style="'top:' + top(m) + 'px;height:' + height(m, m + state.data.step) + 'px'"/>
                             <div t-foreach="room.doctors" t-as="d" t-key="'d' + d.id" class="evb-band"
-                                 t-att-style="bandStyle(d)" t-att-title="bandTitle(d)">
+                                 t-att-class="{'evb-editable': state.data.can_edit_shifts}"
+                                 t-att-style="bandStyle(d)" t-att-title="bandTitle(d)"
+                                 t-on-click="(ev) => this.onBandClick(ev, d)">
                                 <span class="evb-band-text"><t t-esc="d.initials"/> <t t-esc="d.time_label"/></span>
                             </div>
                             <t t-foreach="globalBlocks" t-as="b" t-key="'g' + b.id">

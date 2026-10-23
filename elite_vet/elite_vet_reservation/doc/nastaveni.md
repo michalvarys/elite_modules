@@ -172,6 +172,16 @@ Služby se nezadávají dvakrát. Směna lékařky v aplikaci **Rozpis služeb �
 Z kalendáře Rozpisu služeb: klikněte na den → malý formulář s datem, směnou, lékařkou
 a ordinací. Klik na existující směnu → **Upravit** otevře směnu i s ordinací.
 
+Přímo z **Tabule** (Rezervace → Tabule), když máte právo upravovat Rozpis služeb:
+
+- **Klik na jméno lékařky** v hlavičce ordinace (nebo na její barevný pruh ve sloupci)
+  otevře její směnu z Rozpisu služeb – změníte lékařku, směnu nebo ordinaci a po uložení
+  se to propíše do rozpisu na webu i na tabuli. Ručně zadaná služba (vlastní čas) otevře
+  svůj formulář z Rozpisu lékařů.
+- **+ služba** v hlavičce ordinace přidá novou směnu do Rozpisu služeb s předvyplněným
+  dnem tabule a touto ordinací (ordinace zůstane, i když lékařka má jinou výchozí).
+- Bez práva (recepce) se jméno jen zobrazí a klik na pruh založí rezervaci jako dřív.
+
 Co se děje dál:
 
 - **Změna** ordinace, lékařky, data nebo typu směny se hned promítne do služby v rezervacích.

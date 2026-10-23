@@ -87,6 +87,9 @@
     display: block; padding: 4px 0; writing-mode: vertical-rl; white-space: nowrap;
     margin: 0 auto; letter-spacing: .03em;
 }
+.evb-doctor-chip.evb-editable, .evb-band.evb-editable { cursor: pointer; }
+.evb-band.evb-editable:hover { opacity: 1; box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
+.evb-add-shift { font-size: 12px; vertical-align: middle; }
 .evb-event { z-index: 2; }
 
 // ---------- web-only blocks: light and dashed, clicks pass through to the column ----------

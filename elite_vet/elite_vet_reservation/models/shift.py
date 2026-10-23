@@ -40,7 +40,10 @@ class VetShift(models.Model):
     # ---------- defaults and validation ----------
     @api.onchange("doctor_id")
     def _onchange_doctor_room(self):
-        """Another doctor = her default room (empty for a nurse / a doctor without one)."""
+        """Another doctor = her default room (empty for a nurse / a doctor without one).
+        A shift added from a room column of the board keeps that room (context ev_keep_room)."""
+        if self.env.context.get("ev_keep_room") and self.room_id and not self.type_id.is_note:
+            return
         if self.type_id.is_note or not self.doctor_id.accepts_bookings:
             self.room_id = False
         else:

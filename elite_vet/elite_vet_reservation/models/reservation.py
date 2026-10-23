@@ -392,7 +392,7 @@ class VetReservation(models.Model):
                 {"id": a.id, "doctor_id": a.doctor_id.id, "name": a.doctor_id.name,
                  "initials": name_initials(a.doctor_id.name), "color": doctor_color(a.doctor_id),
                  "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60)),
-                 "from_roster": bool(a.shift_id)}
+                 "from_roster": bool(a.shift_id), "shift_id": a.shift_id.id or False}
                 for a in assignments if a.room_id == room])
             for d in shifts:
                 d["time_label"] = "%s–%s" % (minutes_label(d["from"]), minutes_label(d["to"]))
@@ -438,7 +438,9 @@ class VetReservation(models.Model):
                 # Suggestions computed here: one request per board refresh, not one per card.
                 "suggestions": w.board_suggestions(w.id),
             })
-        return {"date": day_str, "step": s.booking_slot_step, "axis": {"from": axis_from, "to": axis_to},
+        return {"date": day_str, "step": s.booking_slot_step,
+                # Rozpis služeb managers edit shifts from the board (click on a doctor, + Služba)
+                "can_edit_shifts": self.env.user.has_group("elite_vet_calendar.group_calendar_manager"), "axis": {"from": axis_from, "to": axis_to},
                 "rooms": rooms_out, "events": events, "waiting": waiting,
                 # Weekend / public holiday when the website does not book (label only; reception still books).
                 "day_note": A.web_day_note(day) or ""}

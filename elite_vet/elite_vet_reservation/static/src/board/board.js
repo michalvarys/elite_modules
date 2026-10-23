@@ -214,6 +214,30 @@ export class ReservationBoard extends Component {
         this.openWizard({ default_minute: min, default_room_id: room.id });
     }
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
+    // ---------- doctor shifts: edited in Rozpis služeb (roster) right from the board ----------
+    openShiftForm(resModel, resId, context = {}) {
+        this.action.doAction({
+            type: "ir.actions.act_window", name: resId ? "Služba" : "Nová služba",
+            res_model: resModel, res_id: resId || false,
+            views: [[false, "form"]], target: "new", context,
+        }, { onClose: () => this.load(true) });
+    }
+    // A roster shift opens the shift (its change goes to the website too); a manual service its own form.
+    editShift(d) {
+        if (!this.state.data.can_edit_shifts) return;
+        if (d.shift_id) this.openShiftForm("elite.vet.shift", d.shift_id, { ev_keep_room: true });
+        else this.openShiftForm("elite.vet.doctor.assignment", d.id);
+    }
+    // Without the right the band is no obstacle: the click books in the column as before.
+    onBandClick(ev, d) {
+        if (!this.state.data.can_edit_shifts) return;
+        ev.stopPropagation();
+        this.editShift(d);
+    }
+    addShift(room) {
+        this.openShiftForm("elite.vet.shift", false,
+            { default_date: this.state.date, default_room_id: room.id, ev_keep_room: true });
+    }
     onColumnClick(ev, room) {
         // "Web only" blocks let clicks through (pointer-events: none): reception may book there.
         if (ev.target.closest(".evb-event")) return;
