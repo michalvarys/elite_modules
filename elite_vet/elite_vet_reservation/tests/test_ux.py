@@ -220,8 +220,9 @@ class TestAdminUx(ReservationCase):
         A = self.env["elite.vet.doctor.assignment"]
         a1 = self.assign(self.dr_a, self.room1, WED, 8.0, 12.0)
         a2 = self.assign(self.dr_b, self.room2, WED, 13.0, 18.0)
-        # Doctor B already has a shift next week that would overlap with the copy.
-        self.assign(self.dr_b, self.room1, WED + timedelta(days=7), 16.0, 19.0)
+        # Doctor B already has a shift next week in the same room that would overlap with the copy
+        # (another room would be fine: she may serve two rooms at once).
+        self.assign(self.dr_b, self.room2, WED + timedelta(days=7), 16.0, 19.0)
         res = (a1 | a2).action_copy_week()
         self.assertEqual(res["tag"], "display_notification")
         self.assertIn("Zkopírováno 1, přeskočeno 1", res["params"]["message"])

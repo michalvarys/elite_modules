@@ -175,9 +175,10 @@ Když dvě recepční (nebo recepční a web) ukládají stejný čas ve stejnou
 systém ordinaci na okamžik „zamkne“. Druhý zápis počká, uvidí první rezervaci
 a skončí hláškou o obsazeném termínu. Dvojí obsazení tak nevznikne ani při souběhu.
 
-Stejně se kontroluje i Rozpis lékařů: jedna lékařka nemůže mít dvě služby přes sebe.
-Platí to i pro služby propsané z Rozpisu služeb: směnu, která by se překrývala s jinou
-službou téže lékařky, nejde uložit (hláška „Směnu … nejde propsat do rezervací“).
+Rozpis lékařů: jedna lékařka může sloužit naráz ve dvou ordinacích (překrývající se směny
+v různých ordinacích jsou v pořádku – volné časy se počítají po ordinacích, takže ji v tu dobu
+jde objednat do obou). Dvě služby téže lékařky přes sebe ve **stejné** ordinaci uložit nejde –
+byl by to jen duplikát (u směny z Rozpisu služeb hláška „Směnu … nejde propsat do rezervací“).
 
 ---
 

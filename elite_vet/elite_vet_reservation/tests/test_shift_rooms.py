@@ -125,6 +125,14 @@ class TestShiftRooms(ReservationCase):
         self.assertEqual(manual.procedure_ids, self.derm, "Only these procedures survive the takeover")
         self.assertEqual(self.Assignment.search_count([("doctor_id", "=", self.dr_a.id), ("date", "=", self.day)]), 1)
 
+    def test_overlapping_shifts_in_two_rooms(self):
+        """Afternoon in one room and an early night shift in another: both go to reservations."""
+        first = self.shift()
+        second = self.shift(shift_type=self.night, room_id=self.room2.id)
+        second.write({"hour_from": 12.0})
+        self.assertEqual((self.linked(first).room_id, self.linked(second).room_id), (self.room1, self.room2))
+        self.assertEqual((self.linked(second).hour_from, self.linked(second).hour_to), (12.0, 24.0))
+
     def test_clash_with_another_roster_shift_is_a_clear_message(self):
         self.shift()
         with self.assertRaises(ValidationError) as cm:

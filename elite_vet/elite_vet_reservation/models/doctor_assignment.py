@@ -81,17 +81,20 @@ class VetDoctorAssignment(models.Model):
                 rec.doctor_id.name or "", rec.room_id.name or "",
                 format_hour(rec.hour_from), format_hour(rec.hour_to))
 
-    @api.constrains("doctor_id", "date", "hour_from", "hour_to")
+    @api.constrains("doctor_id", "room_id", "date", "hour_from", "hour_to")
     def _check_overlap(self):
+        """A doctor may serve two rooms at once (overlapping shifts in different rooms);
+        two overlapping services of hers in the same room would only be a duplicate."""
         for rec in self:
             if rec.hour_from >= rec.hour_to:
                 raise ValidationError(_("Čas „Od“ musí být dřív než „Do“."))
             clash = self.search([
-                ("id", "!=", rec.id), ("doctor_id", "=", rec.doctor_id.id), ("date", "=", rec.date),
-                ("hour_from", "<", rec.hour_to), ("hour_to", ">", rec.hour_from),
+                ("id", "!=", rec.id), ("doctor_id", "=", rec.doctor_id.id), ("room_id", "=", rec.room_id.id),
+                ("date", "=", rec.date), ("hour_from", "<", rec.hour_to), ("hour_to", ">", rec.hour_from),
             ], limit=1)
             if clash:
-                raise ValidationError(_("%s už v tu dobu slouží: %s.") % (rec.doctor_id.name, clash.display_name))
+                raise ValidationError(_("%(doctor)s už v tu dobu slouží v ordinaci %(room)s: %(clash)s.",
+                                        doctor=rec.doctor_id.name, room=rec.room_id.name, clash=clash.display_name))
 
     @api.constrains("doctor_id")
     def _check_doctor_accepts_bookings(self):
@@ -125,7 +128,7 @@ class VetDoctorAssignment(models.Model):
                 continue
             new_date = rec.date + timedelta(days=7)
             clash = self.search_count([
-                ("doctor_id", "=", rec.doctor_id.id), ("date", "=", new_date),
+                ("doctor_id", "=", rec.doctor_id.id), ("room_id", "=", rec.room_id.id), ("date", "=", new_date),
                 ("hour_from", "<", rec.hour_to), ("hour_to", ">", rec.hour_from),
             ])
             if clash:

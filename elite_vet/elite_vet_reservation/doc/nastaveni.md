@@ -194,7 +194,8 @@ Co se děje dál:
 - Měla-li lékařka ten den už ručně zadanou službu, která se se směnou překrývá, směna ji
   **převezme** (propojí a přepíše na ordinaci a čas ze směny) – žádný duplikát nevznikne.
   „Jen tyto úkony“ a poznámka u ní zůstanou.
-- Když směnu propsat nejde (lékařka už v tu dobu slouží jinde), uložení skončí hláškou
+- Směny jedné lékařky se smí překrývat, když jsou v různých ordinacích (slouží naráz ve dvou).
+- Když směnu propsat nejde (lékařka už v tu dobu slouží ve stejné ordinaci), uložení skončí hláškou
   „Směnu … nejde propsat do rezervací: …“.
 
 Služby z rozpisu jsou v Rozpisu lékařů označené **Z rozpisu služeb** (sloupec a filtr),
