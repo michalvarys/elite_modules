@@ -445,14 +445,16 @@ V e-mailu s potvrzením, změnou termínu a připomínkou je odkaz na zrušení.
 2. Krok 2 ukáže jen časy, kdy tato lékařka slouží.
 3. Pokud lékařka v seznamu chybí, daný úkon nedělá (nemá potřebnou specializaci).
 
-Kdo kdy slouží, vidíte v hlavičce sloupců tabule nebo v **Rozpis lékařů**.
+Kdo kdy slouží, vidíte v hlavičce sloupců tabule nebo v **Rozpis lékařů**. Klik do tabule
+předvyplní lékařku, která v té ordinaci a v tu dobu slouží; jde ji změnit.
 Na webu si klient lékařku vybírá v záložce **Podle lékaře**.
 
 ### Lékařka onemocněla
 
-1. **Upravit rozpis** – v **Rozpis lékařů** smažte nebo přepište její služby
-   (např. na zastupující lékařku). Úpravy rozpisu smí jen **Správce rezervací**;
-   recepce rozpis jen vidí.
+1. **Upravit rozpis** – v **Rozpis služeb → Rozpis** změňte u jejích směn lékařku
+   (na zastupující) nebo smažte ordinaci / směnu; do rezervací se to propíše samo.
+   Ručně zadané služby (bez označení **Z rozpisu služeb**) se upravují přímo
+   v **Rozpis lékařů**. Úpravy smí jen **Správce rezervací**; recepce rozpis jen vidí.
 2. Web od té chvíle přestane nabízet časy, které vyžadují právě ji.
 3. **Přeplánovat** – rezervace, které už na ni byly, zůstávají. Najdete je na tabuli
    podle jejích iniciál.

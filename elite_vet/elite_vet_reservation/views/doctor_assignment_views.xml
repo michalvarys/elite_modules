@@ -5,14 +5,48 @@
         <field name="model">elite.vet.doctor.assignment</field>
         <field name="arch" type="xml">
             <list string="Rozpis lékařů" editable="bottom" multi_edit="1" default_order="date, room_id, hour_from">
-                <field name="date"/>
-                <field name="doctor_id"/>
-                <field name="room_id"/>
-                <field name="hour_from" widget="float_time"/>
-                <field name="hour_to" widget="float_time"/>
+                <!-- Rows from Rozpis služeb: doctor, room, date and hours are changed there. -->
+                <field name="date" readonly="from_roster"/>
+                <field name="doctor_id" readonly="from_roster"/>
+                <field name="room_id" readonly="from_roster"/>
+                <field name="hour_from" widget="float_time" readonly="from_roster"/>
+                <field name="hour_to" widget="float_time" readonly="from_roster"/>
+                <field name="from_roster" string="Z rozpisu služeb" optional="show"/>
                 <field name="procedure_ids" widget="many2many_tags" optional="hide"/>
                 <field name="note" optional="hide"/>
             </list>
+        </field>
+    </record>
+
+    <record id="view_assignment_form" model="ir.ui.view">
+        <field name="name">elite.vet.doctor.assignment.form</field>
+        <field name="model">elite.vet.doctor.assignment</field>
+        <field name="arch" type="xml">
+            <form string="Služba lékaře">
+                <sheet>
+                    <div class="alert alert-info" role="status" invisible="not from_roster">
+                        Tato služba je <b>z rozpisu služeb</b>. Lékařka, ordinace, datum a čas se mění
+                        v aplikaci <b>Rozpis služeb</b> (směna <field name="shift_id" readonly="1" class="d-inline"/>);
+                        tady jde upravit jen „Jen tyto úkony“ a poznámka.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="from_roster" invisible="1"/>
+                            <field name="date" readonly="from_roster"/>
+                            <field name="doctor_id" readonly="from_roster"/>
+                            <field name="room_id" readonly="from_roster"/>
+                        </group>
+                        <group>
+                            <field name="hour_from" widget="float_time" readonly="from_roster"/>
+                            <field name="hour_to" widget="float_time" readonly="from_roster"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="procedure_ids" widget="many2many_tags"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
@@ -23,6 +57,7 @@
             <calendar string="Rozpis lékařů" date_start="date" color="room_id" mode="week" quick_create="0">
                 <field name="doctor_id"/>
                 <field name="room_id"/>
+                <field name="from_roster"/>
             </calendar>
         </field>
     </record>
@@ -36,6 +71,9 @@
                 <field name="room_id"/>
                 <filter name="from_today" string="Od dneška"
                         domain="[('date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="from_roster" string="Z rozpisu služeb" domain="[('from_roster', '=', True)]"/>
+                <filter name="manual" string="Zadané ručně" domain="[('from_roster', '=', False)]"/>
                 <group expand="0" string="Seskupit podle">
                     <filter name="group_date" string="Den" context="{'group_by': 'date:day'}"/>
                     <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
@@ -53,8 +91,9 @@
         <field name="context">{'search_default_from_today': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Zapište, kdo kdy slouží</p>
-            <p>Datum, lékařka, ordinace, od–do. Podle toho se na webu nabízí termíny
-               „k lékaři“ a na tabuli je vidět, kdo je v ordinaci.</p>
+            <p>Směny se zadávají v Rozpisu služeb – směna s ordinací se sem propíše sama.
+               Ručně tu jde přidat jen službu mimo rozpis (vlastní čas, půl směny).
+               Podle toho se na webu nabízí termíny „k lékaři“ a na tabuli je vidět, kdo je v ordinaci.</p>
         </field>
     </record>
 

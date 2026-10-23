@@ -173,7 +173,7 @@ export class ReservationBoard extends Component {
         return "top:" + this.top(d.from) + "px;height:" + this.height(d.from, d.to) + "px;left:" +
             (BAND_GAP + d.lane * (BAND_W + BAND_GAP)) + "px;width:" + BAND_W + "px;background:" + d.color;
     }
-    bandTitle(d) { return d.name + " " + d.time_label; }
+    bandTitle(d) { return d.name + " " + d.time_label + (d.from_roster ? " · z rozpisu služeb" : ""); }
     eventLeft(room) { return 4 + (room.lanes || 0) * (BAND_W + BAND_GAP); }
     eventStyle(room, e) {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";

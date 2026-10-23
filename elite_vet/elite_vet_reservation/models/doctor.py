@@ -20,6 +20,12 @@ class VetDoctor(models.Model):
         help="Barva jejího proužku na kartách rezervací a její služby na tabuli. Když ji nevyberete, "
              "přidělí se automaticky – každá lékařka má jinou.")
 
+    default_room_id = fields.Many2one(
+        "elite.vet.room", string="Výchozí ordinace", ondelete="set null",
+        help="Ordinace, která se jí předvyplní u nové směny v Rozpisu služeb. Směna s ordinací "
+             "se sama propíše do Rozpisu lékařů v rezervacích. U směny jde ordinaci změnit "
+             "nebo smazat (pak se směna do rezervací nepropíše).")
+
     def fill_calendar_colors(self):
         """Store the automatic color on doctors without a chosen one, so it shows
         in the color picker and can simply be adjusted."""

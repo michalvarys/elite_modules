@@ -391,7 +391,8 @@ class VetReservation(models.Model):
             shifts, lanes, overlaps = shift_bands([
                 {"id": a.id, "doctor_id": a.doctor_id.id, "name": a.doctor_id.name,
                  "initials": name_initials(a.doctor_id.name), "color": doctor_color(a.doctor_id),
-                 "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60))}
+                 "from": int(round(a.hour_from * 60)), "to": int(round(a.hour_to * 60)),
+                 "from_roster": bool(a.shift_id)}
                 for a in assignments if a.room_id == room])
             for d in shifts:
                 d["time_label"] = "%s–%s" % (minutes_label(d["from"]), minutes_label(d["to"]))

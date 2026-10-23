@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Rozpis služeb (elite_vet_calendar) gets the room: a shift with a room is propagated
+         to Rezervace → Rozpis lékařů by itself (models/shift.py). The calendar module itself
+         stays untouched; everything is inherited here. -->
+    <record id="view_vet_shift_list_reservation" model="ir.ui.view">
+        <field name="name">elite.vet.shift.list.reservation</field>
+        <field name="model">elite.vet.shift</field>
+        <field name="inherit_id" ref="elite_vet_calendar.view_vet_shift_list"/>
+        <field name="arch" type="xml">
+            <field name="doctor_id" position="after">
+                <field name="accepts_bookings" column_invisible="1"/>
+                <field name="room_id" string="Ordinace" readonly="is_note or not accepts_bookings"
+                       options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_vet_shift_form_reservation" model="ir.ui.view">
+        <field name="name">elite.vet.shift.form.reservation</field>
+        <field name="model">elite.vet.shift</field>
+        <field name="inherit_id" ref="elite_vet_calendar.view_vet_shift_form"/>
+        <field name="arch" type="xml">
+            <field name="doctor_id" position="after">
+                <field name="accepts_bookings" invisible="1"/>
+                <field name="room_id" invisible="is_note or not accepts_bookings" options="{'no_create': True}"/>
+            </field>
+            <xpath expr="//sheet" position="inside">
+                <div class="alert alert-info" role="status" invisible="is_note or not room_id">
+                    Směna s ordinací se sama propíše do rezervací (Rezervace → Rozpis lékařů, tabule,
+                    volné termíny). Bez ordinace se do rezervací nepropíše.
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Small form for a new shift straight from the calendar (click on a day). -->
+    <record id="view_vet_shift_form_quick_create" model="ir.ui.view">
+        <field name="name">elite.vet.shift.form.quick.create</field>
+        <field name="model">elite.vet.shift</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <form string="Směna">
+                <group>
+                    <field name="is_note" invisible="1"/>
+                    <field name="accepts_bookings" invisible="1"/>
+                    <field name="date"/>
+                    <field name="type_id"/>
+                    <field name="doctor_id" invisible="is_note"/>
+                    <field name="room_id" invisible="is_note or not accepts_bookings" options="{'no_create': True}"/>
+                    <field name="note" invisible="not is_note" placeholder="např. Státní svátek"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_vet_shift_calendar_reservation" model="ir.ui.view">
+        <field name="name">elite.vet.shift.calendar.reservation</field>
+        <field name="model">elite.vet.shift</field>
+        <field name="inherit_id" ref="elite_vet_calendar.view_vet_shift_calendar"/>
+        <field name="arch" type="xml">
+            <xpath expr="/calendar" position="attributes">
+                <attribute name="quick_create">1</attribute>
+                <attribute name="quick_create_view_id">%(elite_vet_reservation.view_vet_shift_form_quick_create)d</attribute>
+                <!-- Edit from the calendar opens the form in a dialog (room included). -->
+                <attribute name="event_open_popup">1</attribute>
+            </xpath>
+            <field name="type_id" position="after">
+                <field name="room_id"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- One-off import of the existing roster (Vedení). Not run on module update. -->
+    <record id="action_shift_roster_to_reservations" model="ir.actions.server">
+        <field name="name">Převzít rozpis do rezervací</field>
+        <field name="model_id" ref="elite_vet_calendar.model_elite_vet_shift"/>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_roster_to_reservations()</field>
+    </record>
+    <menuitem id="menu_rozpis_to_reservations" name="Převzít rozpis do rezervací"
+              parent="elite_vet_calendar.menu_rozpis_root" action="action_shift_roster_to_reservations"
+              sequence="60" groups="elite_vet_reservation.group_reservation_manager"/>
+</odoo>

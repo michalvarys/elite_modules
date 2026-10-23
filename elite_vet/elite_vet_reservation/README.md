@@ -24,6 +24,18 @@ Snímky obrazovek jsou v `doc/img/`.
 - Skupiny: **Recepce** (denní práce) a **Správce rezervací** (konfigurace).
 - Lékařka = **Lékařka – přijímá rezervace** v Rozpis služeb → Lékařky; kdo dělá
   který úkon, plyne ze specializací na kartě v Náš tým.
+- **Směny se zadávají jednou, v Rozpisu služeb.** Směna lékařky s **Ordinací**
+  (předvyplní se z **Výchozí ordinace** lékařky) se sama propíše do Rezervace → Rozpis
+  lékařů (čas z typu směny); změna / smazání směny nebo ordinace ji upraví / smaže,
+  změna času typu směny přepíše služby od dneška dál. Takové služby jsou označené
+  **Z rozpisu služeb** a lékařka, ordinace, datum a čas se u nich mění jen v Rozpisu
+  služeb. Ruční služby (vlastní čas, půl směny) se dál zadávají v Rozpisu lékařů;
+  překrývající se ruční službu téže lékařky směna převezme. **Zkopírovat na další
+  týden** kopíruje jen ruční služby. Stávající rozpis jednorázově propíše **Rozpis
+  služeb → Převzít rozpis do rezervací** (Správce rezervací). Technicky: model
+  `elite.vet.shift` dostal `room_id`, vazba je `shift_id` na `elite.vet.doctor.assignment`
+  (`models/shift.py`); modul Rozpis služeb se nemění.
+- Průvodce rezervací i objednání v pokladně předvyplní lékařku ve službě (jde změnit).
 
 ## Nasazení
 

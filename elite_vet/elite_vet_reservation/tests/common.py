@@ -16,7 +16,8 @@ class ReservationCase(TransactionCase):
         # search([]) then returns only this class's fixtures.
         for model in ("elite.vet.room", "elite.vet.procedure"):
             cls.env[model].search([]).write({"active": False})
-        cls.env["elite.vet.doctor.assignment"].search([]).unlink()
+        # (also the ones linked to the shift roster – context of the roster sync)
+        cls.env["elite.vet.doctor.assignment"].with_context(elite_vet_roster_sync=True).search([]).unlink()
         # Reservations and e-mails from manual testing in the same database would
         # occupy slots and add messages; everything is rolled back at the end of the class.
         cls.env["elite.vet.reservation"].search([]).unlink()

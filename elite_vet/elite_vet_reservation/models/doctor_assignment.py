@@ -1,15 +1,23 @@
 from datetime import timedelta
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 from .room import format_hour
 
+# Context key of the roster sync (elite.vet.shift → assignment); only it may change a linked assignment.
+ROSTER_SYNC = "elite_vet_roster_sync"
+# What the roster decides on a linked assignment; the rest (Only these procedures, Note) stays editable here.
+ROSTER_FIELDS = ("shift_id", "doctor_id", "room_id", "date", "hour_from", "hour_to")
+
 
 class VetDoctorAssignment(models.Model):
-    """Who works where and when. Deliberately separate from the shift roster
-    (elite.vet.shift): that one is for the website and only knows the shift type;
-    here we need the room and the exact time.
+    """Who works where and when.
+
+    Two kinds of rows: linked ones (`shift_id` set) are created and kept up to date by
+    the shift roster (elite.vet.shift with a room, see models/shift.py) and may be changed
+    only there; manual ones (no shift) are entered here as before - custom hours, half
+    shifts. The link lives here (shift_id, unique), the shift sees it via assignment_ids.
     """
 
     _name = "elite.vet.doctor.assignment"
@@ -28,6 +36,43 @@ class VetDoctorAssignment(models.Model):
         string="Jen tyto úkony", help="Prázdné = všechny úkony, které se v ordinaci dělají.")
     specialization_ids = fields.Many2many(related="doctor_id.specialization_ids", readonly=True)
     note = fields.Char(string="Poznámka")
+    shift_id = fields.Many2one("elite.vet.shift", string="Směna v rozpisu služeb", readonly=True, copy=False,
+                               index=True, ondelete="cascade")
+    from_roster = fields.Boolean(string="Z rozpisu služeb", compute="_compute_from_roster", store=True,
+                                 help="Služba vznikla z Rozpisu služeb (směna s ordinací). Lékařku, ordinaci, "
+                                      "datum a čas jde měnit jen tam.")
+
+    _sql_constraints = [
+        ("shift_unique", "unique(shift_id)", "Jedna směna z rozpisu služeb může mít jen jednu službu v ordinaci."),
+    ]
+
+    @api.depends("shift_id")
+    def _compute_from_roster(self):
+        for rec in self:
+            rec.from_roster = bool(rec.shift_id)
+
+    # ---------- linked assignments are owned by the roster ----------
+    def _check_roster_owned(self, vals=None):
+        if self.env.context.get(ROSTER_SYNC):
+            return
+        if vals is not None and not any(f in vals for f in ROSTER_FIELDS):
+            return
+        if self.filtered("shift_id"):
+            raise UserError(_("Tato služba je z Rozpisu služeb – upravte ji tam."))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.context.get(ROSTER_SYNC) and any(v.get("shift_id") for v in vals_list):
+            raise UserError(_("Tato služba je z Rozpisu služeb – upravte ji tam."))
+        return super().create(vals_list)
+
+    def write(self, vals):
+        self._check_roster_owned(vals)
+        return super().write(vals)
+
+    def unlink(self):
+        self._check_roster_owned()
+        return super().unlink()
 
     @api.depends("doctor_id", "room_id", "hour_from", "hour_to")
     def _compute_display_name(self):
@@ -68,9 +113,13 @@ class VetDoctorAssignment(models.Model):
     def action_copy_week(self):
         """Copy the selected assignments one week ahead. A copy that would overlap
         another assignment of the same doctor is skipped (instead of failing the whole
-        copy). The same goes for a doctor who no longer accepts bookings."""
+        copy). The same goes for a doctor who no longer accepts bookings.
+
+        Only manual assignments are copied: the ones from the shift roster come from
+        the roster's next week (a copy would be a manual duplicate the roster knows nothing about)."""
+        roster = self.filtered("shift_id")
         copied, skipped = 0, 0
-        for rec in self.sorted(lambda r: (r.date, r.hour_from)):
+        for rec in (self - roster).sorted(lambda r: (r.date, r.hour_from)):
             if not rec.doctor_id.accepts_bookings:
                 skipped += 1
                 continue
@@ -84,12 +133,16 @@ class VetDoctorAssignment(models.Model):
                 continue
             rec.copy({"date": new_date})
             copied += 1
+        message = _("Zkopírováno %(ok)s, přeskočeno %(skip)s.", ok=copied, skip=skipped)
+        if roster:
+            message += " " + _("%(n)s služeb je z Rozpisu služeb – ty se nekopírují, zadávají se tam.",
+                               n=len(roster))
         return {
             "type": "ir.actions.client", "tag": "display_notification",
             "params": {
                 "title": _("Kopírování na další týden"),
-                "message": _("Zkopírováno %(ok)s, přeskočeno %(skip)s.", ok=copied, skip=skipped),
-                "type": "success" if not skipped else "warning",
+                "message": message,
+                "type": "success" if not skipped and not roster else "warning",
                 "next": {"type": "ir.actions.client", "tag": "soft_reload"},
             },
         }

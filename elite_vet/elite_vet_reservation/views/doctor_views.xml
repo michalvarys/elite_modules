@@ -10,6 +10,8 @@
             <field name="member_id" position="after">
                 <field name="accepts_bookings" string="Lékařka (rezervace)"/>
                 <field name="calendar_color" widget="color" optional="show"/>
+                <field name="default_room_id" invisible="not accepts_bookings" optional="show"
+                       options="{'no_create': True}"/>
             </field>
         </field>
     </record>
@@ -21,6 +23,7 @@
             <field name="member_id" position="after">
                 <field name="accepts_bookings"/>
                 <field name="calendar_color" widget="color" invisible="not accepts_bookings"/>
+                <field name="default_room_id" invisible="not accepts_bookings" options="{'no_create': True}"/>
             </field>
         </field>
     </record>

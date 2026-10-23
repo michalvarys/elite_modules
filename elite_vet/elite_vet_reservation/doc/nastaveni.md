@@ -43,6 +43,9 @@ U každé veterinární lékařky:
 4. Případně změňte **Barva v kalendáři**. V této barvě se na tabuli
    zobrazuje proužek na kartách jejích rezervací, její služba a štítek. Barva se přidělí automaticky
    (každá lékařka jinou), stačí ji upravit, když se dvě podobají.
+5. Vyplňte **Výchozí ordinace** – ordinaci, kde obvykle slouží. Předvyplní se jí
+   u každé nové směny v Rozpisu služeb, a směna se tak sama propíše do rezervací
+   (viz kapitola 6). U konkrétní směny jde ordinaci změnit nebo smazat.
 
 Co příznak dělá:
 
@@ -148,12 +151,58 @@ Tip: Úkon, který nechcete nabízet, raději **archivujte** (Akce → Archivova
 
 - web nabízí termíny „k lékaři“ a úkony se specializací,
 - recepce vidí v hlavičce sloupců tabule, kdo slouží,
-- tabule navrhuje „Potvrdit → Ordinace · lékařka“.
+- tabule navrhuje „Potvrdit → Ordinace · lékařka“,
+- průvodce novou rezervací (klik do tabule i **Nová rezervace**) a objednání v pokladně
+  předvyplní lékařku, která v té ordinaci a v tu dobu slouží (jde ji změnit).
 
-Rozpis lékařů je samostatný od veřejného **Rozpisu služeb** (ten zná jen typ směny,
-tady je potřeba ordinace a přesný čas).
+### Směny se zadávají jednou – v Rozpisu služeb
 
-### Zadání služeb
+Služby se nezadávají dvakrát. Směna lékařky v aplikaci **Rozpis služeb → Rozpis**
+(seznam i kalendář) má sloupec **Ordinace**:
+
+1. Zadejte směnu jako dosud: **Datum**, **Lékařka**, **Směna**.
+2. **Ordinace** se předvyplní z **Výchozí ordinace** lékařky (Rozpis služeb → Lékařky).
+   Jde ji změnit, nebo smazat.
+3. Směna s ordinací se **sama propíše** do Rezervace → Rozpis lékařů: datum a lékařka
+   ze směny, čas **Od–Do** z typu směny (Rozpis služeb → Typy směn). Noční služba
+   (20:00–8:00) se do rezervací propíše do půlnoci.
+4. Bez ordinace se směna do rezervací nepropíše – tak to zůstane u sester a recepce
+   (u nich ordinace ani nejde vyplnit) a u lékařky, která ten den v ordinaci nepracuje.
+
+Z kalendáře Rozpisu služeb: klikněte na den → malý formulář s datem, směnou, lékařkou
+a ordinací. Klik na existující směnu → **Upravit** otevře směnu i s ordinací.
+
+Co se děje dál:
+
+- **Změna** ordinace, lékařky, data nebo typu směny se hned promítne do služby v rezervacích.
+- **Smazání** ordinace, smazání směny nebo změna na celodenní poznámku (Zavřeno) službu
+  v rezervacích smaže.
+- **Změna času typu směny** (Typy směn → Od/Do) přepíše služby z rozpisu **od dneška dál**;
+  odsloužené dny zůstanou, jak byly.
+- Měla-li lékařka ten den už ručně zadanou službu, která se se směnou překrývá, směna ji
+  **převezme** (propojí a přepíše na ordinaci a čas ze směny) – žádný duplikát nevznikne.
+  „Jen tyto úkony“ a poznámka u ní zůstanou.
+- Když směnu propsat nejde (lékařka už v tu dobu slouží jinde), uložení skončí hláškou
+  „Směnu … nejde propsat do rezervací: …“.
+
+Služby z rozpisu jsou v Rozpisu lékařů označené **Z rozpisu služeb** (sloupec a filtr),
+na tabuli je to v bublině proužku lékařky. Lékařka, ordinace, datum a čas se u nich
+mění jen v Rozpisu služeb – pokus o úpravu nebo smazání tady skončí hláškou
+„Tato služba je z Rozpisu služeb – upravte ji tam.“ Upravit tu jde jen **Jen tyto úkony**
+a **Poznámka**.
+
+### Převzetí stávajícího rozpisu
+
+Směny zadané dřív nemají ordinaci. Jednorázově je propíše **Rozpis služeb → Převzít rozpis
+do rezervací** (jen Správce rezervací / Vedení): směnám **od dneška dál** bez ordinace
+nastaví výchozí ordinaci lékařky a tím je propíše. Hláška ukáže „Propsáno X. Přeskočeno:
+bez výchozí ordinace Y, kolize Z.“ – kolize = lékařka má v tu dobu jinou službu. Nespouští
+se samo (ani při aktualizaci modulu); jde ho spustit znovu, už propsané směny se přeskočí.
+
+### Ruční služby (mimo rozpis)
+
+Službu, která v Rozpisu služeb není (vlastní čas, půl směny, záskok), jde dál zadat
+přímo tady:
 
 1. Klikněte **Nové** (nebo přidejte řádek v seznamu).
 2. **Datum**, **Lékařka**, **Ordinace**, **Od**, **Do**.
@@ -166,7 +215,8 @@ dvě lékařky současně – tabule je ukáže jako dva barevné proužky vedle
 naráz**; druhá lékařka znamená jen to, že úkon může dělat kterákoli z nich.
 
 Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékařka**,
-**Ordinace**. Vpravo nahoře lze přepnout na týdenní kalendář.
+**Ordinace**, filtrovat **Z rozpisu služeb** / **Zadané ručně**. Vpravo nahoře lze
+přepnout na týdenní kalendář.
 
 ### Kopírování týdne
 
@@ -175,6 +225,8 @@ Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékař
 3. Služby se zkopírují o 7 dní dál. Kopie, která by se překrývala s jinou službou téže
    lékařky, se přeskočí; stejně tak služba lékařky, která už nepřijímá rezervace.
    Hláška ukáže „Zkopírováno X, přeskočeno Y.“
+4. Kopírují se jen **ruční** služby. Služby z rozpisu služeb se přeskočí (hláška je
+   spočítá zvlášť) – další týden se zadává v Rozpisu služeb.
 
 ---
 
@@ -297,6 +349,8 @@ Recepce na tabuli vidí vždy české názvy.
 - [ ] V **Úkony** nemá žádný online úkon v „Kdo dělá“ text „žádná lékařka“.
 - [ ] Ordinace mají ordinační dobu, sál má odškrtnuté **Rezervovatelná online**.
 - [ ] Svátky na nejbližší měsíce jsou zadané jako **Výjimky**.
+- [ ] Lékařky mají **Výchozí ordinaci** a stávající rozpis je převzatý
+      (**Rozpis služeb → Převzít rozpis do rezervací**).
 - [ ] **Rozpis lékařů** je vyplněný aspoň na **Nejdál dopředu (dní)** dopředu.
 - [ ] **Nastavení rezervace**: e-mail pro upozornění, telefon na recepci, rozhodnutí
       o „Online jen tam, kde slouží lékař“ a připomínkách.

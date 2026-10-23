@@ -2,6 +2,7 @@ from . import room
 from . import procedure
 from . import doctor
 from . import doctor_assignment
+from . import shift
 from . import pet
 from . import reservation
 from . import mailing

@@ -176,6 +176,8 @@ systém ordinaci na okamžik „zamkne“. Druhý zápis počká, uvidí první 
 a skončí hláškou o obsazeném termínu. Dvojí obsazení tak nevznikne ani při souběhu.
 
 Stejně se kontroluje i Rozpis lékařů: jedna lékařka nemůže mít dvě služby přes sebe.
+Platí to i pro služby propsané z Rozpisu služeb: směnu, která by se překrývala s jinou
+službou téže lékařky, nejde uložit (hláška „Směnu … nejde propsat do rezervací“).
 
 ---
 
