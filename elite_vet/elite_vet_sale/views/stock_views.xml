@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Stock overview for the nurses (spec, section 7): filters "Dochází", "Expiruje do 30 dní"
+    <!-- Stock overview of the reception and Vedení (spec, section 7; task 14): filters "Dochází", "Expiruje do 30 dní"
          and "Prošlé" on the stock by lot (stock.quant) and on the lots (stock.lot). -->
     <record id="quant_search_view_overview" model="ir.ui.view">
         <field name="name">stock.quant.search.elite.vet</field>

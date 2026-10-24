@@ -15,6 +15,9 @@ class SaleCase(ClinicCase):
         super().setUpClass()
         cls.setup = cls.env["elite.vet.sale.setup"]
         cls.setup.ensure_setup()
+        # Recepce gets the till group when the role is set (elite_vet_reception); granted here
+        # too, so these tests do not depend on that module (idempotent).
+        cls.reception._elite_vet_grant_till()
         cls.company = cls.env.company
         cls.pos_config = cls.setup.pos_config()
         cls.tax21 = cls.setup.tax_for_rate(21)

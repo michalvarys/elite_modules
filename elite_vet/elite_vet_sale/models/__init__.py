@@ -11,3 +11,4 @@ from . import product_code
 from . import expense
 from . import goods_receipt
 from . import product
+from . import res_users

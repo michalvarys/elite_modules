@@ -127,7 +127,8 @@ class ClinicalRecordSale(models.Model):
         day = self.date.strftime("%-d. %-m. %Y") if self.date else ""
         return {
             "partner_id": self.pet_id.partner_id.id,
-            "pricelist_id": self.env["elite.vet.sale.setup"].pos_config().pricelist_id.id,
+            # sudo: doctors and nurses have no POS rights (task 14), the till pricelist is still theirs
+            "pricelist_id": self.env["elite.vet.sale.setup"].sudo().pos_config().pricelist_id.id,
             "client_order_ref": " – ".join(p for p in (self.pet_id.name, day) if p),
             "order_line": self._sale_line_commands(),
         }

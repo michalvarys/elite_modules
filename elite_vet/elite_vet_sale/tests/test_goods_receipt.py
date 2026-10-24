@@ -30,7 +30,7 @@ class TestGoodsReceipt(SaleCase):
             [("company_id", "=", cls.env.company.id)], limit=1).lot_stock_id
 
     def receipt(self, user=None):
-        return self.Receipt.with_user(user or self.nurse)
+        return self.Receipt.with_user(user or self.reception)
 
     # scan -----------------------------------------------------------------
     def test_scan_gs1_of_a_known_gtin(self):
@@ -145,12 +145,17 @@ class TestGoodsReceipt(SaleCase):
             self.receipt().validate(self.supplier.id, [{"product_id": self.product_b.id, "lot": "", "expiry": None,
                                                         "quantity": 1, "unit_cost": 1}], None)
 
-    def test_reception_has_no_access(self):
-        with self.assertRaises(AccessError):
-            self.receipt(self.reception).scan(GTIN_A)
-        with self.assertRaises(AccessError):
-            self.receipt(self.reception).validate(self.supplier.id, [
-                {"product_id": self.product_b.id, "lot": "X", "expiry": None, "quantity": 1, "unit_cost": 1}], None)
+    def test_nurse_and_doctor_have_no_access(self):
+        """Task 14: the goods receipt belongs to the till group (Recepce) and Vedení."""
+        for user in (self.nurse, self.doctor_user):
+            with self.subTest(user=user.login):
+                with self.assertRaises(AccessError):
+                    self.receipt(user).scan(GTIN_A)
+                with self.assertRaises(AccessError):
+                    self.receipt(user).validate(self.supplier.id, [
+                        {"product_id": self.product_b.id, "lot": "X", "expiry": None, "quantity": 1,
+                         "unit_cost": 1}], None)
+        self.assertTrue(self.receipt(self.manager).scan(GTIN_A)["known"])
 
     # suppliers ------------------------------------------------------------
     def test_suppliers_recent_first(self):

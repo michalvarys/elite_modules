@@ -1,8 +1,8 @@
 """Goods receipt by barcode scanner (API of the OWL client action elite_vet_sale.goods_receipt).
 
-The nurse picks a supplier, scans the goods (GS1 DataMatrix: product + lot + expiry; EAN or
-another code: product, lot and expiry from the last receipt) and stocks them in: one incoming
-picking on the main warehouse, done with lots, and one expense (elite.vet.expense) for it.
+Reception (group_till_stock, task 14) picks a supplier, scans the goods (GS1 DataMatrix: product +
+lot + expiry; EAN or another code: product, lot and expiry from the last receipt) and stocks them
+in: one incoming picking on the main warehouse, done with lots, and one expense (elite.vet.expense) for it.
 """
 from collections import OrderedDict, defaultdict
 from datetime import datetime, time
@@ -13,7 +13,7 @@ from odoo.tools import float_round
 
 from . import gs1
 
-NURSE_GROUP = "elite_vet_clinic.group_clinic_nurse"
+TILL_GROUP = "elite_vet_sale.group_till_stock"
 EXPENSE_RATES = (0, 12, 21)   # elite.vet.expense.vat_rate keys
 
 
@@ -23,8 +23,8 @@ class GoodsReceipt(models.AbstractModel):
 
     # helpers --------------------------------------------------------------
     def _check_access(self):
-        if not (self.env.su or self.env.user.has_group(NURSE_GROUP)):
-            raise AccessError(_("Příjem zboží smí dělat jen sestra, lékařka nebo správce."))
+        if not (self.env.su or self.env.user.has_group(TILL_GROUP)):
+            raise AccessError(_("Příjem zboží smí dělat jen recepce (pokladna a sklad) nebo vedení."))
 
     def _find_product(self, parsed):
         codes = gs1.lookup_codes(parsed["gtin"], parsed["raw"])

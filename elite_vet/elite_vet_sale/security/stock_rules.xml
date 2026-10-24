@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 14: Odoo lets every internal user read stock.quant (access_stock_quant_all). Elite Vet
+         doctors and nurses must not see the stock: an internal user without the stock rights
+         reads no quant; stock users (Recepce via group_till_stock, Vedení) read all of them.
+         Group rules are combined with OR, so the second rule lifts the first for stock users.
+         Server code reading quants for the clinic runs under sudo (no rules). -->
+    <record id="rule_stock_quant_internal_none" model="ir.rule">
+        <field name="name">Elite Vet: stav skladu jen se skladem (ostatní interní nic)</field>
+        <field name="model_id" ref="stock.model_stock_quant"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="domain_force">[(0, '=', 1)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_stock_quant_stock_user_all" model="ir.rule">
+        <field name="name">Elite Vet: stav skladu – uživatel skladu vše</field>
+        <field name="model_id" ref="stock.model_stock_quant"/>
+        <field name="groups" eval="[(4, ref('stock.group_stock_user'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+</odoo>

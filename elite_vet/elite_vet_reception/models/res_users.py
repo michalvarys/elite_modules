@@ -1,8 +1,14 @@
 """Home screen (res.users.action_id) by the highest role of the user (spec "Role a výchozí
 obrazovky"). Set automatically when the groups change, only while the user has no home action or
-one of the role actions – a custom home action is never overwritten."""
+one of the role actions – a custom home action is never overwritten.
+
+Till and stock (task 14): when the highest role changes to Recepce, the user gets
+elite_vet_sale.group_till_stock; when it changes to Sestra or Lékařka, the till, sale and stock
+groups are removed. Only on a role change: a manual tick or untick afterwards stays."""
 from odoo import _, api, models
 from odoo.exceptions import AccessError
+
+from odoo.addons.elite_vet_sale.models.res_users import CLINIC_ROLES
 
 # Highest role first.
 ROLE_HOME_ACTIONS = (
@@ -23,13 +29,31 @@ class ResUsers(models.Model):
     def create(self, vals_list):
         users = super().create(vals_list)
         users._elite_vet_apply_home_action()
+        users._elite_vet_apply_role_till({})
         return users
 
     def write(self, vals):
+        groups_change = any(key in GROUP_KEYS or key.startswith(REIFIED_GROUP_PREFIXES) for key in vals)
+        roles_before = {user.id: user._elite_vet_role() for user in self} if groups_change else {}
         res = super().write(vals)
-        if any(key in GROUP_KEYS or key.startswith(REIFIED_GROUP_PREFIXES) for key in vals):
+        if groups_change:
             self._elite_vet_apply_home_action()
+            self._elite_vet_apply_role_till(roles_before)
         return res
+
+    def _elite_vet_apply_role_till(self, roles_before):
+        """Till group by the new role, for users whose highest role changed (roles_before:
+        {user id: role before the write}, empty for new users)."""
+        for user in self.sudo():
+            if user.share:
+                continue
+            role = user._elite_vet_role()
+            if role == roles_before.get(user.id, False):
+                continue
+            if role == "reception":
+                user._elite_vet_grant_till()
+            elif role in CLINIC_ROLES:
+                user._elite_vet_drop_till_rights()
 
     def _elite_vet_home_action(self):
         """The role home action of the user (ir.actions record), empty without a role."""

@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Goods receipt by scanner (OWL client action registered by static/src/goods_receipt). -->
+    <!-- Goods receipt by scanner (OWL client action registered by static/src/goods_receipt).
+         Menus for the till group (task 14); "-" removes the nurse group of earlier versions on update. -->
     <record id="action_goods_receipt" model="ir.actions.client">
         <field name="name">Příjem zboží</field>
         <field name="tag">elite_vet_sale.goods_receipt</field>
         <field name="target">current</field>
     </record>
     <menuitem id="menu_goods_receipt_clinic" name="Příjem zboží" parent="elite_vet_clinic.menu_clinic_root"
-              sequence="40" action="action_goods_receipt" groups="elite_vet_clinic.group_clinic_nurse"/>
+              sequence="40" action="action_goods_receipt"
+              groups="-elite_vet_clinic.group_clinic_nurse,elite_vet_sale.group_till_stock"/>
     <menuitem id="menu_goods_receipt_stock" name="Příjem zboží" parent="stock.menu_stock_warehouse_mgmt"
-              sequence="1" action="action_goods_receipt" groups="elite_vet_clinic.group_clinic_nurse"/>
+              sequence="1" action="action_goods_receipt"
+              groups="-elite_vet_clinic.group_clinic_nurse,elite_vet_sale.group_till_stock"/>
 
     <!-- Codes assigned to products in the goods receipt (to correct a wrong assignment). -->
     <record id="view_product_code_list" model="ir.ui.view">

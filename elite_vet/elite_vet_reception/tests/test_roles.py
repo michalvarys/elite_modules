@@ -5,7 +5,9 @@ from .common import ReceptionCase
 
 RECEPTION = "elite_vet_reservation.group_reservation_reception"
 NURSE = "elite_vet_clinic.group_clinic_nurse"
+DOCTOR = "elite_vet_clinic.group_clinic_doctor"
 MANAGER = "elite_vet_reservation.group_reservation_manager"
+TILL = "elite_vet_sale.group_till_stock"
 
 
 @tagged("post_install", "-at_install")
@@ -62,6 +64,70 @@ class TestRoles(ReceptionCase):
             active_model="res.users", active_ids=user.ids).run()
         self.assertEqual(user.action_id.id, self.custom_action.id)
 
+    # ------------------------------------------------------------------ till group (task 14)
+
+    def has_till(self, user):
+        user.invalidate_recordset(["groups_id"])
+        return self.env.ref(TILL) in user.groups_id
+
+    def test_till_group_follows_role_change(self):
+        user = self.new_user("role_till_test")
+        self.assertFalse(self.has_till(user))
+        user.write({"groups_id": [(4, self.env.ref(RECEPTION).id)]})
+        self.assertTrue(self.has_till(user))
+        self.assertTrue(user.has_group("point_of_sale.group_pos_user"))
+        self.assertTrue(user.has_group("stock.group_stock_user"))
+        user.write({"groups_id": [(4, self.env.ref(NURSE).id)]})
+        self.assertFalse(self.has_till(user))
+        for group in ("point_of_sale.group_pos_user", "sales_team.group_sale_salesman", "stock.group_stock_user"):
+            self.assertFalse(user.has_group(group), group)
+        # back to Recepce through the role selection of the user form
+        field = next(name for name in self.env["res.users"].fields_get(attributes=["type"])
+                     if name.startswith("sel_groups_") and str(self.env.ref(RECEPTION).id) in name.split("_")[2:]
+                     and str(self.env.ref(NURSE).id) in name.split("_")[2:])
+        user.write({field: self.env.ref(RECEPTION).id})
+        self.assertFalse(user.has_group(NURSE))
+        self.assertTrue(self.has_till(user))
+        user.write({field: self.env.ref(DOCTOR).id})
+        self.assertFalse(self.has_till(user))
+        self.assertFalse(user.has_group("point_of_sale.group_pos_user"))
+        user.write({field: self.env.ref(MANAGER).id})
+        self.assertTrue(user.has_group(TILL))
+        self.assertTrue(user.has_group("point_of_sale.group_pos_manager"))
+
+    def test_new_users_by_role(self):
+        self.assertTrue(self.has_till(self.new_user("role_till_new_reception", RECEPTION)))
+        for login, role in (("role_till_new_nurse", NURSE), ("role_till_new_doctor", DOCTOR)):
+            user = self.new_user(login, role)
+            self.assertFalse(user.has_group(TILL), login)
+            self.assertFalse(user.has_group("point_of_sale.group_pos_user"), login)
+        self.assertFalse(self.has_till(self.new_user("role_till_new_none")))
+
+    def test_manual_till_tick_is_kept(self):
+        nurse = self.new_user("role_till_tick_nurse", NURSE)
+        nurse.write({"groups_id": [(4, self.env.ref(TILL).id)]})
+        self.assertTrue(self.has_till(nurse))
+        self.assertTrue(nurse.has_group("point_of_sale.group_pos_user"))
+        # another change that is not a role change keeps it
+        nurse.write({"groups_id": [(4, self.env.ref("base.group_partner_manager").id)]})
+        self.assertTrue(self.has_till(nurse))
+        reception = self.new_user("role_till_untick_reception", RECEPTION)
+        reception.write({"groups_id": [(3, self.env.ref(TILL).id)]})
+        reception.write({"groups_id": [(4, self.env.ref("base.group_partner_manager").id)]})
+        self.assertFalse(self.has_till(reception))
+
+    def test_till_group_on_user_form(self):
+        """The till group is outside the role selection (its own category)."""
+        role_field = next(name for name in self.env["res.users"].fields_get(attributes=["type"])
+                          if name.startswith("sel_groups_") and str(self.env.ref(NURSE).id) in name.split("_")[2:])
+        self.assertNotIn(str(self.env.ref(TILL).id), role_field.split("_")[2:])
+        arch = self.env["res.users"].get_view(self.env.ref("base.view_users_form").id)["arch"]
+        till_fields = [name for name in self.env["res.users"].fields_get(attributes=["type"])
+                       if name.startswith(("sel_groups_", "in_group_"))
+                       and str(self.env.ref(TILL).id) in name.split("_")[2:]]
+        self.assertTrue(till_fields)
+        self.assertTrue(any(name in arch for name in till_fields))
+
     def test_set_home_actions_button(self):
         users = self.nurse | self.reception
         users.write({"action_id": False})
@@ -85,7 +151,16 @@ class TestRoles(ReceptionCase):
         visible = self.visible(self.reception)
         self.assertIn(self.env.ref("point_of_sale.menu_point_root").id, visible)
         self.assertIn(self.env.ref("elite_vet_web.menu_rezervace_root").id, visible)
-        for xmlid in ("sale.sale_menu_root", "account.menu_finance", "stock.menu_stock_root",
+        # Task 14: the stock root with Přehled skladu and Příjem zboží (till group), nothing else of it
+        for xmlid in ("stock.menu_stock_root", "elite_vet_sale.menu_stock_overview",
+                      "elite_vet_sale.menu_goods_receipt_stock"):
+            self.assertIn(self.env.ref(xmlid).id, visible, xmlid)
+        stock_root = self.env.ref("stock.menu_stock_root")
+        others = self.env["ir.ui.menu"].with_context(**{"ir.ui.menu.full_list": True}).search(
+            [("parent_id", "=", stock_root.id), ("id", "not in", self.env.ref("elite_vet_sale.menu_stock_overview").ids
+              + self.env.ref("elite_vet_sale.menu_goods_receipt_stock").ids)])
+        self.assertFalse(set(others.ids) & visible, others.filtered(lambda m: m.id in visible).mapped("name"))
+        for xmlid in ("sale.sale_menu_root", "account.menu_finance",
                       "elite_vet_winvet.menu_winvet_root", "hr.menu_hr_root",
                       "elite_vet_calendar.menu_rozpis_root", "elite_vet_clinic.menu_clinic_root"):
             with self.subTest(menu=xmlid):
@@ -134,26 +209,29 @@ class TestRoles(ReceptionCase):
         self.assertEqual(custom.action_id.id, self.custom_action.id)
 
     def test_nurse_and_doctor_menus(self):
+        """Task 14: Ordinace, Rezervace, Diskuze – no Pokladna, no stock."""
         stock_root = self.env.ref("stock.menu_stock_root")
         overview = self.env.ref("elite_vet_sale.menu_stock_overview")
         receipt = self.env.ref("elite_vet_sale.menu_goods_receipt_stock")
         self.assertEqual(receipt.parent_id, stock_root)
         self.assertEqual(receipt.sequence, overview.sequence + 1)
-        others = self.env["ir.ui.menu"].with_context(**{"ir.ui.menu.full_list": True}).search(
-            [("parent_id", "=", stock_root.id), ("id", "not in", (overview | receipt).ids)])
-        self.assertTrue(others)
+        for menu in (stock_root, overview, receipt):
+            self.assertEqual(menu.groups_id, self.env.ref(TILL) | self.env.ref(MANAGER), menu.name)
         for user in (self.nurse, self.doctor_user):
             visible = self.visible(user)
             with self.subTest(user=user.login):
+                for xmlid in ("elite_vet_clinic.menu_clinic_root", "elite_vet_web.menu_rezervace_root",
+                              "mail.menu_root_discuss", "elite_vet_clinic.menu_patient_card"):
+                    self.assertIn(self.env.ref(xmlid).id, visible, xmlid)
                 for xmlid in ("stock.menu_stock_root", "elite_vet_sale.menu_stock_overview",
                               "elite_vet_sale.menu_goods_receipt_stock", "elite_vet_sale.menu_goods_receipt_clinic",
-                              "elite_vet_sale.menu_stock_overview_clinic", "elite_vet_clinic.menu_clinic_root",
-                              "point_of_sale.menu_point_root", "elite_vet_web.menu_rezervace_root"):
-                    self.assertIn(self.env.ref(xmlid).id, visible, xmlid)
-                self.assertFalse(set(others.ids) & visible, others.filtered(lambda m: m.id in visible).mapped("name"))
-                for xmlid in ("sale.sale_menu_root", "account.menu_finance", "elite_vet_winvet.menu_winvet_root",
+                              "elite_vet_sale.menu_stock_overview_clinic", "point_of_sale.menu_point_root",
+                              "sale.sale_menu_root", "account.menu_finance", "elite_vet_winvet.menu_winvet_root",
                               "hr.menu_hr_root", "elite_vet_calendar.menu_rozpis_root"):
                     self.assertNotIn(self.env.ref(xmlid).id, visible, xmlid)
+                loaded = self.env["ir.ui.menu"].with_user(user).load_menus(False)
+                self.assertNotIn(stock_root.id, loaded)
+                self.assertNotIn(self.env.ref("point_of_sale.menu_point_root").id, loaded)
 
     def test_manager_menus(self):
         visible = self.visible(self.manager)
@@ -169,7 +247,7 @@ class TestRoles(ReceptionCase):
         self.env["ir.ui.menu"]._elite_vet_apply_role_menus()
         self.env["ir.ui.menu"]._elite_vet_apply_role_menus()
         self.assertEqual(self.env.ref("account.menu_finance").groups_id, self.env.ref(MANAGER))
-        self.assertEqual(self.env.ref("point_of_sale.menu_point_root").groups_id, self.env.ref(RECEPTION))
+        self.assertEqual(self.env.ref("point_of_sale.menu_point_root").groups_id, self.env.ref(TILL))
 
     # ------------------------------------------------------------------ POS employees
 

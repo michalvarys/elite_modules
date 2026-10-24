@@ -154,3 +154,51 @@ Pošli uživateli krátce:
 - výsledky kontrol z kroku 6,
 - případná varování,
 - seznam kroků z bodu 7.
+
+## Doplnění: role bez pokladny
+
+Pro server, na kterém už běží `master` s moduly výše (`elite_vet_sale` 18.0.1.0.1). Lékařky
+a sestry přestanou vidět pokladnu a sklad; má je jen recepce (nová skupina **Pokladna a sklad
+(recepce)**) a vedení. Cílový kód: `elite_vet_sale` 18.0.1.0.2.
+
+Pravidla a záloha jako v krocích 2–3 (záloha, žádná otevřená pokladna). Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_sale,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-role-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-role-*.log      # nesmí nic najít
+grep -n "Elite Vet till rights" upgrade-role-*.log              # počty a loginy změněných uživatelů
+```
+
+`elite_vet_clinic` se neaktualizuje (beze změny). Obě aktualizace musí být v jednom běhu
+(`elite_vet_reception` nastaví menu).
+
+**Co se změní uživatelům** (migrace proběhne jednou, ruční změny potom zůstanou):
+- Recepce (nejvyšší role Recepce) dostane skupinu Pokladna a sklad (recepce) – pokladna jako dosud,
+  navíc Sklad s Přehledem skladu a Příjmem zboží.
+- Sestra a Lékařka (ne vedení, ne správce systému) přijdou o skupiny pokladny (uživatel, správce),
+  prodejce a skladu (uživatel, správce). Ztratí menu Prodejní místa a Sklad, Příjem zboží
+  a Přehled skladu v Ordinaci; `/pos/ui` jim vrátí 403. Karta pacienta, Hotovo k pokladně, stav
+  platby a tabule fungují dál.
+- Vedení a uživatelé bez role Elite Vet beze změny.
+
+Kontrola (lékařka nemá žádnou skupinu pokladny; dotaz musí vrátit 0 řádků):
+
+```sql
+SELECT u.login, d.module || '.' || d.name AS group_xmlid
+FROM res_users u
+JOIN res_groups_users_rel r ON r.uid = u.id
+JOIN ir_model_data d ON d.model = 'res.groups' AND d.res_id = r.gid
+WHERE u.share IS NOT TRUE
+  AND u.id IN (SELECT uid FROM res_groups_users_rel WHERE gid =
+               (SELECT res_id FROM ir_model_data WHERE module = 'elite_vet_clinic' AND name = 'group_clinic_nurse'))
+  AND u.id NOT IN (SELECT uid FROM res_groups_users_rel WHERE gid =
+               (SELECT res_id FROM ir_model_data WHERE module = 'elite_vet_reservation' AND name = 'group_reservation_manager'))
+  AND (d.module, d.name) IN (('point_of_sale', 'group_pos_user'), ('point_of_sale', 'group_pos_manager'),
+                             ('elite_vet_sale', 'group_till_stock'), ('stock', 'group_stock_user'),
+                             ('stock', 'group_stock_manager'), ('sales_team', 'group_sale_salesman'),
+                             ('sales_team', 'group_sale_salesman_all_leads'));
+```
+
+Uživateli předej: sestra, která má přijímat zboží, potřebuje v Nastavení › Uživatelé zapnout
+**Pokladna a sklad (recepce)** ručně (až po nastavení role). Na pokladně a v kartě obnovit stránku
+natvrdo (Ctrl+Shift+R).

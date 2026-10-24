@@ -1,15 +1,18 @@
-# Pokladna a sklad – návod pro recepci a sestry
+# Pokladna a sklad – návod pro recepci
 
 **K čemu je tento návod.** Popisuje, jak účet z karty pacienta dojde do pokladny, jak ho
 recepce zaplatí (kartou, hotově, převodem, se zálohou nebo fakturou), jak se dělá vratka
-a uzávěrka, a jak sestra přijímá zboží čtečkou a hlídá sklad. Technické nastavení (pro
+a uzávěrka, a jak recepce přijímá zboží čtečkou a hlídá sklad. Pokladnu a sklad má uživatel se
+skupinou **Pokladna a sklad (recepce)** – recepce ji dostane s rolí, vedení ji má vždy; lékařka
+a sestra do pokladny ani do skladu nevidí (zboží může přijímat sestra, jen když jí vedení skupinu
+zapne ručně). Technické nastavení (pro
 správce) je v [README modulu](../README.md), část „Pro správce“.
 
 Kde co najdete:
 
 - **Pokladna Recepce** – aplikace **Prodejní místa** → pokladna **Recepce** → **Otevřít pokladnu**
   (nebo **Pokračovat v prodeji**, když už je otevřená).
-- **Příjem zboží** – aplikace **Ordinace → Příjem zboží**, nebo **Sklady → Operace → Příjem zboží**.
+- **Příjem zboží** – aplikace **Sklady → Příjem zboží**.
 - **Přehled skladu** – aplikace **Sklady → Přehled skladu**.
 
 > **Zkušební provoz.** Dokud ve WinVetu běží ostrý provoz, vede ceník a sklad WinVet. Odoo jeho
@@ -145,7 +148,7 @@ přidala, zaplaťte to v pokladně zvlášť (nová objednávka), případně vr
 
 ---
 
-# Část B – sestry
+# Část B – příjem zboží a sklad (recepce)
 
 ## 8. Čtečka čárových kódů
 
@@ -162,7 +165,7 @@ nastavená správně.
 
 ![Příjem zboží](img/prijem-radky.png)
 
-1. Otevřete **Ordinace → Příjem zboží** (nebo Sklady → Operace → Příjem zboží).
+1. Otevřete **Sklady → Příjem zboží**.
 2. **Dodavatel:** začněte psát název; naposledy použití dodavatelé jsou nahoře. Nový
    dodavatel se založí jen se jménem.
 3. Volitelně **Dodací list** – číslo dodacího listu (dá se i naskenovat).
@@ -191,7 +194,7 @@ dál přijímejte i ve WinVetu.
 
 ## 10. Přehled skladu
 
-**Sklady → Přehled skladu** (recepce: **Ordinace → Přehled skladu**, jen ke čtení) ukazuje, co je na skladě, po šaržích: produkt, šarže, expirace
+**Sklady → Přehled skladu** ukazuje, co je na skladě, po šaržích: produkt, šarže, expirace
 a množství. Řádky jsou seskupené podle produktu – kliknutím na produkt uvidíte jeho šarže.
 
 ![Přehled skladu](img/prehled-skladu.png)

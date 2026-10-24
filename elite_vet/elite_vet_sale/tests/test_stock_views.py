@@ -43,18 +43,18 @@ class TestStockViews(SaleCase):
         return lot
 
     def filter_domains(self, model, view_id):
-        arch = self.env[model].with_user(self.nurse).get_view(view_id, "search")["arch"]
+        arch = self.env[model].with_user(self.reception).get_view(view_id, "search")["arch"]
         filters = {f.get("name"): f.get("domain") for f in etree.fromstring(arch).iter("filter")}
         context = {
             "datetime": safe_eval_module.datetime, "time": safe_eval_module.time,
             "relativedelta": safe_eval_module.dateutil.relativedelta.relativedelta,
-            "context_today": date.today, "uid": self.nurse.id,
+            "context_today": date.today, "uid": self.reception.id,
         }
         return {name: safe_eval(filters[name], context) for name in FILTERS}
 
     def test_stock_views_load(self):
         action = self.env.ref("elite_vet_sale.action_stock_overview")
-        Quant = self.env["stock.quant"].with_user(self.nurse)
+        Quant = self.env["stock.quant"].with_user(self.reception)
         Quant.get_view(action.view_id.id, "list")
         domains = self.filter_domains("stock.quant", action.search_view_id.id)
         internal = [("location_id.usage", "=", "internal")]
@@ -68,20 +68,24 @@ class TestStockViews(SaleCase):
         self.assertEqual(quants("expired").lot_id, self.lot_expired)
 
         lot_domains = self.filter_domains("stock.lot", self.env.ref("stock.search_product_lot_filter").id)
-        Lot = self.env["stock.lot"].with_user(self.nurse)
+        Lot = self.env["stock.lot"].with_user(self.reception)
         lots = self.lot_soon | self.lot_expired | self.lot_far
         self.assertEqual(Lot.search(lot_domains["below_minimum"] + [("id", "in", lots.ids)]), self.lot_soon)
         self.assertEqual(Lot.search(lot_domains["expiring_30_days"] + [("id", "in", lots.ids)]), self.lot_soon)
         self.assertEqual(Lot.search(lot_domains["expired"] + [("id", "in", lots.ids)]), self.lot_expired)
 
-    def test_menu_for_nurse_not_reception(self):
-        menu = self.env.ref("elite_vet_sale.menu_stock_overview")
-        self.assertIn(menu.id, self.env["ir.ui.menu"].with_user(self.nurse)._visible_menu_ids())
-        self.assertNotIn(menu.id, self.env["ir.ui.menu"].with_user(self.reception)._visible_menu_ids())
+    def test_menu_for_till_not_nurse(self):
+        """Task 14: Přehled skladu is for the till group (Recepce) and Vedení, not for nurses and doctors."""
+        Menu = self.env["ir.ui.menu"]
+        for xmlid in ("elite_vet_sale.menu_stock_overview", "elite_vet_sale.menu_stock_overview_clinic"):
+            menu = self.env.ref(xmlid)
+            self.assertIn(self.env.ref("elite_vet_sale.group_till_stock"), menu.groups_id)
+            for user in (self.nurse, self.doctor_user):
+                self.assertNotIn(menu.id, Menu.with_user(user)._visible_menu_ids(), (xmlid, user.login))
+        self.assertIn(self.env.ref("elite_vet_sale.menu_stock_overview").id,
+                      Menu.with_user(self.reception)._visible_menu_ids())
 
-    def test_reception_reads_stock_but_cannot_write(self):
-        # Reception reads the stock (lots in the till); the Ordinace menu with the stock overview is
-        # for nurses and up (workplaces ruling R11, elite_vet_reception), so no menu is asserted here.
+    def test_reception_reads_stock(self):
         action = self.env.ref("elite_vet_sale.action_stock_overview")
         Quant = self.env["stock.quant"].with_user(self.reception)
         Lot = self.env["stock.lot"].with_user(self.reception)
@@ -90,9 +94,13 @@ class TestStockViews(SaleCase):
         self.assertEqual(quants.lot_id, self.lot_expired | self.lot_far)
         quants.read(["product_id", "lot_id", "expiration_date", "quantity"])
         self.assertEqual(Lot.search([("id", "=", self.lot_soon.id)]), self.lot_soon)
+        # no stock manager rights
         with self.assertRaises(AccessError):
-            Lot.browse(self.lot_soon.id).write({"name": "PR-CHANGED"})
-        with self.assertRaises(AccessError):
-            Quant.browse(quants[:1].id).write({"inventory_quantity": 99})
-        with self.assertRaises(AccessError):
-            Lot.create({"name": "PR-NEW", "product_id": self.low.id})
+            self.env["stock.warehouse.orderpoint"].with_user(self.reception).browse(
+                self.env["stock.warehouse.orderpoint"].search([], limit=1).id).unlink()
+
+    def test_nurse_and_doctor_have_no_lots(self):
+        for user in (self.nurse, self.doctor_user):
+            with self.subTest(user=user.login):
+                with self.assertRaises(AccessError):
+                    self.env["stock.lot"].with_user(user).browse(self.lot_soon.id).read(["name"])

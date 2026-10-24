@@ -408,13 +408,21 @@ Seznam se obnovuje sám, jakmile recepce někoho přijme (záložně každých 3
 ## 10. Role a výchozí obrazovky
 
 Role se přidělují v **Nastavení → Uživatelé** (skupiny Elite Vet: Recepce < Sestra < Lékařka <
-Správce = Vedení; vyšší role má vše, co nižší).
+Správce = Vedení; vyšší role má vše, co nižší – kromě pokladny a skladu, viz níže).
 
 | Role | Po přihlášení | Menu |
 |---|---|---|
-| Recepce | pokladna Recepce | Prodejní místa (pokladna), Rezervace, Diskuze |
-| Sestra, Lékařka | Karta pacienta (Moji pacienti dnes) | navíc Ordinace a ze Skladu jen Přehled skladu a Příjem zboží |
+| Recepce | pokladna Recepce | Prodejní místa (pokladna), Rezervace, Diskuze, ze Skladu jen Přehled skladu a Příjem zboží |
+| Sestra, Lékařka | Karta pacienta (Moji pacienti dnes) | Ordinace, Rezervace, Diskuze – bez pokladny a skladu |
 | Vedení | Přehled tržeb a výdajů | vše |
+
+- **Pokladna a sklad (recepce)** je samostatné pole ve formuláři uživatele (oddíl „Elite Vet –
+  pokladna“), mimo výběr role. Dává pokladnu, nabídky, Přehled skladu a Příjem zboží. Když
+  uživateli nastavíte roli **Recepce**, dostane ho sám; když roli změníte na **Sestra** nebo
+  **Lékařka**, odebere se (i s právy pokladny a skladu). Má-li zboží přijímat i sestra, zapněte
+  jí ho ručně **po** nastavení role – ruční změna zůstane. Vedení ho má vždy.
+- Lékařka a sestra dál uzavírají účty (**Hotovo, k pokladně**) a vidí stav platby v kartě
+  pacienta i na tabuli; do pokladny ani do skladu se nedostanou.
 
 - Výchozí obrazovka se nastaví sama, když uživateli přidělíte roli (nebo ji změníte). Vlastní
   výchozí obrazovku, kterou uživatel má nastavenou ručně, to nepřepíše.
@@ -422,7 +430,8 @@ Správce = Vedení; vyšší role má vše, co nižší).
   uživatele → **Akce → Nastavit výchozí obrazovky**. Nastaví výchozí obrazovky **všem** interním
   uživatelům podle role, nejen zaškrtnutým (vlastní zůstanou). Použijte, když jste měnili členy přímo ve formuláři skupiny.
 - **Skrytá menu:** Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy
-  vidí jen vedení, Aplikace jen správce systému; recepce nevidí Ordinaci. Lékařky vidí služby na tabuli.
+  vidí jen vedení, Aplikace jen správce systému; recepce nevidí Ordinaci; sestra a lékařka nevidí
+  Prodejní místa ani Sklad. Lékařky vidí služby na tabuli.
 - **Účetní** potřebuje roli **Vedení** – Fakturace je jen pro vedení.
 - Každý, kdo ráno **otevírá pokladnu**, musí mít u svého uživatele vyplněný **e-mail**. Bez něj
   Odoo otevření odmítne („nakonfigurujte e-mailovou adresu odesílatele“).

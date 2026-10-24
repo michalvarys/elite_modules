@@ -7,8 +7,8 @@ Závisí na `elite_vet_clinic`, `elite_vet_winvet`, `point_of_sale`, `pos_sale`,
 `sale_management`, `stock`, `product_expiry` a `l10n_cz`.
 
 Modul obsahuje společné nastavení prodeje a skladu, ceník → produkty, zrcadlo skladu ze WinVetu,
-nabídky z karty pacienta, vyrovnání v pokladně, příjem zboží čtečkou a přehled skladu pro sestry.
-Návod pro recepci a sestry: [doc/pokladna-a-sklad.md](doc/pokladna-a-sklad.md).
+nabídky z karty pacienta, vyrovnání v pokladně, příjem zboží čtečkou a přehled skladu pro recepci.
+Návod pro recepci a lékařky: [doc/pokladna-a-sklad.md](doc/pokladna-a-sklad.md).
 
 ## Modely a API (přehled)
 
@@ -132,8 +132,10 @@ tak zrušená. Zrušení záznamu zruší nezaplacenou nabídku. API karty (`_re
 
 ## Příjem zboží čtečkou (`elite.vet.goods.receipt`)
 
-Klientská akce **„Příjem zboží“** (`elite_vet_sale.action_goods_receipt`, menu Ordinace i Sklad →
-Operace, skupina Sestra a výš; API kontroluje skupinu `group_clinic_nurse`, recepce nesmí).
+Klientská akce **„Příjem zboží“** (`elite_vet_sale.action_goods_receipt`, menu Sklad → Příjem zboží
+a Ordinace → Příjem zboží, akce i menu jen se skupinou **Pokladna a sklad (recepce)**
+`group_till_stock` – recepce a vedení; API kontroluje tuto skupinu, sestra a lékařka nesmí, pokud
+jim ji správce nepřidá ručně).
 Obrazovka je pro tablet: pole pro čtečku má fokus vždy (po každé akci i po kliknutí mimo pole),
 čtečka napíše kód + Enter; Ctrl+] (FNC1 čteček v režimu klávesnice) se vloží jako oddělovač GS.
 Skeny se zpracují jeden po druhém, takže druhé pípnutí stejné šarže navýší množství o 1.
@@ -177,11 +179,11 @@ nevyřízený doprodej); prošlá šarže (`scan` vrací `expired`) se přijme, 
 kód načtený čtečkou do pole šarže (začíná `]`, obsahuje GS nebo `(01)`, nebo ≥ 13 číslic) jde do
 fronty skenů místo do šarže.
 
-## Přehled skladu (sestry, recepce)
+## Přehled skladu (recepce, vedení)
 
-Menu **Sklady → Přehled skladu** (`action_stock_overview`, skupina uživatel skladu = Sestra a výš)
-a **Ordinace → Přehled skladu** (stejná akce, Recepce a výš; recepce má na `stock.quant` a `stock.lot`
-jen čtení):
+Menu **Sklady → Přehled skladu** (`action_stock_overview`; akce i menu jen se skupinou
+`group_till_stock`, tedy recepce a vedení) a **Ordinace → Přehled skladu** (stejná akce, stejná
+skupina – v Ordinaci ji tak vidí jen vedení):
 stav po šaržích (`stock.quant`, jen interní lokace, seskupeno podle produktu) jen ke čtení
 se sloupci produkt, šarže, expirace, množství. Filtry (ve vyhledávání `stock.quant` i `stock.lot`,
 tedy i ve standardních obrazovkách Skladu):
@@ -197,14 +199,32 @@ tedy i ve standardních obrazovkách Skladu):
 
 ## Role
 
-Skupiny POS, Prodeje a Skladu se odvozují ze skupin rezervací (řada Recepce < Sestra <
-Lékařka < Správce rezervací, vyšší role dědí nižší):
+Pokladnu, prodej a sklad dává samostatná skupina **Pokladna a sklad (recepce)**
+(`group_till_stock`, kategorie „Elite Vet – pokladna“, mimo řadu rolí Recepce < Sestra < Lékařka <
+Správce rezervací). Recepce ji dostane automaticky při nastavení role (elite_vet_reception,
+`res.users.write`), Správce ji má přes `implied_ids`. Role samy pokladnu, prodej ani sklad nedávají
+(task 14, od verze 18.0.1.0.2):
 
-| | Recepce | Sestra | Lékařka | Správce |
+| | Recepce (+ Pokladna a sklad) | Sestra | Lékařka | Správce |
 |---|---|---|---|---|
-| Pokladna | uživatel | uživatel | uživatel | správce POS |
-| Prodej (nabídky) | prodejce, všechny doklady (nabídky zakládá lékařka) | jako recepce | jako recepce | správce prodeje |
-| Sklad (příjem zboží, stav) | čtení (Ordinace → Přehled skladu) | uživatel skladu | uživatel skladu | správce skladu |
+| Pokladna | uživatel | – | – | správce POS |
+| Prodej (nabídky) | prodejce, všechny doklady (nabídky vznikají z karty pacienta) | – | – | správce prodeje |
+| Sklad (příjem zboží, přehled) | uživatel skladu | – | – | správce skladu |
+
+- Lékařka a sestra dál uzavírají účty (**Hotovo, k pokladně** – nabídka se zapisuje přes `sudo()`
+  po kontrole práva zápisu do záznamu) a vidí stav platby (`payment_state`, počítá se přes
+  `sudo()`), na tabuli i v kartě. `pos.order`, `pos.session`, `sale.order`, `stock.picking`,
+  `stock.lot` ani `stock.quant` číst nemohou a `/pos/ui` jim vrátí 403 (`controllers/main.py`).
+  `stock.quant` smí v Odoo číst každý interní uživatel; `security/stock_rules.xml` to omezí
+  pravidly záznamů: interní uživatel bez skladu nevidí žádný kvant, uživatel skladu všechny
+  (pravidla skupin se sčítají). Kód kliniky, který kvanty potřebuje (Dochází, zrcadlo WinVetu),
+  běží přes `sudo()`.
+- **Aktualizace ze starší verze** (migrace `18.0.1.0.2`, `res.users._elite_vet_split_till_rights`,
+  jednou): odebere vazby Recepce → POS/prodej a Sestra → sklad (to dělá i `security/groups.xml`
+  při každé aktualizaci), uživatelům s nejvyšší rolí Sestra / Lékařka (ne vedení, ne správce
+  systému) odebere jen skupiny `TILL_RIGHTS` (POS uživatel/správce, prodejce, prodejce – všechny
+  doklady, sklad uživatel/správce), uživatelům s rolí Recepce přidá `group_till_stock`. Počty
+  a loginy zapíše do logu. Uživatelů bez role, portálových a veřejných se nedotkne.
 
 ## Testy
 
@@ -252,5 +272,5 @@ položky WinVetu). Výdaj má sazbu podle největší části částky, zaokrouh
 **Známé omezení (jiný modul).** `elite_vet_clinic/security/groups.xml` dává správci rezervací
 skupinu Lékařka záznamem `<record id="elite_vet_reservation.group_reservation_manager">`. Ten
 záznam patří modulu rezervací a je `noupdate`, takže se použije jen při instalaci kliniky, ne při
-`-u`. Kdo vazbu ručně odebere, aktualizací ji nevrátí. Role prodeje a skladu v tomto modulu se
-zapisují přes `<function>` a aktualizace je obnoví.
+`-u`. Kdo vazbu ručně odebere, aktualizací ji nevrátí. Vazby skupin prodeje a skladu v tomto modulu
+se zapisují přes `<function>` a aktualizace je obnoví.

@@ -273,9 +273,22 @@ dostupnosti.
 
 | Role | Výchozí obrazovka (`res.users.action_id`) | Menu |
 |---|---|---|
-| Recepce | `action_open_reception_pos` – pokladna Recepce (`/pos/ui?config_id=…`, stejné okno) | Pokladna, Rezervace, Diskuze |
-| Sestra, Lékařka | Karta pacienta (`elite_vet_clinic.action_patient_card`) | + Ordinace, Sklad jen s Přehledem skladu a Příjmem zboží |
+| Recepce (+ skupina Pokladna a sklad) | `action_open_reception_pos` – pokladna Recepce (`/pos/ui?config_id=…`, stejné okno) | Pokladna, Rezervace, Diskuze, Sklad jen s Přehledem skladu a Příjmem zboží |
+| Sestra, Lékařka | Karta pacienta (`elite_vet_clinic.action_patient_card`) | Ordinace, Rezervace, Diskuze – bez Pokladny a Skladu |
 | Vedení | Přehled tržeb a výdajů (`elite_vet_winvet.action_winvet_dashboard`) | vše |
+
+- **Pokladna a sklad (recepce)** (`elite_vet_sale.group_till_stock`, vlastní kategorie „Elite Vet –
+  pokladna“, ve formuláři uživatele samostatné pole mimo výběr role) dává pokladnu, nabídky
+  a sklad (`point_of_sale.group_pos_user`, `sales_team.group_sale_salesman_all_leads`,
+  `stock.group_stock_user`). Role samy pokladnu ani sklad nedávají; Vedení skupinu má přes
+  nadřazené skupiny.
+- Při **změně role** (`res.users.create` / `write`, nejvyšší role se změnila): nově Recepce →
+  skupinu dostane; nově Sestra nebo Lékařka → odeberou se skupiny pokladny, prodeje a skladu
+  (`TILL_RIGHTS` v `elite_vet_sale/models/res_users.py`: tato skupina, POS uživatel/správce,
+  prodejce, sklad uživatel/správce). Jen při změně role – ruční zaškrtnutí nebo odškrtnutí potom
+  zůstane (např. sestra, která přijímá zboží, může skupinu dostat ručně).
+- `/pos/ui` otevře jen uživatel s právem pokladny (`elite_vet_sale/controllers/main.py`, jinak 403);
+  Odoo samo stránku otevře každému internímu uživateli a relaci založí pod sudo.
 
 - Výchozí obrazovka se nastaví při založení uživatele a při každé změně jeho skupin – jen když
   nemá žádnou nebo má některou z rolových; vlastní jinou výchozí obrazovku nikdy nepřepíše.
@@ -289,9 +302,11 @@ dostupnosti.
 - Menu (`ir.ui.menu._elite_vet_apply_role_menus`, `data/menus.xml`, běží při každé aktualizaci):
   Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy (Dashboards)
   jen vedení; Aplikace jen správci systému (`base.group_system` při každé aktualizaci – `base_install_request`
-  je jinak otevře všem, starší verze je dávala vedení); Ordinace od sestry; Pokladna od recepce; Diskuze všem;
-  ve Skladu zůstanou sestře a lékařce jen Přehled skladu a Příjem zboží (přesunutý z Operací přímo
-  pod Sklad hned za Přehled skladu), ostatní položky, které by viděla, jsou jen pro vedení. Obě položky jsou i v Ordinaci.
+  je jinak otevře všem, starší verze je dávala vedení); Ordinace od sestry; Pokladna jen se skupinou
+  Pokladna a sklad (recepce) a vedení; Diskuze všem; Sklad (kořen) a v něm jen Přehled skladu
+  a Příjem zboží (přesunutý z Operací přímo pod Sklad hned za Přehled skladu) pro skupinu Pokladna
+  a sklad a vedení, ostatní položky Skladu jen vedení. Kopie obou položek v Ordinaci mají skupinu
+  Pokladna a sklad – v Ordinaci je tedy vidí jen vedení (nebo sestra se skupinou přidanou ručně).
   Menu patří jiným modulům: samostatná aktualizace takového modulu vrátí jeho skupiny, další
   aktualizace `elite_vet_reception` je zase nastaví.
 - Účetní, která má vidět Fakturaci, potřebuje skupinu Vedení (menu Fakturace je jen pro vedení).
@@ -315,12 +330,14 @@ v [návodu, část C](doc/recepce-v-pokladne.md)):
 
 - **Role a výchozí obrazovky.** Role = skupiny Elite Vet (Recepce < Sestra < Lékařka < Správce =
   Vedení). Recepce → pokladna Recepce, sestra a lékařka → Karta pacienta, vedení → Přehled tržeb
-  a výdajů. Nastaví se samy při změně skupin uživatele; po úpravě členů ve formuláři skupiny
+  a výdajů. Pokladnu a sklad dává samostatná skupina **Pokladna a sklad (recepce)**: Recepce ji
+  dostane při nastavení role, sestře a lékařce se při změně role odebere (ručně ji lze přidat). Nastaví se samy při změně skupin uživatele; po úpravě členů ve formuláři skupiny
   použijte Uživatelé › Akce › **Nastavit výchozí obrazovky** (zaškrtnout libovolného uživatele,
   provede se pro všechny interní). Vlastní výchozí obrazovka se nepřepisuje.
 - **Skrytá menu** (každá aktualizace `elite_vet_reception` je nastaví znovu): Prodej, Fakturace,
   Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy jen vedení (Aplikace jen správce systému); Ordinace od
-  sestry (recepce ne); ve Skladu sestra a lékařka jen Přehled skladu a Příjem zboží.
+  sestry (recepce ne); Pokladna a Sklad (jen Přehled skladu a Příjem zboží) jen se skupinou Pokladna
+  a sklad (recepce) a vedení – sestra a lékařka je nevidí.
   Samostatná aktualizace modulu, kterému menu patří, vrátí jeho skupiny – pak aktualizujte
   i `elite_vet_reception`.
 - **Účetní** potřebuje skupinu **Vedení** (menu Fakturace je jen pro vedení).

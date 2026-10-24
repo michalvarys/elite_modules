@@ -112,21 +112,51 @@ class TestSetup(SaleCase):
         self.assertTrue(self.setup.is_winvet_master())
 
     def test_role_groups(self):
-        self.assertTrue(self.reception.has_group("point_of_sale.group_pos_user"))
-        self.assertTrue(self.reception.has_group("sales_team.group_sale_salesman"))
-        self.assertFalse(self.reception.has_group("stock.group_stock_user"))
+        """Task 14: only Recepce (the till group) and Vedení have the POS, sale and stock."""
+        till = self.env.ref("elite_vet_sale.group_till_stock")
+        for group in ("point_of_sale.group_pos_user", "sales_team.group_sale_salesman_all_leads",
+                      "stock.group_stock_user"):
+            self.assertIn(self.env.ref(group), till.implied_ids, group)
+        self.assertIn(till, self.reception.groups_id)
+        for group in ("point_of_sale.group_pos_user", "sales_team.group_sale_salesman", "stock.group_stock_user"):
+            self.assertTrue(self.reception.has_group(group), group)
         self.assertFalse(self.reception.has_group("point_of_sale.group_pos_manager"))
-        self.assertTrue(self.nurse.has_group("stock.group_stock_user"))
-        self.assertTrue(self.nurse.has_group("point_of_sale.group_pos_user"))
-        self.assertFalse(self.nurse.has_group("stock.group_stock_manager"))
-        self.assertTrue(self.doctor_user.has_group("stock.group_stock_user"))
-        for group in ("point_of_sale.group_pos_manager", "stock.group_stock_manager",
-                      "sales_team.group_sale_manager"):
+        self.assertFalse(self.reception.has_group("stock.group_stock_manager"))
+        for user in (self.nurse, self.doctor_user):
+            for group in ("elite_vet_sale.group_till_stock", "point_of_sale.group_pos_user",
+                          "sales_team.group_sale_salesman", "stock.group_stock_user"):
+                self.assertFalse(user.has_group(group), (user.login, group))
+        for group in ("elite_vet_sale.group_till_stock", "point_of_sale.group_pos_manager",
+                      "stock.group_stock_manager", "sales_team.group_sale_manager"):
             self.assertTrue(self.manager.has_group(group), group)
 
+    def test_role_chain_without_till(self):
+        """The role groups no longer imply the POS, sale or stock groups (removed on upgrade)."""
+        rights = self.env["res.users"]._elite_vet_till_rights()
+        for xmlid in ("elite_vet_reservation.group_reservation_reception", "elite_vet_clinic.group_clinic_nurse",
+                      "elite_vet_clinic.group_clinic_doctor"):
+            group = self.env.ref(xmlid)
+            self.assertFalse(group.trans_implied_ids & rights, xmlid)
+        till = self.env.ref("elite_vet_sale.group_till_stock")
+        self.assertIn(till, self.env.ref("elite_vet_reservation.group_reservation_manager").trans_implied_ids)
+        self.assertNotEqual(till.category_id, self.env.ref("elite_vet_reservation.group_reservation_reception").category_id)
+
+    def test_old_role_links_removed_on_update(self):
+        """Earlier versions linked Recepce -> salesman / POS and Sestra -> stock; the update removes them."""
+        reception = self.env.ref("elite_vet_reservation.group_reservation_reception")
+        nurse = self.env.ref("elite_vet_clinic.group_clinic_nurse")
+        reception.implied_ids = [(4, self.env.ref("sales_team.group_sale_salesman").id),
+                                 (4, self.env.ref("point_of_sale.group_pos_user").id)]
+        nurse.implied_ids = [(4, self.env.ref("stock.group_stock_user").id)]
+        self.env["res.groups"]._elite_vet_unlink_role_till_rights()
+        rights = self.env["res.users"]._elite_vet_till_rights()
+        self.assertFalse(reception.implied_ids & rights)
+        self.assertFalse(nurse.implied_ids & rights)
+        self.assertIn(self.env.ref("elite_vet_reservation.group_reservation_reception"), nurse.implied_ids)
+
     def test_reception_sees_quotations_of_others(self):
-        quotation = self.env["sale.order"].with_user(self.nurse).create({"partner_id": self.owner.id})
-        self.assertEqual(quotation.user_id, self.nurse)
+        quotation = self.env["sale.order"].with_user(self.manager).create({"partner_id": self.owner.id})
+        self.assertEqual(quotation.user_id, self.manager)
         self.assertEqual(self.env["sale.order"].with_user(self.reception).search([("id", "=", quotation.id)]),
                          quotation)
         self.assertTrue(self.reception.has_group("sales_team.group_sale_salesman_all_leads"))
