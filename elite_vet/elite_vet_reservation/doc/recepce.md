@@ -53,7 +53,7 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | „interní“ u názvu | Ordinace, kam se klienti z webu objednat nemohou (např. Sál). |
 | Červená čára | Aktuální čas (jen u dneška). Čas je i na ose. |
 | Šedá šrafovaná karta se štítkem **WinVet** | Záznam z kalendáře WinVetu (objednáno ve WinVetu). Proužek vlevo má barvu činnosti z WinVetu, název je zvíře (majitel) z kartotéky, jinak text z WinVetu. Jen pro čtení: nejde přetáhnout ani zrušit, klik ukáže podrobnosti. **Termín je obsazený** – v tom čase v Odoo nikdo neobjedná (web, recepce, pokladna). Změny dělejte ve WinVetu, na tabuli se ukážou do pár minut. |
-| Štítek **WinVet · …** v hlavičce sloupce | Celodenní záznam z WinVetu (např. služba „SM 8-20“, dovolená). Jen poznámka, termíny neblokuje. |
+| Štítek **WinVet · …** v hlavičce sloupce | Celodenní záznam z WinVetu (např. služba lékařky nebo dovolená). Jen poznámka, termíny neblokuje. |
 
 Zrušené rezervace se na tabuli neukazují. Kalendář z WinVetu vypíná vedení (WinVet data →
 Kalendář z WinVetu → Zapnout / vypnout); pak karty WinVet zmizí a nic neblokují.
