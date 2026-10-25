@@ -185,7 +185,27 @@ export class ReceptionTodayScreen extends Component {
         });
     }
 
+    /** Zaplatit; with a note of the room the reception reads it first (Pokračovat k platbě). */
     pay(row) {
+        if (row.room_note) {
+            this.dialog.add(NoteDialog, {
+                title: `Poznámka z ordinace: ${row.pet_name}`,
+                value: row.room_note,
+                readonly: true,
+                hint: "Interní poznámka pro recepci – na účtence ani faktuře nebude.",
+                confirmLabel: "Pokračovat k platbě",
+                cancelLabel: "Zpět",
+                onConfirm: async () => {
+                    this.payBill(row);
+                    return true;
+                },
+            });
+            return;
+        }
+        return this.payBill(row);
+    }
+
+    payBill(row) {
         return this.run(`pay-${row.record_id}`, async () => {
             try {
                 await this.pos.payReceptionBill(row.sale_order_id);

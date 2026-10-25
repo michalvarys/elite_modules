@@ -175,6 +175,8 @@ class ClinicalRecordCardApi(models.Model):
             "heart_rate": or_none(rec.heart_rate), "respiratory_rate": or_none(rec.respiratory_rate),
             "anamnesis": rec.anamnesis or "", "examination": rec.examination or "", "diagnosis": rec.diagnosis or "",
             "reception_note": rec.reception_note or None,
+            "room_note": rec.room_note or "",
+            "room_note_editable": rec.state != "cancelled" and self._can_write(),
             "lines": [self._line_data(line) for line in rec.line_ids],
             "amount_total": rec.amount_total, "currency": rec.currency_id.symbol,
             "editable": rec.state == "draft" and self._can_write(),
@@ -565,6 +567,19 @@ class ClinicalRecordCardApi(models.Model):
     def mark_done(self, record_id):
         record = self._get_record(record_id)
         record.action_done()
+        return record._record_data()
+
+    @api.model
+    def save_room_note(self, record_id, note):
+        """Internal note of the room for the reception (Poznámka pro recepci). Unlike the other
+        writes it may change after "Hotovo, k pokladně" too (not on a cancelled record)."""
+        record = self._get_record(record_id, editable=False)
+        self._check_can_write()
+        if record.state == "cancelled":
+            raise UserError(_("Zrušený záznam nelze měnit."))
+        note = (note or "").strip() or False
+        if record.room_note != note:
+            record.room_note = note
         return record._record_data()
 
     @api.model

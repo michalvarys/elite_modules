@@ -50,6 +50,11 @@ class VetClinicalRecord(models.Model):
                                  help="Interní poznámka recepce při příjmu pacienta – ukáže se v ordinaci "
                                       "(karta pacienta, Moji pacienti dnes, obrazovka Ordinace). "
                                       "Klient ji nikde nevidí.")
+    # Request 25. 10.: internal note of the room for the reception, written next to "Hotovo,
+    # k pokladně" (also after finishing); shown at the till before paying. Never on the receipt.
+    room_note = fields.Text(string="Poznámka pro recepci", tracking=True, copy=False,
+                            help="Interní poznámka z ordinace pro recepci – ukáže se v pokladně u účtu "
+                                 "(K pokladně, Zaplatit). Na účtence ani faktuře není.")
     line_ids = fields.One2many("elite.vet.clinical.record.line", "record_id", string="Položky účtu", copy=True)
     currency_id = fields.Many2one("res.currency", string="Měna", required=True,
                                   default=lambda self: self.env.ref("base.CZK"))

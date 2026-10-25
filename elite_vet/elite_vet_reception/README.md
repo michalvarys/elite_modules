@@ -48,7 +48,9 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 - **to_pay** – všechny nezaplacené účty návštěv (Čeká na platbu / Částečně zaplaceno) bez ohledu
   na den, nejstarší první:
   `record_id, sale_order_id, pet_name, owner, partner_id, amount, payment_state, payment_state_label,
-  date, date_label` (`amount` = zbývá zaplatit, `date_label` = „dnes“ nebo „D. M.“).
+  date, date_label, room_note` (`amount` = zbývá zaplatit, `date_label` = „dnes“ nebo „D. M.“,
+  `room_note` = poznámka ordinace pro recepci; s ní Zaplatit nejdřív ukáže okno „Poznámka
+  z ordinace“ → Pokračovat k platbě). Stejné položky má `open_bills` v `owner_data`.
 - **paid_count** – počet dnes zaplacených záznamů.
 - Záznam (`check_in` / `walk_in` / `call_patient` / `assign_room`): `record_id, stage, stage_label,
   state, pet_id, pet_name, reservation_id, doctor, arrived_time, received_by, room_id, room,

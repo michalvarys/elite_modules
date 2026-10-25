@@ -85,3 +85,56 @@ class TestReceptionNote(ReceptionCase):
         texts = " ".join(filter(None, [order.note and str(order.note), order.client_order_ref,
                                        *order.order_line.mapped("name")]))
         self.assertNotIn("TAJNA-POZNAMKA-T22", texts)
+
+
+@tagged("post_install", "-at_install")
+class TestRoomNote(ReceptionCase):
+    """Request 25. 10.: the room's internal note for the reception (Poznámka pro recepci)."""
+
+    def finished_visit(self, name, note=None):
+        reception = self.api(self.reception)
+        record_id = reception.walk_in(self.new_pet(name).id, False, "Jana")["record_id"]
+        nurse = self.as_user(self.nurse)
+        nurse.add_item(record_id, self.exam.id)
+        if note is not None:
+            self.assertEqual(nurse.save_room_note(record_id, note)["room_note"], note.strip())
+        nurse.mark_done(record_id)
+        return self.Record.browse(record_id)
+
+    def test_note_reaches_the_till(self):
+        record = self.finished_visit("Platící", "  Platí převodem, fakturu na firmu  ")
+        self.assertEqual(record.room_note, "Platí převodem, fakturu na firmu")
+        reception = self.api(self.reception)
+        bills = [b for b in reception.today_data()["to_pay"] if b["record_id"] == record.id]
+        self.assertEqual(bills[0]["room_note"], "Platí převodem, fakturu na firmu")
+        owner_bills = [b for b in reception.owner_data(record.partner_id.id)["open_bills"]
+                       if b["record_id"] == record.id]
+        self.assertEqual(owner_bills[0]["room_note"], "Platí převodem, fakturu na firmu")
+        # not on the quotation (receipt / invoice)
+        order = record.sale_order_id
+        texts = " ".join(filter(None, [order.note and str(order.note), order.client_order_ref,
+                                       *order.order_line.mapped("name")]))
+        self.assertNotIn("převodem", texts)
+
+    def test_editable_after_done_not_after_cancel(self):
+        record = self.finished_visit("Doplňovaný")
+        self.assertEqual(record.state, "done")
+        nurse = self.as_user(self.nurse)
+        data = nurse.save_room_note(record.id, "Doplatí zítra")
+        self.assertEqual(data["room_note"], "Doplatí zítra")
+        self.assertTrue(data["room_note_editable"])
+        nurse.save_room_note(record.id, "  ")
+        self.assertFalse(record.room_note)
+        cancelled = self.Record.create({"pet_id": self.new_pet("Zrušený").id, "state": "cancelled"})
+        with self.assertRaises(UserError):
+            nurse.save_room_note(cancelled.id, "x")
+        self.assertFalse(nurse.get_record(cancelled.id)["room_note_editable"])
+
+    def test_reception_cannot_write_it(self):
+        record = self.finished_visit("Čtený", "Jen pro recepci")
+        with self.assertRaises(AccessError):
+            self.as_user(self.reception).save_room_note(record.id, "jiná")
+        data = self.as_user(self.reception).get_record(record.id)
+        self.assertEqual(data["room_note"], "Jen pro recepci")
+        self.assertFalse(data["room_note_editable"])
+        self.assertTrue(self.Record._fields["room_note"].tracking)

@@ -245,8 +245,11 @@ export class PatientCard extends Component {
             popover: null,           // "service" | "product" | "bundle" | "tpl-<section>"
             tlFilter: "all", expanded: {}, showAll: {},
             busy: false, flashLine: null,
+            roomNote: "",            // Poznámka pro recepci (saved on its own, also after Hotovo)
+            roomNoteSave: { status: "idle", at: null },
         });
         this.dirty = new Set();
+        this.roomNoteDirty = false;
         this.lastLoad = 0;
 
         // From a button: action.params {pet_id, reservation_id}; after a page reload the pet id
@@ -272,6 +275,7 @@ export class PatientCard extends Component {
         useExternalListener(window, "beforeunload", () => { this.flush().catch(() => {}); });
         onWillUnmount(() => {
             clearTimeout(this.saveTimer);
+            clearTimeout(this.roomNoteTimer);
             clearTimeout(this.flashTimer);
             this.flush().catch(() => {});
         });
@@ -302,9 +306,10 @@ export class PatientCard extends Component {
         Object.assign(this.state, {
             mode: "card", loading: true, petId, reservationId, popover: null,
             tlFilter: "all", expanded: {}, showAll: {}, invalid: {},
-            save: { status: "idle", at: null },
+            save: { status: "idle", at: null }, roomNoteSave: { status: "idle", at: null },
         });
         this.dirty.clear();
+        this.roomNoteDirty = false;
         try {
             await Promise.all([this.loadCard({ openRecord: true }), this.state.today ? null : this.loadToday()]);
         } catch (e) {
@@ -377,6 +382,7 @@ export class PatientCard extends Component {
             time: nowHHMM(), state: "draft", state_label: "Rozepsaný", temperature: null, weight: null,
             heart_rate: null, respiratory_rate: null, anamnesis: "", examination: "", diagnosis: "",
             lines: [], amount_total: 0, currency: "Kč", editable: true, placeholder: true,
+            reception_note: null, room_note: "", room_note_editable: true,
         };
     }
     /** Id of today's record, creating it on the first write. */
@@ -400,6 +406,8 @@ export class PatientCard extends Component {
     }
     setRecord(record, { replaceForm = false } = {}) {
         this.state.record = record;
+        if (replaceForm) this.roomNoteDirty = false;
+        if (!this.roomNoteDirty) this.state.roomNote = record?.room_note || "";
         if (!record || !replaceForm) return;
         const form = this.emptyForm();
         for (const f of NUMBER_FIELDS) {
@@ -570,6 +578,7 @@ export class PatientCard extends Component {
 
     // Writes the changed fields (invalid numbers stay unsaved until fixed). Calls are serialised.
     async flush() {
+        if (this.roomNoteDirty || this.savingNote) await this.saveRoomNote().catch(() => {});
         clearTimeout(this.saveTimer);
         if (this.saving) {
             await this.saving.catch(() => {});
@@ -608,6 +617,46 @@ export class PatientCard extends Component {
         }
     }
     retrySave() { this.flush().catch(() => {}); }
+
+    // ------------------------------------------------------------ Poznámka pro recepci
+    // Internal note of the room for the reception (request 25. 10.): own call save_room_note,
+    // editable also after Hotovo, k pokladně; saved after a pause in typing, on blur and before Hotovo.
+    get roomNoteEditable() { return !!this.state.record?.room_note_editable; }
+    get roomNoteSaveText() {
+        const s = this.state.roomNoteSave;
+        if (s.status === "pending" || s.status === "saving") return "Ukládám…";
+        if (s.status === "error") return "Neuloženo";
+        return s.at ? "Uloženo " + s.at : "";
+    }
+    onRoomNote(ev) {
+        this.state.roomNote = ev.target.value;
+        this.roomNoteDirty = true;
+        this.state.roomNoteSave.status = "pending";
+        clearTimeout(this.roomNoteTimer);
+        this.roomNoteTimer = setTimeout(() => this.saveRoomNote().catch(() => {}), SAVE_DELAY);
+    }
+    async saveRoomNote() {
+        clearTimeout(this.roomNoteTimer);
+        if (this.savingNote) await this.savingNote.catch(() => {});
+        if (!this.roomNoteDirty || !this.state.record || !this.roomNoteEditable) return;
+        const id = await this.ensureRecord();
+        const text = this.state.roomNote;
+        this.roomNoteDirty = false;
+        this.state.roomNoteSave.status = "saving";
+        this.savingNote = this.orm.call(MODEL, "save_room_note", [id, text]);
+        try {
+            const rec = await this.savingNote;
+            if (this.state.record && this.state.record.id === rec.id) this.state.record.room_note = rec.room_note;
+            this.state.roomNoteSave = { status: this.roomNoteDirty ? "pending" : "idle", at: nowHHMM() };
+        } catch (e) {
+            this.roomNoteDirty = true;
+            this.state.roomNoteSave.status = "error";
+            this.notification.add("Poznámku pro recepci se nepodařilo uložit: " + errorMessage(e), { type: "danger" });
+            throw e;
+        } finally {
+            this.savingNote = null;
+        }
+    }
 
     async onDoctorChange(ev) {
         const doctorId = parseInt(ev.target.value, 10) || false;
@@ -770,7 +819,8 @@ export class PatientCard extends Component {
         this.dialog.add(ConfirmationDialog, {
             title: "Uzavřít záznam a poslat účet k pokladně?",
             body: "Záznam " + this.pet.name + " se uzavře a účet " + total + " půjde k pokladně. " +
-                  "Upravit ho pak půjde jen po znovuotevření lékařkou.",
+                  "Upravit ho pak půjde jen po znovuotevření lékařkou." +
+                  (this.state.roomNote.trim() ? " Recepce uvidí poznámku: „" + this.state.roomNote.trim() + "“." : ""),
             confirmLabel: "Hotovo, k pokladně",
             cancelLabel: "Pokračovat v záznamu",
             confirm: () => this.run(async () => {

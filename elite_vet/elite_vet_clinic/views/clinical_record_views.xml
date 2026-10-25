@@ -60,6 +60,8 @@
                             <group string="Interní poznámky (klient je nevidí)" name="internal_notes">
                                 <field name="reception_note" readonly="state == 'cancelled'"
                                        placeholder="Co recepce napsala při příjmu pacienta"/>
+                                <field name="room_note" readonly="state == 'cancelled'"
+                                       placeholder="Co má recepce vědět při placení"/>
                             </group>
                         </page>
                         <page string="Účet" name="bill">

@@ -397,6 +397,16 @@
                                                     freeLabel.bind="freeLabel" onFree="(name) => this.addFree('product', name)"/>
                                         </div>
                                     </div>
+                                    <div t-if="roomNoteEditable or state.roomNote" class="evpc-room-note">
+                                        <div class="evpc-field-row">
+                                            <label class="evpc-field-label" for="evpc-room-note">Poznámka pro recepci <small class="evpc-muted">(interní, klient ji neuvidí)</small></label>
+                                            <span t-if="roomNoteSaveText" class="evpc-saved" t-att-class="'evpc-saved-' + state.roomNoteSave.status" aria-live="polite" t-esc="roomNoteSaveText"/>
+                                        </div>
+                                        <textarea id="evpc-room-note" name="room_note" class="evpc-room-note-input" rows="2"
+                                                  t-att-readonly="!roomNoteEditable" t-att-value="state.roomNote"
+                                                  t-att-placeholder="roomNoteEditable ? 'Např. platí převodem, doplatí zítra, objednat na kontrolu za 14 dní' : ''"
+                                                  t-on-input="onRoomNote" t-on-blur="() => this.saveRoomNote().catch(() => {})"/>
+                                    </div>
                                     <div class="evpc-bill-final">
                                         <button t-if="editable" type="button" class="evpc-btn evpc-btn-primary" t-att-disabled="!canFinish"
                                                 t-on-click="markDone">

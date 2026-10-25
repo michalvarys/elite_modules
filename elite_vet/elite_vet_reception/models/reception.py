@@ -168,6 +168,8 @@ class Reception(models.AbstractModel):
                 "amount": self._amount_to_pay(rec), "payment_state": state,
                 "payment_state_label": labels[state], "date": date_str(rec.date),
                 "date_label": "dnes" if rec.date == today else "%d. %d." % (rec.date.day, rec.date.month),
+                # request 25. 10.: internal note of the room for the reception (never on the receipt)
+                "room_note": rec.room_note or None,
             })
         return to_pay
 

@@ -9,7 +9,7 @@ Závisí na `elite_vet_winvet` (a přes něj na rezervacích a rozpisu lékařů
 | Model | Popis |
 |---|---|
 | `elite.vet.pet.alert` | Upozornění na pacientovi: druh `bites` Kouše / `allergy` Alergie / `other` Jiné, poznámka, aktivní. Na mazlíčkovi `alert_ids` a počítané `alert_summary` („Kouše; Alergie: penicilin“). |
-| `elite.vet.clinical.record` | Záznam návštěvy: pacient, majitel (related, uložený), lékařka, zapsal(a), rezervace (max. jeden záznam na rezervaci), čas `start`, den `date` (čas kliniky Europe/Prague), stav `draft` Rozepsaný / `done` Hotovo – k pokladně / `cancelled` Zrušeno (sledovaný v chatteru), teplota, váha, tep, dech, anamnéza, vyšetření, diagnóza a doporučení (čistý text), položky účtu, `amount_total` (CZK), interní `reception_note` Poznámka recepce (píše recepce při příjmu, sledovaná; klient ji nikde nevidí). Váha uzavřeného záznamu se zapíše do `pet.weight`. |
+| `elite.vet.clinical.record` | Záznam návštěvy: pacient, majitel (related, uložený), lékařka, zapsal(a), rezervace (max. jeden záznam na rezervaci), čas `start`, den `date` (čas kliniky Europe/Prague), stav `draft` Rozepsaný / `done` Hotovo – k pokladně / `cancelled` Zrušeno (sledovaný v chatteru), teplota, váha, tep, dech, anamnéza, vyšetření, diagnóza a doporučení (čistý text), položky účtu, `amount_total` (CZK), interní `reception_note` Poznámka recepce (píše recepce při příjmu) a `room_note` Poznámka pro recepci (píše ordinace u Hotovo, k pokladně, ukáže se v pokladně) – obě sledované, klient je nikde nevidí. Váha uzavřeného záznamu se zapíše do `pet.weight`. |
 | `elite.vet.clinical.record.line` | Položka účtu: položka ceníku (`elite.vet.winvet.item`), název, druh (podle položky, volná položka „Jiné“), množství, jednotka, cena za jednotku (výchozí = cena s DPH z ceníku), částka, `bundle_id` když přišla z balíčku. |
 | `elite.vet.text.template` | Šablona textu: název, oddíl (anamnéza / vyšetření / diagnóza / kterýkoli), text, pořadí, `group_name` (skupina z WinVetu), `winvet_ref`, `edited_in_odoo`. |
 | `elite.vet.procedure.bundle` (+ `.line`) | Balíček výkonů: název, kód, popis, položky (položka ceníku, název, množství, jednotka, pořadí), `winvet_ref`, `edited_in_odoo`; počítaný počet položek a cena podle ceníku. |
@@ -111,6 +111,7 @@ v Odoo (kromě zrušených) a z vitálních hodnot WinVetu.
 {id, name, pet_id, partner_id, doctor_id, doctor_name, user_name, reservation_id, start, date, time,
  state ("draft"|"done"|"cancelled"), state_label, temperature, weight, heart_rate, respiratory_rate,
  anamnesis, examination, diagnosis, reception_note (poznámka recepce | null),
+ room_note (poznámka pro recepci, "" když není), room_note_editable (sestra/lékařka, záznam není zrušený),
  lines: [LINE], amount_total, currency ("Kč"), editable (rozepsaný a uživatel smí zapisovat)}
 LINE = {id, sequence, item_id, code, name, kind ("service"|"product"|"other"), kind_label, quantity, unit,
         price_unit, amount, bundle_id, bundle_name}
@@ -150,6 +151,7 @@ Všechny zápisy kromě `open_today_record` a `reopen_record` vyžadují rozepsa
 | `apply_template(record_id, template_id, section)` | `section` ∈ `anamnesis, examination, diagnosis`; připojí text šablony za stávající text oddělený prázdným řádkem, uloží a vrátí `{section, text}`. Před voláním uložte rozepsaný text (`save_record`), jinak se připojí k uložené verzi. |
 | `mark_done(record_id)` | Stav „Hotovo – k pokladně“; váha záznamu se zapíše pacientovi. |
 | `reopen_record(record_id)` | Jen lékařka/správce: uzavřený záznam zpět do rozepsaných. |
+| `save_room_note(record_id, note)` | Poznámka pro recepci (`room_note`, oříznutá, prázdná = smazat). Na rozdíl od ostatních zápisů jde i u uzavřeného záznamu, jen ne u zrušeného. |
 
 ## Testy
 

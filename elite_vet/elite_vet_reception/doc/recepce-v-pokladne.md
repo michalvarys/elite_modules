@@ -150,6 +150,12 @@ jinému zvířeti – „Rezervace už má návštěvu jiného zvířete.“
 
    ![K pokladně](img/recepce-k-pokladne.png)
 
+   Když ordinace k účtu napsala **poznámku pro recepci** (např. „Platí převodem“, „Doplatí
+   zítra“, „Objednat na kontrolu za 14 dní“), je žlutě pod klientem už v K pokladně a po
+   kliknutí na Zaplatit se nejdřív ukáže v okně **Poznámka z ordinace**. Přečtěte ji
+   a klikněte **Pokračovat k platbě** (**Zpět** platbu neotevře). Poznámka je interní – na účtence
+   ani faktuře není. Je vidět i v Kartotéce u otevřených účtů klienta.
+
 2. Pokladna sama načte účet i se zákazníkem (majitelem) a otevře platbu – nic nehledáte
    v Akce → Nabídka/Objednávka.
 3. Zvolte způsob platby (**Kartou**, **Hotově**, **Převodem**), případně zapněte **Faktura**,
@@ -422,7 +428,10 @@ a v kartě pacienta žlutý pruh pod záhlavím „Poznámka recepce: …“. Je
 ![Po zavolání](img/ordinace-v-ordinaci.png)
 
 4. Zapište návštěvu a účet v kartě pacienta (**+ Úkon**, **+ Lék ze skladu**, balíček).
-5. Na konci klikněte **Hotovo, k pokladně** a potvrďte. Pacient přejde do **Hotovo dnes**
+5. Pro recepci můžete nad tlačítkem **Hotovo, k pokladně** napsat **Poznámku pro recepci**
+   (interní, klient ji neuvidí) – recepce ji uvidí u účtu v K pokladně a před platbou. Ukládá
+   se sama; opravit nebo smazat ji jde i po uzavření záznamu (dokud není zrušený).
+6. Na konci klikněte **Hotovo, k pokladně** a potvrďte. Pacient přejde do **Hotovo dnes**
    a recepce ho hned vidí ve sloupci **K pokladně**. Podrobně (štítky, znovuotevření,
    rozpracovaný účet v pokladně) to popisuje
    [Pokladna a sklad – 1. Jak se účet dostane k pokladně](../../elite_vet_sale/doc/pokladna-a-sklad.md#1-jak-se-účet-dostane-k-pokladně).
