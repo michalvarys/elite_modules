@@ -4,17 +4,28 @@ and pets, and link a web reservation to them.
 Owners and pets are written with the caller's own rights (reception has create/write on
 res.partner and elite.vet.pet); sudo is used only for the clinic-derived data (bills).
 """
+import math
 import re
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.osv import expression
 
-from odoo.addons.elite_vet_clinic.models.patient_card import date_str, local_time
+from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
+from odoo.addons.elite_vet_clinic.models.pet_alert import ALERT_KINDS
 from odoo.addons.elite_vet_reservation.models.pet import SPECIES, normalize_phone
 
 OWNER_FIELDS = ("name", "phone", "mobile", "email", "street", "city", "zip")
-PET_FIELDS = ("name", "species", "breed", "sex", "birth_date", "chip", "note")
+# Task 22: every pet field reception can fill (none required except name and species).
+# `deceased` (bool) and `alerts` (list) are handled apart from these text values.
+PET_FIELDS = ("name", "species", "species_other", "breed", "sex", "birth_date", "birth_year", "chip",
+              "tattoo", "passport", "color", "weight", "next_vaccination", "next_deworming",
+              "important_note", "note", "death_date")
+PET_DATE_FIELDS = {
+    "birth_date": "datum narození", "next_vaccination": "datum příští vakcinace",
+    "next_deworming": "datum příštího odčervení", "death_date": "datum úhynu",
+}
+MIN_BIRTH_YEAR = 1950
 SEARCH_LIMIT = 20
 BOOKING_SEARCH_LIMIT = 20
 
@@ -102,24 +113,129 @@ class ReceptionCardIndex(models.AbstractModel):
 
     @api.model
     def _pet_dict(self, pet):
+        kinds = dict(ALERT_KINDS)
         return {
             "id": pet.id, "name": pet.name, "species": pet.species or None,
+            "species_other": pet.species_other or None,
             "species_label": self.env["elite.vet.clinical.record"]._species_label(pet),
             "breed": pet.breed or None, "sex": pet.sex or None, "birth_date": date_str(pet.birth_date),
-            "chip": pet.chip or None, "note": pet.note or None, "alerts": pet.alert_summary or None,
-            "next_vaccination": date_str(pet.next_vaccination), "deceased": pet.deceased,
+            "birth_year": pet.birth_year or None, "chip": pet.chip or None, "tattoo": pet.tattoo or None,
+            "passport": pet.passport or None, "color": pet.color or None, "weight": pet.weight or None,
+            "note": pet.note or None, "important_note": pet.important_note or None,
+            "alerts": pet.alert_summary or None,
+            "alert_list": [{"id": a.id, "kind": a.kind, "kind_label": kinds.get(a.kind), "note": a.note or None}
+                           for a in pet.alert_ids.filtered("active")],
+            "next_vaccination": date_str(pet.next_vaccination), "next_deworming": date_str(pet.next_deworming),
+            "deceased": pet.deceased, "death_date": date_str(pet.death_date),
             # request 25. 10.: Nedorazil of the last 12 months (computed from reservations)
             "no_show_count": pet.sudo().no_show_count,
         }
 
     @api.model
-    def _parse_date(self, value):
+    def _parse_date(self, value, label="datum narození"):
         if not value:
             return False
         try:
             return fields.Date.to_date(value)
         except (TypeError, ValueError):
-            raise UserError(_("Neplatné datum narození: %s (zadejte RRRR-MM-DD).") % value) from None
+            raise UserError(_("Neplatné %(label)s: %(value)s (zadejte RRRR-MM-DD).", label=label, value=value)) from None
+
+    @api.model
+    def _parse_weight(self, value):
+        """'12,5' / '12.5' -> 12.5 kg; empty -> 0 (no weight)."""
+        if not value:
+            return 0.0
+        try:
+            weight = float(value.replace(" ", "").replace(",", "."))
+        except ValueError:
+            raise UserError(_("Hmotnost „%s“ není číslo (např. 12,5).") % value) from None
+        if not math.isfinite(weight) or weight < 0:
+            raise UserError(_("Hmotnost nesmí být záporná."))
+        return weight
+
+    @api.model
+    def _parse_birth_year(self, value):
+        if not value:
+            return 0
+        try:
+            year = int(value)
+        except ValueError:
+            raise UserError(_("Rok narození „%s“ není rok (např. 2019).") % value) from None
+        if not MIN_BIRTH_YEAR <= year <= clinic_today().year:
+            raise UserError(_("Rok narození musí být mezi %(min)s a %(max)s.",
+                              min=MIN_BIRTH_YEAR, max=clinic_today().year))
+        return year
+
+    @api.model
+    def _pet_vals(self, vals):
+        """Form values of save_pet -> elite.vet.pet values (text cleaned, dates, numbers parsed)."""
+        raw = vals if isinstance(vals, dict) else None
+        clean = _clean(vals, PET_FIELDS)
+        for key, label in PET_DATE_FIELDS.items():
+            if key in clean:
+                clean[key] = self._parse_date(clean[key], label)
+        if "weight" in clean:
+            clean["weight"] = self._parse_weight(clean["weight"])
+        if "birth_year" in clean:
+            clean["birth_year"] = self._parse_birth_year(clean["birth_year"])
+        if "species" in clean and clean["species"] and clean["species"] not in dict(SPECIES):
+            raise UserError(_("Neznámý druh zvířete: %s") % clean["species"])
+        if raw and "deceased" in raw:
+            if not isinstance(raw["deceased"], bool):
+                raise UserError(_("Neplatná hodnota pole %s.") % "deceased")
+            clean["deceased"] = raw["deceased"]
+        return clean
+
+    @api.model
+    def _check_pet_dates(self, pet):
+        today = clinic_today()
+        if pet.birth_date and pet.birth_date > today:
+            raise UserError(_("Datum narození nesmí být v budoucnosti."))
+        if pet.death_date and pet.death_date > today:
+            raise UserError(_("Datum úhynu nesmí být v budoucnosti."))
+        if pet.death_date and pet.birth_date and pet.death_date < pet.birth_date:
+            raise UserError(_("Datum úhynu nesmí být před datem narození."))
+
+    @api.model
+    def _alert_items(self, alerts):
+        """List of {id?, kind, note} from the form -> [(id or False, kind, note)]."""
+        if not isinstance(alerts, list):
+            raise UserError(_("Neplatná upozornění."))
+        kinds = dict(ALERT_KINDS)
+        items = []
+        for alert in alerts:
+            if not isinstance(alert, dict):
+                raise UserError(_("Neplatná upozornění."))
+            kind = alert.get("kind") or "other"
+            if kind not in kinds:
+                raise UserError(_("Neznámý druh upozornění: %s") % kind)
+            note = alert.get("note") or ""
+            if not isinstance(note, str):
+                raise UserError(_("Neplatná poznámka upozornění."))
+            items.append((self._to_id(alert.get("id")) or False, kind, note.strip() or False))
+        return items
+
+    @api.model
+    def _save_alerts(self, pet, items):
+        """Active alerts of the pet become exactly `items`: listed ones are updated, new ones
+        created, unlisted ones archived (as the patient card does - nurse has no unlink).
+
+        Reception may only read elite.vet.pet.alert (ACL of elite_vet_clinic), so this checked
+        API writes them under sudo, limited to the alerts of this one pet."""
+        Alert = self.env["elite.vet.pet.alert"].sudo()
+        current = pet.sudo().alert_ids.filtered("active")
+        kept = Alert.browse()
+        for alert_id, kind, note in items:
+            if alert_id:
+                alert = current.filtered(lambda a, i=alert_id: a.id == i)
+                if not alert:
+                    raise UserError(_("Upozornění nepatří zvířeti %s.") % pet.name)
+                if (alert.kind, alert.note or False) != (kind, note):
+                    alert.write({"kind": kind, "note": note})
+                kept |= alert
+            else:
+                kept |= Alert.create({"pet_id": pet.id, "kind": kind, "note": note})
+        (current - kept).write({"active": False})
 
     # ------------------------------------------------------------------ read API
 
@@ -187,7 +303,11 @@ class ReceptionCardIndex(models.AbstractModel):
     def pet_options(self):
         """Choices for the pet form of the card index dialog."""
         self._check_reception()
-        return {"species": [{"value": key, "label": label} for key, label in SPECIES]}
+        return {
+            "species": [{"value": key, "label": label} for key, label in SPECIES],
+            # the alert kinds of the patient card (elite.vet.pet.alert)
+            "alert_kinds": [{"value": key, "label": label} for key, label in ALERT_KINDS],
+        }
 
     @api.model
     def owner_data(self, partner_id):
@@ -234,28 +354,46 @@ class ReceptionCardIndex(models.AbstractModel):
 
     @api.model
     def save_pet(self, partner_id, vals, pet_id=None):
-        """Create (no pet_id) or edit a pet of the owner."""
+        """Create (no pet_id) or edit a pet of the owner.
+
+        Keys of PET_FIELDS (text; dates RRRR-MM-DD; weight with a decimal comma; empty = none),
+        `deceased` (bool, only when editing) and `alerts` ([{id?, kind, note}], the full list of
+        active alerts). Only name and species are required."""
         self._check_reception()
         partner = self._get_owner(partner_id)
-        vals = _clean(vals, PET_FIELDS)
-        if "birth_date" in vals:
-            vals["birth_date"] = self._parse_date(vals["birth_date"])
-        if "species" in vals and vals["species"] and vals["species"] not in dict(SPECIES):
-            raise UserError(_("Neznámý druh zvířete: %s") % vals["species"])
+        alerts = vals.get("alerts") if isinstance(vals, dict) else None
+        items = self._alert_items(alerts) if alerts is not None else None
+        vals = self._pet_vals(vals)
         if pet_id:
             pet = self._get_owner_pet(partner, pet_id)
             if "name" in vals and not vals["name"]:
                 raise UserError(_("Vyplňte jméno zvířete."))
             if "species" in vals and not vals["species"]:
                 raise UserError(_("Vyberte druh zvířete."))
-            if vals:
-                pet.write(vals)
         else:
+            pet = None
             if not vals.get("name"):
                 raise UserError(_("Vyplňte jméno zvířete."))
             if not vals.get("species"):
                 raise UserError(_("Vyberte druh zvířete."))
-            self.env["elite.vet.pet"].create(dict(vals, partner_id=partner.id))
+            if vals.get("deceased") or vals.get("death_date"):
+                raise UserError(_("Nové zvíře nejde založit jako uhynulé."))
+            vals.pop("deceased", None)
+        species = vals.get("species") or (pet.species if pet else False)
+        if species != "other" and ("species" in vals or "species_other" in vals):
+            vals["species_other"] = False  # Jiný druh only with Druh = Jiné
+        deceased = vals.get("deceased", pet.deceased if pet else False)
+        if not deceased and ("deceased" in vals or vals.get("death_date")):
+            vals["death_date"] = False  # Datum úhynu only for a deceased pet
+        if pet:
+            if vals:
+                pet.write(vals)
+        else:
+            pet = self.env["elite.vet.pet"].create(dict(vals, partner_id=partner.id))
+        if {"birth_date", "death_date", "deceased"} & set(vals):
+            self._check_pet_dates(pet)  # only what this save changes (WinVet data may be odd)
+        if items is not None:
+            self._save_alerts(pet, items)
         return self.owner_data(partner.id)
 
     @api.model

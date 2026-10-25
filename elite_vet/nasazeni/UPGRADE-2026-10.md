@@ -573,3 +573,28 @@ Vypnout kalendář z WinVetu** (Vedení). Karty WinVet zmizí z tabule i z Dnes,
 a další záznamy z mostu se neukládají. **Smazat přenesené záznamy** je pak vymaže (ve WinVetu
 zůstanou). Na PC s WinVetem potom smazat úlohu „WinVet bridge - kalendar“ (běžné běhy kalendář
 dál posílají, Odoo ho ignoruje). Zpět: tlačítko **Zapnout**, další běh mostu okno znovu naplní.
+
+## Doplnění: všechna pole zvířete
+
+Kartotéka v pokladně má ve formuláři zvířete všechna pole zvířete (povinné jen jméno a druh):
+Jiný druh, sbalovací **Další údaje** (rok narození, hmotnost, barva, tetování, číslo pasu, příští
+vakcinace a odčervení, Důležité, poznámka), **Upozornění** (přidat / odebrat) a při úpravě
+**Uhynulý** + datum úhynu. Větev `feature/elite-vet-pet-form`. Cílový kód: `elite_vet_reception`
+18.0.1.6.0 (ostatní moduly beze změny).
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_reception --stop-after-init 2>&1 | tee upgrade-pole-zvirete-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-pole-zvirete-*.log      # nesmí nic najít
+```
+
+Data se nemění, žádné tabulky ani sloupce nepřibudou (pole zvířete už existují), práva se
+nemění: upozornění recepce dál jen čte a zapisuje je jen API Kartotéky po kontrole role (odebrání
+= archivace jako v kartě pacienta). Mění se jen Python API (`save_pet`, `owner_data`,
+`pet_options`) a JS/CSS pokladny – v pokladně znovu načíst (Ctrl+Shift+R).
+
+Kontrola po startu: Kartotéka → klient → **+ Nové zvíře** (Další údaje zavřené, Uhynulý není),
+**Upravit** u zvířete s hmotností z WinVetu (Další údaje otevřené, hmotnost s čárkou). Recepci
+připomenout: u zvířat z WinVetu přenos dál přepisuje pole, která má i WinVet (seznam v návodu
+recepce, kapitola 3 „Souběh s WinVetem“) – měnit je i ve WinVetu.

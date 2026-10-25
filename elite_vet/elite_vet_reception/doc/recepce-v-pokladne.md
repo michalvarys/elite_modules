@@ -223,8 +223,8 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
   červený štítek **Nedorazil 2×** (najetím myší podrobnosti) a pod ním seznam: datum, úkon,
   zvíře. U zvířete je štítek **nedorazil 1×**. Počítá se to samo z rezervací ve stavu
   Nedorazil, nic se nezapisuje ručně.
-- Vpravo **zvířata**: druh, plemeno, pohlaví, narození, čip, upozornění (oranžový štítek)
-  a příští očkování. Uhynulá zvířata jsou na konci, vybledlá; s nimi nejde nic dělat.
+- Vpravo **zvířata**: druh, plemeno, pohlaví, narození (nebo jen rok), čip, hmotnost, příští
+  očkování a odčervení, upozornění a **Důležité** (červené štítky). Uhynulá zvířata jsou na konci, vybledlá; s nimi nejde nic dělat.
 - Kliknutím vyberete zvíře (rámeček) – pod ním je **Upravit <jméno>** (při Přijmout bez
   objednání i výběr **Lékařka**).
 - **‹ Zpět na výsledky** vás vrátí k hledání.
@@ -237,9 +237,32 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
    ![Nový klient](img/recepce-novy-klient.png)
 
 2. **Uložit.** Otevře se karta nového klienta.
-3. **+ Nové zvíře**: jméno a druh jsou povinné; pohlaví, plemeno, narození, čip a poznámka ne.
+3. **+ Nové zvíře**: povinné jsou jen **jméno** a **druh**, všechno ostatní můžete nechat prázdné.
+   - Nahoře: jméno, druh, pohlaví, plemeno, narození, čip. U druhu **Jiné** se objeví pole
+     **Jiný druh** (např. fretka).
+   - **Další údaje** (klepnutím rozbalíte; u nového zvířete jsou zavřené, při úpravě se otevřou
+     samy, když v nich něco je): **Rok narození** (když přesné datum neznáte), **Hmotnost (kg)**
+     (desetinná čárka i tečka, např. 12,5), **Barva**, **Tetování**, **Číslo pasu**, **Příští
+     vakcinace**, **Příští odčervení**, **Důležité** (krátký text – na kartě majitele je to
+     červený štítek u zvířete) a **Poznámka**.
+   - **Upozornění**: **+ Upozornění** přidá řádek – druh (Kouše, Alergie, Jiné – stejné jako
+     v kartě pacienta) a poznámka (např. náhubek, penicilin). Koš řádek odebere. Upozornění se
+     ukazují jako štítky v kartě majitele, na tabuli i v kartě pacienta.
 4. **Upravit** (u klienta) a **Upravit <jméno>** (u zvířete) otevřou stejný formulář s vyplněnými
    údaji. **Uložit** změny zapíše, **Zrušit** je zahodí.
+5. Jen při úpravě zvířete (ne při registraci) je dole **Uhynulý** a pak **Datum úhynu**. Po
+   Uložit se Kartotéka zeptá „Označit … jako uhynulé?“. Uhynulé zvíře nejde objednat ani přijmout.
+   Omylem označené: odškrtněte Uhynulý a uložte (datum úhynu se smaže).
+
+> **Souběh s WinVetem.** Dokud se kartotéka přenáší z WinVetu (most každých 15 minut a denní
+> plný běh), přenos u zvířat, která **přišla z WinVetu**, přepíše tato pole hodnotou z WinVetu:
+> jméno, majitel, druh a jiný druh, plemeno, pohlaví, barva, narození, rok narození, čip,
+> tetování, číslo pasu, hmotnost, uhynulý, datum úhynu, příští vakcinace, příští odčervení,
+> Důležité (a aktivní / registrován). Stane se to, když se zvíře **ve WinVetu změní** (změní se
+> mu čas poslední úpravy ve WinVetu); u zvířete, které ve WinVetu čas úpravy nemá, při každém
+> přenosu. Jinak přenos úpravu z Odoo nechá. Změnu těchto polí proto udělejte i ve WinVetu. Z WinVetu se nikdy
+> nepřepisují **Poznámka** (poznámka z WinVetu má vlastní pole) a **Upozornění** – ta jsou jen
+> v Odoo. Zvířata založená v Odoo přenos nemění.
 
 Stejný telefon nebo e-mail jako jiný klient nevadí – nic se neslučuje. Kontakty zaměstnanců
 a firem v kartotéce upravit nejde („Tento kontakt není klient kliniky.“).

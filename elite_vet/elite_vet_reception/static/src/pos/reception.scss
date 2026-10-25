@@ -324,3 +324,40 @@
     font-size: 0.7rem;
     vertical-align: middle;
 }
+
+// Task 22: pet form with every field (Další údaje, Upozornění, Uhynulý) - no horizontal
+// scroll at 420 px: rows and badges wrap
+.o_ev_card_index {
+    .o_ev_pet {
+        flex-wrap: wrap;
+        .o_ev_grow {
+            flex-basis: 12rem;
+        }
+        .o_ev_badge_alert {
+            max-width: 100%;
+        }
+    }
+    .o_ev_pet_details {
+        overflow-wrap: anywhere;
+    }
+    .o_ev_more_toggle {
+        min-height: 2.75rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .o_ev_alert_row {
+        .o_ev_alert_kind {
+            flex: 0 0 9rem;
+            width: 9rem;
+        }
+        .o_ev_alert_note {
+            flex: 1 1 10rem;
+        }
+    }
+    .o_ev_deceased .form-check-input {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+}

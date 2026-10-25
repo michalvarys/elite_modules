@@ -10,12 +10,23 @@
  */
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { callReception, errorMessage, shortDate } from "@elite_vet_reception/pos/reception_api";
 
 const OWNER_FIELDS = ["name", "phone", "mobile", "email", "street", "city", "zip"];
-const PET_FIELDS = ["name", "species", "breed", "sex", "birth_date", "chip", "note"];
+// Task 22: every pet field of the form as text (deceased and alerts are kept apart)
+const PET_FIELDS = [
+    "name", "species", "species_other", "breed", "sex", "birth_date", "chip",
+    "birth_year", "color", "weight", "tattoo", "passport", "next_vaccination", "next_deworming",
+    "important_note", "note", "death_date",
+];
+// fields of the collapsible section Další údaje (open when any of them has a value)
+const PET_MORE_FIELDS = [
+    "birth_year", "color", "weight", "tattoo", "passport", "next_vaccination", "next_deworming",
+    "important_note", "note",
+];
 
 export const CARD_INDEX_MODES = ["browse", "booking", "order", "reservation", "walk_in"];
 
@@ -40,6 +51,23 @@ function formValues(source, fields) {
         values[field] = (source && source[field]) || "";
     }
     return values;
+}
+
+/** Pet form values as text: weight with a decimal comma, years and dates as typed. */
+function petFormValues(pet) {
+    const values = formValues(pet, PET_FIELDS);
+    if (pet?.weight) {
+        values.weight = String(pet.weight).replace(".", ",");
+    }
+    if (pet?.birth_year) {
+        values.birth_year = String(pet.birth_year);
+    }
+    return values;
+}
+
+/** "12,5 kg" */
+export function weightLabel(weight) {
+    return weight ? `${String(Math.round(weight * 100) / 100).replace(".", ",")} kg` : "";
 }
 
 export class CardIndexDialog extends Component {
@@ -67,6 +95,7 @@ export class CardIndexDialog extends Component {
         this.pos = usePos();
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.dialog = useService("dialog");
         this.state = useState({
             term: (this.props.mode === "reservation" && this.props.reservation?.owner) || "",
             results: null,
@@ -74,7 +103,7 @@ export class CardIndexDialog extends Component {
             data: null, // owner_data()
             petId: null,
             ownerForm: null, // {isNew, values, firstPet: {name, species}}
-            petForm: null, // {petId, values}
+            petForm: null, // {petId, values, alerts: [{key, id, kind, note}], deceased, wasDeceased, showMore}
             saving: false,
             doctors: [],
             walkInDoctorId: "",
@@ -82,7 +111,9 @@ export class CardIndexDialog extends Component {
             walkInRoomId: "", // optional room of the walk-in (task 15); empty = Nepřiřazení
             walkInNote: "", // optional internal note of the reception for the room
             species: [],
+            alertKinds: [],
         });
+        this.alertKey = 0;
         onWillStart(async () => {
             const walkIn = this.mode === "walk_in";
             const [options, booking] = await Promise.all([
@@ -90,6 +121,7 @@ export class CardIndexDialog extends Component {
                 walkIn ? callReception(this.orm, this.notification, "booking_options") : null,
             ]);
             this.state.species = options?.species || [];
+            this.state.alertKinds = options?.alert_kinds || [];
             this.state.doctors = booking?.doctors || [];
             this.state.rooms = booking?.rooms || [];
             if (this.props.start === "new_owner") {
@@ -203,6 +235,21 @@ export class CardIndexDialog extends Component {
         return [pet.species_label, pet.breed, pet.sex].filter(Boolean).join(", ");
     }
 
+    /** Second line of a pet in the owner card: birth, chip, weight, vaccination, deworming. */
+    petDetails(pet) {
+        const birth = pet.birth_date ? this.formatDate(pet.birth_date) : pet.birth_year || "";
+        return [
+            birth && `nar. ${birth}`,
+            pet.chip && `čip ${pet.chip}`,
+            pet.weight && weightLabel(pet.weight),
+            pet.next_vaccination && `očkování ${this.formatDate(pet.next_vaccination)}`,
+            pet.next_deworming && `odčervení ${this.formatDate(pet.next_deworming)}`,
+            pet.deceased && pet.death_date && `úhyn ${this.formatDate(pet.death_date)}`,
+        ]
+            .filter(Boolean)
+            .join(" · ");
+    }
+
     // ------------------------------------------------------------------ search
 
     async search() {
@@ -282,15 +329,72 @@ export class CardIndexDialog extends Component {
 
     newPet() {
         this.state.ownerForm = null;
-        this.state.petForm = { petId: null, values: formValues({ species: "dog" }, PET_FIELDS) };
+        this.state.petForm = {
+            petId: null,
+            values: petFormValues({ species: "dog" }),
+            alerts: [],
+            deceased: false,
+            wasDeceased: false,
+            showMore: false, // Další údaje closed on a new pet
+        };
     }
 
     editPet() {
         if (!this.pet) {
             return;
         }
+        const pet = this.pet;
+        const values = petFormValues(pet);
         this.state.ownerForm = null;
-        this.state.petForm = { petId: this.pet.id, values: formValues(this.pet, PET_FIELDS) };
+        this.state.petForm = {
+            petId: pet.id,
+            values,
+            alerts: (pet.alert_list || []).map((a) => ({
+                key: ++this.alertKey,
+                id: a.id,
+                kind: a.kind,
+                note: a.note || "",
+            })),
+            deceased: pet.deceased,
+            wasDeceased: pet.deceased,
+            showMore: PET_MORE_FIELDS.some((f) => values[f]),
+        };
+    }
+
+    toggleMore() {
+        this.state.petForm.showMore = !this.state.petForm.showMore;
+    }
+
+    addAlert() {
+        this.state.petForm.alerts.push({
+            key: ++this.alertKey,
+            id: null,
+            kind: this.state.alertKinds[0]?.value || "other",
+            note: "",
+        });
+    }
+
+    removeAlert(alert) {
+        const alerts = this.state.petForm.alerts;
+        alerts.splice(alerts.indexOf(alert), 1);
+    }
+
+    /** Resolves true when the user confirms marking the pet as deceased. */
+    confirmDeceased(name) {
+        return new Promise((resolve) => {
+            this.dialog.add(
+                ConfirmationDialog,
+                {
+                    title: "Uhynulé zvíře",
+                    body: `Označit ${name} jako uhynulé? Uhynulé zvíře nejde objednat ani přijmout.`,
+                    confirmLabel: "Označit jako uhynulé",
+                    cancelLabel: "Zrušit",
+                    confirm: () => resolve(true),
+                    cancel: () => resolve(false),
+                },
+                { onClose: () => resolve(false) }
+            );
+        });
     }
 
     cancelForm() {
@@ -346,9 +450,21 @@ export class CardIndexDialog extends Component {
             this.notification.add("Vyberte druh zvířete.", { type: "warning" });
             return;
         }
+        if (form.petId && form.deceased && !form.wasDeceased && !(await this.confirmDeceased(form.values.name.trim()))) {
+            return;
+        }
+        const vals = {
+            ...form.values,
+            alerts: form.alerts.map((a) => ({ id: a.id || false, kind: a.kind, note: a.note })),
+        };
+        if (form.petId) {
+            vals.deceased = form.deceased; // Uhynulý only when editing (never on registration)
+        } else {
+            delete vals.death_date;
+        }
         this.state.saving = true;
         try {
-            const args = [this.owner.id, form.values];
+            const args = [this.owner.id, vals];
             if (form.petId) {
                 args.push(form.petId);
             }

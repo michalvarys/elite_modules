@@ -98,13 +98,17 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 | `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...], "no_shows": {...}}` (zvíře navíc `no_show_count`) |
 | `client_no_shows(partner_id)` | `no_show_summary` klienta pro upozornění v Objednat: `{count, last_date, last_label, text, items: [{id, date, date_label, procedure, pet}]}` (požadavek 25. 10., rezervace Nedorazil za 12 měsíců, viz `elite_vet_reservation/models/no_show.py`) |
 | `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
-| `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče `name, species, breed, sex, birth_date, chip, note`; jméno a druh povinné, zvíře musí patřit majiteli |
-| `pet_options()` | `{"species": [{value, label}]}` – druhy pro formulář zvířete |
+| `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče (Task 22) `name, species, species_other, breed, sex, birth_date, birth_year, chip, tattoo, passport, color, weight, next_vaccination, next_deworming, important_note, note, death_date` (text, prázdné = nic; data `RRRR-MM-DD`; `weight` v kg i s desetinnou čárkou, ≥ 0; `birth_year` 1950 … letos; narození a úhyn ne v budoucnosti, úhyn ne před narozením), `deceased` (bool, jen při úpravě – nové zvíře nejde založit jako uhynulé; `false` smaže `death_date`), `alerts` (`[{id?, kind, note}]` = celý seznam aktivních upozornění: s `id` se upraví, bez `id` přibude, chybějící se archivují; bez klíče se upozornění nemění). `species_other` jen u druhu `other`. Jméno a druh povinné, zvíře musí patřit majiteli |
+| `pet_options()` | `{"species": [{value, label}], "alert_kinds": [{value, label}]}` – druhy zvířete a druhy upozornění (karta pacienta) pro formulář zvířete |
 | `match_reservation(reservation_id, partner_id, pet_id)` | `{reservation_id, time, partner_id, owner, pet_id, pet_name, needs_match}` – rezervace (webová i už spárovaná) dostane majitele a zvíře (i její druhá ordinace); webová pak jde přijmout |
 
-- **pets** – všechna aktivní zvířata majitele (uhynulá na konci): `id, name, species, species_label, breed,
-  sex, birth_date, chip, note, alerts, next_vaccination, deceased` (`alerts` = souhrn upozornění,
-  `next_vaccination` = příští vakcinace z WinVetu).
+- **pets** – všechna aktivní zvířata majitele (uhynulá na konci): `id, name, species, species_other,
+  species_label, breed, sex, birth_date, birth_year, chip, tattoo, passport, color, weight, note,
+  important_note, alerts, alert_list, next_vaccination, next_deworming, deceased, death_date,
+  no_show_count` (`alerts` = souhrn upozornění, `alert_list` = `[{id, kind, kind_label, note}]`
+  aktivních upozornění, prázdné hodnoty `null`).
+- **Upozornění** (`elite.vet.pet.alert`) recepce podle ACL jen čte; `save_pet` je po kontrole role
+  zapisuje pod sudo, jen u toho jednoho zvířete. Odebrání = archivace (jako v kartě pacienta).
 - **open_bills** – nezaplacené účty majitele, stejný tvar jako `to_pay` (`record_id, amount,
   payment_state_label, …`).
 - Stejný telefon nebo e-mail jako jiný majitel nevadí: uloží se, nic se neslučuje.
@@ -175,7 +179,13 @@ pokladny zůstávají standardní.
   už v některé otevřené objednávce je, se zaplatí v ní (vybere se) – nikdy ve dvou objednávkách.
 - **Kartotéka** (`CardIndexDialog`, dialog nad pokladnou): hledání (Enter), výsledky (zvířata
   a majitelé), karta majitele s otevřenými účty a zvířaty, formuláře majitele (nový klient
-  rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`). Prop `mode` určuje jediný úkol
+  rovnou i s prvním zvířetem) a zvířete (druhy z `pet_options`). Formulář zvířete (Task 22) má
+  nahoře jméno, druh (u Jiné i Jiný druh), pohlaví, plemeno, narození a čip, sbalovací sekci
+  **Další údaje** (u nového zvířete zavřená, u úpravy otevřená, když v ní něco je: rok narození,
+  hmotnost, barva, tetování, pas, příští vakcinace a odčervení, Důležité, poznámka), seznam
+  **Upozornění** (druh + poznámka, přidat / odebrat) a jen při úpravě **Uhynulý** + datum úhynu
+  (s potvrzením). Karta majitele ukáže u zvířete Důležité jako červený štítek, hmotnost a příští
+  odčervení. Prop `mode` určuje jediný úkol
   okna: nadpis okna říká, k čemu se klient vybírá, pod ním je krátká nápověda a v patičce je
   nejvýš jedno hlavní tlačítko (vedle Zavřít):
 
