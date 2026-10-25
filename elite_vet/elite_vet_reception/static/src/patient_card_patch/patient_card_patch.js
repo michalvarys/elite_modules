@@ -7,16 +7,18 @@ import { onWillUnmount, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
 import { PatientCard } from "@elite_vet_clinic/patient_card/patient_card";
+import { visitTile } from "@elite_vet_clinic/clinic_ui/clinic_ui";
 
 const RECEPTION = "elite.vet.reception";
 const BUS_MESSAGE = "elite_vet_reservation/changed";
 const POLL_MS = 30000;
 
+// Task 26: the same names, order and state colours as the screen Ordinace.
 export const PATIENT_GROUPS = [
-    { key: "waiting", title: "Čekají", empty: "Nikdo nečeká." },
-    { key: "in_room", title: "V ordinaci", empty: "V ordinaci nikdo není." },
-    { key: "arriving", title: "Objednaní – ještě nepřišli", empty: "Všichni objednaní už přišli." },
-    { key: "done", title: "Hotovo dnes", empty: "Zatím nic hotového." },
+    { key: "waiting", state: "waiting", title: "Čekají", empty: "Nikdo nečeká." },
+    { key: "in_room", state: "in_room", title: "V ordinaci", empty: "V ordinaci nikdo není." },
+    { key: "arriving", state: "booked", title: "Dnes ještě přijdou", empty: "Všichni objednaní už přišli." },
+    { key: "done", state: "done", title: "Hotovo dnes", empty: "Zatím nic hotového." },
 ];
 
 function errorMessage(e) { return e?.data?.message || e?.message || String(e); }
@@ -65,20 +67,15 @@ patch(PatientCard.prototype, {
         });
     },
 
-    stageLine(it) {
-        const parts = [];
-        if (it.walk_in) parts.push("bez objednání");
-        if (it.walk_in && !it.doctor && this.state.today?.filtered_by_doctor) parts.push("kterákoli lékařka");
-        if (it.group === "waiting") {
-            if (it.arrived_time) parts.push("příchod " + it.arrived_time);
-            if (it.waiting_minutes !== null && it.waiting_minutes !== undefined) {
-                parts.push("čeká " + it.waiting_minutes + " min");
-            }
-        } else if (it.group === "in_room") {
-            if (it.called_time) parts.push("od " + it.called_time);
-            else if (it.arrived_time) parts.push("příchod " + it.arrived_time);
-        }
-        return parts.join(" · ");
+    /** The shared visit tile (clinic_ui) of a row; the room is shown, the doctor only when the
+     *  list is not filtered to one doctor (or for a walk-in any doctor may take). */
+    patientTile(it, group) {
+        const filtered = this.state.today?.filtered_by_doctor;
+        let stateText;
+        if (group.key === "arriving" || group.key === "done") stateText = this.recordBadge(it).label;
+        let doctor = filtered ? null : it.doctor;
+        if (it.walk_in && !it.doctor && filtered) doctor = "Kterákoli lékařka";
+        return visitTile(it, group.state, { stateText, doctor, room: it.room, roomColor: it.room_color });
     },
 
     async callPatient(it) {

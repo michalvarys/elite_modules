@@ -1,19 +1,10 @@
 // Staged "Moji pacienti dnes" (patch of elite_vet_clinic's patient card start screen).
-.evrc-groups { display: grid; gap: 18px; }
-.evrc-group-title {
-    display: flex; align-items: center; gap: 8px; margin: 0 0 6px;
-    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--evpc-muted);
-}
-.evrc-count {
-    min-width: 22px; padding: 0 7px; border-radius: 10px; background: var(--evpc-chip);
-    color: var(--evpc-ink); font-size: 12px; text-align: center; letter-spacing: 0;
-}
-.evrc-group-waiting .evrc-count { background: var(--evpc-warn-bg); color: var(--evpc-warn); }
-.evrc-group-in_room .evrc-count { background: var(--evpc-accent-soft); color: var(--evpc-accent-dark); }
-.evrc-row { display: flex; align-items: stretch; gap: 8px; }
+// Task 26: tiles, group heads and counts come from clinic_ui.scss (.ev-clinic).
+.evrc-groups { display: grid; gap: 28px; }
+.evrc-row { display: flex; align-items: stretch; gap: 10px; }
 .evrc-row .evpc-today-row { flex: 1; min-width: 0; }
-.evrc-row-waiting .evpc-today-row { border-left: 4px solid var(--evpc-warn); }
-.evrc-row-in_room .evpc-today-row { border-left: 4px solid var(--evpc-accent); }
-.evrc-row-done .evpc-today-row { opacity: .75; }
-.evrc-stage { color: var(--evpc-ink); font-weight: 600; }
-.evrc-call { align-self: center; }
+.evrc-call { align-self: center; min-width: 120px; }
+@media (max-width: 575.98px) {
+    .evrc-row { flex-wrap: wrap; }
+    .evrc-call { width: 100%; }
+}
