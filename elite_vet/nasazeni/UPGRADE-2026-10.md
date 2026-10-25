@@ -630,7 +630,8 @@ nepropojí. Na počítačích obnovit stránku natvrdo (Ctrl+Shift+R).
    na Recepce), zaškrtnutí **Vytvořit**.
 3. **Hesla** – jedna ze dvou cest:
    - nechat **Poslat pozvánku e-mailem** vypnuté a heslo nastavit v Nastavení › Uživatelé › účet ›
-     Akce › **Změnit heslo** (sdělit osobně), nebo
+     Akce › **Změnit heslo** (sdělit osobně; Odoo 18 přitom samo zařadí do fronty e-mail
+     „Security Update: Password Changed“ na e-mail účtu – to je standard Odoo, ne tento modul), nebo
    - zaškrtnout **Poslat pozvánku e-mailem**: každý dostane standardní pozvánku Odoo s odkazem na
      nastavení hesla (zařadí se do fronty e-mailů a odejde s nejbližším během odesílání, odkaz platí
      podle `auth_signup.signup_validity_hours`, výchozí 6 dní). Musí fungovat odchozí pošta.

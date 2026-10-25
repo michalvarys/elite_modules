@@ -288,7 +288,8 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   Propojený účet s rolí Sestra / Lékařka (ne Vedení, ne účet ordinace) má výchozí obrazovku
   Ordinace. Obrazovka se mu při každém otevření nastaví na ordinaci, kde má teď službu (jinak další
   dnešní službu, jinak Všechny ordinace); ruční přepnutí platí, dokud v obrazovce pracuje (i po
-  návratu z karty drobečkovou navigací), do `localStorage` se neukládá.
+  návratu z karty jejím tlačítkem zpět – obnova akce z drobečkové navigace, `useSetupAction`
+  `getLocalState`; obnovení stránky a Zpět prohlížeče otevírají znovu), do `localStorage` se neukládá.
   Kdo pacienta převzal: `assign_room` / `call_patient` propojenou **Lékařkou** (člen týmu s rezervacemi) zapíše za lékařku ji,
   když záznam lékařku nemá nebo ji má jen automaticky (`doctor_auto`: z rozpisu, z rezervace); ručně vybraná lékařka
   zůstane. Sestry, recepce a účty ordinací dál podle rozpisu. Úpravy obsahu záznamu propojenou

@@ -112,7 +112,8 @@ je v Přístupových právech › Elite Vet jen pro čtení **Člen týmu**.
 - Lékařka a sestra po přihlášení přistanou na obrazovce **Ordinace**, předvybraná je ordinace, kde
   mají **teď službu** podle Rozpisu lékařů. Když teď službu nemají, pak ordinace jejich **další
   dnešní služby**, jinak **Všechny ordinace**. Ruční přepnutí platí, dokud v obrazovce pracují (i po
-  návratu z karty pacienta); při dalším otevření je zase ordinace ze služby.
+  návratu z karty pacienta tlačítkem zpět vlevo nahoře v kartě). Při dalším otevření – nové
+  přihlášení, obnovení stránky, tlačítko Zpět prohlížeče – je zase ordinace ze služby.
 - **Kdo pacienta převzal:** když lékařka (role Lékařka) pacienta zavolá, vezme do ordinace nebo
   přetáhne do ordinace, zapíše se jako jeho lékařka – pokud pacient lékařku nemá nebo ji má jen
   automaticky (z rozpisu nebo z rezervace). Ručně vybranou lékařku nepřepíše. Sestra, recepce
