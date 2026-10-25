@@ -65,6 +65,17 @@ class BookingController(http.Controller):
     def _setting(self):
         return request.env["elite.vet.setting"].sudo().nastaveni()
 
+    def _web_booking_off(self):
+        """None when the website books into Odoo; otherwise the answer of every public booking
+        call. With "Rezervace na webu" = WinVet the clinic books through the WinVet form on
+        /rezervacni-system, so our API neither offers dates nor creates reservations. The chat
+        widget shows the message and a link to that page."""
+        if self._setting().web_booking_source == "elite":
+            return None
+        return {"ok": False, "error": "web_booking_off", "fields": {},
+                "message": _("Online rezervace najdete na stránce Rezervační systém."),
+                "url": request.env["ir.http"]._url_for("/rezervacni-system")}
+
     def _procedure(self, procedure_id):
         proc = request.env["elite.vet.procedure"].sudo().browse(int(procedure_id or 0)).exists()
         return proc if proc and proc.online else None
@@ -76,6 +87,9 @@ class BookingController(http.Controller):
 
     @http.route("/rezervace/api/options", type="json", auth="public", website=True, methods=["POST"], csrf=False)
     def options(self, **kw):
+        off = self._web_booking_off()
+        if off:
+            return off
         env = request.env
         s = self._setting()
         today = fields.Date.context_today(env["elite.vet.setting"].sudo())
@@ -112,6 +126,9 @@ class BookingController(http.Controller):
         the Czech public holidays of the month are marked in the calendar, also when the
         website books on them; `holidays_closed` = setting booking_block_holidays (the day is
         unavailable). Older callers (the chat widget) keep getting the plain list."""
+        off = self._web_booking_off()
+        if off:
+            return off
         proc = self._procedure(procedure_id)
         if not proc:
             free = []
@@ -133,6 +150,9 @@ class BookingController(http.Controller):
 
     @http.route("/rezervace/api/slots", type="json", auth="public", website=True, methods=["POST"], csrf=False)
     def slots(self, procedure_id=None, date=None, **kw):
+        off = self._web_booking_off()
+        if off:
+            return off
         proc = self._procedure(procedure_id)
         if not proc:
             return []
@@ -142,6 +162,9 @@ class BookingController(http.Controller):
 
     @http.route("/rezervace/api/submit", type="json", auth="public", website=True, methods=["POST"], csrf=False)
     def submit(self, **data):
+        off = self._web_booking_off()
+        if off:
+            return off
         if data.get("hp"):
             return {"ok": True, "token": "", "deposit": False}   # bot: pretend it went through
         ip = request.httprequest.remote_addr or "?"

@@ -21,7 +21,9 @@ class TestControllers(HttpCase):
         self.day = (date.today() + timedelta(days=3)).isoformat()
         # "Today + 3" may fall on a weekend/holiday; those have their own test below.
         self.setting = self.env["elite.vet.setting"].nastaveni()
-        self.setting.write({"booking_block_weekends": False, "booking_block_holidays": False})
+        # the public API books only with "Rezervace na webu" = Elite Vet (default WinVet, task 19)
+        self.setting.write({"booking_block_weekends": False, "booking_block_holidays": False,
+                            "web_booking_source": "elite"})
 
     def rpc(self, path, params):
         resp = self.url_open(path, data=json.dumps({"jsonrpc": "2.0", "method": "call", "params": params}),

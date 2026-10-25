@@ -380,7 +380,7 @@
                 loadSlots().then(function (fresh) { if (fresh) q('[data-slots="taken"]').hidden = false; });
                 return;
             }
-            if (res.error === "rate_limit") { showErrors({}, q('[data-error="fatal"]').textContent); return; }
+            if (res.error === "rate_limit" || res.error === "web_booking_off") { showErrors({}, q('[data-error="fatal"]').textContent); return; }
             showErrors(res.fields, "");
         }).catch(function () { btn.disabled = false; fatal(); });
     });
@@ -411,7 +411,11 @@
     var procList = q('[data-list="procedures"]');
     procList.appendChild(loadingEl());
     qa(".evbk-tabs button").forEach(function (b) { b.disabled = true; });
-    rpc("/rezervace/api/options", {}).then(function (o) { state.options = o; renderStep1(); }).catch(function () {
+    rpc("/rezervace/api/options", {}).then(function (o) {
+        // "Rezervace na webu" was switched to WinVet after this page was loaded
+        if (o && o.error === "web_booking_off") { procList.innerHTML = ""; fatal(); return; }
+        state.options = o; renderStep1();
+    }).catch(function () {
         procList.innerHTML = ""; fatal();
     });
 })();

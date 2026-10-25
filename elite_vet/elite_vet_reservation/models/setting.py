@@ -18,11 +18,29 @@ SETTING_ACTIONS = (
 )
 
 
+WEB_BOOKING_SOURCES = [
+    ("winvet", "WinVet (podle adresy)"),
+    ("elite", "Elite Vet (náš kalendář)"),
+]
+
+
 class EliteVetSetting(models.Model):
     """Booking settings live on the same record as the rest of the website
     settings, so the clinic does not have to look in two places."""
 
     _inherit = "elite.vet.setting"
+
+    # Which calendar the website offers on /rezervacni-system. The default is WinVet: a fresh
+    # install and an upgrade of a database that does not have the column yet (the ORM fills the
+    # new required column with the default) both show the WinVet form first. The clinic sets up
+    # rooms, procedures and the roster, then switches to Elite Vet.
+    web_booking_source = fields.Selection(
+        WEB_BOOKING_SOURCES, string="Rezervace na webu", required=True, default="winvet",
+        help="WinVet (podle adresy) = na stránce /rezervacni-system je formulář WinVet z adresy "
+             "níže, jako dřív. Náš webový rezervační systém (stránka i chat) pak žádné rezervace "
+             "nepřijímá. Elite Vet (náš kalendář) = na stejném místě je náš rezervační průvodce "
+             "a žádosti z webu chodí do Odoo (Rezervace › Čekající). Recepce, tabule a pokladna "
+             "objednávají v obou režimech stejně.")
 
     booking_slot_step = fields.Integer("Krok slotů (min)", default=15,
                                        help="Po kolika minutách se nabízejí začátky termínů.")
@@ -66,6 +84,13 @@ class EliteVetSetting(models.Model):
             if min(rec.booking_min_hours_before, rec.booking_max_days_ahead, rec.booking_cancel_hours_before) < 0:
                 raise ValidationError(_("Hodnoty časových limitů nesmí být záporné."))
 
+    def _check_web_booking_source(self):
+        for rec in self:
+            if rec.web_booking_source == "winvet" and not (rec.booking_url or "").strip():
+                raise ValidationError(_(
+                    "Rezervace přes WinVet potřebují adresu formuláře WinVet. Vyplňte ji, "
+                    "nebo přepněte rezervace na webu na Elite Vet (náš kalendář)."))
+
     # ---------- rights (task 16) ----------
     # Only Správce rezervací changes the settings (booking and the contact data of the website);
     # a calendar manager of elite_vet_web who is not Správce rezervací only reads them. The record
@@ -75,14 +100,23 @@ class EliteVetSetting(models.Model):
         if not self.env.su and not self.env.user.has_group(SETTING_MANAGER_GROUP):
             raise AccessError(_("Nastavení může měnit jen správce rezervací."))
 
+    # The WinVet address is checked only when somebody chooses WinVet or changes the address:
+    # the record created by nastaveni() (or an old record without the address) is not refused.
     @api.model_create_multi
     def create(self, vals_list):
         self._check_setting_rights()
-        return super().create(vals_list)
+        records = super().create(vals_list)
+        for rec, vals in zip(records, vals_list):
+            if "web_booking_source" in vals:
+                rec._check_web_booking_source()
+        return records
 
     def write(self, vals):
         self._check_setting_rights()
-        return super().write(vals)
+        res = super().write(vals)
+        if "web_booking_source" in vals or "booking_url" in vals:
+            self._check_web_booking_source()
+        return res
 
     def unlink(self):
         self._check_setting_rights()

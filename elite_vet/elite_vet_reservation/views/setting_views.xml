@@ -35,13 +35,29 @@
                     <field name="booking_consent_text" placeholder="Souhlasím se zpracováním údajů…"/>
                 </div>
             </xpath>
-            <!-- The page no longer uses the old WinVet (external booking link and loading notice).
-                 Only these groups are hidden; the phone and shift schedule link stay. -->
+            <!-- The switch between the WinVet form (by its address) and our wizard sits in the group
+                 of the WinVet address. The address is required while WinVet is chosen. -->
             <xpath expr="//field[@name='booking_url']/parent::group" position="attributes">
-                <attribute name="invisible">1</attribute>
+                <attribute name="string">Rezervace na webu</attribute>
             </xpath>
+            <xpath expr="//field[@name='booking_url']" position="before">
+                <field name="web_booking_source" widget="radio"/>
+            </xpath>
+            <xpath expr="//field[@name='booking_url']" position="attributes">
+                <attribute name="string">Adresa formuláře WinVet</attribute>
+                <attribute name="required">web_booking_source == 'winvet'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='booking_url']" position="after">
+                <div colspan="2" class="text-muted">
+                    WinVet = na stránce /rezervacni-system je formulář WinVet z této adresy, náš
+                    systém z webu rezervace nepřijímá. Elite Vet = na stejném místě je náš průvodce
+                    a žádosti chodí do Rezervace › Čekající. Recepce, tabule a pokladna objednávají
+                    v obou režimech stejně.
+                </div>
+            </xpath>
+            <!-- The loading notice belongs to the WinVet form only. -->
             <xpath expr="//field[@name='booking_loading_title']/parent::group" position="attributes">
-                <attribute name="invisible">1</attribute>
+                <attribute name="invisible">web_booking_source == 'elite'</attribute>
             </xpath>
         </field>
     </record>

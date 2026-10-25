@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Replaces the WinVet iframe with our own wizard. Texts are in English (source),
-         Czech/German/Russian live in i18n. JavaScript only fills data into these blocks. -->
+    <!-- Our own wizard in place of the WinVet iframe, when the setting "Rezervace na webu" is
+         Elite Vet. With WinVet the original block of elite_vet_web (iframe and its loading notice)
+         stays untouched: it only gets a t-if, so its markup is not copied here.
+         Texts are in English (source), Czech/German/Russian live in i18n. JavaScript only fills
+         data into these blocks. -->
     <template id="booking_widget" inherit_id="elite_vet_web.rezervace" name="Elite Vet - Rezervace: vlastní průvodce">
-        <xpath expr="//div[hasclass('evrez')]" position="replace">
+        <xpath expr="//div[hasclass('evrez')]" position="attributes">
+            <attribute name="t-if">not ev_booking_elite</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('evrez')]" position="before">
             <t t-set="ev_settings" t-value="request.env['elite.vet.setting'].sudo().nastaveni()"/>
-            <section id="ev-booking" class="evbk o_colored_level" t-att-data-lang="request.env.lang">
+            <t t-set="ev_booking_elite" t-value="ev_settings.web_booking_source == 'elite'"/>
+            <section t-if="ev_booking_elite" id="ev-booking" class="evbk o_colored_level" t-att-data-lang="request.env.lang">
                 <div class="ev-container evbk-inner">
                     <div t-if="ev_settings.booking_intro" class="evbk-intro" t-out="ev_settings.booking_intro"/>
 

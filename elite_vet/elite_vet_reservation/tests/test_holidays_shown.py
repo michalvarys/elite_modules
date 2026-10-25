@@ -160,6 +160,7 @@ class TestHolidayMonthResponse(HttpCase):
         self.holiday = next_holiday(date.today(), min_days=3)
         self.setting = self.env["elite.vet.setting"].nastaveni()
         self.setting.write({"booking_block_weekends": False, "booking_block_holidays": False,
+                            "web_booking_source": "elite",
                             "booking_require_doctor": False, "booking_min_hours_before": 0,
                             "booking_max_days_ahead": (self.holiday - date.today()).days + 5})
 

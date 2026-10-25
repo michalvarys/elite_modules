@@ -283,8 +283,32 @@ Ve stejném formuláři jsou i starší části:
 - **Telefon na recepci** – **Telefon na recepci** a **Recepce jak se zobrazí**. Používá se,
   když je na zrušení odkazem pozdě („zavolejte na recepci“).
 - **Odkaz na rozpis služeb pod rezervací** – text a tlačítko pod rezervací na webu.
-- Pole starého vloženého WinVetu (odkaz na rezervační systém a hláška při načítání)
-  vlastní rezervace nepoužívá, proto jsou ve formuláři skrytá.
+- **Rezervace na webu** a **Adresa formuláře WinVet** – viz *Přepnutí rezervací na webu* níže.
+- **Hláška, dokud se rezervace načítá** – patří jen k formuláři WinVet, proto je ve formuláři
+  vidět jen při **Rezervace na webu = WinVet**.
+
+### Přepnutí rezervací na webu
+
+Pole **Rezervace na webu** (nahoře v Nastavení rezervace, skupina *Rezervace na webu*) říká, který
+kalendář je na stránce **/rezervacni-system**. Mění ho jen **Správce rezervací**.
+
+| Hodnota | Co je na webu |
+|---|---|
+| **WinVet (podle adresy)** – výchozí | Formulář WinVet z **Adresy formuláře WinVet** i s hláškou při načítání, přesně jako dřív. Náš webový rezervační systém žádné rezervace nepřijímá: stránka ho neukazuje a jeho rozhraní (volné dny, časy, odeslání žádosti, objednání v chatu) odpoví „Online rezervace najdete na stránce Rezervační systém.“. Chat místo objednání nabídne odkaz na /rezervacni-system. |
+| **Elite Vet (náš kalendář)** | Na stejném místě stránky je náš rezervační průvodce; žádosti z webu chodí do **Rezervace → Čekající z webu**. Adresa WinVet se nepoužívá (může zůstat vyplněná). |
+
+- Při **WinVet** je **Adresa formuláře WinVet** povinná. Bez ní formulář neuloží
+  („Rezervace přes WinVet potřebují adresu formuláře WinVet…“).
+- Recepce, tabule, průvodce **Nová rezervace** a pokladna objednávají v obou režimech stejně.
+- Nová instalace i aktualizace databáze, která pole ještě nemá, začíná na **WinVet** – na webu
+  se tedy nejdřív ukáže to, co tam bylo. Postup: nastavit ordinace, úkony, lékařky a rozpis
+  (kontrolní seznam v kapitole 10), pak přepnout na **Elite Vet (náš kalendář)** a uložit.
+  Zpátky na WinVet jde přepnout kdykoli; žádosti, které mezitím přišly z webu, zůstávají
+  v Čekajících.
+- Ověření: otevřít /rezervacni-system v anonymním okně (nebo po odhlášení) a obnovit stránku.
+  WinVet = rámeček WinVet s hláškou „Načítáme rezervační systém…“; Elite Vet = kroky
+  „1 · Co potřebujete“ a karty úkonů.
+- Stránka **/rozpis-lekaru** má vlastní vložený formulář WinVet a přepínač ji nemění.
 
 **Zálohy:** online platební brána zatím **není**. Při zapnutých zálohách se na webu ukáže
 částka a klient dostane informaci, že platební údaje mu pošle recepce.
@@ -382,6 +406,8 @@ Recepce na tabuli vidí vždy české názvy.
 - [ ] Zkušební rezervace z webu: dorazily oba e-maily (klientovi i klinice)?
 - [ ] Zkušební zrušení odkazem z e-mailu funguje.
 - [ ] Uživatelé mají skupinu **Recepce** nebo **Správce rezervací**.
+- [ ] Až je všechno nastavené: **Rezervace na webu = Elite Vet (náš kalendář)** a kontrola
+      /rezervacni-system v anonymním okně (kapitola 7, *Přepnutí rezervací na webu*).
 
 ### Technické nastavení serveru (pro správce Odoo)
 

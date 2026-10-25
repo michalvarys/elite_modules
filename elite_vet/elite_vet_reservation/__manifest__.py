@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rezervace",
-    "version": "18.0.2.4.0",
+    "version": "18.0.2.5.0",
     "category": "Website",
     "summary": "Rezervacni kalendar kliniky: ordinace, ukony, rozpis lekaru, online rezervace.",
     "description": """
@@ -9,7 +9,8 @@ Elite Vet - Rezervace
 
 Nahrazuje rezervacni system WinVet. Ordinace, jejich ordinacni doba, sluzby
 lekaru, seznam ukonu a rezervace jsou v Odoo; na webu /rezervacni-system
-bezi vlastni rezervacni pruvodce misto iframu.
+bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
+"Rezervace na webu" (vychozi je WinVet).
 """,
     "author": "Michal Varys",
     "website": "https://www.michalvarys.eu",

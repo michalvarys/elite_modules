@@ -2,7 +2,8 @@
 
 Odoo 18 modul. Nahrazuje rezervační systém WinVet: ordinace, ordinační doba,
 rozpis lékařů, úkony a rezervace jsou v Odoo, na webu `/rezervacni-system`
-běží vlastní průvodce místo iframu.
+běží vlastní průvodce místo iframu WinVet – podle nastavení **Rezervace na webu**
+(viz *Přepnutí rezervací na webu* níže).
 
 ## Návody (česky)
 
@@ -50,6 +51,27 @@ Snímky obrazovek jsou v `doc/img/`.
   `elite.vet.shift` dostal `room_id`, vazba je `shift_id` na `elite.vet.doctor.assignment`
   (`models/shift.py`); modul Rozpis služeb se nemění.
 - Průvodce rezervací i objednání v pokladně předvyplní lékařku ve službě (jde změnit).
+
+## Přepnutí rezervací na webu
+
+`elite.vet.setting.web_booking_source` (**Rezervace na webu**, povinné, výchozí `winvet`; mění
+jen Správce rezervací, viz Nastavení výše):
+
+- `winvet` „WinVet (podle adresy)“ – `/rezervacni-system` ukazuje původní blok `div.evrez`
+  z `elite_vet_web` (iframe z `booking_url` a hláška při načítání). Šablona
+  `booking_widget` ho nekopíruje, jen mu dá `t-if`. Veřejné rozhraní `/rezervace/api/options`,
+  `days`, `slots` a `submit` vrací `{"ok": false, "error": "web_booking_off", "message", "url"}`
+  a nic nezakládá; chat (`static/src/chat`) místo objednání ukáže odkaz na `url`.
+  `booking_url` je povinné (formulář; `write` / `create` hlásí „Rezervace přes WinVet potřebují
+  adresu formuláře WinVet…“, když se volí WinVet nebo mění adresa).
+- `elite` „Elite Vet (náš kalendář)“ – místo bloku WinVet náš průvodce `#ev-booking`, API
+  funguje jako dřív.
+
+Nová instalace i upgrade databáze bez sloupce dostane `winvet` (výchozí hodnota povinného pole,
+ORM ji při přidání sloupce zapíše do stávajícího záznamu). Interní objednávání (průvodce Nová
+rezervace, tabule, pokladna) na přepínači nezávisí. `/rozpis-lekaru` (`elite_vet_calendar`) má
+vlastní iframe WinVet a přepínač ho nemění. Testy: `tests/test_web_booking_switch.py`,
+`node tests/chat_off_test.js`.
 
 ## Nasazení
 

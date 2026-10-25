@@ -397,3 +397,51 @@ Kontrola po startu:
 - Upgrade log: řádek `block_reason:` a žádná chyba.
 
 Na počítačích s tabulí, v kartě pacienta a na pokladnách obnovit stránku natvrdo (Ctrl+Shift+R).
+
+## Doplnění: přepínač WinVet / Elite Vet
+
+Pro server, na kterém už běží předchozí doplnění (požadavky 25. 10.). Nové nastavení **Rezervace
+na webu** přepíná stránku /rezervacni-system mezi formulářem WinVet (podle adresy) a naším
+rezervačním průvodcem. Větev `feature/elite-vet-booking-switch`. Cílový kód:
+`elite_vet_reservation` 18.0.2.5.0 (ostatní moduly beze změny verze).
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_reservation --i18n-overwrite --stop-after-init 2>&1 | tee upgrade-prepinac-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-prepinac-*.log      # nesmí nic najít
+```
+
+`--i18n-overwrite` je potřeba kvůli přejmenovaným textům průvodce (viz níže); bez něj zůstanou
+staré překlady.
+
+Co upgrade udělá s daty:
+- Nový povinný sloupec `elite_vet_setting.web_booking_source`. Stávající záznam nastavení dostane
+  **`winvet`** – po upgradu je tedy na /rezervacni-system **formulář WinVet** (z pole „Adresa
+  formuláře WinVet“, dosud `booking_url`), i když tam předtím byl náš průvodce. Nic jiného se
+  nemění, rezervace ani žádosti z webu se nemažou.
+- Agent hodnotu **nepřepíná** (pravidla: nic neměnit v datech) – přepnutí dělá uživatel (níže).
+
+```sql
+SELECT web_booking_source, booking_url FROM elite_vet_setting;   -- winvet + adresa WinVet
+```
+
+Když je `booking_url` prázdné, stránka ukáže výchozí formulář WinVet kliniky
+(`…/booking/f5832eae07850edb2b5a1167843ef423`); zapiš to do zprávy, ať adresu uživatel doplní.
+
+**Postup pro uživatele (první ostré spuštění):**
+1. Po upgradu je na webu WinVet – klienti se objednávají jako dosud. Ověřit v anonymním okně:
+   /rezervacni-system ukazuje rámeček WinVet s hláškou „Načítáme rezervační systém…“.
+2. V klidu nastavit náš systém: Rezervace › Konfigurace (ordinace a ordinační doba, úkony,
+   lékařky a specializace, rozpis), Nastavení rezervace (e-maily, limity) – kontrolní seznam
+   v `elite_vet_reservation/doc/nastaveni.md`, kapitola 10. Recepce může mezitím objednávat
+   v Odoo (tabule, Nová rezervace, pokladna) – to na přepínači nezávisí.
+3. Přepnout: Rezervace › Konfigurace › **Nastavení rezervace** › skupina *Rezervace na webu* ›
+   **Elite Vet (náš kalendář)** › Uložit (jen Správce rezervací).
+4. Ověřit v anonymním okně (obnovit stránku): na /rezervacni-system jsou kroky „1 · Co
+   potřebujete“ a seznam úkonů, rámeček WinVet zmizel. Volitelně zkušební žádost a kontrola, že
+   dorazila do Rezervace › Čekající z webu (pak ji zrušit).
+5. Návrat: stejné pole zpět na **WinVet (podle adresy)**. Náš systém pak z webu (stránka i chat)
+   rezervace nepřijímá, žádosti z dřívějška v Čekajících zůstávají.
+
+Stránka /rozpis-lekaru má vlastní formulář WinVet a přepínač ji nemění.
