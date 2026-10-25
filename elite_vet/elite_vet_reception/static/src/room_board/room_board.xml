@@ -1,96 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <!-- Card of the view Všechny ordinace (`it` = item of room_board, `column` = its column). -->
-    <t t-name="elite_vet_reception.RoomCard">
-        <div class="evrm-card" t-att-class="{
-                'evrm-card-waiting': it.stage === 'waiting', 'evrm-card-in_room': it.stage === 'in_room',
-                'evrm-card-booked': it.stage === 'booked', 'evrm-card-done': it.stage === 'done',
-                'evrm-card-drag': state.drag === it.key}"
-             t-att-draggable="it.draggable ? 'true' : 'false'"
+    <!-- "…" menu of a patient (component RoomMenu, props.it, props.board): Otevřít kartu,
+         Poznámka recepce, Do jiné ordinace (rooms right in the menu, also for touch screens). -->
+    <t t-name="elite_vet_reception.RoomMenu">
+        <t t-set="it" t-value="props.it"/>
+        <t t-set="board" t-value="props.board"/>
+        <Dropdown position="'bottom-end'" menuClass="'ev-clinic-menu'">
+            <button type="button" class="ev-icon-btn evt-more evrm-more" t-att-aria-label="'Další akce: ' + (it.pet_name or 'pacient')"
+                    title="Další akce" t-att-disabled="board.state.busy">
+                <i class="fa fa-ellipsis-h" aria-hidden="true"/>
+            </button>
+            <t t-set-slot="content">
+                <DropdownItem t-if="board.canOpenFromMenu(it)" class="'evrm-open'" onSelected="() => board.openCard(props.it)">
+                    <i class="fa fa-folder-open-o fa-fw" aria-hidden="true"/>Otevřít kartu
+                </DropdownItem>
+                <DropdownItem t-if="board.canNote(it)" class="'evrm-note-edit'" onSelected="() => board.editNote(props.it)">
+                    <i class="fa fa-sticky-note-o fa-fw" aria-hidden="true"/>Poznámka recepce…
+                </DropdownItem>
+                <t t-if="it.draggable">
+                    <div class="dropdown-divider" t-if="board.canOpenFromMenu(it) or board.canNote(it)"/>
+                    <h6 class="dropdown-header">Do jiné ordinace</h6>
+                    <t t-foreach="board.roomColumns" t-as="col" t-key="col.key">
+                        <DropdownItem t-if="col.room_id !== it.room_id" class="'evrm-to-room'" onSelected="() => board.pickRoomFor(props.it, col.room_id)">
+                            <span class="evt-dot" t-att-style="'background:' + (col.color or '#8796ab')" aria-hidden="true"/>
+                            <span><t t-esc="col.name"/> <small class="text-muted" t-esc="board.dutyText(col)"/></span>
+                        </DropdownItem>
+                    </t>
+                    <DropdownItem t-if="it.room_id" class="'evrm-to-room'" onSelected="() => board.pickRoomFor(props.it, false)">
+                        <span class="evt-dot" style="background:#b5bfbc" aria-hidden="true"/>Nepřiřazení
+                    </DropdownItem>
+                </t>
+            </t>
+        </Dropdown>
+    </t>
+
+    <!-- One patient: the shared tile + one primary action + "…" (`it`, `column`, `compact`). -->
+    <t t-name="elite_vet_reception.RoomTile">
+        <t t-set="tile" t-value="this.tile(it)"/>
+        <t t-set="primary" t-value="primaryAction(it)"/>
+        <div class="evt evrm-card" t-att-class="'evt-' + it.stage + (compact ? ' evt-compact' : '') + (state.drag === it.key ? ' evrm-card-drag' : '') + (compact and it.draggable ? ' evrm-draggable' : '')"
+             t-att-draggable="compact and it.draggable ? 'true' : 'false'"
              t-on-dragstart="(ev) => this.onDragStart(ev, it)" t-on-dragend="onDragEnd"
              t-att-data-key="it.key">
-            <div class="evrm-card-top">
-                <span class="evrm-time" t-esc="timeText(it)"/>
-                <span class="evrm-stage" t-att-class="'evrm-stage-' + it.stage" t-esc="stageText(it)"/>
-            </div>
-            <div class="evrm-pet">
-                <t t-esc="it.pet_name or 'Bez mazlíčka'"/>
-                <span t-if="it.species_label" class="evrm-muted" t-esc="' (' + it.species_label + ')'"/>
-            </div>
-            <div class="evrm-sub">
-                <t t-esc="it.owner or ''"/><t t-if="it.procedure"> · <t t-esc="it.procedure"/></t>
-                <t t-if="it.walk_in"> · bez objednání</t>
-            </div>
-            <div class="evrm-sub"><i class="fa fa-user-md me-1" aria-hidden="true"/><t t-esc="it.doctor or 'lékařka nevybrána'"/></div>
-            <div t-if="it.alerts" class="evrm-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></div>
-            <div t-if="it.reception_note" class="evrm-note" title="Interní poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></div>
-            <div t-if="it.draggable or it.pet_id or it.reservation_id" class="evrm-card-actions">
-                <span t-if="it.draggable" class="evrm-picker-anchor">
-                    <button type="button" class="btn btn-sm btn-light evrm-to-room" t-att-disabled="state.busy"
-                            t-on-click="() => this.openRoomPicker(it)">Do ordinace…</button>
-                    <div t-if="state.pickRoom and state.pickRoom.key === it.key" class="evrm-picker" role="menu">
-                        <button t-foreach="roomColumns" t-as="col" t-key="col.key" type="button" class="evrm-picker-item"
-                                t-att-class="{'evrm-picker-current': col.room_id === it.room_id}"
-                                t-on-click="() => this.pickRoomFor(it, col.room_id)">
-                            <b t-esc="col.name"/> <span class="evrm-muted" t-esc="dutyText(col)"/>
-                        </button>
-                        <button type="button" class="evrm-picker-item" t-att-class="{'evrm-picker-current': !it.room_id}"
-                                t-on-click="() => this.pickRoomFor(it, false)">Nepřiřazení</button>
-                    </div>
-                </span>
-                <button t-if="it.record_id or it.pet_id" type="button" class="btn btn-sm btn-link evrm-open"
-                        t-on-click="() => this.openCard(it)">Karta</button>
-            </div>
+            <t t-call="elite_vet_clinic.VisitTileBody"/>
+            <span class="evt-actions">
+                <t t-if="!compact">
+                    <button t-if="primary === 'call'" type="button" class="ev-btn ev-btn-primary evt-primary evrm-call"
+                            t-att-disabled="state.busy" t-on-click="() => this.callPatient(it, column.room_id)">Zavolat</button>
+                    <button t-elif="primary === 'open'" type="button" class="ev-btn ev-btn-primary evt-primary evrm-open"
+                            t-on-click="() => this.openCard(it)">Otevřít kartu</button>
+                </t>
+                <RoomMenu t-if="hasMenu(it)" it="it" board="this"/>
+            </span>
         </div>
     </t>
 
-    <!-- Row of the one-room view (`it`, `section`, `column`). -->
-    <t t-name="elite_vet_reception.RoomRow">
-        <li class="evrm-row" t-att-class="'evrm-row-' + it.stage">
-            <span class="evrm-row-time" t-esc="timeText(it)"/>
-            <span class="evrm-row-main">
-                <span class="evrm-row-pet">
-                    <t t-esc="it.pet_name or 'Bez mazlíčka'"/>
-                    <span t-if="it.species_label" class="evrm-muted" t-esc="' (' + it.species_label + ')'"/>
-                    <span class="evrm-stage" t-att-class="'evrm-stage-' + it.stage" t-esc="stageText(it)"/>
-                </span>
-                <span class="evrm-sub">
-                    <t t-esc="it.owner or ''"/><t t-if="it.procedure"> · <t t-esc="it.procedure"/></t>
-                    <t t-if="it.walk_in"> · bez objednání</t> · <t t-esc="it.doctor or 'lékařka nevybrána'"/>
-                </span>
-                <span t-if="it.alerts" class="evrm-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
-                <span t-if="it.reception_note" class="evrm-note" title="Interní poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></span>
-            </span>
-            <span class="evrm-row-actions">
-                <button t-if="it.stage === 'waiting' and canCall" type="button" class="btn btn-primary evrm-call"
-                        t-att-disabled="state.busy" t-on-click="() => this.callPatient(it, column.room_id)">Zavolat</button>
-                <button t-if="it.record_id or it.pet_id" type="button" class="btn btn-secondary evrm-open"
-                        t-on-click="() => this.openCard(it)">Otevřít kartu</button>
-            </span>
-        </li>
+    <t t-name="elite_vet_reception.RoomNoteDialog">
+        <Dialog title="'Poznámka recepce – ' + (props.item.pet_name or '')" size="'md'">
+            <label class="form-label" for="evrm-note-input">Interní poznámka, klient ji neuvidí</label>
+            <textarea id="evrm-note-input" class="form-control evrm-note-input" rows="4" t-model="state.note"
+                      placeholder="Např. klient spěchá, platí převodem"/>
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-primary" t-att-disabled="state.busy" t-on-click="save">Uložit</button>
+                <button type="button" class="btn btn-secondary" t-on-click="props.close">Zrušit</button>
+            </t>
+        </Dialog>
     </t>
 
     <t t-name="elite_vet_reception.RoomBoard">
-        <div class="evrm o_action" t-on-click.self="closePickers">
+        <div class="evrm ev-clinic o_action">
             <div class="evrm-toolbar">
-                <div class="evrm-switch" role="tablist" aria-label="Ordinace">
-                    <button type="button" class="evrm-tab" t-att-class="{'evrm-tab-active': state.view === 'all'}"
-                            t-on-click="() => this.selectView('all')">Všechny ordinace</button>
-                    <t t-if="state.data">
-                        <button t-foreach="state.data.rooms" t-as="room" t-key="room.id" type="button" class="evrm-tab"
-                                t-att-class="{'evrm-tab-active': state.view === room.id}"
-                                t-on-click="() => this.selectView(room.id)">
-                            <span class="evrm-dot" t-att-style="'background:' + (room.color or '#94a3b8')"/>
-                            <t t-esc="room.name"/>
-                        </button>
+                <t t-set="column" t-value="state.view !== 'all' ? currentColumn : null"/>
+                <div class="evrm-title">
+                    <t t-if="state.loading or state.view === 'all'">
+                        <h1 class="evrm-room-name">Všechny ordinace</h1>
+                        <div t-if="state.data" class="evrm-summary" aria-label="Souhrn">
+                            <span class="ev-chip ev-chip-waiting">Čeká <b class="ev-num" t-esc="summary.waiting"/></span>
+                            <span class="ev-chip ev-chip-in_room">V ordinacích <b class="ev-num" t-esc="summary.inRoom"/></span>
+                            <span class="ev-chip">Nepřiřazení <b class="ev-num" t-esc="summary.unassigned"/></span>
+                        </div>
+                    </t>
+                    <t t-elif="column">
+                        <h1 class="evrm-room-name">
+                            <span class="evrm-room-dot" t-att-style="'background:' + (column.color or '#8796ab')" aria-hidden="true"/>
+                            <t t-esc="column.name"/>
+                        </h1>
+                        <t t-set="duty" t-value="dutyLine"/>
+                        <div class="evrm-duty" t-att-class="{'evrm-duty-none': !duty.now}">
+                            <i class="fa fa-user-md me-2" aria-hidden="true"/>
+                            <t t-if="duty.now">Ve službě <b t-esc="duty.text"/></t>
+                            <t t-elif="duty.text">Teď nikdo ve službě. Dnes: <t t-esc="duty.text"/></t>
+                            <t t-else="">Dnes tu nikdo nemá službu</t>
+                        </div>
                     </t>
                 </div>
-                <span class="flex-grow-1"/>
-                <span t-if="state.data" class="evrm-muted evrm-clock">Aktualizováno <t t-esc="state.data.time"/></span>
-                <button type="button" class="btn btn-light" title="Obnovit" t-on-click="() => this.refresh()"><i class="fa fa-refresh"/></button>
+                <div class="evrm-tools">
+                    <span t-if="state.data" class="ev-meta evrm-clock">Aktualizováno <span class="ev-num" t-esc="state.data.time"/></span>
+                    <button type="button" class="ev-icon-btn" title="Obnovit" aria-label="Obnovit" t-on-click="() => this.refresh()"><i class="fa fa-refresh" aria-hidden="true"/></button>
+                    <label class="evrm-switch">
+                        <span class="visually-hidden">Ordinace</span>
+                        <select class="form-select evrm-select" t-on-change="onViewChange" aria-label="Ordinace">
+                            <option value="all" t-att-selected="state.view === 'all'">Všechny ordinace</option>
+                            <t t-if="state.data">
+                                <option t-foreach="state.data.rooms" t-as="room" t-key="room.id" t-att-value="room.id"
+                                        t-att-selected="state.view === room.id" t-esc="room.name"/>
+                            </t>
+                        </select>
+                    </label>
+                </div>
             </div>
 
-            <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
+            <div t-if="state.loading" class="p-4 ev-meta">Načítám…</div>
 
             <!-- Všechny ordinace -->
             <div t-elif="state.view === 'all'" class="evrm-columns">
@@ -99,32 +119,34 @@
                          t-att-data-column="column.key"
                          t-on-dragover="(ev) => this.onDragOver(ev, column)" t-on-drop="(ev) => this.onDrop(ev, column)">
                     <header class="evrm-col-head" t-att-style="column.color ? 'border-top-color:' + column.color : ''">
-                        <div class="evrm-col-name" t-esc="column.name"/>
-                        <div class="evrm-duty" t-att-class="{'evrm-duty-none': column.room_id and !column.on_duty.length}">
+                        <h2 class="ev-h3 evrm-col-name" t-esc="column.name"/>
+                        <div class="evrm-col-duty" t-att-class="{'evrm-duty-none': column.room_id and !column.on_duty.length}">
                             <t t-if="column.room_id"><i class="fa fa-user-md me-1" aria-hidden="true"/></t><t t-esc="dutyText(column)"/>
                         </div>
                     </header>
                     <div class="evrm-col-body">
+                        <t t-set="compact" t-value="true"/>
                         <t t-foreach="sections" t-as="section" t-key="section.key">
                             <t t-set="items" t-value="sectionItems(column, section.key)"/>
-                            <div t-if="section.key === 'done'" class="evrm-section evrm-section-done">
-                                <button t-if="items.length" type="button" class="evrm-section-title evrm-done-toggle"
-                                        t-on-click="() => this.toggleDone(column)">
-                                    <i t-att-class="isDoneOpen(column) ? 'fa fa-caret-down' : 'fa fa-caret-right'"/>
-                                    Hotovo <span class="evrm-count" t-esc="items.length"/>
-                                </button>
-                                <t t-if="isDoneOpen(column)">
-                                    <t t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomCard"/></t>
-                                </t>
-                            </div>
-                            <div t-elif="items.length" class="evrm-section" t-att-class="'evrm-section-' + section.key">
-                                <div class="evrm-section-title"><t t-esc="section.title"/> <span class="evrm-count" t-esc="items.length"/></div>
-                                <t t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomCard"/></t>
+                            <div t-if="items.length" class="evrm-section" t-att-class="'ev-group-' + section.key">
+                                <h3 class="evrm-section-title"><t t-esc="section.title"/> <span class="ev-count" t-esc="items.length"/></h3>
+                                <t t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomTile"/></t>
                             </div>
                         </t>
-                        <p t-if="!column.counts.in_room and !column.counts.waiting and !column.counts.booked" class="evrm-empty">
+                        <p t-if="!column.counts.in_room and !column.counts.waiting and !column.counts.booked" class="ev-empty-line">
                             <t t-if="column.room_id">Nikdo tu není.</t><t t-else="">Všichni mají ordinaci.</t>
                         </p>
+                        <t t-set="items" t-value="sectionItems(column, 'done')"/>
+                        <div t-if="items.length" class="evrm-done">
+                            <button type="button" class="evrm-done-toggle" t-att-aria-expanded="isDoneOpen(column) ? 'true' : 'false'"
+                                    t-on-click="() => this.toggleDone(column)">
+                                <i t-att-class="isDoneOpen(column) ? 'fa fa-angle-down' : 'fa fa-angle-right'" aria-hidden="true"/>
+                                Hotovo dnes: <span class="ev-num" t-esc="items.length"/>
+                            </button>
+                            <t t-if="isDoneOpen(column)">
+                                <t t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomTile"/></t>
+                            </t>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -132,73 +154,73 @@
             <!-- One room -->
             <div t-else="" class="evrm-room">
                 <t t-set="column" t-value="currentColumn"/>
-                <div t-if="!column" class="p-4 text-muted">Ordinace nebyla nalezena.</div>
+                <div t-if="!column" class="p-4 ev-meta">Ordinace nebyla nalezena.</div>
                 <t t-else="">
-                    <header class="evrm-room-head" t-att-style="column.color ? 'border-left-color:' + column.color : ''">
-                        <h2 class="evrm-room-name" t-esc="column.name"/>
-                        <div class="evrm-duty evrm-duty-lg" t-att-class="{'evrm-duty-none': !column.on_duty.length}">
-                            <i class="fa fa-user-md me-1" aria-hidden="true"/>
-                            <t t-if="column.on_duty.length">Ve službě: <t t-esc="dutyText(column)"/></t>
-                            <t t-else="">Teď nikdo ve službě</t>
+                    <t t-set="compact" t-value="false"/>
+                    <section t-if="unassignedArrived.length" class="evrm-bar" aria-label="Nepřiřazení">
+                        <div class="evrm-bar-row">
+                            <span class="evrm-bar-text"><i class="fa fa-clock-o me-2" aria-hidden="true"/><t t-esc="unassignedText"/></span>
+                            <button type="button" class="ev-btn ev-btn-quiet evrm-bar-toggle" t-att-aria-expanded="state.showUnassigned ? 'true' : 'false'"
+                                    t-on-click="toggleUnassigned">
+                                <t t-if="state.showUnassigned">Skrýt</t><t t-else="">Zobrazit</t>
+                            </button>
+                            <button t-if="unassignedWaiting.length" type="button" class="ev-btn ev-btn-primary evrm-take-next"
+                                    t-att-disabled="state.busy" t-on-click="takeNext"
+                                    t-att-title="'Vezme do této ordinace pacienta, který čeká nejdéle: ' + unassignedWaiting[0].pet_name">
+                                Vzít dalšího
+                            </button>
                         </div>
-                        <div t-if="column.shifts.length" class="evrm-muted evrm-shifts">
-                            Dnes: <t t-foreach="column.shifts" t-as="s" t-key="s_index"><t t-if="s_index">, </t><span t-att-class="{'evrm-shift-now': s.now}"><t t-esc="s.doctor"/> <t t-esc="s.label"/></span></t>
-                        </div>
-                    </header>
-
-                    <section t-if="unassignedArrived.length" class="evrm-unassigned" aria-label="Nepřiřazení">
-                        <h3 class="evrm-group-title">Nepřiřazení – čekají na ordinaci <span class="evrm-count" t-esc="unassignedArrived.length"/></h3>
-                        <ol class="evrm-list">
-                            <li t-foreach="unassignedArrived" t-as="it" t-key="it.key" class="evrm-row evrm-row-unassigned">
-                                <span class="evrm-row-time" t-esc="timeText(it)"/>
-                                <span class="evrm-row-main">
-                                    <span class="evrm-row-pet">
-                                        <t t-esc="it.pet_name"/>
-                                        <span t-if="it.species_label" class="evrm-muted" t-esc="' (' + it.species_label + ')'"/>
-                                        <span class="evrm-stage" t-att-class="'evrm-stage-' + it.stage" t-esc="stageText(it)"/>
+                        <ol t-if="state.showUnassigned" class="evrm-list evrm-bar-list">
+                            <li t-foreach="unassignedArrived" t-as="it" t-key="it.key">
+                                <t t-set="tile" t-value="this.tile(it)"/>
+                                <div class="evt" t-att-class="'evt-' + it.stage">
+                                    <t t-call="elite_vet_clinic.VisitTileBody"/>
+                                    <span class="evt-actions">
+                                        <button type="button" class="ev-btn evrm-take" t-att-disabled="state.busy"
+                                                t-on-click="() => this.assign(it, column.room_id)">Vzít do této ordinace</button>
                                     </span>
-                                    <span class="evrm-sub"><t t-esc="it.owner or ''"/><t t-if="it.walk_in"> · bez objednání</t><t t-if="it.doctor"> · <t t-esc="it.doctor"/></t></span>
-                                    <span t-if="it.alerts" class="evrm-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
-                                    <span t-if="it.reception_note" class="evrm-note" title="Interní poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></span>
-                                </span>
-                                <span class="evrm-row-actions">
-                                    <button type="button" class="btn btn-primary evrm-take" t-att-disabled="state.busy"
-                                            t-on-click="() => this.assign(it, column.room_id)">Vzít do této ordinace</button>
-                                </span>
+                                </div>
                             </li>
                         </ol>
                     </section>
 
-                    <section t-foreach="sections" t-as="section" t-key="section.key" class="evrm-group"
-                             t-att-class="'evrm-group-' + section.key">
-                        <t t-set="items" t-value="sectionItems(column, section.key)"/>
-                        <h3 class="evrm-group-title">
-                            <button t-if="section.key === 'done'" type="button" class="evrm-done-toggle" t-on-click="() => this.toggleDone(column)">
-                                <i t-att-class="isDoneOpen(column) ? 'fa fa-caret-down' : 'fa fa-caret-right'"/> Hotovo
-                            </button>
-                            <t t-else="" t-esc="section.title"/>
-                            <span class="evrm-count" t-esc="items.length"/>
-                        </h3>
-                        <t t-if="section.key !== 'done' or isDoneOpen(column)">
-                            <p t-if="!items.length" class="evrm-empty" t-esc="section.empty"/>
+                    <div class="evrm-flow">
+                        <section t-foreach="sections" t-as="section" t-key="section.key" class="evrm-stage"
+                                 t-att-class="'ev-group-' + section.key">
+                            <t t-set="items" t-value="sectionItems(column, section.key)"/>
+                            <h2 class="ev-group-head"><t t-esc="section.title"/> <span class="ev-count" t-esc="items.length"/></h2>
+                            <p t-if="!items.length" class="ev-empty-line" t-esc="section.empty"/>
                             <ol t-else="" class="evrm-list">
-                                <t t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomRow"/></t>
+                                <li t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomTile"/></li>
                             </ol>
-                        </t>
-                    </section>
+                            <t t-if="section_last">
+                                <t t-set="done" t-value="sectionItems(column, 'done')"/>
+                                <div t-if="done.length" class="evrm-done">
+                                    <button type="button" class="evrm-done-toggle" t-att-aria-expanded="isDoneOpen(column) ? 'true' : 'false'"
+                                            t-on-click="() => this.toggleDone(column)">
+                                        <i t-att-class="isDoneOpen(column) ? 'fa fa-angle-down' : 'fa fa-angle-right'" aria-hidden="true"/>
+                                        Hotovo dnes: <span class="ev-num" t-esc="done.length"/>
+                                    </button>
+                                    <ol t-if="isDoneOpen(column)" class="evrm-list">
+                                        <li t-foreach="done" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomTile"/></li>
+                                    </ol>
+                                </div>
+                            </t>
+                        </section>
+                    </div>
                 </t>
             </div>
 
             <!-- Two doctors on duty: who takes the patient -->
             <div t-if="state.pickDoctor" class="evrm-modal-backdrop" t-on-click.self="() => this.chooseDoctor(null)">
                 <div class="evrm-modal" role="dialog" aria-label="Která lékařka">
-                    <h4>Kdo pacienta převezme?</h4>
-                    <p class="evrm-muted"><t t-esc="state.pickDoctor.item.pet_name"/> · <t t-esc="roomName(state.pickDoctor.roomId)"/> – ve službě jsou dvě lékařky.</p>
+                    <h2 class="ev-h2">Kdo pacienta převezme?</h2>
+                    <p class="ev-meta mt-2"><t t-esc="state.pickDoctor.item.pet_name"/> jde do ordinace <t t-esc="roomName(state.pickDoctor.roomId)"/>. Ve službě jsou dvě lékařky.</p>
                     <div class="evrm-modal-choices">
                         <button t-foreach="state.pickDoctor.doctors" t-as="doc" t-key="doc.id" type="button"
-                                class="btn btn-primary btn-lg evrm-doctor-choice" t-on-click="() => this.chooseDoctor(doc)" t-esc="doc.name"/>
+                                class="ev-btn ev-btn-primary evrm-doctor-choice" t-on-click="() => this.chooseDoctor(doc)" t-esc="doc.name"/>
                     </div>
-                    <button type="button" class="btn btn-link" t-on-click="() => this.chooseDoctor(null)">Zatím nevybírat</button>
+                    <button type="button" class="ev-btn ev-btn-quiet" t-on-click="() => this.chooseDoctor(null)">Zatím nevybírat</button>
                 </div>
             </div>
         </div>

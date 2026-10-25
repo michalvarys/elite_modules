@@ -1,125 +1,110 @@
-// Screen Ordinace (task 15). Colours as the reservation board (elite_vet_reservation/static/src/board).
+// Screen Ordinace (task 15, redesigned in task 26). Tokens, the visit tile, buttons and the
+// "…" menu come from elite_vet_clinic/static/src/clinic_ui/clinic_ui.scss (.ev-clinic).
 .evrm {
-    --evrm-ink: #1e293b; --evrm-muted: #64748b; --evrm-line: #e2e8f0; --evrm-bg: #f7f9fb;
-    --evrm-accent: #2b7870; --evrm-accent-soft: #e6f2f0; --evrm-warn: #b45309; --evrm-warn-bg: #fef3c7;
-    display: flex; flex-direction: column; height: 100%; background: var(--evrm-bg); color: var(--evrm-ink);
-    position: relative;
+    display: flex; flex-direction: column; height: 100%; position: relative;
 }
-.evrm-muted { color: var(--evrm-muted); font-weight: normal; }
-.evrm-toolbar {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px;
-    border-bottom: 1px solid var(--evrm-line); background: #fff;
-}
-.evrm-switch { display: flex; flex-wrap: wrap; gap: 4px; }
-.evrm-tab {
-    display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--evrm-line);
-    border-radius: 6px; background: #fff; color: #334155; font-weight: 600;
-    &:hover { background: #f1f5f9; }
-}
-.evrm-tab-active { background: var(--evrm-accent); border-color: var(--evrm-accent); color: #fff; &:hover { background: var(--evrm-accent); } }
-.evrm-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.evrm-clock { font-size: 12px; }
-.evrm-count {
-    display: inline-block; min-width: 22px; padding: 0 7px; border-radius: 10px; background: #e2e8f0;
-    color: var(--evrm-ink); font-size: 12px; text-align: center; font-weight: 700;
-}
-.evrm-empty { color: var(--evrm-muted); font-size: 13px; margin: 6px 0; }
-.evrm-alert { display: block; color: #b91c1c; font-size: 12px; }
-// internal note of the reception (request 25. 10.)
-.evrm-note {
-    display: block; margin-top: 4px; padding: 3px 8px; background: #fff4c2; color: #6b5200;
-    border-left: 3px solid #e8c53a; border-radius: 4px; font-size: 12.5px; font-weight: 600;
-    white-space: pre-wrap; overflow-wrap: anywhere; text-align: left;
-}
-.evrm-stage { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e2e8f0; }
-.evrm-stage-waiting { background: var(--evrm-warn-bg); color: var(--evrm-warn); }
-.evrm-stage-in_room { background: var(--evrm-accent-soft); color: var(--evrm-accent); }
-.evrm-stage-done { background: #dcfce7; color: #166534; }
 
-// ---------- Všechny ordinace ----------
-.evrm-columns { display: flex; gap: 10px; flex: 1; min-height: 0; overflow: auto; padding: 10px; align-items: flex-start; }
-.evrm-col {
-    flex: 1 0 230px; max-width: 360px; background: #fff; border: 1px solid var(--evrm-line); border-radius: 8px;
-    display: flex; flex-direction: column; min-height: 200px;
+// ---------- header line: room + who is on duty | updated, refresh, room switch ----------
+.evrm-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 16px 24px;
+    background: var(--ev-paper); border-bottom: 1px solid var(--ev-line); flex: none;
 }
-.evrm-col-unassigned { background: #f1f5f9; }
-.evrm-col-drop { outline: 3px dashed var(--evrm-accent); outline-offset: -3px; }
-.evrm-col-head { padding: 8px 10px; border-bottom: 1px solid var(--evrm-line); border-top: 4px solid #94a3b8; border-radius: 8px 8px 0 0; }
-.evrm-col-name { font-weight: 700; font-size: 15px; }
-.evrm-duty { font-size: 12px; color: var(--evrm-accent); }
-.evrm-duty-none { color: var(--evrm-muted); font-style: italic; }
-.evrm-duty-lg { font-size: 15px; }
-.evrm-col-body { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-.evrm-section { display: flex; flex-direction: column; gap: 6px; }
-.evrm-section-title {
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--evrm-muted);
-    display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; text-align: left;
+.evrm-title { flex: 1 1 360px; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; }
+.evrm-room-name {
+    display: inline-flex; align-items: center; gap: 10px; margin: 0;
+    font-size: var(--ev-fs-name); font-weight: 700; line-height: 1.15; color: var(--ev-ink);
 }
-.evrm-card {
-    background: #fff; border: 1px solid var(--evrm-line); border-left: 4px solid #94a3b8; border-radius: 6px;
-    padding: 6px 8px; font-size: 13px;
-    &[draggable="true"] { cursor: grab; }
+.evrm-room-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.evrm-duty { font-size: var(--ev-fs-body); color: var(--ev-accent-strong); b { font-weight: 700; } }
+.evrm-duty-none { color: var(--ev-muted); }
+.evrm-summary { display: flex; flex-wrap: wrap; gap: 8px; .ev-chip { font-size: var(--ev-fs-body); padding: 4px 12px; } b { font-weight: 700; } }
+.evrm-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.evrm-select {
+    min-height: 44px; min-width: 220px; font-size: var(--ev-fs-body); font-weight: 600; color: var(--ev-ink);
+    border-color: var(--ev-line-strong); border-radius: var(--ev-r-sm);
+    &:focus { border-color: var(--ev-accent); box-shadow: 0 0 0 3px var(--ev-focus); }
 }
-.evrm-card-waiting { border-left-color: var(--evrm-warn); }
-.evrm-card-in_room { border-left-color: var(--evrm-accent); }
-.evrm-card-booked { background: #fbfcfd; }
-.evrm-card-done { opacity: .7; }
-.evrm-card-drag { opacity: .4; }
-.evrm-card-top { display: flex; justify-content: space-between; gap: 6px; align-items: center; }
-.evrm-time { font-weight: 700; font-variant-numeric: tabular-nums; }
-.evrm-pet { font-weight: 700; }
-.evrm-sub { display: block; color: var(--evrm-muted); font-size: 12px; }
-.evrm-card-actions { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
-.evrm-picker-anchor { position: relative; }
-.evrm-picker {
-    position: absolute; z-index: 20; top: 100%; left: 0; min-width: 220px; background: #fff;
-    border: 1px solid var(--evrm-line); border-radius: 6px; box-shadow: 0 6px 18px rgba(15, 23, 42, .15);
-    display: flex; flex-direction: column; padding: 4px;
-}
-.evrm-picker-item {
-    text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 4px; font-size: 14px;
-    &:hover { background: #f1f5f9; }
-}
-.evrm-picker-current { background: var(--evrm-accent-soft); }
+.evrm-clock { white-space: nowrap; }
+
+.evrm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 
 // ---------- one room ----------
-.evrm-room { flex: 1; overflow: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 16px; max-width: 1100px; }
-.evrm-room-head { background: #fff; border: 1px solid var(--evrm-line); border-left: 6px solid #94a3b8; border-radius: 8px; padding: 10px 14px; }
-.evrm-room-name { margin: 0; font-size: 1.6rem; font-weight: 700; }
-.evrm-shifts { font-size: 13px; }
-.evrm-shift-now { font-weight: 700; color: var(--evrm-accent); }
-.evrm-unassigned { background: var(--evrm-warn-bg); border-radius: 8px; padding: 10px 12px; }
-.evrm-group-title {
-    display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 13px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .04em; color: var(--evrm-muted);
+.evrm-room { flex: 1; min-height: 0; overflow: auto; padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+// unassigned patients: one slim bar
+.evrm-bar {
+    background: var(--ev-waiting-bg); border: 1px solid #efd3a3; border-left: 6px solid var(--ev-waiting-bar);
+    border-radius: var(--ev-r-lg); padding: 8px 10px 8px 16px;
 }
-.evrm-done-toggle { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
-.evrm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.evrm-row {
-    display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--evrm-line);
-    border-left: 4px solid #94a3b8; border-radius: 8px; padding: 10px 12px; font-size: 15px;
+.evrm-bar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.evrm-bar-text { flex: 1 1 240px; font-size: 18px; font-weight: 700; color: var(--ev-waiting); }
+.evrm-bar-toggle { color: var(--ev-waiting); &:hover:not(:disabled) { background: rgba(255, 255, 255, .6); color: var(--ev-ink); } }
+.evrm-bar-list { margin: 8px 0 4px; }
+
+// the flow: Čekají | V ordinaci | Dnes ještě přijdou
+.evrm-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.evrm-stage { min-width: 0; }
+.evrm-done { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.evrm-done-toggle {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px;
+    border: 1px solid var(--ev-line); border-radius: var(--ev-r-sm); background: var(--ev-paper);
+    font-size: var(--ev-fs-body); font-weight: 600; color: var(--ev-muted);
+    &:hover { color: var(--ev-ink); border-color: var(--ev-line-strong); }
 }
-.evrm-row-waiting { border-left-color: var(--evrm-warn); }
-.evrm-row-in_room { border-left-color: var(--evrm-accent); }
-.evrm-row-done { opacity: .75; }
-.evrm-row-unassigned { border-left-color: var(--evrm-warn); }
-.evrm-row-time { min-width: 56px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.evrm-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.evrm-row-pet { font-weight: 700; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.evrm-row-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+// three columns side by side: the primary action goes under the text, "…" stays top right
+@media (min-width: 1100px) {
+    .evrm-flow .evt { position: relative; }
+    .evrm-flow .evt-main { grid-column: 2 / 4; }
+    .evrm-flow .evt-pet { padding-right: 40px; }
+    .evrm-flow .evt-actions { display: contents; }
+    .evrm-flow .evt-primary { grid-column: 2 / 4; grid-row: 2; justify-self: end; margin: 0 12px 12px; }
+    .evrm-flow .evt-more { position: absolute; top: 6px; right: 6px; }
+}
+
+// ---------- Všechny ordinace ----------
+.evrm-columns { display: flex; gap: 16px; flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 24px; align-items: flex-start; }
+.evrm-col {
+    flex: 1 0 280px; max-width: 420px; background: var(--ev-paper); border: 1px solid var(--ev-line);
+    border-radius: var(--ev-r-lg); display: flex; flex-direction: column; min-height: 160px;
+}
+.evrm-col-unassigned { background: #f6f8f7; }
+.evrm-col-drop { outline: 3px dashed var(--ev-accent); outline-offset: -3px; }
+.evrm-col-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--ev-line); border-top: 5px solid var(--ev-done-bar); border-radius: var(--ev-r-lg) var(--ev-r-lg) 0 0; }
+.evrm-col-name { font-size: 18px; }
+.evrm-col-duty { font-size: var(--ev-fs-meta); color: var(--ev-accent-strong); }
+.evrm-col-body { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
+.evrm-section { display: flex; flex-direction: column; gap: 8px; }
+.evrm-section-title {
+    display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--ev-fs-body); font-weight: 700; color: var(--ev-ink);
+}
+.evrm-section.ev-group-waiting .ev-count { background: var(--ev-waiting-bg); color: var(--ev-waiting); }
+.evrm-section.ev-group-in_room .ev-count { background: var(--ev-in_room-bg); color: var(--ev-in_room); }
+.evrm-section.ev-group-booked .ev-count { background: var(--ev-booked-bg); color: var(--ev-booked); }
+.evrm-draggable { cursor: grab; }
+.evrm-card-drag { opacity: .4; }
 
 // ---------- doctor choice ----------
 .evrm-modal-backdrop {
-    position: absolute; inset: 0; z-index: 50; background: rgba(15, 23, 42, .35);
+    position: absolute; inset: 0; z-index: 50; background: rgba(20, 40, 38, .35);
     display: flex; align-items: center; justify-content: center; padding: 16px;
 }
-.evrm-modal { background: #fff; border-radius: 10px; padding: 18px 20px; max-width: 420px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
-.evrm-modal-choices { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.evrm-modal { background: var(--ev-paper); border-radius: var(--ev-r-lg); padding: 24px; max-width: 440px; width: 100%; box-shadow: var(--ev-shadow-menu); }
+.evrm-modal-choices { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 8px; }
+.evrm-note-input { font-size: 16px; }
 
+// ---------- smaller screens ----------
+@media (max-width: 1279.98px) {
+    .evrm-flow { gap: 16px; }
+}
+@media (max-width: 1099.98px) {
+    // tablet: the flow becomes a list (Čekají, V ordinaci, Dnes ještě přijdou)
+    .evrm-flow { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .evrm-toolbar { padding: 12px 16px; }
+    .evrm-room { padding: 16px; }
+    .evrm-columns { padding: 12px 16px; }
+}
 @media (max-width: 640px) {
     .evrm-columns { flex-direction: column; align-items: stretch; }
     .evrm-col { max-width: none; flex-basis: auto; }
-    .evrm-room { padding: 10px; }
-    .evrm-row { flex-wrap: wrap; }
-    .evrm-row-actions { width: 100%; justify-content: flex-start; }
+    .evrm-tools { width: 100%; margin-left: 0; }
+    .evrm-select { flex: 1; min-width: 0; }
 }

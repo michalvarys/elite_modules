@@ -1,5 +1,7 @@
+from datetime import timedelta
 from unittest.mock import patch
 
+from odoo import fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
@@ -100,6 +102,47 @@ class TestRooms(ReceptionCase):
         self.api(self.nurse).assign_room(data["record_id"], self.room2.id)
         self.assertEqual(self.Record.browse(data["record_id"]).room_id, self.room2)
         self.assertEqual(res.room_id, self.room1)
+
+    # ---------------------------------------------------------------- take_next_patient (task 26)
+    def test_take_next_takes_the_longest_waiting(self):
+        reception = self.api(self.reception)
+        later = self.walk_in("Přišel později")
+        first = self.walk_in("Čeká nejdéle")
+        in_room = self.walk_in("Už je u sestry")
+        now = fields.Datetime.now()
+        first.arrived_at = now - timedelta(minutes=40)
+        later.arrived_at = now - timedelta(minutes=10)
+        in_room.write({"arrived_at": now - timedelta(minutes=60), "visit_stage": "in_room"})
+        other_room = self.walk_in("Má ordinaci", room_id=self.room2.id)
+        other_room.arrived_at = now - timedelta(minutes=90)
+        self.duty(self.room1, self.doc_a)
+        precommit = self.env.cr.precommit.data
+        precommit.pop(PRECOMMIT_KEY, None)
+        result = reception.take_next_patient(self.room1.id)
+        self.assertIn(PRECOMMIT_KEY, precommit, "the screens refresh (bus)")
+        self.assertEqual((result["record_id"], result["room_id"], result["needs_doctor"]), (first.id, self.room1.id, []))
+        self.assertEqual((first.room_id, first.doctor_id, first.visit_stage), (self.room1, self.doc_a, "waiting"),
+                         "same rules as assign_room: doctor on duty, not called in")
+        self.assertEqual(reception.take_next_patient(self.room1.id)["record_id"], later.id)
+        self.assertFalse(reception.take_next_patient(self.room1.id), "nobody waits without a room")
+        self.assertFalse(in_room.room_id, "a patient already in a room is not taken")
+        self.assertEqual(other_room.room_id, self.room2, "assigned patients stay")
+
+    def test_take_next_two_on_duty_and_rights(self):
+        record = self.walk_in("Dvě ve službě")
+        self.duty(self.room1, self.doc_a)
+        self.duty(self.room1, self.doc_b)
+        result = self.api(self.nurse).take_next_patient(self.room1.id)
+        self.assertEqual(result["record_id"], record.id)
+        self.assertEqual({d["id"] for d in result["needs_doctor"]}, {self.doc_a.id, self.doc_b.id})
+        with self.assertRaises(UserError):
+            self.api(self.reception).take_next_patient(False)
+        with self.assertRaises(AccessError):
+            self.api(self.outsider).take_next_patient(self.room1.id)
+        # done and other days' visits are never taken
+        done = self.walk_in("Hotový dnes")
+        self.as_user(self.nurse).mark_done(done.id)
+        self.assertFalse(self.api(self.reception).take_next_patient(self.room2.id))
 
     def test_assign_only_today_drafts(self):
         record = self.walk_in("Hotový")

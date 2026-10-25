@@ -2,14 +2,20 @@
 // Screen Ordinace (task 15, client action elite_vet_reception.room_board): the visits of the day
 // by consultation room. Top switch Všechny ordinace | <room> …:
 // - Všechny ordinace: columns Nepřiřazení + one per room; arrived patients are dragged between
-//   columns (or "Do ordinace…" on touch screens).
-// - one room: its list (V ordinaci, Čekají, Objednaní, Hotovo) with Zavolat / Otevřít kartu and
-//   above it the unassigned patients with "Vzít do této ordinace".
+//   columns (or "…" › Do jiné ordinace on touch screens).
+// - one room: the flow Čekají | V ordinaci | Dnes ještě přijdou (Hotovo dnes folded under it),
+//   above it one bar with the unassigned patients: Vzít dalšího / Zobrazit.
+// Task 26: one design system (.ev-clinic, elite_vet_clinic/static/src/clinic_ui), every patient
+// is the shared visit tile with one primary action by state and the rest in the "…" menu.
 // Data: elite.vet.reception.room_board (models/room_board.py, shapes in README.md).
 import { registry } from "@web/core/registry";
+import { Dialog } from "@web/core/dialog/dialog";
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { useService } from "@web/core/utils/hooks";
 import { useSetupAction } from "@web/search/action_hook";
 import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { plural, visitTile } from "@elite_vet_clinic/clinic_ui/clinic_ui";
 
 const RECEPTION = "elite.vet.reception";
 const BUS_MESSAGE = "elite_vet_reservation/changed";
@@ -17,11 +23,11 @@ const POLL_MS = 30000;
 const VIEW_KEY = "elite_vet_reception.room_view";   // remembered choice of this browser
 const ALL = "all";
 
+// Left to right in the room, top to bottom in a column of Všechny ordinace; Hotovo is folded.
 export const ROOM_SECTIONS = [
-    { key: "in_room", title: "V ordinaci", empty: "V ordinaci nikdo není." },
     { key: "waiting", title: "Čekají", empty: "Nikdo nečeká." },
-    { key: "booked", title: "Objednaní", empty: "Nikdo další objednaný." },
-    { key: "done", title: "Hotovo", empty: "Zatím nic hotového.", collapsed: true },
+    { key: "in_room", title: "V ordinaci", empty: "V ordinaci nikdo není." },
+    { key: "booked", title: "Dnes ještě přijdou", empty: "Dnes už nikdo objednaný." },
 ];
 
 function errorMessage(e) { return e?.data?.message || e?.message || String(e); }
@@ -41,21 +47,49 @@ function saveView(view) {
     }
 }
 
+/** Poznámka recepce of a visit (set_reception_note), from the "…" menu. */
+export class RoomNoteDialog extends Component {
+    static template = "elite_vet_reception.RoomNoteDialog";
+    static components = { Dialog };
+    static props = ["item", "onSave", "close"];
+
+    setup() {
+        this.state = useState({ note: this.props.item.reception_note || "", busy: false });
+    }
+    async save() {
+        this.state.busy = true;
+        try {
+            if (await this.props.onSave(this.state.note)) this.props.close();
+        } finally {
+            this.state.busy = false;
+        }
+    }
+}
+
+/** The "…" menu of a tile: its own component, so every item keeps its own patient. */
+export class RoomMenu extends Component {
+    static template = "elite_vet_reception.RoomMenu";
+    static components = { Dropdown, DropdownItem };
+    static props = ["it", "board"];
+}
+
 export class RoomBoard extends Component {
     static template = "elite_vet_reception.RoomBoard";
+    static components = { RoomMenu };
     static props = ["*"];
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
+        this.dialog = useService("dialog");
         this.state = useState({
             data: null, loading: true, view: ALL, busy: false,
             drag: null,          // key of the dragged card
             dropKey: null,       // column under the dragged card
-            pickRoom: null,      // card whose "Do ordinace…" picker is open
             pickDoctor: null,    // {item, roomId, doctors}: two doctors on duty, who takes it
             openDone: {},        // column key -> Hotovo expanded
+            showUnassigned: false,   // one room: the unassigned list under the bar
         });
         const action = this.props.action || {};
         const params = action.params || action.context?.params || {};
@@ -110,7 +144,7 @@ export class RoomBoard extends Component {
     }
     selectView(view) {
         this.state.view = view;
-        this.state.pickRoom = null;
+        this.state.showUnassigned = false;
         if (!this.state.data?.perms.member_account) saveView(view);
     }
 
@@ -123,36 +157,62 @@ export class RoomBoard extends Component {
     }
     get canCall() { return !!this.state.data?.perms.can_call; }
     get sections() { return ROOM_SECTIONS; }
-    /** Arrived but not assigned (waiting / in_room without a room). */
+    /** Arrived but not assigned (waiting first, longest waiting on top; then in_room without a room). */
     get unassignedArrived() {
         const col = this.unassigned;
-        return col ? [...col.sections.in_room, ...col.sections.waiting] : [];
+        return col ? [...col.sections.waiting, ...col.sections.in_room] : [];
     }
+    get unassignedWaiting() { return this.unassigned?.sections.waiting || []; }
+    get unassignedText() {
+        const n = this.unassignedArrived.length;
+        return n + " " + plural(n, "pacient čeká", "pacienti čekají", "pacientů čeká") + " na ordinaci";
+    }
+    /** Všechny ordinace: the line on top. */
+    get summary() {
+        let waiting = 0, inRoom = 0;
+        for (const col of this.columns) {
+            waiting += col.counts.waiting;
+            inRoom += col.room_id ? col.counts.in_room : 0;
+        }
+        return { waiting, inRoom, unassigned: this.unassignedArrived.length };
+    }
+    onViewChange(ev) {
+        const value = ev.target.value;
+        this.selectView(value === ALL ? ALL : parseInt(value, 10));
+    }
+    /** Shift text of the room header: "MVDr. A, 7:00–14:00" once per doctor on duty now. */
+    get dutyLine() {
+        const column = this.currentColumn;
+        if (!column) return null;
+        if (this.state.data.is_today && column.on_duty.length) {
+            const now = column.shifts.filter((s) => s.now);
+            const parts = column.on_duty.map((d) => {
+                const shift = now.find((s) => s.doctor === d.name);
+                return shift ? d.name + ", " + shift.label : d.name;
+            });
+            return { now: true, text: parts.join(" a ") };
+        }
+        return { now: false, text: column.shifts.map((s) => s.doctor + " " + s.label).join(", ") };
+    }
+    tile(it) { return visitTile(it, it.stage); }
+    /** One primary action by state: Čeká -> Zavolat (nurse, doctor), V ordinaci -> Otevřít kartu. */
+    primaryAction(it) {
+        if (it.stage === "waiting" && it.record_id && this.canCall) return "call";
+        if (it.stage === "in_room" && (it.record_id || it.pet_id)) return "open";
+        return null;
+    }
+    canNote(it) { return !!(it.record_id && it.stage !== "done"); }
+    canOpenFromMenu(it) { return !!((it.record_id || it.pet_id) && this.primaryAction(it) !== "open"); }
+    hasMenu(it) { return this.canOpenFromMenu(it) || this.canNote(it) || !!it.draggable; }
 
     sectionItems(column, key) { return column.sections[key] || []; }
     isDoneOpen(column) { return !!this.state.openDone[column.key]; }
     toggleDone(column) { this.state.openDone[column.key] = !this.state.openDone[column.key]; }
 
-    stageText(it) {
-        if (it.stage === "waiting") {
-            return it.waiting_minutes !== null && it.waiting_minutes !== undefined
-                ? "Čeká " + it.waiting_minutes + " min" : "Čeká";
-        }
-        if (it.stage === "in_room") return it.called_time ? "V ordinaci od " + it.called_time : "V ordinaci";
-        if (it.stage === "done") return "Hotovo";
-        return "Objednáno";
-    }
-    timeText(it) {
-        if (it.arrived_time) {
-            return it.reservation_time && it.reservation_time !== it.arrived_time
-                ? it.arrived_time + " (obj. " + it.reservation_time + ")" : it.arrived_time;
-        }
-        return it.time || "–";
-    }
     dutyText(column) {
-        if (!column.room_id) return "čekají na ordinaci";
-        if (!this.state.data.is_today) return column.shifts.map((s) => s.doctor + " " + s.label).join(", ") || "nikdo ve službě";
-        return column.on_duty.map((d) => d.name).join(", ") || "nikdo ve službě";
+        if (!column.room_id) return "Čekají na ordinaci";
+        if (!this.state.data.is_today) return column.shifts.map((s) => s.doctor + " " + s.label).join(", ") || "Nikdo ve službě";
+        return column.on_duty.map((d) => d.name).join(", ") || "Teď nikdo ve službě";
     }
     roomName(roomId) {
         return this.state.data.rooms.find((r) => r.id === roomId)?.name || "Nepřiřazení";
@@ -185,15 +245,31 @@ export class RoomBoard extends Component {
     }
 
     // ------------------------------------------------------------ actions
-    openRoomPicker(it) { this.state.pickRoom = this.state.pickRoom?.key === it.key ? null : it; }
-    closePickers() {
-        this.state.pickRoom = null;
-        this.state.pickDoctor = null;
-    }
     async pickRoomFor(it, roomId) {
-        this.state.pickRoom = null;
         if ((it.room_id || null) === (roomId || null)) return;
         await this.assign(it, roomId);
+    }
+    toggleUnassigned() { this.state.showUnassigned = !this.state.showUnassigned; }
+    /** Vzít dalšího: the unassigned patient waiting the longest comes into this room. */
+    async takeNext() {
+        const column = this.currentColumn;
+        if (!column) return;
+        const result = await this.run("take_next_patient", [column.room_id]);
+        if (result === null) return;
+        if (!result) {
+            this.notification.add("Na ordinaci už nikdo nečeká.", { type: "info" });
+            return;
+        }
+        this.notification.add(result.pet_name + " → " + column.name, { type: "success" });
+        this.askDoctor({ record_id: result.record_id, pet_name: result.pet_name }, column.room_id, result);
+    }
+    editNote(it) {
+        this.dialog.add(RoomNoteDialog, {
+            item: it,
+            onSave: async (note) => {
+                return (await this.run("set_reception_note", [it.record_id, note])) !== null;
+            },
+        });
     }
 
     async run(method, args) {

@@ -137,6 +137,24 @@ class ReceptionRooms(models.AbstractModel):
         notify_board(self.env)
         return dict(self._record_dict(record), needs_doctor=needs_doctor)
 
+    @api.model
+    def take_next_patient(self, room_id):
+        """Vzít dalšího (task 26): the unassigned patient waiting the longest today (draft, stage
+        Čeká, no room; earliest arrival) goes into the room, with the same doctor rules as
+        assign_room. Returns its dict + needs_doctor, or False when nobody waits."""
+        self._check_reception()
+        room = self._get_room(room_id)
+        if not room:
+            raise UserError(_("Vyberte ordinaci."))
+        record = self._records().search([
+            ("date", "=", clinic_today()), ("state", "=", "draft"),
+            ("visit_stage", "=", "waiting"), ("room_id", "=", False)], order="arrived_at, id", limit=1)
+        if not record:
+            return False
+        needs_doctor = self._set_room(record, room, taker=self._taking_doctor())
+        notify_board(self.env)
+        return dict(self._record_dict(record), needs_doctor=needs_doctor)
+
     # ------------------------------------------------------------------ read API
 
     @api.model
