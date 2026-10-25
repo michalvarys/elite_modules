@@ -350,7 +350,8 @@ Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodc
 ### Nová blokace (správce rezervací)
 
 1. Na tabuli klikněte **Nová blokace**.
-2. Vyplňte **Důvod blokace** (např. „Oběd“).
+2. Vyplňte **Důvod blokace** (např. „Oběd“). Důvod se nepřekládá: napíšete-li ho s profilem
+   v angličtině nebo němčině, uloží se tak, jak je, a stejně ho uvidí všichni.
 3. **Druh blokace** – **Úplná**, nebo **Jen web**.
 4. **Ordinace** – vyberte jednu, nebo nechte prázdné = **všechny ordinace**.
 5. **Začátek** a **Konec**.

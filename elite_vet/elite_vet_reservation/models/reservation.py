@@ -116,7 +116,9 @@ class VetReservation(models.Model):
     pet_species = fields.Selection(SPECIES, string="Druh zvířete")
     problem = fields.Text(string="Popis problému")
     note = fields.Text(string="Interní poznámka")
-    block_reason = fields.Char(string="Důvod blokace", translate=True)
+    # Internal note (request 25. 10.): not translatable, the reason typed in any UI language is the
+    # one everybody sees (it used to be stored only in the language of the user who typed it).
+    block_reason = fields.Char(string="Důvod blokace")
     block_scope = fields.Selection(
         BLOCK_SCOPES, string="Druh blokace", default="full",
         help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"

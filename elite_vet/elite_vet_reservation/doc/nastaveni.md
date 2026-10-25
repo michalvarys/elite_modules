@@ -355,8 +355,9 @@ ven a všechny e-maily jsou vidět na http://localhost:8025.
 
 ## 9. Překlady
 
-Web je ve čtyřech jazycích. Názvy úkonů, ordinací, instrukce pro klienta, důvod
-blokace a texty v nastavení se překládají přímo v záznamu:
+Web je ve čtyřech jazycích. Názvy úkonů, ordinací, instrukce pro klienta a texty
+v nastavení se překládají přímo v záznamu (**důvod blokace ne** – je to interní poznámka, ukládá
+se jen jednou a všichni ho vidí stejně, ať ho napíšete v jakémkoli jazyce profilu):
 
 1. Vpravo nahoře přepněte svůj jazyk (nebo u pole klikněte na zkratku jazyka).
 2. Přepište text.
