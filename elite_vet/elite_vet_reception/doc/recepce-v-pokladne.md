@@ -421,13 +421,17 @@ rezervace – kopie ve druhé ordinaci se posune s ní (u kopie Přesunout ani p
 ### Přetažení rezervace
 
 Potvrzenou rezervaci můžete myší přetáhnout na jiný čas nebo do jiné ordinace (na dotykové
-obrazovce použijte **Přesunout** v detailu). Po puštění se pokladna zeptá „Přesunout … z …
-na …?“ (i s poznámkou, že klient dostane e-mail o změně termínu, když ho má). Teprve
+obrazovce použijte **Přesunout** v detailu). Po puštění se otevře okno „Přesunout rezervaci?“
+s políčky **Datum**, **Čas** a **Ordinace** předvyplněnými podle místa puštění a větou
+„Přesunout … z … na …?“ – když jste se netrefili, opravte čas (po krocích rezervací), den nebo
+ordinaci přímo v okně, věta se mění s nimi. Dostane-li klient e-mail o změně termínu, okno to
+napíše a ukáže zaškrtnuté **Poslat klientovi e-mail o změně**; po odškrtnutí proběhne tento
+přesun bez e-mailu (v historii rezervace zůstane „Klient nebyl o změně informován.“). Teprve
 **Přesunout** rezervaci přesune; **Zrušit** nechá vše, jak bylo. Platí stejná pravidla jako na backendové tabuli:
 v ordinaci musí sloužit lékařka, která úkon dělá (jinak se lékařka vymění za tu, která tam
 slouží), a čas musí být volný. Když to nejde, objeví se česká hláška (např. „Termín … je
-obsazený“) a rezervace zůstane, kde byla. Při změně času dostane klient e-mail o přesunu,
-pokud ho má.
+obsazený“) přímo v okně, okno zůstane otevřené a rezervace tam, kde byla – zvolte jiný čas.
+Při změně času dostane klient e-mail o přesunu, pokud ho má a pokud ho neodškrtnete.
 
 ### Klik do volného místa
 

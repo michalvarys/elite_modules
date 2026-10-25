@@ -677,3 +677,49 @@ a Založil(a), filtr Z webu.
 ```sql
 SELECT source, count(*) FROM elite_vet_reservation WHERE kind = 'reservation' GROUP BY source;
 ```
+
+## Doplnění: opravy 26. 10.
+
+Tři opravy z testování (větev `feature/elite-vet-fixes-1026`). Cílový kód:
+`elite_vet_calendar` 18.0.5.6.0, `elite_vet_reservation` 18.0.2.9.0, `elite_vet_reception` 18.0.1.10.0.
+
+1. **Potvrzení žádosti z webu lékařkou (i recepcí a sestrou).** Žádost s e-mailem, který patří
+   uživateli Odoo (člen týmu si objedná vlastní zvíře – od účtů členů týmu má každá lékařka
+   e-mail jako přihlašovací jméno), se spárovala s kontaktem toho uživatele a označení „klient“
+   na něm směl změnit jen správce práv → potvrzení skončilo chybou „You are not allowed to
+   modify 'User'“. Teď se nastaví jen tento příznak (sudo). Rozpis služeb a Rozpis lékařů dál
+   mění jen správce rozpisu / Správce rezervací.
+2. **Okno přesunu a potvrzení** (tabule v backendu i v pokladně, potvrzení žádosti z webu):
+   políčka **Datum**, **Čas** (po krocích rezervací) a **Ordinace** předvyplněná z puštění,
+   opravitelná; hláška „obsazeno / neslouží lékařka“ zůstane v okně. Zaškrtávátko **Poslat
+   klientovi e-mail o změně** / **Poslat klientovi potvrzení** (výchozí zaškrtnuté, jen když by
+   e-mail odešel); odškrtnuté = jen tato změna bez e-mailu, v historii rezervace „Klient nebyl
+   o změně (potvrzení) informován.“
+3. **/rozpis-lekaru v menším zobrazení** (do 900 px a dotykové displeje): pod jménem jen čas
+   od–do, nad každým měsícem krátká legenda barev; bubliny a celodenní poznámky beze změny.
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_calendar,elite_vet_reservation,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-opravy-1026-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-opravy-1026-*.log      # nesmí nic najít
+```
+
+Žádné tabulky ani sloupce nepřibudou, data se nemění. Mění se šablona stránky /rozpis-lekaru
+(záznam modulu, ne kopie z editoru webu – zkontrolujte, že `elite_vet_calendar.rozpis_lekaru`
+nemá kopii s jiným `website_id`), JS/CSS tabulí a pokladny – na počítačích i v pokladně obnovit
+stránku natvrdo (Ctrl+Shift+R).
+
+Kontrola:
+- uživatel s rolí Lékařka: Rezervace › Tabule → přetáhnout žádost z webu do ordinace → okno
+  s datem, časem a ordinací → opravit čas → **Potvrdit**; tlačítko „+ služba“ ani klik na pruh
+  lékařky se jí nenabízí;
+- přesun potvrzené rezervace s e-mailem na jiný čas s odškrtnutým e-mailem → v historii
+  „Klient nebyl o změně informován.“, ve frontě e-mailů nic nového;
+- /rozpis-lekaru na mobilu → pod jmény jen „8:00–14:00“, nad měsícem barvy s názvy směn.
+
+```sql
+SELECT key, website_id FROM ir_ui_view WHERE key = 'elite_vet_calendar.rozpis_lekaru';
+SELECT m.date, m.body FROM mail_message m
+ WHERE m.model = 'elite.vet.reservation' AND m.body LIKE '%nebyl o%informován%' ORDER BY m.id DESC LIMIT 10;
+```

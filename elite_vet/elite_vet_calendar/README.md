@@ -77,9 +77,11 @@ nejsou** (bylo jich moc a kalendář byl nepřehledný) – jsou v bublině u jm
 směny a časem:
 
 * na počítači se bublina ukáže po najetí myší na jméno, klikem na jméno zůstane otevřená;
-* na mobilu a tabletu (a na úzkém okně, kde se kalendář posouvá do strany) je čas směny pod
-  jménem jako dřív a bublina s ikonami se ukáže ťuknutím na jméno; ťuknutí jinam, Esc nebo
-  posunutí stránky ji zavře;
+* na mobilu a tabletu (a na úzkém okně, kde se kalendář posouvá do strany) je pod jménem jen
+  čas od–do (např. „8:00–14:00“, čas typu směny), bez názvu směny – směnu říká barva tečky
+  a nad každým měsícem je v tomto zobrazení krátká legenda barev (názvy typů směn); bublina
+  s názvem směny a ikonami se ukáže ťuknutím na jméno; ťuknutí jinam, Esc nebo posunutí
+  stránky ji zavře;
 * z klávesnice: Tab na jméno bublinu ukáže, Enter / mezerník ji otevře nebo zavře.
 
 V bublině jsou ikony s názvy specializací; slouží-li na směně víc lékařek, je u ikon i jméno.

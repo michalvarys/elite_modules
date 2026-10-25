@@ -144,10 +144,17 @@ Pod kartou jsou zelená tlačítka **Potvrdit → Ordinace · lékařka**, např
 požadovaný čas volný a kde slouží lékařka, která úkon dělá.
 
 1. Vyberte vhodné tlačítko a klikněte.
-2. Tabule se zeptá „Potvrdit žádost Rex (Jana Nováková) na čt 29. 10. 10:00–10:20,
-   Ordinace 1?“ – když má žádost e-mail, i „Klient dostane potvrzovací e-mail (adresa).“
-3. **Potvrdit**: rezervace se zapíše do ordinace v požadovaném čase a klient dostane e-mail
-   s potvrzením (jen když ho vyplnil). **Zrušit** nic nezmění.
+2. Otevře se okno „Potvrdit žádost?“ s políčky **Datum**, **Čas** a **Ordinace**
+   (předvyplněné podle tlačítka) a větou „Potvrdit žádost Rex (Jana Nováková) na čt 29. 10.
+   10:00–10:20, Ordinace 1?“. Datum, čas (po krocích rezervací, obvykle 15 minut) i ordinaci
+   můžete před potvrzením opravit, věta se mění s nimi. Změníte-li ordinaci, lékařku vybere
+   systém podle rozpisu.
+3. Když má žádost e-mail, okno napíše „Klient dostane potvrzovací e-mail (adresa).“ a pod tím
+   je zaškrtnuté **Poslat klientovi potvrzení**. Odškrtnete-li ho, e-mail neodejde a v historii
+   rezervace zůstane poznámka „Klient nebyl o potvrzení informován.“
+4. **Potvrdit**: rezervace se zapíše do zvolené ordinace a času. Není-li čas volný nebo tam
+   neslouží lékařka, hláška se ukáže přímo v okně a okno zůstane otevřené – opravte čas nebo
+   ordinaci a zkuste to znovu. **Zrušit** nic nezmění.
 
 Když se objeví text **„Požadovaný čas už není volný – otevřete a přeplánujte.“**,
 termín mezitím někdo obsadil. Text **„Požadovaný čas už uplynul – otevřete
@@ -157,12 +164,12 @@ a přeplánujte.“** znamená, že termín už začal. V obou případech postu
 ### Přetažení do sloupce
 
 Kartu můžete myší přetáhnout do sloupce ordinace na zvolený čas. Pustíte-li ji,
-tabule se stejně jako u tlačítka zeptá „Potvrdit žádost … na …?“ a teprve po **Potvrdit**
-se rezervace potvrdí v tomto čase a ordinaci a klient dostane potvrzení. **Zrušit** (nebo Esc)
-nic nezmění, karta zůstane v Čekajících.
+otevře se stejné okno jako u tlačítka: datum, čas a ordinace podle místa, kam jste kartu
+pustili, a dají se ještě opravit (netrefili jste se o čtvrthodinu? stačí přepsat čas). Teprve po
+**Potvrdit** se rezervace potvrdí a klient dostane potvrzení (pokud ho neodškrtnete).
+**Zrušit** (nebo Esc) nic nezmění, karta zůstane v Čekajících.
 
-- Pozor: kartu pouštíte na den, který je právě na tabuli. Chcete-li jiný den,
-  nejdřív si ho na tabuli otevřete.
+- Kartu pouštíte na den, který je právě na tabuli; jiný den nastavíte v okně v políčku **Datum**.
 - Při přetažení se kontroluje, že čas je volný a že v té ordinaci v tu dobu slouží
   lékařka, která úkon dělá (nebo ta, kterou si vybral klient). Když ne, objeví se
   červená hláška „V 9:00 v Ordinace 1 neslouží lékařka, která dělá …“ a nic se neuloží.
@@ -288,23 +295,36 @@ Vraťte se **Zpět** a vyberte jiný čas.
 
 1. Chyťte kartu na tabuli a přetáhněte ji na jiný čas nebo do jiné ordinace.
 2. Čas se zaokrouhlí na nejbližší krok (obvykle 15 minut).
-3. Po puštění se tabule zeptá, např. „Přesunout Rex (Jan Novák) z čt 29. 10. 9:00–9:20,
-   Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?“. Když klient dostane e-mail o změně
-   termínu, okno to napíše i s adresou. **Přesunout** rezervaci přesune, **Zrušit** (nebo Esc)
-   nechá vše, jak bylo – omylem puštěná karta tak nic nezmění. Puštění na stejné místo se na
-   nic neptá. Stejně se ptá i přesun blokace.
+3. Po puštění se otevře okno „Přesunout?“ s políčky **Datum**, **Čas** a **Ordinace**
+   předvyplněnými podle místa puštění a větou, např. „Přesunout Rex (Jan Novák) z čt 29. 10.
+   9:00–9:20, Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?“. Netrefili-li jste se, opravte
+   čas (po krocích rezervací), datum nebo ordinaci přímo v okně – věta „na …“ se mění s nimi.
+4. Když klient dostane e-mail o změně termínu (potvrzená rezervace s e-mailem a jiný den nebo
+   čas), okno to napíše i s adresou a ukáže zaškrtnuté **Poslat klientovi e-mail o změně**.
+   Odškrtnete-li ho, tento jeden přesun proběhne bez e-mailu a v historii rezervace zůstane
+   poznámka „Klient nebyl o změně informován.“ Další přesun už e-mail pošle zase normálně.
+5. **Přesunout** rezervaci přesune, **Zrušit** (nebo Esc) nechá vše, jak bylo – omylem
+   puštěná karta tak nic nezmění. Puštění na stejné místo se na nic neptá. Stejně se ptá
+   i přesun blokace.
 
-Přetahovat jde jen v rámci zobrazeného dne. Na jiný den přesunete rezervaci
-ve formuláři: klikněte na kartu a změňte **Začátek**.
+Na jiný den přesunete rezervaci také v tomto okně (políčko **Datum**), nebo ve formuláři
+(klikněte na kartu a změňte **Začátek**).
 
-Je-li cílový čas obsazený, objeví se červená hláška „Termín … v ordinaci … je obsazený: …“
-a karta zůstane na původním místě. Stejně tak u rezervace, když v cílové ordinaci
+Je-li cílový čas obsazený, objeví se v okně červená hláška „Termín … v ordinaci … je
+obsazený: …“, okno zůstane otevřené a rezervace na původním místě – zvolte jiný čas a zkuste
+**Přesunout** znovu. Stejně tak u rezervace, když v cílové ordinaci
 a čase neslouží lékařka, která úkon dělá („V … v … neslouží lékařka, která dělá …“).
 Neslouží-li tam dosavadní lékařka, zapíše se ta, která tam slouží (blokace jdou
 přesunout kamkoli).
 
 Klient s e-mailem dostane po přesunu potvrzené rezervace na jiný čas automaticky
-e-mail **o změně termínu**. Při změně jen ordinace (stejný čas) e-mail nechodí.
+e-mail **o změně termínu** (pokud v okně neodškrtnete „Poslat klientovi e-mail o změně“).
+Při změně jen ordinace (stejný čas) e-mail nechodí.
+
+Potvrzovat, odmítat a přesouvat žádosti i rezervace může Recepce, Sestra i Lékařka. Služby
+lékařek (Rozpis služeb, Rozpis lékařů, „+ služba“, klik na pruh lékařky) mění jen správce
+rozpisu a Správce rezervací – ostatním se tyto ovládací prvky na tabuli neukážou a server
+jejich změnu odmítne.
 
 ### Zákrok pro dvě lékařky (druhá ordinace)
 
