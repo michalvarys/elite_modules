@@ -23,6 +23,9 @@ class ClinicalRecordPatientList(models.Model):
     def _record_data(self):
         data = super()._record_data()
         data["visit_stage"] = self.visit_stage or False
+        # task 26: the visit chip in the card header ("Čeká od 9:05", "V ordinaci od 9:20")
+        data["arrived_time"] = local_time(self.arrived_at) if self.arrived_at else None
+        data["called_time"] = local_time(self.called_at) if self.called_at else None
         return data
 
     def _stage_info(self, now):

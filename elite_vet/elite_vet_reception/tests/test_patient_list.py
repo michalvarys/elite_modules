@@ -96,6 +96,14 @@ class TestPatientList(ReceptionCase):
         data = self.as_user(self.doctor_user).card_data(pet.id)
         self.assertEqual(data["today_record"]["id"], rec["record_id"])
         self.assertEqual(data["today_record"]["visit_stage"], "waiting", "card_data stays read-only")
+        # task 26: the visit chip of the card header
+        record = self.Record.browse(rec["record_id"])
+        self.assertEqual(data["today_record"]["arrived_time"], rec["arrived_time"])
+        self.assertIsNone(data["today_record"]["called_time"])
+        self.api(self.doctor_user).call_patient(record.id)
+        data = self.as_user(self.doctor_user).card_data(pet.id)
+        self.assertEqual(data["today_record"]["visit_stage"], "in_room")
+        self.assertRegex(data["today_record"]["called_time"], r"^\d{1,2}:\d{2}$")
 
     def test_unassigned_walk_ins_for_every_doctor(self):
         """Ruling R17: a walk-in without a doctor is offered to every doctor under `unassigned`;

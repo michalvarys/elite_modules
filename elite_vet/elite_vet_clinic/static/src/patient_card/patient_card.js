@@ -5,6 +5,7 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { visitTile } from "@elite_vet_clinic/clinic_ui/clinic_ui";
 import {
     Component, useState, useRef, onWillStart, onMounted, onPatched, onWillUnmount, useExternalListener,
 } from "@odoo/owl";
@@ -244,6 +245,7 @@ export class PatientCard extends Component {
             save: { status: "idle", at: null },
             popover: null,           // "service" | "product" | "bundle" | "tpl-<section>"
             tlFilter: "all", expanded: {}, showAll: {},
+            historyOpen: false,      // below 1280 px the history is folded (task 26)
             busy: false, flashLine: null,
             roomNote: "",            // Poznámka pro recepci (saved on its own, also after Hotovo)
             roomNoteSave: { status: "idle", at: null },
@@ -445,6 +447,28 @@ export class PatientCard extends Component {
         const days = ["neděle", "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota"];
         return days[d.getDay()] + " " + fmtDate(iso);
     }
+    /** Tile of the plain list (without elite_vet_reception, which replaces the list). */
+    todayTile(item) {
+        const state = item.record_state === "done" ? "done" : "booked";
+        return visitTile(item, state, {
+            stateText: this.recordBadge(item).label,
+            room: item.room, roomColor: item.room_color,
+            doctor: this.state.today?.filtered_by_doctor ? null : item.doctor,
+        });
+    }
+    /** Header chip of today's visit (stage from elite_vet_reception): Čeká / V ordinaci od … */
+    get visitChip() {
+        const rec = this.state.record;
+        if (!rec || rec.date !== this.todayIso) return null;
+        if (rec.state === "done") return { state: "done", text: "Hotovo, čeká u pokladny" };
+        if (rec.visit_stage === "in_room") {
+            return { state: "in_room", text: rec.called_time ? "V ordinaci od " + rec.called_time : "V ordinaci" };
+        }
+        if (rec.visit_stage === "waiting") {
+            return { state: "waiting", text: rec.arrived_time ? "Čeká od " + rec.arrived_time : "Čeká" };
+        }
+        return null;
+    }
     isCurrentTab(item) {
         return this.state.mode === "card" && item.pet_id && item.pet_id === this.state.petId;
     }
@@ -458,7 +482,7 @@ export class PatientCard extends Component {
     // header band
     get petFacts() {
         const p = this.pet;
-        return [p.species_label, p.breed, p.sex, p.age_text].filter(Boolean).join(" · ");
+        return [p.species_label, p.breed, p.sex, p.age_text].filter(Boolean).join(", ");
     }
     get weightText() {
         const p = this.pet;
