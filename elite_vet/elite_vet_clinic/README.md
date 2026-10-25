@@ -9,7 +9,7 @@ Závisí na `elite_vet_winvet` (a přes něj na rezervacích a rozpisu lékařů
 | Model | Popis |
 |---|---|
 | `elite.vet.pet.alert` | Upozornění na pacientovi: druh `bites` Kouše / `allergy` Alergie / `other` Jiné, poznámka, aktivní. Na mazlíčkovi `alert_ids` a počítané `alert_summary` („Kouše; Alergie: penicilin“). |
-| `elite.vet.clinical.record` | Záznam návštěvy: pacient, majitel (related, uložený), lékařka, zapsal(a), rezervace (max. jeden záznam na rezervaci), čas `start`, den `date` (čas kliniky Europe/Prague), stav `draft` Rozepsaný / `done` Hotovo – k pokladně / `cancelled` Zrušeno (sledovaný v chatteru), teplota, váha, tep, dech, anamnéza, vyšetření, diagnóza a doporučení (čistý text), položky účtu, `amount_total` (CZK). Váha uzavřeného záznamu se zapíše do `pet.weight`. |
+| `elite.vet.clinical.record` | Záznam návštěvy: pacient, majitel (related, uložený), lékařka, zapsal(a), rezervace (max. jeden záznam na rezervaci), čas `start`, den `date` (čas kliniky Europe/Prague), stav `draft` Rozepsaný / `done` Hotovo – k pokladně / `cancelled` Zrušeno (sledovaný v chatteru), teplota, váha, tep, dech, anamnéza, vyšetření, diagnóza a doporučení (čistý text), položky účtu, `amount_total` (CZK), interní `reception_note` Poznámka recepce (píše recepce při příjmu, sledovaná; klient ji nikde nevidí). Váha uzavřeného záznamu se zapíše do `pet.weight`. |
 | `elite.vet.clinical.record.line` | Položka účtu: položka ceníku (`elite.vet.winvet.item`), název, druh (podle položky, volná položka „Jiné“), množství, jednotka, cena za jednotku (výchozí = cena s DPH z ceníku), částka, `bundle_id` když přišla z balíčku. |
 | `elite.vet.text.template` | Šablona textu: název, oddíl (anamnéza / vyšetření / diagnóza / kterýkoli), text, pořadí, `group_name` (skupina z WinVetu), `winvet_ref`, `edited_in_odoo`. |
 | `elite.vet.procedure.bundle` (+ `.line`) | Balíček výkonů: název, kód, popis, položky (položka ceníku, název, množství, jednotka, pořadí), `winvet_ref`, `edited_in_odoo`; počítaný počet položek a cena podle ceníku. |
@@ -110,7 +110,7 @@ v Odoo (kromě zrušených) a z vitálních hodnot WinVetu.
 ```text
 {id, name, pet_id, partner_id, doctor_id, doctor_name, user_name, reservation_id, start, date, time,
  state ("draft"|"done"|"cancelled"), state_label, temperature, weight, heart_rate, respiratory_rate,
- anamnesis, examination, diagnosis,
+ anamnesis, examination, diagnosis, reception_note (poznámka recepce | null),
  lines: [LINE], amount_total, currency ("Kč"), editable (rozepsaný a uživatel smí zapisovat)}
 LINE = {id, sequence, item_id, code, name, kind ("service"|"product"|"other"), kind_label, quantity, unit,
         price_unit, amount, bundle_id, bundle_name}
@@ -129,7 +129,7 @@ partner_id, phone, chip, last_visit, deceased, alerts}]` – jméno zvířete, j
 **`my_patients_today()`** → `{date, doctor: {id, name}|null, filtered_by_doctor, items: [...]}`;
 položky: `{reservation_id, start, time, time_end, room, room_color, doctor, pet_id (null u webové
 rezervace bez spárovaného mazlíčka), pet_name, species_label, owner, partner_id, phone, procedure,
-problem, state, state_label, record_id, record_state, alerts}`. Dnešní rezervace (potvrzené
+problem, state, state_label, record_id, record_state, alerts, reception_note}`. Dnešní rezervace (potvrzené
 a proběhlé) lékařky přihlášeného uživatele; když se uživatel s žádnou lékařkou nespáruje, všechny
 dnešní rezervace.
 

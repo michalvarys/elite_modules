@@ -289,3 +289,30 @@
     font-weight: 600;
     white-space: nowrap;
 }
+
+// Internal visit notes (request 25. 10.): yellow sticky note, never on a receipt.
+.o_ev_note {
+    margin-top: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    background: #fff4c2;
+    color: #6b5200;
+    border-left: 3px solid #e8c53a;
+    border-radius: 0.3rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.35;
+    .o_ev_note_text {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    &.o_ev_note_lg {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+        border-left-width: 5px;
+        .fa {
+            margin-top: 0.25rem;
+        }
+    }
+}

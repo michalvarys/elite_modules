@@ -67,7 +67,13 @@ class Reception(models.AbstractModel):
             "doctor": record.doctor_id.name or None, "arrived_time": local_time(record.arrived_at),
             "received_by": record.received_by or None,
             "room_id": record.room_id.id or None, "room": record.room_id.name or None,
+            "reception_note": record.reception_note or None,
         }
+
+    @api.model
+    def _clean_note(self, note):
+        """Text of an internal note: stripped, '' / None -> False."""
+        return (note or "").strip() or False
 
     @api.model
     def _mark_arrived(self, record, employee_name):
@@ -132,6 +138,7 @@ class Reception(models.AbstractModel):
                 "stage": rec.visit_stage, "stage_label": dict(VISIT_STAGES)[rec.visit_stage],
                 "arrived_time": local_time(since),
                 "waiting_minutes": max(0, int((until - since).total_seconds() // 60)) if since else None,
+                "reception_note": rec.reception_note or None,
             })
 
         paid_count = len(records.filtered(lambda r: r.state == "done" and r.payment_state == "paid"))
@@ -167,8 +174,9 @@ class Reception(models.AbstractModel):
     # ------------------------------------------------------------------ write API
 
     @api.model
-    def check_in(self, reservation_id, employee_name=None):
-        """The client of a reservation arrived: its record (existing or new) is waiting."""
+    def check_in(self, reservation_id, employee_name=None, note=None):
+        """The client of a reservation arrived: its record (existing or new) is waiting.
+        `note` (optional): internal note of the reception for the room (reception_note)."""
         self._check_reception()
         reservation = self.env["elite.vet.reservation"].sudo().browse(int(reservation_id)).exists()
         if not reservation or reservation.kind != "reservation":
@@ -207,14 +215,15 @@ class Reception(models.AbstractModel):
         if not record.room_id and reservation.room_id and record.state == "draft":
             record.room_id = reservation.room_id   # task 15: the visit is in the reservation's room
         self._mark_arrived(record, employee_name)
+        self._set_note(record, note)
         notify_board(self.env)
         return self._record_dict(record)
 
     @api.model
-    def walk_in(self, pet_id, doctor_id=False, employee_name=None, room_id=False):
+    def walk_in(self, pet_id, doctor_id=False, employee_name=None, room_id=False, note=None):
         """A client without a reservation: today's open record of the pet, else a new draft.
         `room_id` (optional, task 15): the room the visit goes to; without it the visit is
-        unassigned (Nepřiřazení on the screen Ordinace)."""
+        unassigned (Nepřiřazení on the screen Ordinace). `note`: internal note for the room."""
         self._check_reception()
         Records = self._records()
         pet = Records._get_pet(pet_id)
@@ -234,6 +243,28 @@ class Reception(models.AbstractModel):
         if room and record.room_id != room:
             self._set_room(record, room)
         self._mark_arrived(record, employee_name)
+        self._set_note(record, note)
+        notify_board(self.env)
+        return self._record_dict(record)
+
+    @api.model
+    def _set_note(self, record, note):
+        """Check-in note: only a filled note is written (an empty one keeps an earlier note)."""
+        note = self._clean_note(note)
+        if note and record.reception_note != note:
+            record.reception_note = note
+
+    @api.model
+    def set_reception_note(self, record_id, note):
+        """Edit (or clear) the internal note of the reception on an open visit (Dnes, waiting
+        or in the room). The client never sees it."""
+        self._check_reception()
+        record = self._records().browse(int(record_id)).exists()
+        if not record:
+            raise UserError(_("Záznam návštěvy nebyl nalezen."))
+        if record.state != "draft":
+            raise UserError(_("Návštěva je už uzavřená – poznámku recepce už nejde změnit."))
+        record.reception_note = self._clean_note(note)
         notify_board(self.env)
         return self._record_dict(record)
 

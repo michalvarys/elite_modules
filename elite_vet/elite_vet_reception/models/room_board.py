@@ -225,6 +225,7 @@ class ReceptionRooms(models.AbstractModel):
             "doctor_id": rec.doctor_id.id or None,
             "room_id": (rec.room_id or res.room_id).id or None,
             "alerts": pet.alert_summary or None,
+            "reception_note": rec.reception_note or None,
             "draggable": bool(is_today and rec.state == "draft" and rec.visit_stage),
             "sort": sort_at.strftime("%Y-%m-%d %H:%M:%S") if sort_at else None,
         }

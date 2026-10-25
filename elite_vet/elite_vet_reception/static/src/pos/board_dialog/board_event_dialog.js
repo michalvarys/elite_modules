@@ -8,6 +8,7 @@ import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { callReception } from "@elite_vet_reception/pos/reception_api";
+import { NoteDialog } from "@elite_vet_reception/pos/note_dialog/note_dialog";
 
 export class BoardEventDialog extends Component {
     static template = "elite_vet_reception.BoardEventDialog";
@@ -24,6 +25,7 @@ export class BoardEventDialog extends Component {
         this.pos = usePos();
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.dialog = useService("dialog");
         this.state = useState({ detail: null, busy: false, confirmCancel: false });
         onWillStart(() => this.load());
     }
@@ -79,17 +81,27 @@ export class BoardEventDialog extends Component {
         }
     }
 
+    /** Přijmout with an optional internal note for the room (same dialog as in Dnes). */
     checkIn() {
-        return this.run(async () => {
-            const result = await callReception(this.orm, this.notification, "check_in", [
-                this.detail.main_id,
-                this.pos.get_cashier()?.name || null,
-            ]);
-            if (result) {
-                this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });
-                this.props.onChanged();
-                this.props.close();
-            }
+        const detail = this.detail;
+        this.dialog.add(NoteDialog, {
+            title: `Přijmout: ${[detail.pet_name, detail.owner].filter(Boolean).join(" · ")}`,
+            label: "Interní poznámka pro ordinaci (nepovinné)",
+            hint: "Uvidí ji sestra a lékařka v ordinaci, klient nikde. Enter = Přijmout.",
+            confirmLabel: "Přijmout do čekárny",
+            onConfirm: async (note) => {
+                const result = await callReception(this.orm, this.notification, "check_in", [
+                    detail.main_id,
+                    this.pos.get_cashier()?.name || null,
+                    note || null,
+                ]);
+                if (result) {
+                    this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });
+                    this.props.onChanged();
+                    this.props.close();
+                }
+                return Boolean(result);
+            },
         });
     }
 

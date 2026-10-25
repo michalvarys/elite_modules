@@ -25,6 +25,12 @@
 }
 .evrm-empty { color: var(--evrm-muted); font-size: 13px; margin: 6px 0; }
 .evrm-alert { display: block; color: #b91c1c; font-size: 12px; }
+// internal note of the reception (request 25. 10.)
+.evrm-note {
+    display: block; margin-top: 4px; padding: 3px 8px; background: #fff4c2; color: #6b5200;
+    border-left: 3px solid #e8c53a; border-radius: 4px; font-size: 12.5px; font-weight: 600;
+    white-space: pre-wrap; overflow-wrap: anywhere; text-align: left;
+}
 .evrm-stage { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e2e8f0; }
 .evrm-stage-waiting { background: var(--evrm-warn-bg); color: var(--evrm-warn); }
 .evrm-stage-in_room { background: var(--evrm-accent-soft); color: var(--evrm-accent); }

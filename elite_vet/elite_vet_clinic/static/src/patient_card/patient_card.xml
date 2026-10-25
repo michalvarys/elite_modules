@@ -104,6 +104,7 @@
                                             <t t-if="!state.today.filtered_by_doctor and it.doctor"> · <t t-esc="it.doctor"/></t>
                                         </span>
                                         <span t-if="it.alerts" class="evpc-opt-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
+                                        <span t-if="it.reception_note" class="evpc-row-note" title="Poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></span>
                                     </span>
                                     <t t-set="badge" t-value="recordBadge(it)"/>
                                     <span class="evpc-st" t-att-class="badge.cls" t-esc="badge.label"/>
@@ -184,6 +185,10 @@
                             </button>
                         </div>
                     </header>
+                    <div t-if="state.record and state.record.reception_note" class="evpc-visit-note evpc-reception-note" role="note">
+                        <i class="fa fa-sticky-note me-2" aria-hidden="true"/>
+                        <span><b>Poznámka recepce:</b> <span class="evpc-visit-note-text" t-esc="state.record.reception_note"/></span>
+                    </div>
 
                     <div class="evpc-grid">
                         <!-- ===== history ===== -->

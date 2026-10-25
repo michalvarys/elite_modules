@@ -143,6 +143,11 @@
                                 <option t-foreach="state.rooms" t-as="room" t-key="room.id" t-att-value="room.id" t-esc="room.name"/>
                             </select>
                         </label>
+                        <label class="w-100 o_ev_field">
+                            <b>Interní poznámka pro ordinaci (nepovinné)</b>
+                            <textarea class="form-control o_ev_walk_in_note" rows="2" t-model="state.walkInNote"
+                                      placeholder="Uvidí ji sestra a lékařka v ordinaci, klient nikde."/>
+                        </label>
                     </div>
                 </div>
             </div>

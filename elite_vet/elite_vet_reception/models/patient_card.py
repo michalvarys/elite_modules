@@ -89,6 +89,7 @@ class ClinicalRecordPatientList(models.Model):
             "phone": partner.mobile or partner.phone or None,
             "procedure": None, "problem": None, "state": None, "state_label": "Bez objednání",
             "record_id": rec.id, "record_state": rec.state, "alerts": pet.alert_summary or None,
+            "reception_note": rec.reception_note or None,
             "group": item_group(rec),
         }
         item.update(rec._stage_info(now))

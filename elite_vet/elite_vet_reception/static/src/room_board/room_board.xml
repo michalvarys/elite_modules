@@ -23,6 +23,7 @@
             </div>
             <div class="evrm-sub"><i class="fa fa-user-md me-1" aria-hidden="true"/><t t-esc="it.doctor or 'lékařka nevybrána'"/></div>
             <div t-if="it.alerts" class="evrm-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></div>
+            <div t-if="it.reception_note" class="evrm-note" title="Interní poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></div>
             <div t-if="it.draggable or it.pet_id or it.reservation_id" class="evrm-card-actions">
                 <span t-if="it.draggable" class="evrm-picker-anchor">
                     <button type="button" class="btn btn-sm btn-light evrm-to-room" t-att-disabled="state.busy"
@@ -58,6 +59,7 @@
                     <t t-if="it.walk_in"> · bez objednání</t> · <t t-esc="it.doctor or 'lékařka nevybrána'"/>
                 </span>
                 <span t-if="it.alerts" class="evrm-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
+                <span t-if="it.reception_note" class="evrm-note" title="Interní poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></span>
             </span>
             <span class="evrm-row-actions">
                 <button t-if="it.stage === 'waiting' and canCall" type="button" class="btn btn-primary evrm-call"
@@ -157,6 +159,7 @@
                                     </span>
                                     <span class="evrm-sub"><t t-esc="it.owner or ''"/><t t-if="it.walk_in"> · bez objednání</t><t t-if="it.doctor"> · <t t-esc="it.doctor"/></t></span>
                                     <span t-if="it.alerts" class="evrm-alert"><i class="fa fa-exclamation-triangle me-1"/><t t-esc="it.alerts"/></span>
+                                    <span t-if="it.reception_note" class="evrm-note" title="Interní poznámka recepce"><i class="fa fa-sticky-note me-1" aria-hidden="true"/><t t-esc="it.reception_note"/></span>
                                 </span>
                                 <span class="evrm-row-actions">
                                     <button type="button" class="btn btn-primary evrm-take" t-att-disabled="state.busy"

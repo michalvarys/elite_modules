@@ -44,6 +44,12 @@ class VetClinicalRecord(models.Model):
     anamnesis = fields.Text(string="Anamnéza")
     examination = fields.Text(string="Vyšetření")
     diagnosis = fields.Text(string="Diagnóza a doporučení")
+    # Request 25. 10.: internal note of the reception written when the client is checked in
+    # (POS Dnes / Kartotéka), shown in the room. Never printed for the client.
+    reception_note = fields.Text(string="Poznámka recepce", tracking=True, copy=False,
+                                 help="Interní poznámka recepce při příjmu pacienta – ukáže se v ordinaci "
+                                      "(karta pacienta, Moji pacienti dnes, obrazovka Ordinace). "
+                                      "Klient ji nikde nevidí.")
     line_ids = fields.One2many("elite.vet.clinical.record.line", "record_id", string="Položky účtu", copy=True)
     currency_id = fields.Many2one("res.currency", string="Měna", required=True,
                                   default=lambda self: self.env.ref("base.CZK"))

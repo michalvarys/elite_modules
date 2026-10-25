@@ -71,8 +71,17 @@
                                 <t t-if="row.stage === 'in_room' and row.arrived_time"> · příchod <t t-esc="row.arrived_time"/></t>
                                 <t t-elif="row.waiting_minutes !== null"> · čeká <t t-esc="row.waiting_minutes"/> min</t>
                             </small>
+                            <div t-if="row.reception_note" class="o_ev_note o_ev_reception_note" title="Interní poznámka recepce pro ordinaci">
+                                <i class="fa fa-sticky-note me-1" aria-hidden="true"/><span class="o_ev_note_text" t-esc="row.reception_note"/>
+                            </div>
                         </div>
                         <span class="o_ev_badge" t-att-class="row.stage === 'in_room' ? 'o_ev_badge_in' : ''" t-esc="row.stage_label"/>
+                        <button class="btn btn-light o_ev_edit_note" t-att-disabled="state.busy['note-' + row.record_id]"
+                                t-att-title="row.reception_note ? 'Upravit poznámku pro ordinaci' : 'Přidat poznámku pro ordinaci'"
+                                t-att-aria-label="row.reception_note ? 'Upravit poznámku pro ordinaci' : 'Přidat poznámku pro ordinaci'"
+                                t-on-click="() => this.editNote(row)">
+                            <i class="fa fa-pencil" aria-hidden="true"/><span class="d-none d-xl-inline ms-1">Poznámka</span>
+                        </button>
                     </div>
                 </section>
                 <!-- K pokladně -->

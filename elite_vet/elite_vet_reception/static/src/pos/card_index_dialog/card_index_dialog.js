@@ -80,6 +80,7 @@ export class CardIndexDialog extends Component {
             walkInDoctorId: "",
             rooms: [],
             walkInRoomId: "", // optional room of the walk-in (task 15); empty = Nepřiřazení
+            walkInNote: "", // optional internal note of the reception for the room
             species: [],
         });
         onWillStart(async () => {
@@ -369,6 +370,7 @@ export class CardIndexDialog extends Component {
                 Number(this.state.walkInDoctorId) || false,
                 this.pos.get_cashier()?.name || null,
                 Number(this.state.walkInRoomId) || false,
+                this.state.walkInNote.trim() || null,
             ]);
             if (result) {
                 this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });

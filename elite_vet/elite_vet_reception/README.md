@@ -32,8 +32,9 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 | Metoda | Vrací |
 |---|---|
 | `today_data(day=None)` | `{"date", "arriving": [...], "waiting": [...], "to_pay": [...], "paid_count"}` |
-| `check_in(reservation_id, employee_name=None)` | záznam (`record_id`, `stage`, …) |
-| `walk_in(pet_id, doctor_id=False, employee_name=None, room_id=False)` | záznam |
+| `check_in(reservation_id, employee_name=None, note=None)` | záznam (`record_id`, `stage`, …) |
+| `walk_in(pet_id, doctor_id=False, employee_name=None, room_id=False, note=None)` | záznam |
+| `set_reception_note(record_id, note)` | záznam; poznámka recepce rozepsané návštěvy (prázdná = smazat) |
 | `call_patient(record_id, room_id=None, doctor_id=False)` | záznam + `needs_doctor`; jen sestra a lékařka |
 | `assign_room(record_id, room_id=False, doctor_id=False)` | záznam + `needs_doctor` |
 | `room_board(day=None)` | data obrazovky Ordinace (viz níže) |
@@ -42,15 +43,16 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
   `reservation_id, time, pet_id|None, pet_name, owner, partner_id, procedure, doctor, room, needs_match`
   (`needs_match` = webová rezervace bez spárovaného zvířete).
 - **waiting** – rozepsané záznamy dne se stavem návštěvy, podle příchodu:
-  `record_id, pet_name, owner, doctor, room, stage, stage_label, arrived_time, waiting_minutes`
-  (u V ordinaci minuty od příchodu do zavolání).
+  `record_id, pet_name, owner, doctor, room, stage, stage_label, arrived_time, waiting_minutes,
+  reception_note` (u V ordinaci minuty od příchodu do zavolání).
 - **to_pay** – všechny nezaplacené účty návštěv (Čeká na platbu / Částečně zaplaceno) bez ohledu
   na den, nejstarší první:
   `record_id, sale_order_id, pet_name, owner, partner_id, amount, payment_state, payment_state_label,
   date, date_label` (`amount` = zbývá zaplatit, `date_label` = „dnes“ nebo „D. M.“).
 - **paid_count** – počet dnes zaplacených záznamů.
 - Záznam (`check_in` / `walk_in` / `call_patient` / `assign_room`): `record_id, stage, stage_label,
-  state, pet_id, pet_name, reservation_id, doctor, arrived_time, received_by, room_id, room`.
+  state, pet_id, pet_name, reservation_id, doctor, arrived_time, received_by, room_id, room,
+  reception_note`.
   Ve sloupci Čekárna a ordinace (`waiting`) je `room` ordinace návštěvy (`room_id`), ne rezervace.
 
 Pravidla přijetí:
@@ -67,6 +69,13 @@ Pravidla přijetí:
   a `received_by`.
 - `walk_in` použije dnešní rozepsaný záznam zvířete, jinak založí nový (i když už dnes jeden
   uzavřený má).
+- **Poznámka recepce** (požadavek 25. 10., pole `reception_note` záznamu z `elite_vet_clinic`):
+  `note` u `check_in` / `walk_in` se ořízne a zapíše jen neprázdná (opakované přijetí bez poznámky
+  starou nechá). `set_reception_note` ji změní nebo smaže, jen u rozepsané návštěvy („Návštěva je už
+  uzavřená – poznámku recepce už nejde změnit.“). Sledovaná v chatteru, do nabídky ani na účtenku se
+  nedostane. Pokladna: Přijmout v Dnes i v tabuli otevře `NoteDialog` (`static/src/pos/note_dialog/`,
+  Enter = potvrdit), u Čekárny a ordinace tlačítko Poznámka, v Kartotéce při Přijmout bez objednání
+  textové pole.
 - Každá změna pošle zprávu na tabuli (`notify_board`, kanál `elite_vet_reservation/changed`);
   stejně i uzavření (Hotovo, k pokladně), znovuotevření a zrušení záznamu, takže sloupec
   K pokladně v pokladně se mění hned.
@@ -268,7 +277,8 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   - Karta: `key` (`r<záznam>` / `b<rezervace>`), `record_id, reservation_id, walk_in, stage`
     (`in_room/waiting/booked/done`), `time` (příchod, jinak čas rezervace), `reservation_time,
     arrived_time, called_time, waiting_minutes, pet_id, pet_name, species_label, owner, partner_id,
-    procedure, doctor, doctor_id, room_id, alerts, draggable` (jen dnešní rozepsaný záznam se stavem).
+    procedure, doctor, doctor_id, room_id, alerts, reception_note, draggable` (jen dnešní rozepsaný
+    záznam se stavem).
 - **`assign_room(record_id, room_id=False, doctor_id=False)`**: jen dnešní rozepsaný záznam
   („Do ordinace jde přiřadit jen dnešní rozepsanou návštěvu.“), `room_id` False = zpět do
   Nepřiřazení. Rezervace svou ordinaci nemění (tabule ukazuje rezervaci).
@@ -297,7 +307,7 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   `key` (`r<rezervace>` / `w<záznam>`, unikátní), `group` (`waiting` / `in_room` / `arriving` / `done`),
   `visit_stage` (`waiting` / `in_room` / `False`), `arrived_time`, `called_time`, `waiting_minutes`
   (jen u rozepsaného záznamu ve stavu Čeká / V ordinaci, u V ordinaci od příchodu do zavolání, jinak
-  `None`), `payment_state`, `walk_in`.
+  `None`), `payment_state`, `walk_in`, `reception_note` (poznámka recepce, žlutě pod řádkem).
 - `unassigned` (nový klíč odpovědi, pravidlo R17): dnešní rozepsaní neobjednaní bez lékařky ve stavu
   Čeká / V ordinaci, stejný tvar jako `items`. Plní se jen u filtrovaného seznamu lékařky (nefiltrovaný
   je má v `items`); úvodní obrazovka je ukazuje v Čekají s poznámkou „kterákoli lékařka“.

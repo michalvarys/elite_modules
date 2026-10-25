@@ -57,6 +57,10 @@
                                 <field name="examination" readonly="state != 'draft'"/>
                                 <field name="diagnosis" readonly="state != 'draft'"/>
                             </group>
+                            <group string="Interní poznámky (klient je nevidí)" name="internal_notes">
+                                <field name="reception_note" readonly="state == 'cancelled'"
+                                       placeholder="Co recepce napsala při příjmu pacienta"/>
+                            </group>
                         </page>
                         <page string="Účet" name="bill">
                             <field name="line_ids" readonly="state != 'draft'">

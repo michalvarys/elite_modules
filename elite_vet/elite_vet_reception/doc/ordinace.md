@@ -32,7 +32,9 @@ Každý pacient má na kartě nebo řádku tyto údaje:
 - zvíře (druh) a majitele,
 - úkon,
 - stav: **Čeká N min** / **V ordinaci** / **Objednáno** / **Hotovo**,
-- lékařku a upozornění na pacientovi (červeně).
+- lékařku a upozornění na pacientovi (červeně),
+- **poznámku recepce** (žlutě, s lístečkem) – co recepce napsala při příjmu, např. „Klient
+  spěchá“. Je interní, klient ji nevidí.
 
 Obrazovka se obnovuje sama: hned po každé změně (příjem, zavolání, přesun, Hotovo) a nejpozději
 každých 30 sekund. Tlačítkem ⟳ ji obnovíte hned.

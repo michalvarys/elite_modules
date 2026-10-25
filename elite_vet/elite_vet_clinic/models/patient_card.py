@@ -174,6 +174,7 @@ class ClinicalRecordCardApi(models.Model):
             "temperature": or_none(rec.temperature), "weight": or_none(rec.weight),
             "heart_rate": or_none(rec.heart_rate), "respiratory_rate": or_none(rec.respiratory_rate),
             "anamnesis": rec.anamnesis or "", "examination": rec.examination or "", "diagnosis": rec.diagnosis or "",
+            "reception_note": rec.reception_note or None,
             "lines": [self._line_data(line) for line in rec.line_ids],
             "amount_total": rec.amount_total, "currency": rec.currency_id.symbol,
             "editable": rec.state == "draft" and self._can_write(),
@@ -405,6 +406,7 @@ class ClinicalRecordCardApi(models.Model):
                 "state": res.state, "state_label": states.get(res.state),
                 "record_id": rec.id if rec else None, "record_state": rec.state if rec else None,
                 "alerts": pet.alert_summary or None if pet else None,
+                "reception_note": rec.reception_note or None if rec and rec.state != "cancelled" else None,
             })
         return {"date": date_str(today), "doctor": {"id": doctor.id, "name": doctor.name} if doctor else None,
                 "filtered_by_doctor": bool(doctor), "items": items}

@@ -4,6 +4,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
+import { NoteDialog } from "@elite_vet_reception/pos/note_dialog/note_dialog";
 import {
     TODAY_SCREEN,
     callReception,
@@ -115,22 +116,55 @@ export class ReceptionTodayScreen extends Component {
         }
         this.state.busy[key] = true;
         try {
-            await action();
+            return await action();
         } finally {
             delete this.state.busy[key];
         }
     }
 
+    /** Přijmout: a small dialog with an optional internal note for the room (Enter = Přijmout). */
     checkIn(row) {
-        return this.run(`in-${row.reservation_id}`, async () => {
-            const result = await callReception(this.orm, this.notification, "check_in", [
-                row.reservation_id,
-                this.cashierName,
-            ]);
-            if (result) {
-                this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });
-            }
-            await this.load();
+        if (this.state.busy[`in-${row.reservation_id}`]) {
+            return;
+        }
+        this.dialog.add(NoteDialog, {
+            title: `Přijmout: ${[row.pet_name, row.owner].filter(Boolean).join(" · ")}`,
+            label: "Interní poznámka pro ordinaci (nepovinné)",
+            hint: "Uvidí ji sestra a lékařka v ordinaci, klient nikde. Enter = Přijmout.",
+            confirmLabel: "Přijmout do čekárny",
+            onConfirm: (note) =>
+                this.run(`in-${row.reservation_id}`, async () => {
+                    const result = await callReception(this.orm, this.notification, "check_in", [
+                        row.reservation_id,
+                        this.cashierName,
+                        note || null,
+                    ]);
+                    if (result) {
+                        this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });
+                    }
+                    await this.load();
+                    return Boolean(result);
+                }),
+        });
+    }
+
+    /** Poznámka: edit (or clear) the reception note of a waiting / in-room visit. */
+    editNote(row) {
+        this.dialog.add(NoteDialog, {
+            title: `Poznámka recepce: ${row.pet_name}`,
+            label: "Interní poznámka pro ordinaci",
+            hint: "Prázdné pole poznámku smaže. Klient ji nikde nevidí.",
+            value: row.reception_note || "",
+            confirmLabel: "Uložit",
+            onConfirm: (note) =>
+                this.run(`note-${row.record_id}`, async () => {
+                    const result = await callReception(this.orm, this.notification, "set_reception_note", [
+                        row.record_id,
+                        note || false,
+                    ]);
+                    await this.load();
+                    return Boolean(result);
+                }),
         });
     }
 

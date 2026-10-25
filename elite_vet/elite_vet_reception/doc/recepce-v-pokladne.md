@@ -83,9 +83,19 @@ jde jen dnešní návštěvu.
 ### Přijmout objednaného klienta
 
 1. Klient přijde – najděte ho ve sloupci **Přicházejí**.
-2. Klikněte **Přijmout**.
-3. Klient se přesune do **Čekárny a ordinace** se štítkem **Čeká**. Lékařka ho hned vidí
+2. Klikněte **Přijmout**. Otevře se malé okno s polem **Interní poznámka pro ordinaci
+   (nepovinné)** – např. „Klient spěchá“, „Kouše, opatrně“, „Přinesl vzorek moči“. Poznámku
+   můžete nechat prázdnou.
+3. Klikněte **Přijmout do čekárny** (nebo stiskněte Enter; nový řádek v poznámce je
+   Shift+Enter). **Zrušit** okno zavře a klient zůstane v Přicházejí.
+4. Klient se přesune do **Čekárny a ordinace** se štítkem **Čeká**. Lékařka ho hned vidí
    ve svém seznamu **Čekají**.
+
+**Poznámka recepce** je interní: ukáže se žlutě v ordinaci – v Moji pacienti dnes, na obrazovce
+Ordinace a nahoře v kartě pacienta u té návštěvy. Klient ji nikde nevidí, na účtence ani faktuře
+není. U pacienta v **Čekárně a ordinaci** je vidět i v pokladně a tlačítkem **Poznámka**
+(tužka) ji doplníte, opravíte nebo smažete (prázdné pole = smazat), dokud lékařka návštěvu
+neuzavře. Stejné okno má **Přijmout** v tabuli (kapitola 5).
 
 ![Čekárna po přijetí](img/recepce-cekarna.png)
 
@@ -103,6 +113,7 @@ Klient přišel bez rezervace:
    lékařky s poznámkou „kterákoli lékařka“ a ujme se ho ta, která ho zavolá.
 4. Volitelně vyberte **Ordinaci**. Bez ní je pacient na obrazovce Ordinace v části Nepřiřazení
    a ordinace si ho vezme ([Obrazovka Ordinace](ordinace.md)).
+   Volitelně napište **Interní poznámku pro ordinaci** (stejná poznámka recepce jako u Přijmout).
 5. Klikněte **Přijmout**. Okno se zavře a zvíře je v **Čekárně a ordinaci** se štítkem **Čeká**
    (u pacienta s ordinací je vidět i ordinace).
 
@@ -318,7 +329,7 @@ Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas 
 ![Detail rezervace](img/tabule-detail.png)
 
 - **Přijmout** – jen u dnešní rezervace, která ještě nemá návštěvu; zvíře je pak v čekárně
-  (stejně jako Přijmout na záložce Dnes). Webová rezervace bez spárovaného klienta se přijme až
+  (stejně jako Přijmout na záložce Dnes, i s oknem pro interní poznámku pro ordinaci). Webová rezervace bez spárovaného klienta se přijme až
   po **Klient…**.
 - **Klient…** – Kartotéka pro tuto rezervaci (stejné jako Klient… na záložce Dnes, kapitola 2):
   vyberte klienta a zvíře a **Přiřadit k rezervaci**. Tabule zůstane otevřená pod ním.
@@ -395,6 +406,9 @@ sestra a účet bez spárované lékařky vidí všechny.
 | **Hotovo dnes** | uzavřené návštěvy (Hotovo, k pokladně) |
 
 Seznam se obnovuje sám, jakmile recepce někoho přijme (záložně každých 30 s).
+
+Když recepce při příjmu napsala **poznámku recepce**, je u pacienta žlutě (s ikonou lístečku)
+a v kartě pacienta žlutý pruh pod záhlavím „Poznámka recepce: …“. Je interní, klient ji nevidí.
 
 ## 9. Zavolat a ošetření
 

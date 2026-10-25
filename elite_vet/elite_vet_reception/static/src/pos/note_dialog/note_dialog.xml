@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_vet_reception.NoteDialog">
+        <Dialog title="props.title" size="'md'" contentClass="'o_ev_note_dialog'">
+            <div t-if="props.readonly" class="o_ev_note o_ev_note_lg" role="note">
+                <i class="fa fa-sticky-note me-2" aria-hidden="true"/><span class="o_ev_note_text" t-esc="props.value"/>
+            </div>
+            <label t-else="" class="d-block">
+                <b class="d-block mb-1" t-esc="props.label"/>
+                <textarea class="form-control form-control-lg o_ev_note_input" rows="3" t-ref="text"
+                          t-model="state.text" t-on-keydown="onKeydown"/>
+            </label>
+            <small t-if="props.hint" class="text-muted d-block mt-2" t-esc="props.hint"/>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary btn-lg o_ev_note_confirm" t-ref="confirm" t-att-disabled="state.busy"
+                        t-on-click="confirm" t-esc="props.confirmLabel"/>
+                <button class="btn btn-secondary btn-lg o_ev_note_cancel" t-on-click="props.close" t-esc="props.cancelLabel"/>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>
