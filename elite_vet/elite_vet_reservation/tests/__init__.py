@@ -22,3 +22,4 @@ from . import test_holidays_shown
 from . import test_block_reason_lang
 from . import test_move_confirm
 from . import test_history
+from . import test_no_show

@@ -154,6 +154,16 @@ export class CardIndexDialog extends Component {
         return this.state.data?.owner || null;
     }
 
+    /** Tooltip of the badge Nedorazil N×: one line per no-show (newest first). */
+    get noShowTitle() {
+        const ns = this.state.data?.no_shows;
+        if (!ns?.count) {
+            return "";
+        }
+        const lines = ns.items.map((i) => [i.date_label, i.procedure, i.pet].filter(Boolean).join(" · "));
+        return `${ns.text}\n${lines.join("\n")}`;
+    }
+
     get ownerPhones() {
         const owner = this.owner;
         return [owner?.mobile, owner?.phone].filter(Boolean).join(", ") || "–";

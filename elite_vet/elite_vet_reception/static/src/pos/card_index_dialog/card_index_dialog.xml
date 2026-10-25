@@ -88,7 +88,19 @@
                         <span>Klient</span>
                         <button t-if="state.results" type="button" class="btn btn-link p-0" t-on-click="backToResults">‹ Zpět na výsledky</button>
                     </div>
-                    <div class="o_ev_field"><b>Jméno</b><span class="fs-5 o_ev_owner_name" t-esc="owner.name"/></div>
+                    <div class="o_ev_field"><b>Jméno</b>
+                        <span class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="fs-5 o_ev_owner_name" t-esc="owner.name"/>
+                            <span t-if="state.data.no_shows and state.data.no_shows.count" class="o_ev_badge o_ev_badge_alert o_ev_no_show_badge"
+                                  t-att-title="noShowTitle">Nedorazil <t t-esc="state.data.no_shows.count"/>×</span>
+                        </span>
+                    </div>
+                    <div t-if="state.data.no_shows and state.data.no_shows.count" class="o_ev_field o_ev_no_shows">
+                        <b>Nedorazil (posledních 12 měsíců)</b>
+                        <small t-foreach="state.data.no_shows.items" t-as="ns" t-key="ns.id" class="text-muted">
+                            <t t-esc="ns.date_label"/><t t-if="ns.procedure"> · <t t-esc="ns.procedure"/></t><t t-if="ns.pet"> · <t t-esc="ns.pet"/></t>
+                        </small>
+                    </div>
                     <div class="o_ev_field"><b>Telefon · e-mail</b>
                         <span class="o_ev_owner_phone" t-esc="ownerPhones"/>
                         <span class="o_ev_owner_email" t-esc="owner.email or 'bez e-mailu'"/></div>
@@ -127,6 +139,8 @@
                         </div>
                         <span t-if="p.deceased" class="o_ev_badge">uhynulé</span>
                         <span t-if="p.alerts" class="o_ev_badge o_ev_badge_alert" t-esc="p.alerts"/>
+                        <span t-if="p.no_show_count" class="o_ev_badge o_ev_badge_alert"
+                              title="Kolikrát zvíře nedorazilo za posledních 12 měsíců">nedorazil <t t-esc="p.no_show_count"/>×</span>
                     </div>
                     <div t-if="pet" class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-secondary o_ev_edit_pet" t-on-click="editPet">Upravit <t t-esc="pet.name"/></button>

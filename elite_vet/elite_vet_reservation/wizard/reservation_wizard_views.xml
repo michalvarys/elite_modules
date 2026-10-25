@@ -20,6 +20,12 @@
                     <field name="holiday_warning" readonly="1" nolabel="1"/>
                 </div>
 
+                <!-- The client did not come before (Nedorazil, last 12 months): a warning only. -->
+                <div invisible="not no_show_warning or step not in ('client', 'summary')"
+                     class="alert alert-warning o_ev_no_show_warning" role="status">
+                    <i class="fa fa-user-times me-1" title="Nedorazil" aria-hidden="true"/><field name="no_show_warning" readonly="1" nolabel="1"/>
+                </div>
+
                 <!-- 1. What and when -->
                 <group invisible="step != 'what'">
                     <group>

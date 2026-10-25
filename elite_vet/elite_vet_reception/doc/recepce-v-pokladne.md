@@ -209,7 +209,10 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
 ![Kartotéka – karta majitele](img/recepce-kartoteka.png)
 
 - Vlevo **klient**: jméno, telefon a e-mail, adresa, počet **otevřených účtů**, tlačítko
-  **Upravit**.
+  **Upravit**. Když klient v posledních 12 měsících **nedorazil** na rezervaci, je u jména
+  červený štítek **Nedorazil 2×** (najetím myší podrobnosti) a pod ním seznam: datum, úkon,
+  zvíře. U zvířete je štítek **nedorazil 1×**. Počítá se to samo z rezervací ve stavu
+  Nedorazil, nic se nezapisuje ručně.
 - Vpravo **zvířata**: druh, plemeno, pohlaví, narození, čip, upozornění (oranžový štítek)
   a příští očkování. Uhynulá zvířata jsou na konci, vybledlá; s nimi nejde nic dělat.
 - Kliknutím vyberete zvíře (rámeček) – pod ním je **Upravit <jméno>** (při Přijmout bez
@@ -254,7 +257,9 @@ se ukáže, až je předchozí vyplněný.
    zvířete, aspoň 2 znaky). Výsledky se ukážou pod polem samy, za každé zvíře jeden řádek, třeba
    „Rex (pes) · Jana Nováková · 777 123 456“ (uhynulá zvířata ani personál se nenabízejí).
    Kliknutím na řádek (nebo Enter na prvním) je zvíře vybrané a v kroku zůstane „Rex · Jana
-   Nováková“. **Změnit** otevře hledání znovu, **Upravit** otevře Kartotéku na tomto klientovi
+   Nováková“. Když klient za posledních 12 měsíců nedorazil, je pod ním žluté upozornění
+   „Klient 2× nedorazil, naposledy 12. 10“ (najetím myší seznam) – jen pro informaci, objednat
+   jde normálně. **Změnit** otevře hledání znovu, **Upravit** otevře Kartotéku na tomto klientovi
    (úprava kontaktu nebo zvířete, pak **Vybrat**).
    Nový klient: **+ Nový klient** vedle pole otevře Kartotéku rovnou na formuláři nového klienta
    (i s prvním zvířetem); po uložení klikněte **Vybrat**. Majitel bez zvířete má v hledání řádek

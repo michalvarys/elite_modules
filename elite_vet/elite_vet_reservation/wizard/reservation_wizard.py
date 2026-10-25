@@ -90,6 +90,9 @@ class ReservationWizard(models.TransientModel):
     pet_id = fields.Many2one("elite.vet.pet", string="Mazlíček", domain="[('partner_id', '=', partner_id)]")
     pet_name = fields.Char(string="Nový mazlíček – jméno")
     pet_species = fields.Selection(SPECIES, string="Druh", default="dog")
+    # Request 25. 10.: the client did not come before (reservations Nedorazil, last 12 months)
+    no_show_warning = fields.Char(compute="_compute_no_show_warning",
+                                  help="Klient v posledních 12 měsících nedorazil – jen upozornění.")
     has_pet = fields.Boolean(compute="_compute_has_pet",
                                  help="Vybraný mazlíček patří vybranému existujícímu klientovi.")
     problem = fields.Text(string="Popis problému")
@@ -169,6 +172,13 @@ class ReservationWizard(models.TransientModel):
             elif not w.send_email_offered:
                 w.send_email = True
             w.send_email_offered = w.send_email_offered or bool(w.contact_email)
+
+    @api.depends("partner_mode", "partner_id")
+    def _compute_no_show_warning(self):
+        Reservation = self.env["elite.vet.reservation"]
+        for w in self:
+            partner = w._selected_partner()
+            w.no_show_warning = Reservation.no_show_summary(partner=partner)["text"] if partner else False
 
     @api.depends("partner_mode", "partner_id", "pet_id")
     def _compute_has_pet(self):

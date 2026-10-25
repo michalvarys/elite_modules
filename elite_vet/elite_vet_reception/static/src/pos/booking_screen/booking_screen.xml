@@ -68,6 +68,10 @@
                             </div>
                             <button class="btn btn-light btn-lg o_ev_pick_client" t-on-click="openClientSearch">Změnit</button>
                             <button class="btn btn-light btn-lg o_ev_edit_client" t-on-click="editClient"><i class="fa fa-pencil me-1"/>Upravit</button>
+                            <div t-if="state.noShows" class="w-100 alert alert-warning py-1 px-2 mb-0 o_ev_no_show_warning" role="status"
+                                 t-att-title="noShowTitle">
+                                <i class="fa fa-user-times me-1" aria-hidden="true"/><t t-esc="state.noShows.text"/>
+                            </div>
                         </div>
                     </div>
                 </div>

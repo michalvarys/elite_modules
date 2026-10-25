@@ -108,6 +108,8 @@ class ReceptionCardIndex(models.AbstractModel):
             "breed": pet.breed or None, "sex": pet.sex or None, "birth_date": date_str(pet.birth_date),
             "chip": pet.chip or None, "note": pet.note or None, "alerts": pet.alert_summary or None,
             "next_vaccination": date_str(pet.next_vaccination), "deceased": pet.deceased,
+            # request 25. 10.: Nedorazil of the last 12 months (computed from reservations)
+            "no_show_count": pet.sudo().no_show_count,
         }
 
     @api.model
@@ -200,7 +202,15 @@ class ReceptionCardIndex(models.AbstractModel):
             },
             "pets": [self._pet_dict(pet) for pet in pets],
             "open_bills": self._to_pay(partner=partner),
+            "no_shows": self.env["elite.vet.reservation"].no_show_summary(partner=partner),
         }
+
+    @api.model
+    def client_no_shows(self, partner_id):
+        """Nedorazil of the client (last 12 months) for the warning in Objednat:
+        {count, last_date, last_label, text, items}."""
+        self._check_reception()
+        return self.env["elite.vet.reservation"].no_show_summary(partner=self._get_owner(partner_id))
 
     # ------------------------------------------------------------------ write API
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Request 25. 10.: no-shows of the last 12 months on the client and the pet (models/no_show.py). -->
+    <record id="view_partner_form_no_show" model="ir.ui.view">
+        <field name="name">res.partner.form.no.show</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_no_shows" type="object" class="oe_stat_button text-danger" icon="fa-user-times"
+                        invisible="not no_show_count" groups="elite_vet_reservation.group_reservation_reception"
+                        help="Rezervace ve stavu Nedorazil za posledních 12 měsíců">
+                    <field name="no_show_count" widget="statinfo" string="Nedorazil"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_pet_form_no_show" model="ir.ui.view">
+        <field name="name">elite.vet.pet.form.no.show</field>
+        <field name="model">elite.vet.pet</field>
+        <field name="inherit_id" ref="view_pet_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="before">
+                <div class="oe_button_box" name="button_box">
+                    <button name="action_view_no_shows" type="object" class="oe_stat_button text-danger" icon="fa-user-times"
+                            invisible="not no_show_count" groups="elite_vet_reservation.group_reservation_reception"
+                            help="Rezervace ve stavu Nedorazil za posledních 12 měsíců">
+                        <field name="no_show_count" widget="statinfo" string="Nedorazil"/>
+                    </button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

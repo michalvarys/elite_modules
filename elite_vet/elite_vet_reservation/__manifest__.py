@@ -28,6 +28,7 @@ bezi vlastni rezervacni pruvodce misto iframu.
         "views/pet_views.xml",
         "views/reservation_views.xml",
         "views/history_views.xml",
+        "views/no_show_views.xml",
         "views/partner_views.xml",
         "views/setting_views.xml",
         "views/board_action.xml",

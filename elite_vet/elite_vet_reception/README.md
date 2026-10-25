@@ -91,7 +91,8 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 |---|---|
 | `booking_search(term)` | řádky vyhledávání v kroku 1 Objednat: `{kind: "pet", id, name, species_label, owner, partner_id, phone}` za každé živé zvíře (majitel nalezený jménem / telefonem / e-mailem → všechna jeho živá zvířata, každé jednou), majitel bez živého zvířete `{kind: "owner", id, partner_id, owner, phone}`; bez personálu a firem (pravidlo Kartotéky), bez uhynulých; nejvýš 20 řádků, méně než 2 znaky = `[]` |
 | `card_search(term)` | seznam: zvířata (`kind: "pet"`, tvar `search_patients` karty pacienta – jméno, majitel, čip, číslice telefonu) a majitelé (`kind: "owner"`: `id, partner_id, name, owner, phone, email, pet_count`) podle jména / telefonu / e-mailu, které žádné nalezené zvíře neukazuje (např. bez zvířat); méně než 2 znaky = `[]` |
-| `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...]}` |
+| `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...], "no_shows": {...}}` (zvíře navíc `no_show_count`) |
+| `client_no_shows(partner_id)` | `no_show_summary` klienta pro upozornění v Objednat: `{count, last_date, last_label, text, items: [{id, date, date_label, procedure, pet}]}` (požadavek 25. 10., rezervace Nedorazil za 12 měsíců, viz `elite_vet_reservation/models/no_show.py`) |
 | `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
 | `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče `name, species, breed, sex, birth_date, chip, note`; jméno a druh povinné, zvíře musí patřit majiteli |
 | `pet_options()` | `{"species": [{value, label}]}` – druhy pro formulář zvířete |

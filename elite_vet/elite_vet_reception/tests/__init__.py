@@ -6,3 +6,4 @@ from . import test_patient_list
 from . import test_board
 from . import test_rooms
 from . import test_visit_notes
+from . import test_no_show

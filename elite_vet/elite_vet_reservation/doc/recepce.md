@@ -325,7 +325,7 @@ Ve formuláři rezervace jsou nahoře tlačítka:
 | **Potvrdit** | Čekající z webu | Potvrdí (musí být vyplněná ordinace), pošle potvrzení. |
 | **Poslat potvrzení** | Potvrzená s e-mailem | Pošle potvrzovací e-mail znovu. |
 | **Proběhla** | Potvrzená | Označí návštěvu jako proběhlou (karta zbledne). |
-| **Nedorazil** | Potvrzená | Označí, že klient nepřišel (karta zbledne). E-mail neodchází. |
+| **Nedorazil** | Potvrzená | Označí, že klient nepřišel (karta zbledne). E-mail neodchází. Klient i zvíře to pak mají v počtu „Nedorazil“ (kapitola 7). |
 | **Zrušit** | Čekající nebo potvrzená | Zruší rezervaci. Má-li klient e-mail, odejde mu e-mail o zrušení (budete na to upozorněni). Termín se uvolní. |
 | **Spárovat klienta** | Rezervace bez klienta | Dohledá nebo založí klienta a mazlíčka z údajů z webu. |
 
@@ -431,6 +431,12 @@ Nic neblokuje – klinika ordinuje i v noci a o víkendech; jestli web ve svátk
 - **Klienti** – kartotéka klientů kliniky. Na kartě klienta je záložka **Mazlíčci**
   (jméno, druh, plemeno, poznámka) a pole **ID ve WinVetu** (zatím se nevyplňuje).
 - **Mazlíčci** – seznam všech zvířat s majitelem.
+- **Nedorazil:** když klient (nebo zvíře) v posledních 12 měsících nedorazil na rezervaci, je na
+  kartě klienta i mazlíčka nahoře červené tlačítko **Nedorazil N** – otevře seznam těch
+  rezervací (datum, úkon, ordinace, lékařka). Počítá se samo z rezervací ve stavu Nedorazil
+  (kopie ve druhé ordinaci se nepočítá dvakrát). V průvodci Nová rezervace se u takového klienta
+  v kroku Klient a ve shrnutí ukáže žluté upozornění „Klient 2× nedorazil, naposledy 12. 10“;
+  rezervaci jde uložit normálně. Stejné upozornění je v pokladně (Kartotéka, Objednat).
 
 Klient a mazlíček se zakládají sami: při potvrzení žádosti z webu a při uložení
 průvodce. Klient se hledá nejdřív podle e-mailu, pak podle telefonu (posledních

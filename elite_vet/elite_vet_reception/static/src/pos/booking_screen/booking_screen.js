@@ -69,6 +69,7 @@ export class ReceptionBookingScreen extends Component {
             nearestLoaded: false,
             pick: null, // {day, minute, room_id}: the nearest time, selected once its day is loaded
             pet: this.props.pet || null, // {id, name, owner, partner_id}
+            noShows: null, // no_show_summary of the client (Nedorazil, last 12 months) or null
             procedureId: "",
             doctorId: "",
             day: clinicToday(),
@@ -106,6 +107,9 @@ export class ReceptionBookingScreen extends Component {
                 this.state.frequent = options.frequent || [];
             }
             await this.applyBoardProps(this.props);
+            if (this.state.pet) {
+                this.loadNoShows(this.state.pet);
+            }
         });
         // the POS keeps this screen and only changes its props when it is shown again
         onWillUpdateProps((next) => {
@@ -544,6 +548,25 @@ export class ReceptionBookingScreen extends Component {
         this.state.pet = pet;
         this.state.booked = null;
         this.closeClientSearch();
+        this.loadNoShows(pet);
+    }
+
+    /** Tooltip of the no-show warning: one line per no-show. */
+    get noShowTitle() {
+        const items = this.state.noShows?.items || [];
+        return items.map((i) => [i.date_label, i.procedure, i.pet].filter(Boolean).join(" · ")).join("\n");
+    }
+
+    /** Request 25. 10.: a warning when the client did not come before (last 12 months). */
+    async loadNoShows(pet) {
+        this.state.noShows = null;
+        if (!pet?.partner_id) {
+            return;
+        }
+        const data = await callReception(this.orm, this.notification, "client_no_shows", [pet.partner_id]);
+        if (data && this.state.pet?.partner_id === pet.partner_id) {
+            this.state.noShows = data.count ? data : null;
+        }
     }
 
     /** A pet row selects it; an owner without a live pet opens Kartotéka to add one. */
@@ -602,6 +625,7 @@ export class ReceptionBookingScreen extends Component {
         this.state.slots = null;
         this.state.nextFreeDay = null;
         this.state.pet = null;
+        this.state.noShows = null;
         this.state.note = "";
         this.state.prefill = null;
         this.state.showAllProcedures = false;
