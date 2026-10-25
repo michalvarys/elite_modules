@@ -42,6 +42,8 @@ itself matches them. A changed occurrence is a complete row with its own time an
 
 All-day events (VOLBY bit 0) are stored from 23:00 of the previous day to 23:00 of the last day;
 they are normalised to local midnights (rounded to the nearest midnight), see :func:`day_bounds`.
+Recurrences of all-day events are expanded on those real days (a weekly "Wednesday" all-day pattern
+is stored from Tuesday 23:00; its deleted occurrences are stored the same way).
 """
 
 from __future__ import annotations
@@ -466,6 +468,9 @@ class EventBuilder:
         if start is None or end is None:
             self._problem("event without time")
             return
+        if (to_int(pattern.get("VOLBY")) or 0) & OPTION_ALL_DAY:
+            # all-day: the rule works on the real days (stored from 23:00 of the previous day)
+            start, end = day_bounds(start, end)
         duration = max(end - start, _dt.timedelta(minutes=1))
         try:
             rule = decode_recurrence(blob_bytes(pattern.get("OPAKOVANI_INFO")))

@@ -219,6 +219,18 @@ class EventBuilderTest(unittest.TestCase):
                           regular["recurring"]), (49, 49, "2026-09-27 08:00:00", "2026-09-27 08:30:00", True))
         self.assertEqual(builder.problems, {})
 
+    def test_all_day_recurrence_works_on_the_real_days(self):
+        # weekly on Wednesday (bit 3), all-day, stored from Tuesday 23:00 like WinVet does
+        weekly = recurrence_blob(1, occur_days=0x08)
+        rows = [
+            row(549, D(2026, 9, 15, 23), D(2026, 9, 16, 23), typ=1, options=3, recurrence=weekly),
+            row(551, D(2026, 9, 22, 23), D(2026, 9, 23, 23), typ=4, parent=549, index=1, options=3),  # 23. 9.
+        ]
+        events, _b = self.build(rows)
+        self.assertEqual(sorted(events), ["549-20260930"])
+        self.assertEqual((events["549-20260930"]["start"], events["549-20260930"]["end"],
+                          events["549-20260930"]["all_day"]), ("2026-09-30 00:00:00", "2026-10-01 00:00:00", True))
+
     def test_changed_occurrence_moved_into_the_window_keeps_its_key(self):
         daily = recurrence_blob(0, count=20, day_type=1)
         rows = [

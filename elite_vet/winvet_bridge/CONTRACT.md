@@ -366,7 +366,8 @@ Rules (bridge side):
    strings are resource ids, other strings resource **names** (resolved case-insensitively against
    KALENDAR_NEW_KALENDAR). Layout in `scheduler.py`. Undecodable → `resource_ids: []`.
 4. All-day events are stored by WinVet from 23:00 of the previous day to 23:00 of the last day; they
-   are rounded to the nearest local midnight.
+   are rounded to the nearest local midnight. Recurrences of all-day events are expanded on these real
+   days (checked on the analysis copy: all 15 deleted occurrences match the date of their index).
 5. Problems (undecodable recurrence, occurrence without pattern, event without time) are counted in
    the log (counts only) and never stop the run.
 
