@@ -26,7 +26,7 @@
                     <!-- STEP 1 -->
                     <div class="evbk-step" data-step="1">
                         <div class="evbk-tabs" role="tablist">
-                            <button type="button" class="is-active" data-tab="procedure">By problem</button>
+                            <button type="button" class="is-active" data-tab="procedure">By procedure</button>
                             <button type="button" data-tab="doctor">By doctor</button>
                             <button type="button" data-tab="specialization">By specialization</button>
                         </div>
@@ -42,13 +42,13 @@
                             <p class="evbk-hint">Choose a doctor, then the reason for your visit.</p>
                             <div class="evbk-cards" data-list="doctors"></div>
                             <div class="evbk-list" data-list="procedures-for-doctor" hidden="hidden"></div>
-                            <p class="evbk-empty" data-empty="doctors" hidden="hidden">No doctor has online appointments in the coming weeks. Choose by problem or call us.</p>
+                            <p class="evbk-empty" data-empty="doctors" hidden="hidden">No doctor has online appointments in the coming weeks. Choose by procedure or call us.</p>
                         </div>
                         <div class="evbk-tab" data-tab="specialization" hidden="hidden">
                             <p class="evbk-hint">Choose a specialization, then the reason for your visit.</p>
                             <div class="evbk-cards" data-list="specializations"></div>
                             <div class="evbk-list" data-list="procedures-for-spec" hidden="hidden"></div>
-                            <p class="evbk-empty" data-empty="specializations" hidden="hidden">No specializations are set up yet. Choose by problem.</p>
+                            <p class="evbk-empty" data-empty="specializations" hidden="hidden">No specializations are set up yet. Choose by procedure.</p>
                         </div>
                     </div>
 

@@ -232,8 +232,8 @@ msgstr "По врачу"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "By problem"
-msgstr "По проблеме"
+msgid "By procedure"
+msgstr "По услуге"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
@@ -885,9 +885,9 @@ msgstr "Для этой записи задаток не требуется."
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
-"No doctor has online appointments in the coming weeks. Choose by problem or "
+"No doctor has online appointments in the coming weeks. Choose by procedure or "
 "call us."
-msgstr "В ближайшие недели ни у одного врача нет онлайн-записи. Выберите по проблеме или позвоните."
+msgstr "В ближайшие недели ни у одного врача нет онлайн-записи. Выберите по услуге или позвоните."
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
@@ -896,8 +896,8 @@ msgstr "В этом месяце свободных мест нет. Попро�
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "No specializations are set up yet. Choose by problem."
-msgstr "Специализации пока не настроены. Выберите по проблеме."
+msgid "No specializations are set up yet. Choose by procedure."
+msgstr "Специализации пока не настроены. Выберите по услуге."
 
 #. module: elite_vet_reservation
 #. odoo-javascript

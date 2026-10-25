@@ -99,7 +99,7 @@ lékařku ve formuláři. Tam rozhoduje recepce.
 ![Web – krok 1](img/web-1-problem.png)
 
 1. Klient na stránce `/rezervacni-system` projde 4 kroky: **Co potřebujete**
-   (podle problému, lékaře nebo specializace) → **Termín** → **Vaše údaje** → **Hotovo**.
+   (podle úkonu, lékaře nebo specializace) → **Termín** → **Vaše údaje** → **Hotovo**.
 2. Při odeslání systém **znovu ověří**, že termín je pořád volný. Pokud ne, klient
    uvidí hlášku a vybere jiný čas.
 3. Vznikne rezervace ve stavu **Čekající z webu** – bez ordinace, se zdrojem „Web“.

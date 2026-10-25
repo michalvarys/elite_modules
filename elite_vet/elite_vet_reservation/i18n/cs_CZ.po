@@ -232,8 +232,8 @@ msgstr "Podle lékaře"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "By problem"
-msgstr "Podle problému"
+msgid "By procedure"
+msgstr "Podle úkonu"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
@@ -885,9 +885,9 @@ msgstr "Pro tento termín není záloha potřeba."
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
-"No doctor has online appointments in the coming weeks. Choose by problem or "
+"No doctor has online appointments in the coming weeks. Choose by procedure or "
 "call us."
-msgstr "V příštích týdnech nemá žádný lékař online termíny. Vyberte podle problému nebo zavolejte."
+msgstr "V příštích týdnech nemá žádný lékař online termíny. Vyberte podle úkonu nebo zavolejte."
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
@@ -896,8 +896,8 @@ msgstr "V tomto měsíci není volný termín. Zkuste další."
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "No specializations are set up yet. Choose by problem."
-msgstr "Specializace zatím nejsou nastavené. Vyberte podle problému."
+msgid "No specializations are set up yet. Choose by procedure."
+msgstr "Specializace zatím nejsou nastavené. Vyberte podle úkonu."
 
 #. module: elite_vet_reservation
 #. odoo-javascript

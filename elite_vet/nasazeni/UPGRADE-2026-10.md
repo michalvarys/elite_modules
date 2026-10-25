@@ -451,3 +451,6 @@ Stránka /rozpis-lekaru má vlastní formulář WinVet a přepínač ji nemění
   poplatku) je pod naším průvodcem vycentrovaný v šířce průvodce; dřív na PC ležel u levého
   okraje stránky. V režimu WinVet beze změny. Kontrola: /rezervacni-system v režimu Elite Vet na
   PC – text je pod kartami úkonů uprostřed.
+- Webový průvodce: první záložka „Podle problému“ se jmenuje **„Podle úkonu“** (de „Nach
+  Leistung“, ru „По услуге“), stejně i věty, které na ni odkazují („Vyberte podle úkonu…“).
+  „Popište problém“ ve formuláři zůstává. Potřebuje `--i18n-overwrite` (je v příkazu výše).

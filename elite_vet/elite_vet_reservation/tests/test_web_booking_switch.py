@@ -192,3 +192,20 @@ class TestWebBookingSwitch(HttpCase):
         html = self.url_open("/rezervacni-system").text
         self.assertIn('class="evrez-zprava-misto"', html)
         self.assertIn("T23 text pod rezervací", html)
+
+    def test_first_tab_is_by_procedure(self):
+        """"Podle problému" became "Podle úkonu" (task 19); the client's "Popište problém" stays."""
+        view = self.env.ref("elite_vet_reservation.booking_widget")
+        self.assertIn(">By procedure<", view.arch_db)
+        self.assertNotIn("by problem", view.arch_db.lower())
+        expected = {"cs_CZ": ("Podle úkonu", "Popište problém"), "de_DE": ("Nach Leistung", None),
+                    "ru_RU": ("По услуге", None)}
+        installed = dict(self.env["res.lang"].get_installed())
+        for lang, (tab, kept) in expected.items():
+            if lang not in installed:
+                continue
+            arch = view.with_context(lang=lang).arch_db
+            self.assertIn(tab, arch, lang)
+            self.assertNotIn("problému", arch.replace("Popište problém", ""), lang)
+            if kept:
+                self.assertIn(kept, arch, lang)
