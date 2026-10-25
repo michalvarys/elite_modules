@@ -48,3 +48,23 @@ class TestRosterSpecsInBubble(HttpCase):
         self.assertIn("MVDr. Srdíčková T22", rows[0].xpath('./span[@class="rs-tip-name"]')[0].text_content())
         self.assertIn("Kardiologie T22", rows[0].xpath('.//span[@class="rs-spec-name"]')[0].text_content())
         self.assertTrue(rows[0].xpath('.//img[contains(@class, "ev-spec-ico")]'))
+
+    def test_narrow_view_shows_only_the_time_with_a_colour_legend(self):
+        """Task 25: under the name (narrow / touch view) only "8:00–14:00"; the shift name is in its own
+        span hidden by those media queries, a short legend of the colours sits above each month."""
+        resp = self.url_open("/rozpis-lekaru")
+        tree = lxml_html.fromstring(resp.content)
+        doc = [d for d in tree.xpath('//span[contains(concat(" ", @class, " "), " rs-doc ")]')
+               if "MVDr. Srdíčková T22" in d.text_content()][0]
+        time_span = doc.xpath('.//span[@class="rs-tip-time"]')[0]
+        type_span = time_span.xpath('./span[@class="rs-tip-type"]')[0]
+        self.assertIn("Služba T22", type_span.text_content())
+        # what stays visible: the text after the hidden shift name
+        self.assertEqual((type_span.tail or "").strip(), "8:00–14:00")
+        self.assertEqual(time_span.text_content().replace(type_span.text_content(), "").strip(), "8:00–14:00")
+        legend = tree.xpath('//div[@class="rs-month-legend"]')
+        self.assertTrue(legend)
+        self.assertIn("Služba T22", legend[0].text_content())
+        css = "".join(tree.xpath("//style/text()"))
+        self.assertIn(".rs-tip .rs-tip-type { display: none; }", css)
+        self.assertIn(".rs-month-legend { display: flex; }", css)
