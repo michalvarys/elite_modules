@@ -18,6 +18,19 @@ class ClinicalRecordVisitStage(models.Model):
     arrived_at = fields.Datetime(string="Příchod", copy=False)
     called_at = fields.Datetime(string="Zavolán(a)", copy=False)
     received_by = fields.Char(string="Přijal(a)", copy=False, help="Zaměstnanec pokladny, který klienta přijal.")
+    # Task 15: the consultation room of the visit (screen Ordinace). Taken from the reservation
+    # (also for records that existed before the field); empty = not assigned yet (walk-ins).
+    # Moving the visit to another room does not move the reservation.
+    room_id = fields.Many2one("elite.vet.room", string="Ordinace", compute="_compute_room_id", store=True,
+                              readonly=False, index=True, tracking=True, ondelete="set null", copy=False)
+
+    @api.depends("reservation_id")
+    def _compute_room_id(self):
+        for rec in self:
+            if rec.reservation_id.room_id:
+                rec.room_id = rec.reservation_id.room_id
+            elif not rec.room_id:
+                rec.room_id = False
 
     @api.model
     def _can_write(self):

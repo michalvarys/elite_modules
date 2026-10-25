@@ -65,6 +65,7 @@ class Reception(models.AbstractModel):
             "reservation_id": record.reservation_id.id or None,
             "doctor": record.doctor_id.name or None, "arrived_time": local_time(record.arrived_at),
             "received_by": record.received_by or None,
+            "room_id": record.room_id.id or None, "room": record.room_id.name or None,
         }
 
     @api.model
@@ -126,7 +127,7 @@ class Reception(models.AbstractModel):
             until = rec.called_at if rec.visit_stage == "in_room" and rec.called_at else now
             waiting.append({
                 "record_id": rec.id, "pet_name": rec.pet_id.name, "owner": rec.partner_id.name or None,
-                "doctor": (rec.doctor_id or res.doctor_id).name or None, "room": res.room_id.name or None,
+                "doctor": (rec.doctor_id or res.doctor_id).name or None, "room": rec.room_id.name or None,
                 "stage": rec.visit_stage, "stage_label": dict(VISIT_STAGES)[rec.visit_stage],
                 "arrived_time": local_time(since),
                 "waiting_minutes": max(0, int((until - since).total_seconds() // 60)) if since else None,
@@ -200,13 +201,17 @@ class Reception(models.AbstractModel):
                 record = Records.browse(data["id"])
                 if force_new:
                     record.doctor_id = reservation.doctor_id
+        if not record.room_id and reservation.room_id and record.state == "draft":
+            record.room_id = reservation.room_id   # task 15: the visit is in the reservation's room
         self._mark_arrived(record, employee_name)
         notify_board(self.env)
         return self._record_dict(record)
 
     @api.model
-    def walk_in(self, pet_id, doctor_id=False, employee_name=None):
-        """A client without a reservation: today's open record of the pet, else a new draft."""
+    def walk_in(self, pet_id, doctor_id=False, employee_name=None, room_id=False):
+        """A client without a reservation: today's open record of the pet, else a new draft.
+        `room_id` (optional, task 15): the room the visit goes to; without it the visit is
+        unassigned (Nepřiřazení on the screen Ordinace)."""
         self._check_reception()
         Records = self._records()
         pet = Records._get_pet(pet_id)
@@ -222,13 +227,20 @@ class Reception(models.AbstractModel):
             data = Records.open_today_record(pet.id, force_new=True)
             record = Records.browse(data["id"])
             record.doctor_id = doctor
+        room = self._get_room(room_id)
+        if room and record.room_id != room:
+            self._set_room(record, room)
         self._mark_arrived(record, employee_name)
         notify_board(self.env)
         return self._record_dict(record)
 
     @api.model
-    def call_patient(self, record_id):
-        """Doctor or nurse calls the patient from the waiting room into the room."""
+    def call_patient(self, record_id, room_id=None, doctor_id=False):
+        """Doctor or nurse calls the patient from the waiting room into the room.
+
+        Task 15: `room_id` = the room calling (screen Ordinace); the visit moves there. A record
+        without a doctor gets the doctor on duty in its room (see _set_room); with two on duty and
+        no `doctor_id` the result has `needs_doctor` (the client asks and calls assign_room)."""
         self._check_reception()
         if not self.env.user.has_group(NURSE_GROUP):
             raise AccessError(_("Pacienta může zavolat jen sestra nebo lékařka."))
@@ -237,7 +249,10 @@ class Reception(models.AbstractModel):
             raise UserError(_("Záznam návštěvy nebyl nalezen."))
         if record.state != "draft":
             raise UserError(_("Návštěva je už uzavřená."))
-        if not record.doctor_id:
+        room = self._get_room(room_id) if room_id else record.room_id
+        doctor = self._get_doctor(doctor_id)
+        needs_doctor = self._set_room(record, room, doctor) if room or doctor else []
+        if not record.doctor_id and not needs_doctor:
             # Ruling R17: an unassigned walk-in is taken by the doctor who calls it in
             doctor = record._doctor_for_user()
             if doctor:
@@ -245,4 +260,4 @@ class Reception(models.AbstractModel):
         if record.visit_stage != "in_room":
             record.write({"visit_stage": "in_room", "called_at": fields.Datetime.now()})
         notify_board(self.env)
-        return self._record_dict(record)
+        return dict(self._record_dict(record), needs_doctor=needs_doctor)

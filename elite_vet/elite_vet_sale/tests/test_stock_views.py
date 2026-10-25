@@ -79,7 +79,9 @@ class TestStockViews(SaleCase):
         Menu = self.env["ir.ui.menu"]
         for xmlid in ("elite_vet_sale.menu_stock_overview", "elite_vet_sale.menu_stock_overview_clinic"):
             menu = self.env.ref(xmlid)
-            self.assertIn(self.env.ref("elite_vet_sale.group_till_stock"), menu.groups_id)
+            # the copy under Ordinace: elite_vet_reception (task 15) narrows it to Vedení
+            if xmlid == "elite_vet_sale.menu_stock_overview":
+                self.assertIn(self.env.ref("elite_vet_sale.group_till_stock"), menu.groups_id)
             for user in (self.nurse, self.doctor_user):
                 self.assertNotIn(menu.id, Menu.with_user(user)._visible_menu_ids(), (xmlid, user.login))
         self.assertIn(self.env.ref("elite_vet_sale.menu_stock_overview").id,

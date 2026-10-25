@@ -4,7 +4,8 @@ Odoo 18 modul: pracoviště recepce v pokladně Odoo „Recepce“ a stavy náv�
 (spec: `docs/superpowers/specs/2026-10-22-reception-workplaces-design.md`).
 Závisí na `elite_vet_sale` a `pos_hr`. Ostatní moduly se neupravují, jen rozšiřují (`_inherit`).
 
-Návod pro recepci, lékařky a vedení: [doc/recepce-v-pokladne.md](doc/recepce-v-pokladne.md).
+Návod pro recepci, lékařky a vedení: [doc/recepce-v-pokladne.md](doc/recepce-v-pokladne.md);
+obrazovka Ordinace a účty ordinací: [doc/ordinace.md](doc/ordinace.md).
 
 ## Stavy návštěvy
 
@@ -16,6 +17,7 @@ Na `elite.vet.clinical.record` přibývá:
 | `arrived_at` | čas příchodu (přijetí recepcí) |
 | `called_at` | čas zavolání do ordinace |
 | `received_by` | jméno zaměstnance pokladny (pos_hr), který klienta přijal – volitelné |
+| `room_id` | ordinace návštěvy (úkol 15): z rezervace (uložený compute podle `reservation_id`, doplní se i stávajícím záznamům), prázdná = nepřiřazená (neobjednaní); mění ji `assign_room` / `call_patient` |
 
 Otevření dnešního záznamu z karty pacienta (`open_today_record`) sestrou nebo lékařkou posune
 rozepsaný záznam ve stavu Čeká (nebo bez stavu) do V ordinaci a zapíše `called_at`.
@@ -31,8 +33,10 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 |---|---|
 | `today_data(day=None)` | `{"date", "arriving": [...], "waiting": [...], "to_pay": [...], "paid_count"}` |
 | `check_in(reservation_id, employee_name=None)` | záznam (`record_id`, `stage`, …) |
-| `walk_in(pet_id, doctor_id=False, employee_name=None)` | záznam |
-| `call_patient(record_id)` | záznam; jen sestra a lékařka |
+| `walk_in(pet_id, doctor_id=False, employee_name=None, room_id=False)` | záznam |
+| `call_patient(record_id, room_id=None, doctor_id=False)` | záznam + `needs_doctor`; jen sestra a lékařka |
+| `assign_room(record_id, room_id=False, doctor_id=False)` | záznam + `needs_doctor` |
+| `room_board(day=None)` | data obrazovky Ordinace (viz níže) |
 
 - **arriving** – potvrzené rezervace dne (bez druhých ordinací) bez nezrušeného záznamu, podle času:
   `reservation_id, time, pet_id|None, pet_name, owner, partner_id, procedure, doctor, room, needs_match`
@@ -45,8 +49,9 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
   `record_id, sale_order_id, pet_name, owner, partner_id, amount, payment_state, payment_state_label,
   date, date_label` (`amount` = zbývá zaplatit, `date_label` = „dnes“ nebo „D. M.“).
 - **paid_count** – počet dnes zaplacených záznamů.
-- Záznam (`check_in` / `walk_in` / `call_patient`): `record_id, stage, stage_label, state, pet_id,
-  pet_name, reservation_id, doctor, arrived_time, received_by`.
+- Záznam (`check_in` / `walk_in` / `call_patient` / `assign_room`): `record_id, stage, stage_label,
+  state, pet_id, pet_name, reservation_id, doctor, arrived_time, received_by, room_id, room`.
+  Ve sloupci Čekárna a ordinace (`waiting`) je `room` ordinace návštěvy (`room_id`), ne rezervace.
 
 Pravidla přijetí:
 
@@ -240,6 +245,47 @@ dostupnosti.
   – rezervaci nejde přesunout / zrušit.“ Přesunout jde jen potvrzenou rezervaci, zrušit jen
   potvrzenou nebo čekající. Blokace: „Rezervace nebyla nalezena.“
 
+## Obrazovka Ordinace (úkol 15)
+
+Klientská akce `elite_vet_reception.action_room_board` (tag `elite_vet_reception.room_board`,
+`static/src/room_board/`, bundle `web.assets_backend`), menu **Ordinace › Ordinace** (první položka,
+Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordinace.md](doc/ordinace.md).
+
+- **Účet ordinace**: `res.users.elite_vet_room_id` (formulář uživatele › Přístupová práva › Elite
+  Vet). Výchozí obrazovka takového účtu (role Recepce až Lékařka, ne Vedení) je obrazovka Ordinace;
+  obrazovka se na účtu ordinace otevře vždy na jeho ordinaci, jinak na volbě uložené v prohlížeči
+  (`localStorage` `elite_vet_reception.room_view`, `all` nebo id ordinace).
+- **`room_board(day=None)`** → `{"date", "is_today", "time", "columns": [...], "rooms": [{id, name,
+  color}], "perms": {"can_call", "user_room_id"}}`. `columns[0]` = Nepřiřazení (`key: "unassigned"`,
+  `room_id: None`), pak jedna za každou aktivní ordinaci v pořadí (`sequence`) a ordinace, které
+  mají dnes návštěvu, i když jsou archivované. Sloupec: `key, room_id, name, color, on_duty: [{id,
+  name}]` (služby `elite.vet.doctor.assignment` dne, které pokrývají teď; jen dnes), `shifts:
+  [{doctor, label, now}]`, `sections: {in_room, waiting, booked, done}`, `counts`.
+  - `in_room` / `waiting`: rozepsané záznamy dne se stavem návštěvy (podle zavolání / příchodu),
+  - `booked`: potvrzené rezervace dne (bez druhých ordinací) bez nezrušeného záznamu + rozepsané
+    záznamy bez stavu (karta otevřená před příchodem), podle času rezervace,
+  - `done`: uzavřené záznamy dne.
+  - Karta: `key` (`r<záznam>` / `b<rezervace>`), `record_id, reservation_id, walk_in, stage`
+    (`in_room/waiting/booked/done`), `time` (příchod, jinak čas rezervace), `reservation_time,
+    arrived_time, called_time, waiting_minutes, pet_id, pet_name, species_label, owner, partner_id,
+    procedure, doctor, doctor_id, room_id, alerts, draggable` (jen dnešní rozepsaný záznam se stavem).
+- **`assign_room(record_id, room_id=False, doctor_id=False)`**: jen dnešní rozepsaný záznam
+  („Do ordinace jde přiřadit jen dnešní rozepsanou návštěvu.“), `room_id` False = zpět do
+  Nepřiřazení. Rezervace svou ordinaci nemění (tabule ukazuje rezervaci).
+- **Lékařka z rozpisu** (`_set_room`): záznam **bez lékařky**, který dostane ordinaci (přiřazení,
+  Zavolat, příjem bez objednání s ordinací), dostane lékařku, která v ordinaci teď slouží
+  (`hour_from ≤ teď < hour_to`). Dvě ve službě → je-li mezi nimi lékařka spárovaná s přihlášeným
+  uživatelem (podle jména), vezme se ona; jinak odpověď nese `needs_doctor: [{id, name}]` a klient se
+  zeptá (pak `assign_room(…, doctor_id)`). Nikdo ve službě → zůstane prázdná. Zadaná `doctor_id` se
+  zapíše vždy. Lékařka už na záznamu zůstává (i při přesunu do jiné ordinace).
+- **`call_patient(record_id, room_id=None, doctor_id=False)`**: dosavadní chování zůstává; s `room_id`
+  se návštěva přesune do té ordinace; bez něj platí ordinace záznamu. Lékařka podle pravidla výše,
+  bez ordinace (nebo nikdo ve službě) jako dřív lékařka volajícího uživatele (R17).
+- Každá změna pošle `notify_board` (kanál `elite_vet_reservation/changed`); obrazovka se obnoví
+  zprávou a záložně každých 30 s.
+- Práva: jako zbytek API (`_check_reception`), zápis přes `_records()` (sudo s příznakem API).
+  Zavolat jen sestra a lékařka; recepce přiřazuje.
+
 ## Ordinace: Moji pacienti dnes (karta pacienta)
 
 Úvodní obrazovka karty pacienta (`elite_vet_clinic`) se rozšiřuje odsud: `models/patient_card.py`
@@ -275,6 +321,7 @@ dostupnosti.
 |---|---|---|
 | Recepce (+ skupina Pokladna a sklad) | `action_open_reception_pos` – pokladna Recepce (`/pos/ui?config_id=…`, stejné okno) | Pokladna, Rezervace, Diskuze, Sklad jen s Přehledem skladu a Příjmem zboží |
 | Sestra, Lékařka | Karta pacienta (`elite_vet_clinic.action_patient_card`) | Ordinace, Rezervace, Diskuze – bez Pokladny a Skladu |
+| Účet ordinace (Sestra / Lékařka s polem Ordinace) | obrazovka Ordinace (`action_room_board`) na své ordinaci | jako Lékařka |
 | Vedení | Přehled tržeb a výdajů (`elite_vet_winvet.action_winvet_dashboard`) | vše |
 
 - **Pokladna a sklad (recepce)** (`elite_vet_sale.group_till_stock`, vlastní kategorie „Elite Vet –
@@ -302,11 +349,12 @@ dostupnosti.
 - Menu (`ir.ui.menu._elite_vet_apply_role_menus`, `data/menus.xml`, běží při každé aktualizaci):
   Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy (Dashboards)
   jen vedení; Aplikace jen správci systému (`base.group_system` při každé aktualizaci – `base_install_request`
-  je jinak otevře všem, starší verze je dávala vedení); Ordinace od sestry; Pokladna jen se skupinou
+  je jinak otevře všem, starší verze je dávala vedení); aplikace Ordinace od recepce, ale recepce v ní
+vidí jen první položku Ordinace (obrazovka ordinací), ostatní položky od sestry; Pokladna jen se skupinou
   Pokladna a sklad (recepce) a vedení; Diskuze všem; Sklad (kořen) a v něm jen Přehled skladu
   a Příjem zboží (přesunutý z Operací přímo pod Sklad hned za Přehled skladu) pro skupinu Pokladna
-  a sklad a vedení, ostatní položky Skladu jen vedení. Kopie obou položek v Ordinaci mají skupinu
-  Pokladna a sklad – v Ordinaci je tedy vidí jen vedení (nebo sestra se skupinou přidanou ručně).
+  a sklad a vedení, ostatní položky Skladu jen vedení. Kopie obou položek v Ordinaci jsou jen pro
+  vedení (úkol 15; recepce je má ve Skladu).
   Menu patří jiným modulům: samostatná aktualizace takového modulu vrátí jeho skupiny, další
   aktualizace `elite_vet_reception` je zase nastaví.
 - Účetní, která má vidět Fakturaci, potřebuje skupinu Vedení (menu Fakturace je jen pro vedení).
@@ -336,10 +384,13 @@ v [návodu, část C](doc/recepce-v-pokladne.md)):
   provede se pro všechny interní). Vlastní výchozí obrazovka se nepřepisuje.
 - **Skrytá menu** (každá aktualizace `elite_vet_reception` je nastaví znovu): Prodej, Fakturace,
   Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy jen vedení (Aplikace jen správce systému); Ordinace od
-  sestry (recepce ne); Pokladna a Sklad (jen Přehled skladu a Příjem zboží) jen se skupinou Pokladna
+  sestry (recepce v ní vidí jen obrazovku Ordinace); Pokladna a Sklad (jen Přehled skladu a Příjem zboží) jen se skupinou Pokladna
   a sklad (recepce) a vedení – sestra a lékařka je nevidí.
   Samostatná aktualizace modulu, kterému menu patří, vrátí jeho skupiny – pak aktualizujte
   i `elite_vet_reception`.
+- **Účty ordinací.** Na ordinaci jeden účet (např. „Ordinace 1“), role **Lékařka**, ve formuláři
+  uživatele › Přístupová práva › Elite Vet pole **Ordinace**. Po přihlášení se otevře obrazovka
+  Ordinace na této ordinaci. Lékařku návštěvy bere obrazovka z Rozpisu lékařů (rezervace).
 - **Účetní** potřebuje skupinu **Vedení** (menu Fakturace je jen pro vedení).
 - **Zaměstnanci s PINem.** Modul žádné nezakládá. Vedení je zakládá v **Zaměstnanci** (jméno,
   záložka Nastavení › **PIN kód**, případně Příslušný uživatel) a povolí na pokladně: Prodejní

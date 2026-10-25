@@ -136,6 +136,13 @@
                                 <option t-foreach="state.doctors" t-as="doc" t-key="doc.id" t-att-value="doc.id" t-esc="doc.name"/>
                             </select>
                         </label>
+                        <label t-if="state.rooms.length" class="d-flex align-items-center gap-2">
+                            <span class="text-muted text-nowrap">Ordinace</span>
+                            <select class="form-select o_ev_walk_in_room" t-model="state.walkInRoomId">
+                                <option value="">zatím žádná</option>
+                                <option t-foreach="state.rooms" t-as="room" t-key="room.id" t-att-value="room.id" t-esc="room.name"/>
+                            </select>
+                        </label>
                     </div>
                 </div>
             </div>

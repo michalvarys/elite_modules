@@ -6,7 +6,7 @@
  * - `booking` (Objednat, field Klient a zvíře): Vybrat → `onSelect(pet)` fills the booking form;
  * - `order` (Pokladna, button Klient): Vybrat k účtu → customer of the open order;
  * - `reservation` (Dnes Klient… / Spárovat, board detail Klient…): Přiřadit k rezervaci;
- * - `walk_in` (Dnes + Bez objednání): Přijmout with a doctor (any / a specific one).
+ * - `walk_in` (Dnes + Bez objednání): Přijmout with a doctor (any / a specific one) and optionally a room.
  */
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
@@ -78,6 +78,8 @@ export class CardIndexDialog extends Component {
             saving: false,
             doctors: [],
             walkInDoctorId: "",
+            rooms: [],
+            walkInRoomId: "", // optional room of the walk-in (task 15); empty = Nepřiřazení
             species: [],
         });
         onWillStart(async () => {
@@ -88,6 +90,7 @@ export class CardIndexDialog extends Component {
             ]);
             this.state.species = options?.species || [];
             this.state.doctors = booking?.doctors || [];
+            this.state.rooms = booking?.rooms || [];
             if (this.props.start === "new_owner") {
                 this.newOwner();
                 return;
@@ -365,6 +368,7 @@ export class CardIndexDialog extends Component {
                 this.pet.id,
                 Number(this.state.walkInDoctorId) || false,
                 this.pos.get_cashier()?.name || null,
+                Number(this.state.walkInRoomId) || false,
             ]);
             if (result) {
                 this.notification.add(`${result.pet_name} je v čekárně.`, { type: "success" });

@@ -127,6 +127,8 @@ class ReceptionBooking(models.AbstractModel):
         return {
             "procedures": [{"id": p.id, "name": p.name, "duration": p.duration} for p in procedures],
             "doctors": [{"id": d.id, "name": d.name} for d in doctors],
+            # rooms of the walk-in check-in (optional, task 15)
+            "rooms": [{"id": r.id, "name": r.name} for r in self.env["elite.vet.room"].search([])],
             # ids of the frequent procedures (big buttons of step Úkon), most booked first
             "frequent": self._frequent_procedures(procedures),
         }

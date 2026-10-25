@@ -10,7 +10,9 @@ Navazující návody:
 - [Pokladna a sklad](../../elite_vet_sale/doc/pokladna-a-sklad.md) – faktura, záloha, vratka,
   uzávěrka, příjem zboží,
 - [Rezervace – návod pro recepci](../../elite_vet_reservation/doc/recepce.md) – tabule, žádosti
-  z webu, průvodce rezervací.
+  z webu, průvodce rezervací,
+- [Obrazovka Ordinace](ordinace.md) – účet pro každou ordinaci, pacienti podle ordinací, přiřazení
+  do ordinace a Zavolat.
 
 Cesta návštěvy:
 
@@ -18,7 +20,7 @@ Cesta návštěvy:
 |---|---|---|
 | Objednáno | web nebo recepce | rezervace (záložka **Objednat**, tabule, web) |
 | Čeká | recepce | **Přijmout** v záložce Dnes, nebo **+ Bez objednání** v záložce Dnes |
-| V ordinaci | lékařka / sestra | **Zavolat** v Moji pacienti dnes, nebo otevření karty pacienta |
+| V ordinaci | lékařka / sestra | **Zavolat** na obrazovce Ordinace nebo v Moji pacienti dnes, nebo otevření karty pacienta |
 | K pokladně | lékařka | **Hotovo, k pokladně** v kartě pacienta |
 | Zaplaceno | recepce | **Zaplatit** v záložce Dnes |
 
@@ -96,7 +98,10 @@ Klient přišel bez rezervace:
 2. Najděte klienta (nebo ho založte tlačítkem **+ Nový klient**, kapitola 3) a klikněte na zvíře.
 3. Vyberte **Lékařku**: konkrétní, nebo **kterákoli** – takového pacienta vidí v Čekají všechny
    lékařky s poznámkou „kterákoli lékařka“ a ujme se ho ta, která ho zavolá.
-4. Klikněte **Přijmout**. Okno se zavře a zvíře je v **Čekárně a ordinaci** se štítkem **Čeká**.
+4. Volitelně vyberte **Ordinaci**. Bez ní je pacient na obrazovce Ordinace v části Nepřiřazení
+   a ordinace si ho vezme ([Obrazovka Ordinace](ordinace.md)).
+5. Klikněte **Přijmout**. Okno se zavře a zvíře je v **Čekárně a ordinaci** se štítkem **Čeká**
+   (u pacienta s ordinací je vidět i ordinace).
 
    ![Přijmout bez objednání](img/recepce-bez-objednani.png)
 

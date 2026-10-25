@@ -3,6 +3,7 @@ noupdate, so their groups are set by data/menus.xml (<function>) on every update
 an update of the owning module alone restores its own groups until the next update of this one."""
 from odoo import api, models
 
+RECEPTION = "elite_vet_reservation.group_reservation_reception"
 NURSE = "elite_vet_clinic.group_clinic_nurse"
 DOCTOR = "elite_vet_clinic.group_clinic_doctor"
 MANAGER = "elite_vet_reservation.group_reservation_manager"
@@ -23,9 +24,12 @@ MANAGER_ROOTS = (
 # base_install_request (auto-installed) opens it to every user, and an earlier version of this
 # module gave it to Vedení.
 ADMIN_ROOTS = ("base.menu_management",)
-# Ordinace from the nurse up (ruling R11); its copies of Příjem zboží and Přehled skladu are for
-# the till group (elite_vet_sale), so only Vedení sees them there.
-NURSE_ROOTS = ("elite_vet_clinic.menu_clinic_root",)
+# Ordinace (ruling R11, task 15): the app is open to Recepce and up for its first item, the screen
+# Ordinace (rooms); every other item is for the nurse and up. Its copies of Příjem zboží and
+# Přehled skladu are for Vedení only (the till group has them in the stock app).
+CLINIC_ROOT = "elite_vet_clinic.menu_clinic_root"
+ROOM_MENU = "elite_vet_reception.menu_room_board"
+CLINIC_MANAGER_ITEMS = ("elite_vet_sale.menu_stock_overview_clinic", "elite_vet_sale.menu_goods_receipt_clinic")
 TILL_ROOTS = ("point_of_sale.menu_point_root",)
 STOCK_ROOT = "stock.menu_stock_root"
 # The two stock items of the till group (Příjem zboží is moved up from Operations); the root and
@@ -44,8 +48,7 @@ class IrUiMenu(models.Model):
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), manager)
         for xmlid in ADMIN_ROOTS:
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), self.env.ref("base.group_system"))
-        for xmlid in NURSE_ROOTS:
-            self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), self.env.ref(NURSE))
+        self._elite_vet_apply_clinic_menus()
         for xmlid in TILL_ROOTS:
             self._elite_vet_set_groups(self.env.ref(xmlid, raise_if_not_found=False), till)
 
@@ -71,6 +74,28 @@ class IrUiMenu(models.Model):
         for menu in Menu.search([("parent_id", "=", stock_root.id), ("id", "not in", kept.ids)]):
             if not menu.groups_id or menu.groups_id & role_groups:
                 self._elite_vet_set_groups(menu, manager)
+
+    @api.model
+    def _elite_vet_apply_clinic_menus(self):
+        root = self.env.ref(CLINIC_ROOT, raise_if_not_found=False)
+        if not root:
+            return
+        reception, nurse, manager = self.env.ref(RECEPTION), self.env.ref(NURSE), self.env.ref(MANAGER)
+        self._elite_vet_set_groups(root, reception)
+        room_menu = self.env.ref(ROOM_MENU, raise_if_not_found=False)
+        self._elite_vet_set_groups(room_menu, reception)
+        manager_items = self.browse()
+        for xmlid in CLINIC_MANAGER_ITEMS:
+            manager_items |= self.env.ref(xmlid, raise_if_not_found=False) or self.browse()
+        for menu in manager_items:
+            self._elite_vet_set_groups(menu, manager)
+        # Items open to everybody or to groups Recepce has become nurse items; items limited to
+        # other groups (Vedení, ...) keep them.
+        open_groups = reception | reception.trans_implied_ids
+        Menu = self.with_context(**{"ir.ui.menu.full_list": True, "active_test": False})
+        for menu in Menu.search([("parent_id", "=", root.id), ("id", "not in", (room_menu | manager_items).ids)]):
+            if not menu.groups_id or menu.groups_id & open_groups:
+                self._elite_vet_set_groups(menu, nurse)
 
     @api.model
     def _elite_vet_set_groups(self, menu, groups):

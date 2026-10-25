@@ -10,4 +10,30 @@
         <field name="state">code</field>
         <field name="code">action = model.action_elite_vet_set_home_actions()</field>
     </record>
+
+    <!-- User form › Access rights: the room of a room account (task 15). -->
+    <record id="view_users_form_elite_vet_room" model="ir.ui.view">
+        <field name="name">res.users.form.elite.vet.room</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="Elite Vet" name="elite_vet">
+                    <field name="elite_vet_room_id" options="{'no_create': True}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Visit record form: the room of the visit (task 15). -->
+    <record id="view_clinical_record_form_room" model="ir.ui.view">
+        <field name="name">elite.vet.clinical.record.form.room</field>
+        <field name="model">elite.vet.clinical.record</field>
+        <field name="inherit_id" ref="elite_vet_clinic.view_clinical_record_form"/>
+        <field name="arch" type="xml">
+            <field name="doctor_id" position="after">
+                <field name="room_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
 </odoo>

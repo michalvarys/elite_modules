@@ -162,16 +162,20 @@ class TestRoles(ReceptionCase):
         self.assertFalse(set(others.ids) & visible, others.filtered(lambda m: m.id in visible).mapped("name"))
         for xmlid in ("sale.sale_menu_root", "account.menu_finance",
                       "elite_vet_winvet.menu_winvet_root", "hr.menu_hr_root",
-                      "elite_vet_calendar.menu_rozpis_root", "elite_vet_clinic.menu_clinic_root"):
+                      "elite_vet_calendar.menu_rozpis_root"):
             with self.subTest(menu=xmlid):
                 self.assertNotIn(self.env.ref(xmlid).id, visible)
+        # Task 15: the Ordinace app with only its first item, the screen Ordinace
+        self.assertIn(self.env.ref("elite_vet_clinic.menu_clinic_root").id, visible)
         # Items of a hidden app are not loaded in the web client (the menu tree starts at the
         # visible roots; _visible_menu_ids alone does not check the parents).
         loaded = self.env["ir.ui.menu"].with_user(self.reception).load_menus(False)
         for xmlid in ("elite_vet_sale.menu_stock_overview_clinic", "elite_vet_sale.menu_goods_receipt_clinic",
-                      "elite_vet_clinic.menu_patient_card"):
+                      "elite_vet_clinic.menu_patient_card", "elite_vet_clinic.menu_clinical_record",
+                      "elite_vet_clinic.menu_pet_alert", "elite_vet_clinic.menu_clinic_config"):
             with self.subTest(loaded=xmlid):
                 self.assertNotIn(self.env.ref(xmlid).id, loaded)
+        self.assertIn(self.env.ref("elite_vet_reception.menu_room_board").id, loaded)
         self.assertIn(self.env.ref("elite_vet_reservation.menu_reservation_board").id, loaded)
 
     def test_only_management_sees_website_dashboards_apps(self):

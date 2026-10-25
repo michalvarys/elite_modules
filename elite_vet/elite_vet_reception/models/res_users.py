@@ -4,8 +4,12 @@ one of the role actions – a custom home action is never overwritten.
 
 Till and stock (task 14): when the highest role changes to Recepce, the user gets
 elite_vet_sale.group_till_stock; when it changes to Sestra or Lékařka, the till, sale and stock
-groups are removed. Only on a role change: a manual tick or untick afterwards stays."""
-from odoo import _, api, models
+groups are removed. Only on a role change: a manual tick or untick afterwards stays.
+
+Room accounts (task 15): one account per consultation room ("Ordinace 1", …) with the field
+Ordinace (elite_vet_room_id). Its home is the screen Ordinace on that room, instead of the
+doctor/nurse home (Vedení keeps its own)."""
+from odoo import _, api, fields, models
 from odoo.exceptions import AccessError
 
 from odoo.addons.elite_vet_sale.models.res_users import CLINIC_ROLES
@@ -18,12 +22,20 @@ ROLE_HOME_ACTIONS = (
     ("elite_vet_reservation.group_reservation_reception", "elite_vet_reception.action_open_reception_pos"),
 )
 MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
+RECEPTION_GROUP = "elite_vet_reservation.group_reservation_reception"
+ROOM_HOME_ACTION = "elite_vet_reception.action_room_board"
 GROUP_KEYS = ("groups_id",)
+HOME_KEYS = GROUP_KEYS + ("elite_vet_room_id",)
 REIFIED_GROUP_PREFIXES = ("in_group_", "sel_groups_")
 
 
 class ResUsers(models.Model):
     _inherit = "res.users"
+
+    elite_vet_room_id = fields.Many2one(
+        "elite.vet.room", string="Ordinace", ondelete="set null",
+        help="Účet ordinace (jeden účet na ordinaci): po přihlášení se otevře obrazovka Ordinace na této "
+             "ordinaci. Roli dejte Lékařka (nebo Sestra).")
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -36,8 +48,9 @@ class ResUsers(models.Model):
         groups_change = any(key in GROUP_KEYS or key.startswith(REIFIED_GROUP_PREFIXES) for key in vals)
         roles_before = {user.id: user._elite_vet_role() for user in self} if groups_change else {}
         res = super().write(vals)
-        if groups_change:
+        if groups_change or any(key in HOME_KEYS for key in vals):
             self._elite_vet_apply_home_action()
+        if groups_change:
             self._elite_vet_apply_role_till(roles_before)
         return res
 
@@ -56,8 +69,13 @@ class ResUsers(models.Model):
                 user._elite_vet_drop_till_rights()
 
     def _elite_vet_home_action(self):
-        """The role home action of the user (ir.actions record), empty without a role."""
+        """The role home action of the user (ir.actions record), empty without a role. A room
+        account below Vedení gets the screen Ordinace."""
         self.ensure_one()
+        if self.elite_vet_room_id and self.has_group(RECEPTION_GROUP) and not self.has_group(MANAGER_GROUP):
+            action = self.env.ref(ROOM_HOME_ACTION, raise_if_not_found=False)
+            if action:
+                return action.sudo()
         for group, xmlid in ROLE_HOME_ACTIONS:
             if self.has_group(group):
                 action = self.env.ref(xmlid, raise_if_not_found=False)
@@ -68,7 +86,7 @@ class ResUsers(models.Model):
     @api.model
     def _elite_vet_role_action_ids(self):
         ids = set()
-        for _group, xmlid in ROLE_HOME_ACTIONS:
+        for xmlid in [xmlid for _group, xmlid in ROLE_HOME_ACTIONS] + [ROOM_HOME_ACTION]:
             action = self.env.ref(xmlid, raise_if_not_found=False)
             if action:
                 ids.add(action.id)

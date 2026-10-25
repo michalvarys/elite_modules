@@ -202,3 +202,47 @@ WHERE u.share IS NOT TRUE
 Uživateli předej: sestra, která má přijímat zboží, potřebuje v Nastavení › Uživatelé zapnout
 **Pokladna a sklad (recepce)** ručně (až po nastavení role). Na pokladně a v kartě obnovit stránku
 natvrdo (Ctrl+Shift+R).
+
+## Doplnění: ordinace
+
+Pro server, na kterém už běží předchozí doplnění (role bez pokladny). Přibude obrazovka
+**Ordinace › Ordinace** (pacienti dne podle ordinací, Nepřiřazení, Zavolat do ordinace), pole
+**Ordinace** u uživatele (účet ordinace) a ordinace u záznamu návštěvy. Cílový kód:
+`elite_vet_reception` 18.0.1.1.0 (`elite_vet_sale` beze změny verze, mění se jen jeho test).
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_reception --stop-after-init 2>&1 | tee upgrade-ordinace-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-ordinace-*.log      # nesmí nic najít
+```
+
+Při upgradu dostanou všechny záznamy návštěv s rezervací ordinaci z rezervace (nové uložené pole).
+Neobjednaní zůstanou bez ordinace (Nepřiřazení).
+
+**Co se změní uživatelům:**
+- Recepce uvidí aplikaci **Ordinace**, ale jen s položkou Ordinace (obrazovka ordinací). Kartu
+  pacienta ani záznamy návštěv nevidí.
+- Lékařky, sestry a vedení mají Ordinace › Ordinace jako první položku. Klik na aplikaci Ordinace
+  tedy otevře obrazovku ordinací, ne Kartu pacienta. Karta pacienta je v menu hned pod ní.
+  Výchozí obrazovka sestry a lékařky zůstává Karta pacienta.
+- Kopie Přehledu skladu a Příjmu zboží v aplikaci Ordinace vidí jen vedení. Recepce je má ve Skladu.
+- V pokladně: Dnes › Čekárna a ordinace ukazuje ordinaci návštěvy. **+ Bez objednání** má
+  nepovinné pole Ordinace.
+
+**Co nastavit (vedení / správce):**
+1. Pro každou ordinaci založit uživatele (Nastavení › Uživatelé), např. „Ordinace 1“, s e-mailem
+   nebo loginem a heslem. Role **Lékařka**. V záložce Přístupová práva › **Elite Vet** vyplnit
+   pole **Ordinace**. Výchozí obrazovka (Ordinace na této ordinaci) se nastaví sama.
+2. Zkontrolovat **Rozpis lékařů** (Rezervace) na dnešek. Obrazovka podle něj ukazuje, kdo
+   v ordinaci slouží, a podle něj zapisuje lékařku zavolaného pacienta.
+
+Kontrola po upgradu (počet návštěv s rezervací bez ordinace; má vrátit 0, pokud všechny rezervace
+ordinaci mají):
+
+```sql
+SELECT count(*) FROM elite_vet_clinical_record r JOIN elite_vet_reservation v ON v.id = r.reservation_id
+WHERE r.room_id IS NULL AND v.room_id IS NOT NULL;
+```
+
+Na počítačích v ordinacích a na pokladně obnovit stránku natvrdo (Ctrl+Shift+R).

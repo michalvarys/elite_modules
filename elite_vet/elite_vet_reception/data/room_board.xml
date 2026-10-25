@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Screen Ordinace (task 15): the visits of the day by consultation room (OWL client action
+         registered by static/src/room_board). Home of a room account (res.users.elite_vet_room_id).
+         Params: {room_id} opens one room. -->
+    <record id="action_room_board" model="ir.actions.client">
+        <field name="name">Ordinace</field>
+        <field name="tag">elite_vet_reception.room_board</field>
+        <field name="target">current</field>
+    </record>
+    <!-- First item of the Ordinace app; its groups are set by models/ir_ui_menu.py (Recepce and up). -->
+    <menuitem id="menu_room_board" name="Ordinace" parent="elite_vet_clinic.menu_clinic_root" sequence="1"
+              action="action_room_board" groups="elite_vet_reservation.group_reservation_reception"/>
+</odoo>
