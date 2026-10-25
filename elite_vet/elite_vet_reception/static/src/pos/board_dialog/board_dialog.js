@@ -7,7 +7,7 @@
  */
 import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
-import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
@@ -15,7 +15,6 @@ import { BoardEventDialog } from "@elite_vet_reception/pos/board_dialog/board_ev
 import {
     BOOKING_SCREEN,
     CLINIC_TZ,
-    callReception,
     clinicToday,
     dayLabel,
     errorMessage,
@@ -505,52 +504,64 @@ export class BoardDialog extends Component {
         if (!event || (event.start === minute && (event.room_id || false) === room.id)) {
             return;
         }
-        this.dialog.add(ConfirmationDialog, {
+        this.askMove(event, minute, room);
+    }
+
+    /** Task 25: "Přesunout Rex (Novák) z čt 29. 10. 9:00–9:20, Ordinace 1 na …?" with the date, time
+     *  and room still editable (and the e-mail checkbox); the server message stays in the dialog. */
+    askMove(event, minute, room) {
+        const day = this.state.day;
+        const rooms = (this.state.data.rooms || []).map((r) => ({ id: r.id, name: r.name }));
+        const oldRoom = rooms.find((r) => r.id === event.room_id)?.name || "";
+        const who = [event.pet, event.owner ? `(${event.owner})` : ""].filter(Boolean).join(" ") || event.name;
+        this.dialog.add(MoveConfirmDialog, {
             title: "Přesunout rezervaci?",
-            body: this.moveQuestion(event, minute, room),
             confirmLabel: "Přesunout",
-            cancelLabel: "Zrušit",
-            confirm: () => this.move(drag.id, minute, room),
-            cancel: () => {},
+            verb: "Přesunout",
+            who,
+            from: `${shortDayLabel(day)} ${event.time_label}${oldRoom ? ", " + oldRoom : ""}`,
+            date: day,
+            minute,
+            roomId: room.id,
+            rooms,
+            duration: event.end - event.start,
+            step: this.state.data.step,
+            mailTo: event.mail_on_move || false,
+            mailOnTimeChange: true,
+            origDate: day,
+            origMinute: event.start,
+            origRoomId: event.room_id || false,
+            mailText: `Klient dostane e-mail o změně termínu (${event.mail_on_move || ""}).`,
+            mailLabel: "Poslat klientovi e-mail o změně",
+            onConfirm: (values) => this.move(event.id, values),
         });
     }
 
-    /** "Přesunout Rex (Novák) z čt 29. 10. 9:00–9:20, Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?" */
-    moveQuestion(event, minute, room) {
-        const day = dayLabel(this.state.day).replace(/ \d{4}$/, "");
-        const oldRoom = (this.state.data.rooms || []).find((r) => r.id === event.room_id)?.name || "";
-        const end = minute + (event.end - event.start);
-        const who = [event.pet, event.owner ? `(${event.owner})` : ""].filter(Boolean).join(" ") || event.name;
-        let text =
-            `Přesunout ${who}\nz ${day} ${event.time_label}${oldRoom ? ", " + oldRoom : ""}` +
-            `\nna ${day} ${hhmm(minute)}–${hhmm(end)}, ${room.name}?`;
-        if (event.mail_on_move && minute !== event.start) {
-            text += `\n\nKlient dostane e-mail o změně termínu (${event.mail_on_move}).`;
-        }
-        return text;
-    }
-
-    async move(reservationId, minute, room) {
-        if (this.state.moving) {
-            return;
-        }
+    /** move_reservation -> success toast; an error is thrown back to the dialog (stays open). */
+    async move(reservationId, { date, minute, roomId, notify }) {
         this.state.moving = true;
+        let result;
         try {
-            const result = await callReception(this.orm, this.notification, "move_reservation", [
+            result = await this.orm.call("elite.vet.reception", "move_reservation", [
                 reservationId,
-                this.state.day,
+                date,
                 minute,
-                room.id,
+                roomId,
+                notify,
             ]);
-            if (result) {
-                this.notification.add(
-                    `Přesunuto: ${result.pet_name || result.owner || "rezervace"} – ${result.time}, ${result.room}.`,
-                    { type: "success" }
-                );
-            }
         } finally {
             this.state.moving = false;
         }
-        await this.load();
+        if (result) {
+            this.notification.add(
+                `Přesunuto: ${result.pet_name || result.owner || "rezervace"} – ${result.date_label || ""} ${result.time}, ${result.room}.`,
+                { type: "success" }
+            );
+        }
+        if (date !== this.state.day) {
+            this.goTo(date);
+        } else {
+            await this.load();
+        }
     }
 }

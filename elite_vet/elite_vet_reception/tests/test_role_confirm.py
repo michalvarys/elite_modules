@@ -62,7 +62,7 @@ class TestRoleConfirm(ReceptionCase):
 
     def confirmed(self, hour, minute=0):
         start = self.local_utc(hour, minute)
-        return self.env["elite.vet.reservation"].create({
+        return self.env["elite.vet.reservation"].with_context(ev_no_mail=True).create({
             "kind": "reservation", "state": "confirmed", "room_id": self.room.id, "procedure_id": self.proc.id,
             "doctor_id": self.doctor.id, "start": start, "stop": start + timedelta(minutes=20),
             "contact_name": "Klient T31", "contact_email": "klient.t31@example.invalid"})
@@ -141,6 +141,36 @@ class TestRoleConfirm(ReceptionCase):
                 self.api(user).move_reservation(res.id, self.day.isoformat(), hour * 60 + 60, self.room_b.id)
                 self.assertEqual((res.start, res.room_id), (self.local_utc(hour + 1), self.room_b))
                 self.assertEqual(res.doctor_id, self.second_doctor)
+
+    def test_till_move_with_and_without_e_mail(self):
+        """Task 25: the till's move dialog may change the date and keep the client uninformed."""
+        Mail = self.env["mail.mail"]
+        res = self.confirmed(9)
+        api = self.api(self.reception)
+        api.move_reservation(res.id, self.day.isoformat(), 9 * 60 + 30, self.room.id, False)
+        self.assertEqual(res.start, self.local_utc(9, 30))
+        self.assertFalse(Mail.search_count([("model", "=", "elite.vet.reservation"), ("res_id", "=", res.id)]))
+        self.assertTrue(res.message_ids.filtered(lambda m: "Klient nebyl o změně informován." in (m.body or "")))
+        api.move_reservation(res.id, self.day.isoformat(), 10 * 60, self.room.id, True)
+        self.assertEqual(Mail.search_count([("model", "=", "elite.vet.reservation"), ("res_id", "=", res.id),
+                                            ("state", "=", "outgoing")]), 1)
+
+    def test_silent_change_by_a_user_without_e_mail(self):
+        """The chatter note of a silent move / confirmation does not need the user's e-mail (a member
+        account may have none); found in the ev_test check."""
+        no_mail = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "MVDr. T31 Bez e-mailu", "login": "t31_doctor_no_email",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id, self.env.ref(DOCTOR).id])]})
+        self.assertFalse(no_mail.email)
+        Res = self.env["elite.vet.reservation"].with_user(no_mail)
+        res = self.confirmed(9)
+        Res.board_move(res.id, self.day.isoformat(), 9 * 60 + 30, self.room.id, False)
+        self.assertEqual(res.start, self.local_utc(9, 30))
+        req = self.web_request(12)
+        Res.board_confirm(req.id, self.day.isoformat(), 12 * 60, self.room.id, None, False)
+        self.assertEqual(req.state, "confirmed")
+        for rec, text in ((res, "Klient nebyl o změně informován."), (req, "Klient nebyl o potvrzení informován.")):
+            self.assertTrue(rec.message_ids.filtered(lambda m: text in (m.body or "")))
 
     def test_every_role_cancels_in_the_till(self):
         for hour, (role, user) in zip((9, 11, 13, 15), self.roles.items()):

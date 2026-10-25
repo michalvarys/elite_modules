@@ -32,6 +32,8 @@ Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných k
             "elite_vet_reception/static/src/room_board/*",
         ],
         "point_of_sale._assets_pos": [
+            # task 25: the move dialog of the boards (date, time, room, e-mail checkbox)
+            "elite_vet_reservation/static/src/move_dialog/*",
             "elite_vet_reception/static/src/pos/**/*",
         ],
     },

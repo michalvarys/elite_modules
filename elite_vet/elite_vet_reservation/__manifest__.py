@@ -45,6 +45,7 @@ bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
     "assets": {
         "web.assets_backend": [
             "elite_vet_reservation/static/src/board/**/*",
+            "elite_vet_reservation/static/src/move_dialog/*",
             "elite_vet_reservation/static/src/sound/sound.js",
         ],
         "web.assets_frontend": [

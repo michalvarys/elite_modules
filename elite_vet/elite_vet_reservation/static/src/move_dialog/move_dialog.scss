@@ -1,0 +1,44 @@
+// Task 25: move / confirm dialog of the boards (backend and till).
+.o_ev_move_dialog {
+    .o_ev_move_fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 12px;
+        margin-bottom: 14px;
+    }
+    .o_ev_move_field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 130px;
+        min-width: 0;
+        font-weight: 600;
+        font-size: 0.85rem;
+        span { color: #475569; }
+    }
+    .o_ev_move_field_room { flex-basis: 180px; }
+    .o_ev_move_question {
+        white-space: pre-line;
+        margin-bottom: 10px;
+    }
+    .o_ev_move_mail {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+    }
+    .o_ev_move_mail_check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        input { margin: 0; }
+    }
+    .o_ev_move_mail_off {
+        margin-top: 4px;
+        color: #b45309;
+        font-size: 0.85rem;
+    }
+}

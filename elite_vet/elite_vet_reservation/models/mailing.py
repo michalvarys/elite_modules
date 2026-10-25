@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytz
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.tools import formataddr
 
 SENDER_NAME = "Elite Vet Karlovy Vary"
@@ -77,6 +77,10 @@ class VetReservationMailing(models.Model):
     def action_confirm(self):
         res = super().action_confirm()
         self.filtered(lambda r: r.kind == "reservation" and not self.env.context.get("ev_no_mail"))._send_template("mail_confirmed")
+        if self.env.context.get("ev_no_confirm_mail_note"):
+            # Task 25: "Poslat klientovi potvrzení" unticked in the board's confirm dialog.
+            for rec in self.filtered(lambda r: r.kind == "reservation" and not r.is_second_room and r.contact_email):
+                rec._message_log(body=_("Klient nebyl o potvrzení informován."))
         return res
 
     def action_cancel(self, reason="clinic"):
@@ -109,7 +113,13 @@ class VetReservationMailing(models.Model):
         moved = self.filtered(lambda r: r.id in before and r.state == "confirmed" and before[r.id] != r.start)
         if moved:
             moved.with_context(ev_skip_mail=True).write({"reminder_sent": False})
-            moved._send_template("mail_rescheduled")
+            if self.env.context.get("ev_no_reschedule_mail"):
+                # Task 25: the move dialog's "Poslat klientovi e-mail o změně" unticked - this one move
+                # is silent; the chatter says so (the second-room copy tells through its main).
+                for rec in moved.filtered(lambda r: not r.is_second_room and r.contact_email):
+                    rec._message_log(body=_("Klient nebyl o změně informován."))
+            else:
+                moved._send_template("mail_rescheduled")
         return res
 
     @api.model

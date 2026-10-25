@@ -625,10 +625,14 @@ class VetReservation(models.Model):
         return False if doctor else None
 
     @api.model
-    def board_move(self, res_id, day_str, minute, room_id):
+    def board_move(self, res_id, day_str, minute, room_id, notify=True):
         """Move on the board. A reservation only where a doctor who does the procedure is on duty
-        (if the current doctor has no shift at the new place, she is replaced); a block anywhere."""
+        (if the current doctor has no shift at the new place, she is replaced); a block anywhere.
+        notify=False (task 25, the dialog's e-mail checkbox unticked): no e-mail about the new time,
+        a chatter note instead."""
         rec = self.browse(res_id)
+        if not notify:
+            rec = rec.with_context(ev_no_reschedule_mail=True)
         doctor_id = rec._board_doctor_check(day_str, minute, room_id or rec.room_id.id,
                                             doctor=rec.doctor_id, strict=False)
         rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id or None,
@@ -645,11 +649,14 @@ class VetReservation(models.Model):
         return main.contact_email or False
 
     @api.model
-    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None):
+    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None, notify=True):
         """doctor_id=None keeps the doctor; a number sets it (suggestion from the Waiting panel).
         Checks that a doctor who does the procedure (or the one the client chose) is on
-        duty at that time and room; if only one is on duty, she is set."""
+        duty at that time and room; if only one is on duty, she is set.
+        notify=False (task 25): no confirmation e-mail, a chatter note instead."""
         rec = self.browse(res_id)
+        if not notify:
+            rec = rec.with_context(ev_no_mail=True, ev_no_confirm_mail_note=True)
         doctor = self.env["elite.vet.doctor"].browse(doctor_id) if doctor_id else rec.doctor_id
         found = rec._board_doctor_check(day_str, minute, room_id, doctor=doctor)
         if doctor_id:

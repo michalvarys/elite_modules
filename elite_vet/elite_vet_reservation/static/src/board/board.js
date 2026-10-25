@@ -1,7 +1,7 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
 import { setSoundOn, playChime, isSoundOn } from "@elite_vet_reservation/sound/sound";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
@@ -10,7 +10,6 @@ const BAND_W = 16;        // width of the doctor shift band on the left of a col
 const BAND_GAP = 2;
 
 function pad(n) { return String(n).padStart(2, "0"); }
-function timeLabel(min) { return Math.floor(min / 60) + ":" + pad(min % 60); }   // "9:05", as the server
 function hhmm(min) { return pad(Math.floor(min / 60)) + ":" + pad(min % 60); }
 function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
 // Noon, so shifting by days never skips a day across a DST change.
@@ -356,8 +355,7 @@ export class ReservationBoard extends Component {
             // Task 19: confirming a web request (and the e-mail to the client) also asks first.
             const w = this.state.data.waiting.find((x) => x.id === drag.id);
             if (!w) return;
-            this.askConfirmRequest(w, this.state.date, min, room.name,
-                () => this.dropCall("board_confirm", [drag.id, this.state.date, min, room.id]));
+            this.askConfirmRequest(w, this.state.date, min, room.id, null);
             return;
         }
         // Request 25. 10.: a move happens only after the user confirms it (an accidental drop
@@ -365,86 +363,86 @@ export class ReservationBoard extends Component {
         const event = this.state.data.events.find((e) => e.id === drag.id);
         if (!event) return;
         if (event.start === min && (event.room_id || false) === room.id) return;
-        this.dialog.add(ConfirmationDialog, {
-            title: "Přesunout?",
-            body: this.moveQuestion(event, min, room),
-            confirmLabel: "Přesunout",
-            cancelLabel: "Zrušit",
-            confirm: () => this.dropCall("board_move", [drag.id, this.state.date, min, room.id]),
-            cancel: () => {},
-        });
+        this.askMove(event, min, room);
     }
-    /** "Přesunout Rex (Novák) z čt 29. 10. 9:00–9:20, Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?" */
-    moveQuestion(event, min, room) {
-        const d = parseIso(this.state.date);
-        const day = WEEKDAY_ABBR[weekdayIndex(d)] + " " + d.getDate() + ". " + (d.getMonth() + 1) + ".";
+    get roomChoices() {
+        return (this.state.data?.rooms || []).map((r) => ({ id: r.id, name: r.name }));
+    }
+    /** Task 25: "Přesunout Rex (Novák) z čt 29. 10. 9:00–9:20, Ordinace 1 na …?" with the date,
+     *  time and room still editable; the server message stays in the dialog. */
+    askMove(event, min, room) {
+        const day = this.state.date;
         const oldRoom = event.room_id
             ? (this.state.data.rooms.find((r) => r.id === event.room_id)?.name || "")
             : "všechny ordinace";
-        const end = min + (event.end - event.start);
-        let who;
-        if (event.kind === "block") {
-            who = "blokaci „" + event.name + "“";
-        } else {
-            who = [event.pet, event.owner ? "(" + event.owner + ")" : ""].filter(Boolean).join(" ") || event.name;
-        }
-        let text = "Přesunout " + who + "\nz " + day + " " + event.time_label + ", " + oldRoom +
-            "\nna " + day + " " + timeLabel(min) + "–" + timeLabel(end) + ", " + room.name + "?";
-        if (event.mail_on_move && min !== event.start) {
-            text += "\n\nKlient dostane e-mail o změně termínu (" + event.mail_on_move + ").";
-        }
-        return text;
-    }
-    /** "Potvrdit žádost Rex (Novák) na čt 29. 10. 10:00–10:20, Ordinace 2?" (+ the e-mail line
-     *  when the request has an e-mail: board_confirm → action_confirm sends the confirmation). */
-    confirmQuestion(w, dateIso, min, roomName) {
-        const d = parseIso(dateIso);
-        const day = WEEKDAY_ABBR[weekdayIndex(d)] + " " + d.getDate() + ". " + (d.getMonth() + 1) + ".";
-        const who = [w.pet, w.owner ? "(" + w.owner + ")" : ""].filter(Boolean).join(" ") || w.name;
-        let text = "Potvrdit žádost " + who + "\nna " + day + " " + timeLabel(min) + "–" +
-            timeLabel(min + (w.duration || 0)) + ", " + roomName + "?";
-        if (w.email) {
-            text += "\n\nKlient dostane potvrzovací e-mail (" + w.email + ").";
-        }
-        return text;
-    }
-    askConfirmRequest(w, dateIso, min, roomName, confirm) {
-        this.dialog.add(ConfirmationDialog, {
-            title: "Potvrdit žádost?",
-            body: this.confirmQuestion(w, dateIso, min, roomName),
-            confirmLabel: "Potvrdit",
-            cancelLabel: "Zrušit",
-            confirm,
-            cancel: () => {},
+        const who = event.kind === "block"
+            ? "blokaci „" + event.name + "“"
+            : ([event.pet, event.owner ? "(" + event.owner + ")" : ""].filter(Boolean).join(" ") || event.name);
+        this.dialog.add(MoveConfirmDialog, {
+            title: "Přesunout?",
+            confirmLabel: "Přesunout",
+            verb: "Přesunout",
+            who,
+            from: shortDayLabel(day) + " " + event.time_label + ", " + oldRoom,
+            date: day,
+            minute: min,
+            roomId: room.id,
+            rooms: this.roomChoices,
+            duration: event.end - event.start,
+            step: this.state.data.step,
+            mailTo: event.mail_on_move || false,
+            mailOnTimeChange: true,
+            origDate: day,
+            origMinute: event.start,
+            origRoomId: event.room_id || false,
+            mailText: "Klient dostane e-mail o změně termínu (" + (event.mail_on_move || "") + ").",
+            mailLabel: "Poslat klientovi e-mail o změně",
+            onConfirm: async ({ date, minute, roomId, notify }) => {
+                await this.orm.call("elite.vet.reservation", "board_move", [event.id, date, minute, roomId, notify]);
+                await this.afterChange(date);
+            },
         });
     }
-    async dropCall(method, args) {
-        try {
-            await this.orm.call("elite.vet.reservation", method, args);
-        } catch (e) {
-            // The server reports an occupied slot as an error; the card stays where it was.
-            this.notification.add(e.data?.message || e.message, { type: "danger" });
+    /** Task 19 + 25: "Potvrdit žádost Rex (Novák) na čt 29. 10. 10:00–10:20, Ordinace 2?" with the
+     *  date, time and room editable (+ the confirmation e-mail checkbox when it has an e-mail).
+     *  `doctorId` (a suggestion) is kept only while its room stays chosen. */
+    askConfirmRequest(w, dateIso, min, roomId, doctorId) {
+        this.dialog.add(MoveConfirmDialog, {
+            title: "Potvrdit žádost?",
+            confirmLabel: "Potvrdit",
+            verb: "Potvrdit žádost",
+            who: [w.pet, w.owner ? "(" + w.owner + ")" : ""].filter(Boolean).join(" ") || w.name,
+            date: dateIso,
+            minute: min,
+            roomId,
+            rooms: this.roomChoices,
+            duration: w.duration || 0,
+            step: this.state.data.step,
+            mailTo: w.email || false,
+            mailText: "Klient dostane potvrzovací e-mail (" + (w.email || "") + ").",
+            mailLabel: "Poslat klientovi potvrzení",
+            onConfirm: async ({ date, minute, roomId: chosen, notify }) => {
+                const doctor = doctorId && chosen === roomId ? doctorId : null;
+                await this.orm.call("elite.vet.reservation", "board_confirm",
+                    [w.id, date, minute, chosen, doctor, notify]);
+                const room = this.roomChoices.find((r) => r.id === chosen)?.name || "";
+                this.notification.add("Potvrzeno: " + shortDayLabel(date) + " · " + room, { type: "success" });
+                await this.afterChange(date);
+            },
+        });
+    }
+    /** After a move / confirmation to another day the board follows it. */
+    async afterChange(date) {
+        if (date !== this.state.date) {
+            this.goTo(date);
+        } else {
+            await this.load(true);
         }
-        await this.load(true);
     }
     confirmSuggestion(w, sug) {
         if (this.state.busy) return;
         this.leaveWaiting();
-        this.askConfirmRequest(w, w.date, w.minute, sug.room, () => this.doConfirmSuggestion(w, sug));
-    }
-    async doConfirmSuggestion(w, sug) {
-        if (this.state.busy) return;
-        this.state.busy = true;
-        try {
-            await this.orm.call("elite.vet.reservation", "board_confirm",
-                [w.id, w.date, w.minute, sug.room_id, sug.doctor_id || null]);
-            this.notification.add("Potvrzeno: " + w.date_label + " · " + sug.room, { type: "success" });
-        } catch (e) {
-            this.notification.add(e.data?.message || e.message, { type: "danger" });
-        } finally {
-            this.state.busy = false;
-        }
-        await this.load(true);
+        this.askConfirmRequest(w, w.date, w.minute, sug.room_id, sug.doctor_id || null);
     }
     // The new-request sound is played by the ../sound service (Odoo-wide); this is just the toggle.
     toggleSound() {

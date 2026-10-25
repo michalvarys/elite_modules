@@ -1865,3 +1865,15 @@ msgstr "Записаться онлайн можно на нашей стран�
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
 msgid "<span class=\"rs-cta-text\">Book online</span>"
 msgstr "<span class=\"rs-cta-text\">Записаться онлайн</span>"
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/mailing.py:0
+msgid "Klient nebyl o změně informován."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/mailing.py:0
+msgid "Klient nebyl o potvrzení informován."
+msgstr ""

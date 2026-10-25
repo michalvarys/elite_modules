@@ -72,3 +72,74 @@ class TestMoveConfirm(ReservationCase):
         Res.board_confirm(quiet.id, self.day.isoformat(), 10 * 60, self.room1.id)
         self.assertEqual(quiet.state, "confirmed")
         self.assertEqual(Mail.search_count([]), mails)
+
+    # ---------------------------------------------------------------- task 25: date / time / e-mail choice
+
+    def notes(self, rec, text):
+        return rec.message_ids.filtered(lambda m: text in (m.body or ""))
+
+    def test_move_to_another_day_and_time(self):
+        """The dialog may change the date as well: board_move takes the chosen day."""
+        r = self.reservation(start=self.dt(self.day, 9, 0))
+        other = self.day + timedelta(days=1)
+        self.env["elite.vet.reservation"].board_move(r.id, other.isoformat(), 10 * 60 + 5, self.room2.id)
+        self.assertEqual((r.start, r.room_id), (self.dt(other, 10, 5), self.room2))
+
+    def test_move_without_e_mail(self):
+        Mail = self.env["mail.mail"]
+        Res = self.env["elite.vet.reservation"]
+        quiet = self.reservation(start=self.dt(self.day, 9, 0), contact_email="t31.ticho@example.cz")
+        loud = self.reservation(start=self.dt(self.day, 11, 0), contact_email="t31.nahlas@example.cz")
+        count = lambda email: Mail.search_count([("email_to", "ilike", email)])
+        quiet_before, loud_before = count("t31.ticho@example.cz"), count("t31.nahlas@example.cz")
+        Res.board_move(quiet.id, self.day.isoformat(), 9 * 60 + 30, self.room1.id, False)
+        self.assertEqual(quiet.start, self.dt(self.day, 9, 30))
+        self.assertEqual(count("t31.ticho@example.cz"), quiet_before)
+        self.assertTrue(self.notes(quiet, "Klient nebyl o změně informován."))
+        self.assertFalse(quiet.reminder_sent)
+        Res.board_move(loud.id, self.day.isoformat(), 11 * 60 + 30, self.room1.id, True)
+        self.assertEqual(count("t31.nahlas@example.cz"), loud_before + 1)
+        self.assertTrue(Mail.search([("email_to", "ilike", "t31.nahlas@example.cz")]).filtered(
+            lambda m: m.state == "outgoing"))
+        self.assertFalse(self.notes(loud, "Klient nebyl o změně informován."))
+        # the next move of the quiet one e-mails again (only that one move was silent)
+        Res.board_move(quiet.id, self.day.isoformat(), 10 * 60, self.room1.id)
+        self.assertEqual(count("t31.ticho@example.cz"), quiet_before + 1)
+
+    def test_confirm_without_e_mail(self):
+        Mail = self.env["mail.mail"]
+        Res = self.env["elite.vet.reservation"]
+        quiet = self.reservation(start=self.dt(self.day, 9, 0), state="web_new", source="web", room_id=False,
+                                 contact_email="t31.potvrzeni@example.cz")
+        loud = self.reservation(start=self.dt(self.day, 10, 0), state="web_new", source="web", room_id=False,
+                                contact_email="t31.potvrzeni2@example.cz")
+        # the dialog may also move the time before confirming
+        Res.board_confirm(quiet.id, self.day.isoformat(), 9 * 60 + 15, self.room1.id, None, False)
+        self.assertEqual((quiet.state, quiet.start), ("confirmed", self.dt(self.day, 9, 15)))
+        self.assertFalse(Mail.search_count([("email_to", "ilike", "t31.potvrzeni@example.cz")]))
+        self.assertTrue(self.notes(quiet, "Klient nebyl o potvrzení informován."))
+        Res.board_confirm(loud.id, self.day.isoformat(), 10 * 60, self.room1.id, None, True)
+        self.assertEqual(Mail.search_count([("email_to", "ilike", "t31.potvrzeni2@example.cz"),
+                                            ("state", "=", "outgoing")]), 1)
+        self.assertFalse(self.notes(loud, "Klient nebyl o potvrzení informován."))
+
+    def test_busy_time_keeps_the_reservation(self):
+        """A taken time: the server refuses (the dialog shows it) and nothing changes."""
+        from odoo.exceptions import ValidationError
+        r = self.reservation(start=self.dt(self.day, 9, 0))
+        self.reservation(start=self.dt(self.day, 12, 0), contact_email=False)
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.env["elite.vet.reservation"].board_move(r.id, self.day.isoformat(), 12 * 60, self.room1.id, False)
+        self.assertEqual(r.start, self.dt(self.day, 9, 0))
+
+    def test_board_assets_have_the_move_dialog(self):
+        from odoo.tools import file_open
+        with file_open("elite_vet_reservation/static/src/board/board.js") as f:
+            js = f.read()
+        with file_open("elite_vet_reservation/static/src/move_dialog/move_dialog.xml") as f:
+            xml = f.read()
+        self.assertIn("MoveConfirmDialog", js)
+        for text in ('type="date"', 'type="time"', "o_ev_move_room", "o_ev_move_error", "props.mailLabel"):
+            self.assertIn(text, xml)
+        self.assertIn("Poslat klientovi e-mail o změně", js)
+        self.assertIn("Poslat klientovi potvrzení", js)
