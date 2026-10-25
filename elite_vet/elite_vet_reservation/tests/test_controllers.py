@@ -75,6 +75,16 @@ class TestControllers(HttpCase):
         self.assertEqual(rec.contact_name, "Jana Testová")
         self.assertEqual(rec.duration_minutes, 15)
 
+    def test_submit_is_web_without_creator(self):
+        """Task 24: the website form and the chat widget (same API) book as source web; the public
+        user who creates it is not shown as "Založil(a)"."""
+        res = self.rpc("/rezervace/api/submit", self.good_submit(time="10:15"))
+        self.assertTrue(res["ok"], res)
+        rec = self.env["elite.vet.reservation"].search([("cancel_token", "=", res["token"])])
+        self.assertEqual(rec.source, "web")
+        self.assertTrue(rec.create_uid.share)
+        self.assertFalse(rec.created_by_id)
+
     def test_submit_validation_errors(self):
         res = self.rpc("/rezervace/api/submit", self.good_submit(contact_email="neni-email", problem="", consent=False))
         self.assertFalse(res["ok"])

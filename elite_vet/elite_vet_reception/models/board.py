@@ -72,7 +72,8 @@ class ReceptionBoard(models.AbstractModel):
             "main_id": main.id,
             "state": state,
             "state_label": dict(STATES)[state],
-            "source": reservation.source,
+            # Task 24: WEB / Klinika and who booked it (the copy shows its main reservation)
+            **reservation._board_origin(),
             "date": date_str(day),
             "date_label": "%s %d. %d. %d" % (WEEKDAY_ABBR[day.weekday()], day.day, day.month, day.year),
             "is_today": day == today,

@@ -100,7 +100,13 @@ class VetReservation(models.Model):
     name = fields.Char(compute="_compute_name", store=True)
     kind = fields.Selection([("reservation", "Rezervace"), ("block", "Blokace")], required=True, default="reservation")
     state = fields.Selection(STATES, string="Stav", required=True, default="confirmed", tracking=True, index=True)
-    source = fields.Selection([("web", "Web"), ("internal", "Interně")], string="Zdroj", required=True, default="internal")
+    # Task 24: "Klinika" (was "Interně") - the word of the board legend and the list filters.
+    source = fields.Selection([("web", "Web"), ("internal", "Klinika")], string="Zdroj", required=True,
+                              default="internal")
+    # Who booked it at the clinic: create_uid of internal users only. A web request is created by the
+    # website's public user - shown as nobody, the source Web says where it came from.
+    created_by_id = fields.Many2one("res.users", string="Založil(a)", compute="_compute_created_by_id",
+                                    compute_sudo=True)
     room_id = fields.Many2one("elite.vet.room", string="Ordinace", ondelete="restrict", index=True, tracking=True)
     doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka", ondelete="set null", tracking=True)
     procedure_id = fields.Many2one("elite.vet.procedure", string="Úkon", ondelete="restrict", tracking=True)
@@ -161,6 +167,27 @@ class VetReservation(models.Model):
             parts = [rec.partner_id.name or rec.contact_name or loc.env._("Bez jména"),
                      rec.pet_id.name or rec.pet_name or "", loc.procedure_id.name or ""]
             rec.name = " / ".join(p for p in parts if p)
+
+    @api.depends("create_uid")
+    def _compute_created_by_id(self):
+        for rec in self:
+            user = rec.create_uid
+            rec.created_by_id = user if user and not user.share else False
+
+    def _board_origin(self):
+        """{source, created_by, created_by_initials, created_at} of a reservation for the boards.
+
+        The second-room copy of a two-doctor procedure shows its main reservation (a web booking
+        stays WEB in both rooms). The creator's name is read under sudo (internal users only)."""
+        self.ensure_one()
+        main = self.linked_reservation_id if self.is_second_room and self.linked_reservation_id else self
+        user = main.sudo().created_by_id
+        created_at = ""
+        if main.create_date:
+            local = pytz.utc.localize(main.create_date).astimezone(TZ)
+            created_at = "%d. %d. %d %s" % (local.day, local.month, local.year, local.strftime("%H:%M"))
+        return {"source": main.source, "created_by": user.name or "",
+                "created_by_initials": name_initials(user.name) if user else "", "created_at": created_at}
 
     @api.depends("start", "stop")
     def _compute_duration(self):
@@ -462,7 +489,8 @@ class VetReservation(models.Model):
                 "doctor": r.doctor_id.name or "", "doctor_initials": name_initials(r.doctor_id.name),
                 "doctor_color": doctor_color(r.doctor_id) if r.doctor_id else False,
                 "linked": r._linked_label(),
-                "source": r.source,
+                # Task 24: WEB / Klinika (initials of who booked it) on the card; for blocks only "source".
+                **(r._board_origin() if r.kind == "reservation" else {"source": r.source}),
                 # Request 25. 10.: the drop asks first; it says whether the client gets an e-mail
                 # about the new time (mailing.write: a confirmed reservation with a contact e-mail).
                 "mail_on_move": r._mail_on_move(),

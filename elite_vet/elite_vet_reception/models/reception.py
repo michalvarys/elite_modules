@@ -123,6 +123,8 @@ class Reception(models.AbstractModel):
                 "procedure": res.procedure_id.with_context(lang=lang).name or None,
                 "doctor": res.doctor_id.name or None, "room": res.room_id.name or None,
                 "needs_match": not res.pet_id,
+                # Task 24: WEB badge in Přicházejí
+                "from_web": res.source == "web",
             })
 
         records = Records.search([("date", "=", day), ("state", "!=", "cancelled")])

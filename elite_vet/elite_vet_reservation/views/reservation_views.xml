@@ -12,7 +12,8 @@
                 <field name="doctor_id" optional="show"/>
                 <field name="procedure_id" optional="hide"/>
                 <field name="contact_phone" optional="show"/>
-                <field name="source" optional="hide"/>
+                <field name="source" optional="show" widget="badge" decoration-info="source == 'web'"/>
+                <field name="created_by_id" optional="show" widget="many2one_avatar_user"/>
                 <field name="state" widget="badge"/>
                 <field name="kind" column_invisible="1"/>
             </list>
@@ -65,6 +66,8 @@
                             <field name="stop"/>
                             <field name="repeat_weekly_until" invisible="kind == 'reservation' or id"/>
                             <field name="source" invisible="kind == 'block'" readonly="1"/>
+                            <field name="created_by_id" invisible="kind == 'block' or source == 'web'" readonly="1"
+                                   widget="many2one_avatar_user"/>
                         </group>
                         <group string="Klient" invisible="kind == 'block'">
                             <field name="partner_id"/>
@@ -169,9 +172,13 @@
                 <filter name="blocks" string="Jen blokace" domain="[('kind', '=', 'block')]"/>
                 <filter name="blocks_web" string="Blokace jen pro web" domain="[('kind', '=', 'block'), ('block_scope', '=', 'web')]"/>
                 <filter name="from_today" string="Od dneška" domain="[('stop', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="from_web" string="Z webu" domain="[('source', '=', 'web')]"/>
+                <filter name="from_clinic" string="Z kliniky" domain="[('kind', '=', 'reservation'), ('source', '=', 'internal')]"/>
                 <group expand="0" string="Seskupit podle">
                     <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
                     <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
+                    <filter name="group_source" string="Zdroj" context="{'group_by': 'source'}"/>
                     <filter name="group_day" string="Den" context="{'group_by': 'start:day'}"/>
                 </group>
             </search>

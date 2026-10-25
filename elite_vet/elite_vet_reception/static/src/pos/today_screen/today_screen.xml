@@ -42,6 +42,8 @@
                             <div class="fw-bold"><t t-esc="row.pet_name or 'Bez zvířete'"/>
                                 <span t-if="row.winvet_event_id" class="badge o_ev_winvet_badge ms-1"
                                       title="Objednáno ve WinVetu – záznam je jen pro čtení, přijetí založí návštěvu">WinVet</span>
+                                <span t-elif="row.from_web" class="badge o_ev_web_badge ms-1"
+                                      title="Rezervace z webu – objednal(a) se klient sám">WEB</span>
                             </div>
                             <small class="text-muted">
                                 <t t-esc="row.owner or 'Bez jména'"/>

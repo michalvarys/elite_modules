@@ -17,7 +17,8 @@
                 <field name="procedure_id" optional="show"/>
                 <field name="room_id"/>
                 <field name="doctor_id" optional="show"/>
-                <field name="source" optional="hide"/>
+                <field name="source" optional="show" widget="badge" decoration-info="source == 'web'"/>
+                <field name="created_by_id" optional="show" widget="many2one_avatar_user"/>
                 <field name="state" widget="badge" decoration-danger="state == 'cancelled'"
                        decoration-warning="state == 'no_show'" decoration-success="state == 'done'"
                        decoration-info="state in ('web_new', 'confirmed')"/>
@@ -54,7 +55,9 @@
                 <separator/>
                 <!-- a tracked change of the time or the room in the chatter (models/history.py) -->
                 <filter name="moved" string="Přesunuté" domain="[('was_moved', '=', True)]"/>
+                <separator/>
                 <filter name="from_web" string="Z webu" domain="[('source', '=', 'web')]"/>
+                <filter name="from_clinic" string="Z kliniky" domain="[('source', '=', 'internal')]"/>
                 <separator/>
                 <filter name="today" string="Dnes"
                         domain="[('start', '&gt;=', context_today().strftime('%Y-%m-%d')),
@@ -72,6 +75,7 @@
                     <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
                     <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
                     <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
+                    <filter name="group_source" string="Zdroj" context="{'group_by': 'source'}"/>
                     <filter name="group_cancelled_by" string="Zrušil(a)" context="{'group_by': 'cancelled_by_id'}"/>
                     <filter name="group_day" string="Den" context="{'group_by': 'start:day'}"/>
                 </group>

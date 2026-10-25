@@ -25,3 +25,4 @@ from . import test_history
 from . import test_no_show
 from . import test_web_booking_switch
 from . import test_web_booking_switch_followups
+from . import test_source_visible

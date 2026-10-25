@@ -31,6 +31,23 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 
 ### Co na tabuli vidíte
 
+**Odkud rezervace je (web, nebo klinika).** Pod horní lištou tabule je jeden řádek s legendou
+a přepínačem **Vše | Web | Klinika**:
+
+| Štítek vlevo na kartě | Význam |
+|---|---|
+| Modrý **WEB** + modrý čárkovaný obrys karty | Rezervace z webu (i z chatu na webu) – objednal(a) se klient sám. Obrys je vidět na každé barvě úkonu. |
+| Bílý štítek s iniciálami, např. **JN** | Rezervaci založil(a) někdo z kliniky (průvodce Nová rezervace, pokladna). Po najetí myší: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
+| Šedý **WinVet** | Záznam z kalendáře WinVetu (viz níže). |
+
+Přepínač **Vše | Web | Klinika** ukáže jen rezervace z webu, nebo jen ty z kliniky.
+Záznamy z WinVetu jsou jen ve **Vše** (ani z webu, ani založené v Odoo); blokace jsou vidět
+vždy. Volbu si pamatuje prohlížeč (každý počítač zvlášť). Když filtr něco skrývá, je vedle
+legendy „skryto: N“ – skryté místo je pořád obsazené.
+
+Druhá ordinace u zákroku pro dvě lékařky má štítek podle hlavní rezervace (web zůstane WEB
+v obou sloupcích).
+
 | Co | Význam |
 |---|---|
 | Světle šedé šrafování | Ordinace je zavřená (mimo ordinační dobu nebo výjimka). |
@@ -42,9 +59,9 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | Písmeno vpravo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
 | Druhý řádek | Název úkonu (jen u delších karet). |
-| 🌐 | Rezervace přišla z webu. |
+| **WEB** / iniciály vlevo | Odkud rezervace je – viz legenda výše. Hned za nimi jsou iniciály lékařky. |
 | 🔗 | Společný zákrok dvou lékařek – rezervace je i v jiné ordinaci (najeďte myší, ukáže se kde). |
-| Zkratka vlevo (např. **GC**) | Iniciály lékařky – vlevo u jejího barevného proužku. Po najetí myší uvidíte celé jméno. |
+| Zkratka na průsvitném podkladu (např. **GC**) | Iniciály lékařky – vlevo u jejího barevného proužku, za štítkem WEB / iniciálami toho, kdo rezervaci založil. Po najetí myší uvidíte celé jméno. |
 | Bledší karta | Proběhla nebo Nedorazil. |
 | Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 8:15–14:00“, v barvě lékařky. |
 | Žlutý štítek „2 lékařky 10:00–14:00“ | V tomto čase slouží v ordinaci dvě lékařky současně. |
@@ -59,7 +76,8 @@ Zrušené rezervace se na tabuli neukazují. Kalendář z WinVetu vypíná veden
 Kalendář z WinVetu → Zapnout / vypnout); pak karty WinVet zmizí a nic neblokují.
 
 Najedete-li myší na kartu, zobrazí se podrobnosti: úkon, lékařka, telefon, e-mail
-a popis problému. Kliknutím na kartu otevřete celou rezervaci.
+a popis problému a kdo a kdy rezervaci založil (nebo „Z webu“). Kliknutím na kartu
+otevřete celou rezervaci.
 
 ### Dvě lékařky v jedné ordinaci
 
@@ -347,12 +365,14 @@ Menu **Rezervace › Historie rezervací** (jen pro správce rezervací) ukazuje
 i zrušené, „nedorazil“ a proběhlé – od nejnovější. Na začátku je zapnutý filtr **Tento měsíc**.
 
 - **Filtry:** Zrušené, Nedorazil, Proběhlé, Platné (čekající, potvrzené), **Přesunuté** (změnil se
-  čas nebo ordinace), Z webu; **Dnes**, **Tento týden**, **Tento měsíc**, Datum rezervace, Datum
+  čas nebo ordinace), **Z webu**, **Z kliniky**; **Dnes**, **Tento týden**, **Tento měsíc**, Datum rezervace, Datum
   zrušení. Do hledání napište klienta, mazlíčka, telefon, e-mail, ordinaci, lékařku nebo úkon.
-- **Seskupit podle:** Klient (kolikrát a jak), Ordinace, Lékařka, Stav, Zrušil(a), Den.
+- **Seskupit podle:** Klient (kolikrát a jak), Ordinace, Lékařka, Stav, **Zdroj**, Zrušil(a), Den.
+- Sloupce **Zdroj** (Web / Klinika) a **Založil(a)** jsou vidět hned (u rezervací z webu je
+  Založil(a) prázdné).
 - Sloupce **Důvod zrušení**, **Zrušil(a)** a **Zrušeno** (kdy). U zrušení klientem odkazem
   z e-mailu je jako „Zrušil(a)“ veřejný uživatel webu a důvod „Klient“. Další sloupce
-  (Naposledy změnil(a), Změněno, Založeno, mazlíček, zdroj) zapnete vpravo v hlavičce seznamu.
+  (Naposledy změnil(a), Změněno, Založeno, mazlíček) zapnete vpravo v hlavičce seznamu.
 - Kliknutím otevřete rezervaci; dole je **historie změn**: kdo a kdy změnil stav, čas, ordinaci,
   lékařku, úkon, klienta, mazlíčka nebo důvod zrušení.
 

@@ -64,7 +64,8 @@ Pokladna se otevře na záložce **Dnes**. Nahoře je lišta:
 Tři sloupce:
 
 - **Přicházejí** – dnešní potvrzené rezervace, které ještě nepřišly, podle času: čas, zvíře,
-  majitel, úkon, lékařka.
+  majitel, úkon, lékařka. Rezervace z webu (i z chatu na webu) mají u zvířete modrý štítek
+  **WEB**.
 - **Čekárna a ordinace** – přijatí klienti: ordinace, lékařka (u neobjednaných případně
   „kterákoli lékařka“), jak dlouho čekají, a štítek **Čeká** nebo **V ordinaci**.
 - **K pokladně** – účty, které lékařka uzavřela a které čekají na zaplacení, s částkou.
@@ -355,7 +356,21 @@ nepřepíná do jiné stránky.
   je teď. Šrafované je mimo ordinační dobu, šedé šrafované pruhy jsou blokace („jen web“ jsou
   světlé – recepce tam objednat smí).
 - Svislý barevný pruh u levého okraje sloupce je **služba lékařky** (iniciály a čas).
-- **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, iniciály lékařky, čas,
+- **Web, nebo klinika** – pod lištou tabule je přepínač **Vše | Web | Klinika** a jednořádková
+  legenda:
+
+  | Štítek vlevo na kartě | Význam |
+  |---|---|
+  | Modrý **WEB** + modrý čárkovaný obrys | Rezervace z webu – objednal(a) se klient sám. |
+  | Bílý štítek s iniciálami, např. **JN** | Rezervaci založil(a) někdo z kliniky. Najetím: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
+  | Šedý **WinVet** | Záznam z kalendáře WinVetu, jen pro čtení. |
+
+  **Web** ukáže jen webové rezervace, **Klinika** jen ty založené na klinice; záznamy z WinVetu
+  jsou jen ve **Vše**, blokace jsou vidět vždy. Volbu si pamatuje prohlížeč (pokladna zvlášť
+  od backendové tabule). Když filtr něco skrývá, je vpravo „skryto: N“ – skrytý čas je pořád
+  obsazený.
+- **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, štítek WEB / iniciály toho, kdo
+  ji založil, iniciály lékařky, čas,
   zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
   jsou bledé.
 - **Záznamy z WinVetu** jsou šedé šrafované karty se štítkem **WinVet** (proužek v barvě
@@ -373,7 +388,9 @@ nepřepíná do jiné stránky.
 
 ### Klik na rezervaci
 
-Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas a ordinace, stav.
+Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas a ordinace, stav
+a **Zdroj** („WEB z webu – objednal(a) se klient sám“, nebo „Klinika – založil(a) Jana
+Nováková“ s datem a časem založení).
 
 ![Detail rezervace](img/tabule-detail.png)
 

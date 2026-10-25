@@ -646,3 +646,34 @@ dnešního pacienta bez vybrané lékařky karta ukáže „Ošetřuje: <ona>“
 ```sql
 SELECT d.name, u.login FROM elite_vet_doctor d JOIN res_users u ON u.id = d.user_id ORDER BY d.name;
 ```
+
+## Doplnění: web vs klinika v kalendáři
+
+Na tabuli (backend i Tabule v pokladně) je u každé rezervace vidět, odkud je: modrý štítek
+**WEB** a modrý čárkovaný obrys = z webu (i z chatu na webu), bílý štítek s **iniciálami** =
+založil(a) někdo z kliniky (najetím jméno a čas), šedý **WinVet** = z WinVetu. Pod lištou tabule
+je legenda a přepínač **Vše | Web | Klinika** (pamatuje si ho prohlížeč; WinVet jen ve „Vše“).
+Seznamy Rezervace a Historie rezervací mají sloupce **Zdroj** a **Založil(a)**, filtry
+**Z webu** / **Z kliniky** a seskupení podle Zdroje; pokladna › Dnes › Přicházejí má štítek WEB.
+Hodnota zdroje „Interně“ se přejmenovala na **Klinika**. Větev `feature/elite-vet-source-visible`.
+Cílový kód: `elite_vet_reservation` 18.0.2.8.0, `elite_vet_reception` 18.0.1.9.0.
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_reservation,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-web-klinika-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-web-klinika-*.log      # nesmí nic najít
+```
+
+Žádné tabulky ani sloupce nepřibudou, data se nemění: „Založil(a)“ je počítané z `create_uid`
+(jen interní uživatelé), zdroj už u rezervací je (web zakládá jen `/rezervace/api/submit`,
+který používá formulář i chat). Mění se pohledy, popisek výběru zdroje a JS/CSS tabulí – na
+počítačích i v pokladně obnovit stránku natvrdo (Ctrl+Shift+R).
+
+Kontrola: Rezervace › Tabule na dni s webovou i klinickou rezervací → WEB s obrysem / iniciály,
+legenda, přepínač Web skryje klinické a WinVet („skryto: N“); Rezervace › seznam → sloupce Zdroj
+a Založil(a), filtr Z webu.
+
+```sql
+SELECT source, count(*) FROM elite_vet_reservation WHERE kind = 'reservation' GROUP BY source;
+```

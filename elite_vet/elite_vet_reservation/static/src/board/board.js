@@ -43,6 +43,24 @@ function loadPanelWidth() {
     }
 }
 
+// Task 24: Vše | Web | Klinika on the board, remembered by the browser.
+// WinVet entries are shown in "Vše" only; blocks always (they are not bookings).
+const SOURCE_FILTER_KEY = "elite_vet_reservation.board_source_filter";
+export const SOURCE_FILTERS = [
+    { key: "all", label: "Vše", title: "Všechny rezervace i záznamy z WinVetu" },
+    { key: "web", label: "Web", title: "Jen rezervace z webu" },
+    { key: "clinic", label: "Klinika", title: "Jen rezervace založené na klinice (bez záznamů z WinVetu)" },
+];
+
+function loadSourceFilter() {
+    try {
+        const v = localStorage.getItem(SOURCE_FILTER_KEY);
+        return SOURCE_FILTERS.some((f) => f.key === v) ? v : "all";
+    } catch {
+        return "all";
+    }
+}
+
 export class ReservationBoard extends Component {
     static template = "elite_vet_reservation.Board";
     static props = ["*"];
@@ -58,6 +76,7 @@ export class ReservationBoard extends Component {
             preview: null,   // hover preview of a waiting request (see hoverWaiting)
             soundOn: isSoundOn(),
             panelWidth: loadPanelWidth(),
+            sourceFilter: loadSourceFilter(),
         });
         this.gridRef = useRef("grid");
         onWillStart(() => this.load());
@@ -152,12 +171,39 @@ export class ReservationBoard extends Component {
         if (e.procedure) lines.push("Úkon: " + e.procedure);
         if (e.doctor) lines.push("Lékařka: " + e.doctor);
         if (e.linked) lines.push("Společný zákrok, také v: " + e.linked);
+        if (e.kind === "reservation") lines.push(this.originTitle(e));
         if (e.phone) lines.push("Telefon: " + e.phone);
         if (e.email) lines.push("E-mail: " + e.email);
         if (e.problem) lines.push("Popis problému: " + e.problem);
         return lines.join("\n");
     }
     isShort(e) { return e.end - e.start <= 15; }
+    // ---------- source: web / clinic (task 24) ----------
+    get sourceFilters() { return SOURCE_FILTERS; }
+    isWeb(e) { return e.kind === "reservation" && e.source === "web"; }
+    originTitle(e) {
+        if (this.isWeb(e)) return "Z webu – objednal(a) se klient sám" + (e.created_at ? ", " + e.created_at : "");
+        if (e.created_by) return "Založil(a): " + e.created_by + (e.created_at ? ", " + e.created_at : "");
+        return "Založeno na klinice" + (e.created_at ? ", " + e.created_at : "");
+    }
+    passesSourceFilter(e) {
+        const f = this.state.sourceFilter;
+        if (f === "all" || e.kind === "block") return true;
+        if (this.isWinvet(e)) return false;
+        return f === "web" ? this.isWeb(e) : !this.isWeb(e);
+    }
+    get hiddenCount() {
+        if (!this.state.data) return 0;
+        return this.state.data.events.filter((e) => !this.passesSourceFilter(e)).length;
+    }
+    setSourceFilter(key) {
+        this.state.sourceFilter = key;
+        try {
+            localStorage.setItem(SOURCE_FILTER_KEY, key);
+        } catch {
+            // without storage the choice lasts until a page reload
+        }
+    }
     // ---------- WinVet calendar (read-only entries, elite_vet_winvet) ----------
     isWinvet(e) { return e.kind === "winvet"; }
     winvetTitle(e) {
@@ -186,7 +232,7 @@ export class ReservationBoard extends Component {
     eventsFor(room) { return this.state.data.events.filter((e) => e.room_id === room.id); }
     isWebBlock(e) { return e.kind === "block" && e.block_scope === "web"; }
     webBlocksFor(room) { return this.eventsFor(room).filter((e) => this.isWebBlock(e)); }
-    otherEventsFor(room) { return this.eventsFor(room).filter((e) => !this.isWebBlock(e)); }
+    otherEventsFor(room) { return this.eventsFor(room).filter((e) => !this.isWebBlock(e) && this.passesSourceFilter(e)); }
     webBlockTitle(b) { return b.time_label + "\n" + b.name + "\nJen web – recepce sem objednat smí (klik do sloupce)."; }
 
     // ---------- doctor shifts (bands on the left) ----------

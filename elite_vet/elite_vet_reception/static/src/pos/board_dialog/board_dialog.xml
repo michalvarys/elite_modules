@@ -20,6 +20,24 @@
                     <span class="flex-grow-1"/>
                     <span class="o_ev_board_hint d-none d-lg-inline">Klik na rezervaci = detail · klik do volného místa = Objednat · rezervaci lze přetáhnout</span>
                 </div>
+                <!-- Task 24: who booked it - filter (remembered by the browser) and the one-line legend. -->
+                <div class="o_ev_board_sourcebar">
+                    <div class="btn-group o_ev_board_source_filter" role="group" aria-label="Zobrazit rezervace">
+                        <button t-foreach="sourceFilters" t-as="f" t-key="f.key" type="button" class="btn"
+                                t-att-class="state.sourceFilter === f.key ? 'btn-primary' : 'btn-light'"
+                                t-att-data-filter="f.key" t-att-title="f.title" t-att-aria-pressed="state.sourceFilter === f.key ? 'true' : 'false'"
+                                t-on-click="() => this.setSourceFilter(f.key)" t-esc="f.label"/>
+                    </div>
+                    <span class="o_ev_board_legend">
+                        <span class="o_ev_board_legend_item"><span class="o_ev_board_src o_ev_board_src_web">WEB</span><span class="o_ev_board_legend_swatch"/> rezervace z webu (klient sám)</span>
+                        <span class="o_ev_board_legend_item"><span class="o_ev_board_src o_ev_board_src_clinic">JN</span> Klinika – iniciály toho, kdo rezervaci založil</span>
+                        <span class="o_ev_board_legend_item"><span class="o_ev_board_src o_ev_board_src_winvet">WinVet</span> z WinVetu, jen pro čtení</span>
+                    </span>
+                    <span t-if="hiddenCount" class="o_ev_board_hidden_count"
+                          title="Filtr skrývá část rezervací tohoto dne – skryté místo je pořád obsazené.">
+                        skryto: <t t-esc="hiddenCount"/>
+                    </span>
+                </div>
                 <div t-if="state.error" class="alert alert-danger m-3">
                     <t t-esc="state.error"/>
                     <button class="btn btn-light ms-2" t-on-click="load">Zkusit znovu</button>
@@ -77,10 +95,13 @@
                                 </t>
                                 <t t-else="">
                                     <div class="o_ev_board_ev_line">
+                                        <!-- Task 24: source first (WEB / creator's initials / WinVet) -->
+                                        <span t-if="isWinvet(e)" class="o_ev_board_src o_ev_board_src_winvet" title="Z WinVetu – jen pro čtení">WinVet</span>
+                                        <span t-elif="isWeb(e)" class="o_ev_board_src o_ev_board_src_web" t-att-title="originTitle(e)">WEB</span>
+                                        <span t-elif="isReservation(e)" class="o_ev_board_src o_ev_board_src_clinic" t-att-title="originTitle(e)"
+                                              t-esc="e.created_by_initials or 'K'"/>
                                         <span t-if="e.doctor_initials" class="o_ev_board_initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                         <span class="o_ev_board_ev_text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
-                                        <span t-if="isWinvet(e)" class="o_ev_board_wv_badge" title="Z WinVetu – jen pro čtení">WinVet</span>
-                                        <i t-if="e.source === 'web'" class="fa fa-globe o_ev_board_icon" title="Z webu"/>
                                         <i t-if="e.linked" class="fa fa-link o_ev_board_icon" t-att-title="'Společný zákrok, také v: ' + e.linked"/>
                                         <span t-if="e.symbol" class="o_ev_board_symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                         <t t-set="chip" t-value="paymentChip(e)"/>
@@ -123,7 +144,13 @@
                     <dd>
                         <span class="o_ev_board_badge o_ev_board_detail_state" t-esc="stateLabel"/>
                         <span t-if="detail.payment_state_label and detail.payment_state !== 'none'" class="o_ev_board_badge ms-1" t-esc="detail.payment_state_label"/>
-                        <span t-if="detail.source === 'web'" class="text-muted ms-1">z webu</span>
+                    </dd>
+                    <dt>Zdroj</dt>
+                    <dd class="o_ev_board_detail_source">
+                        <t t-if="detail.source === 'web'"><span class="o_ev_board_src o_ev_board_src_web">WEB</span> z webu – objednal(a) se klient sám</t>
+                        <t t-else=""><span class="o_ev_board_src o_ev_board_src_clinic" t-esc="detail.created_by_initials or 'K'"/>
+                            Klinika<t t-if="detail.created_by"> – založil(a) <t t-esc="detail.created_by"/></t></t>
+                        <span t-if="detail.created_at" class="text-muted">, <t t-esc="detail.created_at"/></span>
                     </dd>
                     <t t-if="detail.linked">
                         <dt>Společně s</dt>

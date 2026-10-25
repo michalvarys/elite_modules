@@ -11,3 +11,4 @@ from . import test_winvet_calendar
 from . import test_pet_form
 from . import test_member_accounts
 from . import test_treating_doctor
+from . import test_source_visible

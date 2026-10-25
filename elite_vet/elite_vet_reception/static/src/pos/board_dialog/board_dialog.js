@@ -49,6 +49,24 @@ function textOn(hex) {
     return lum > 0.62 ? "#1e293b" : "#fff";
 }
 
+// Task 24: Vše | Web | Klinika, remembered by the browser. WinVet entries only in "Vše",
+// blocks always (they are not bookings). Same rule as the backend board.
+const SOURCE_FILTER_KEY = "elite_vet_reception.board_source_filter";
+const SOURCE_FILTERS = [
+    { key: "all", label: "Vše", title: "Všechny rezervace i záznamy z WinVetu" },
+    { key: "web", label: "Web", title: "Jen rezervace z webu" },
+    { key: "clinic", label: "Klinika", title: "Jen rezervace založené na klinice (bez záznamů z WinVetu)" },
+];
+
+function loadSourceFilter() {
+    try {
+        const value = localStorage.getItem(SOURCE_FILTER_KEY);
+        return SOURCE_FILTERS.some((f) => f.key === value) ? value : "all";
+    } catch {
+        return "all";
+    }
+}
+
 export class BoardDialog extends Component {
     static template = "elite_vet_reception.BoardDialog";
     static components = { Dialog };
@@ -72,6 +90,7 @@ export class BoardDialog extends Component {
             moving: false,
             drag: null, // {id} while a reservation is dragged
             now: clinicNowMinute(),
+            sourceFilter: loadSourceFilter(),
         });
         this.onBusChange = () => this.load();
         onWillStart(() => this.load());
@@ -205,7 +224,52 @@ export class BoardDialog extends Component {
     // ------------------------------------------------------------------ events
 
     eventsFor(room) {
-        return this.state.data.events.filter((e) => e.room_id === room.id);
+        return this.state.data.events.filter((e) => e.room_id === room.id && this.passesSourceFilter(e));
+    }
+
+    // ------------------------------------------------------------------ source (task 24)
+
+    get sourceFilters() {
+        return SOURCE_FILTERS;
+    }
+
+    isWeb(e) {
+        return e.kind === "reservation" && e.source === "web";
+    }
+
+    originTitle(e) {
+        const when = e.created_at ? `, ${e.created_at}` : "";
+        if (this.isWeb(e)) {
+            return `Z webu – objednal(a) se klient sám${when}`;
+        }
+        return e.created_by ? `Založil(a): ${e.created_by}${when}` : `Založeno na klinice${when}`;
+    }
+
+    passesSourceFilter(e) {
+        const filter = this.state.sourceFilter;
+        if (filter === "all" || e.kind === "block") {
+            return true;
+        }
+        if (this.isWinvet(e)) {
+            return false;
+        }
+        return filter === "web" ? this.isWeb(e) : !this.isWeb(e);
+    }
+
+    get hiddenCount() {
+        if (!this.state.data) {
+            return 0;
+        }
+        return this.state.data.events.filter((e) => !this.passesSourceFilter(e)).length;
+    }
+
+    setSourceFilter(key) {
+        this.state.sourceFilter = key;
+        try {
+            localStorage.setItem(SOURCE_FILTER_KEY, key);
+        } catch {
+            // without storage the choice lasts until a page reload
+        }
     }
 
     /** Blocks over all rooms (no room) are drawn in every column. */
@@ -278,6 +342,9 @@ export class BoardDialog extends Component {
         if (e.linked) {
             lines.push(`Společný zákrok, také v: ${e.linked}`);
         }
+        if (this.isReservation(e)) {
+            lines.push(this.originTitle(e));
+        }
         return lines.join("\n");
     }
 
@@ -286,6 +353,7 @@ export class BoardDialog extends Component {
             o_ev_board_block: e.kind === "block",
             o_ev_board_block_web: this.isWebBlock(e),
             o_ev_board_winvet: this.isWinvet(e),
+            o_ev_board_from_web: this.isWeb(e),
             o_ev_board_muted: e.state === "done" || e.state === "no_show",
             o_ev_board_short: this.isShort(e),
             o_ev_board_dragging: this.state.drag?.id === e.id,

@@ -376,15 +376,88 @@ $ev-board-line: #e2e8f0;
     }
 }
 
-.o_ev_board_wv_badge {
+// Task 24: source badge first on the card's line (own background: readable on every procedure colour)
+.o_ev_board_src {
     flex-shrink: 0;
-    margin-left: 4px;
+    margin-right: 4px;
     padding: 0 4px;
     border-radius: 3px;
+    line-height: 14px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.o_ev_board_src_web {
+    background: #1d4ed8;
+    color: #fff;
+    box-shadow: 0 0 0 1px #fff;
+}
+
+.o_ev_board_src_clinic {
+    background: #fff;
+    color: #0f5f57;
+    border: 1px solid #0f5f57;
+    line-height: 12px;
+}
+
+.o_ev_board_src_winvet {
     background: #475569;
     color: #fff;
-    font-size: 10px;
-    font-weight: 700;
+}
+
+// a web booking: dashed blue outline with a white inner line (visible on blue cards too)
+.o_ev_board_event.o_ev_board_from_web::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px dashed #1d4ed8;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+    pointer-events: none;
+}
+
+.o_ev_board_sourcebar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 4px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fbfcfd;
+    font-size: 13px;
+    color: #475569;
+}
+
+.o_ev_board_legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+}
+
+.o_ev_board_legend_item {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.o_ev_board_legend_swatch {
+    display: inline-block;
+    width: 18px;
+    height: 12px;
+    margin-right: 4px;
+    border: 2px dashed #1d4ed8;
+    border-radius: 3px;
+}
+
+.o_ev_board_hidden_count {
+    color: #92400e;
+    font-weight: 600;
+}
+
+.o_ev_board_detail_source .o_ev_board_src {
+    vertical-align: 1px;
 }
 
 .o_ev_board_wv_note {

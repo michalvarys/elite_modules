@@ -123,6 +123,27 @@ Web funguje i na mobilu:
 
 ![Web na mobilu](img/web-mobil.png)
 
+### Web, nebo klinika (Zdroj)
+
+Každá rezervace má **Zdroj**: **Web** (formulář `/rezervacni-system` i chat na webu – oba
+posílají žádost stejnou cestou `/rezervace/api/submit`), nebo **Klinika** (průvodce Nová
+rezervace, pokladna, druhá ordinace). Zdroj se nastaví při založení a nemění se – ani potvrzením
+žádosti z webu.
+
+- **Tabule** (Odoo i pokladna): modrý štítek **WEB** a modrý čárkovaný obrys u webových
+  rezervací, bílý štítek s **iniciálami** toho, kdo rezervaci na klinice založil (uživatel, který
+  ji vytvořil; najetím myší jméno a čas založení), šedý **WinVet** u záznamů z WinVetu. Přepínač
+  **Vše | Web | Klinika** si pamatuje prohlížeč; záznamy z WinVetu jsou jen ve „Vše“.
+  Druhá ordinace dvoulékařského zákroku přebírá zdroj a autora hlavní rezervace.
+- **Seznamy** Rezervace a Historie rezervací: sloupce **Zdroj** a **Založil(a)**, filtry
+  **Z webu** / **Z kliniky**, seskupení podle Zdroje. Webová rezervace „Založil(a)“ nemá
+  (zakládá ji veřejný uživatel webu).
+- Pokladna, **Dnes › Přicházejí**: štítek **WEB** u rezervací z webu.
+
+Technicky: `board_data` posílá u rezervací `source`, `created_by`, `created_by_initials`
+a `created_at` (čas kliniky, „26. 10. 2026 9:12“); pole `created_by_id` je `create_uid`
+jen pro interní uživatele.
+
 ### Stavy rezervace
 
 | Stav | Kdy | Blokuje termín? | Na tabuli |

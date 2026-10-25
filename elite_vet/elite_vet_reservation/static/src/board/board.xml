@@ -33,6 +33,24 @@
                 <button class="btn btn-primary" t-on-click="() => this.openWizard()">Nová rezervace</button>
                 <button t-if="canEditBlocks" class="btn btn-outline-secondary evb-new-block" t-on-click="newBlock">Nová blokace</button>
             </div>
+            <!-- Task 24: who booked it - filter (remembered by the browser) and the one-line legend. -->
+            <div class="evb-sourcebar">
+                <div class="btn-group btn-group-sm evb-source-filter" role="group" aria-label="Zobrazit rezervace">
+                    <button t-foreach="sourceFilters" t-as="f" t-key="f.key" type="button" class="btn"
+                            t-att-class="state.sourceFilter === f.key ? 'btn-primary' : 'btn-outline-secondary'"
+                            t-att-data-filter="f.key" t-att-title="f.title" t-att-aria-pressed="state.sourceFilter === f.key ? 'true' : 'false'"
+                            t-on-click="() => this.setSourceFilter(f.key)" t-esc="f.label"/>
+                </div>
+                <span class="evb-legend">
+                    <span class="evb-legend-item"><span class="evb-src evb-src-web">WEB</span><span class="evb-legend-swatch"/> rezervace z webu (klient sám)</span>
+                    <span class="evb-legend-item"><span class="evb-src evb-src-clinic">JN</span> Klinika – iniciály toho, kdo rezervaci založil</span>
+                    <span class="evb-legend-item"><span class="evb-src evb-src-winvet">WinVet</span> z WinVetu, jen pro čtení</span>
+                </span>
+                <span t-if="!state.loading and hiddenCount" class="evb-hidden-count"
+                      title="Filtr skrývá část rezervací tohoto dne – klik do skrytého místa je pořád obsazený.">
+                    skryto: <t t-esc="hiddenCount"/>
+                </span>
+            </div>
             <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
             <div t-else="" class="evb-body">
                 <aside class="evb-waiting" t-att-style="panelStyle">
@@ -144,17 +162,20 @@
                                       t-on-click.stop="() => this.openEvent(e)">jen web · <t t-esc="e.name"/></span>
                             </div>
                             <div t-foreach="otherEventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
-                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
+                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-from-web': isWeb(e), 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
                                  t-att-style="eventStyle(room, e)"
                                  t-att-title="eventTitle(e)"
                                  t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openEvent(e)">
                                 <div class="evb-ev-line">
-                                    <!-- Doctor initials on the left next to her stripe, procedure abbreviation on the right. -->
+                                    <!-- Task 24: where it comes from first (WEB / creator's initials / WinVet),
+                                         then the doctor initials next to her stripe, procedure abbreviation on the right. -->
+                                    <span t-if="isWinvet(e)" class="evb-src evb-src-winvet" title="Z WinVetu – jen pro čtení">WinVet</span>
+                                    <span t-elif="isWeb(e)" class="evb-src evb-src-web" t-att-title="originTitle(e)">WEB</span>
+                                    <span t-elif="e.kind === 'reservation'" class="evb-src evb-src-clinic" t-att-title="originTitle(e)"
+                                          t-esc="e.created_by_initials or 'K'"/>
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
-                                    <span t-if="isWinvet(e)" class="evb-wv-badge" title="Z WinVetu – jen pro čtení">WinVet</span>
-                                    <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
                                     <span t-if="e.linked" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.linked">🔗</span>
                                     <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                 </div>

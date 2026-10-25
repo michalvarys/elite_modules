@@ -538,11 +538,6 @@ msgid "Interní poznámka recepce"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__source__internal
-msgid "Interně"
-msgstr ""
-
-#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__message_is_follower
 msgid "Is Follower"
 msgstr ""
@@ -666,6 +661,7 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__cancel_reason__clinic
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__source__internal
 msgid "Klinika"
 msgstr ""
 
