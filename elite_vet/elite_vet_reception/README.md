@@ -313,6 +313,10 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
     arrived_time, called_time, waiting_minutes, pet_id, pet_name, species_label, owner, partner_id,
     procedure, doctor, doctor_id, room_id, alerts, reception_note, draggable` (jen dnešní rozepsaný
     záznam se stavem).
+- **`take_next_patient(room_id)`** (úkol 26, tlačítko **Vzít dalšího**): z Nepřiřazení vezme dnešní
+  rozepsaný záznam ve stavu Čeká s nejstarším příchodem (`arrived_at, id`) a přiřadí ho do ordinace
+  stejně jako `assign_room` (lékařka z rozpisu / převzetí, `needs_doctor`). Vrací tvar
+  `_record_dict` + `needs_doctor`, nebo `False`, když nikdo nečeká. Bez `room_id` UserError.
 - **`assign_room(record_id, room_id=False, doctor_id=False)`**: jen dnešní rozepsaný záznam
   („Do ordinace jde přiřadit jen dnešní rozepsanou návštěvu.“), `room_id` False = zpět do
   Nepřiřazení. Rezervace svou ordinaci nemění (tabule ukazuje rezervaci).
@@ -329,6 +333,14 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   zprávou a záložně každých 30 s.
 - Práva: jako zbytek API (`_check_reception`), zápis přes `_records()` (sudo s příznakem API).
   Zavolat jen sestra a lékařka; recepce přiřazuje.
+- **Vzhled (úkol 26):** jeden designový systém pro klinické obrazovky – tokeny, dlaždice pacienta
+  (`elite_vet_clinic.VisitTileBody`, `visitTile()`), tlačítka a nabídka „…“ jsou v
+  `elite_vet_clinic/static/src/clinic_ui/`, kořen obrazovky má třídu `.ev-clinic`. Jedna ordinace:
+  pruh Nepřiřazení (Vzít dalšího / Zobrazit) a sloupce Čekají | V ordinaci | Dnes ještě přijdou
+  (Hotovo dnes sbalené). U pacienta jedno hlavní tlačítko podle stavu (Čeká → Zavolat, V ordinaci →
+  Otevřít kartu), ostatní v nabídce „…“ (komponenta `RoomMenu`, Odoo `Dropdown`): Otevřít kartu,
+  Poznámka recepce… (`set_reception_note`), Do jiné ordinace (`assign_room`). Přepínač ordinací je
+  `<select>`.
 
 ## Ordinace: Moji pacienti dnes (karta pacienta)
 
@@ -345,17 +357,20 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
 - `unassigned` (nový klíč odpovědi, pravidlo R17): dnešní rozepsaní neobjednaní bez lékařky ve stavu
   Čeká / V ordinaci, stejný tvar jako `items`. Plní se jen u filtrovaného seznamu lékařky (nefiltrovaný
   je má v `items`); úvodní obrazovka je ukazuje v Čekají s poznámkou „kterákoli lékařka“.
-- Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „příchod 9:24 · čeká 6 min“,
-  tlačítko Zavolat), **V ordinaci**, **Objednaní – ještě nepřišli** (rezervace bez záznamu nebo se
+- Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „Čeká 6 min“,
+  tlačítko Zavolat), **V ordinaci**, **Dnes ještě přijdou** (rezervace bez záznamu nebo se
   záznamem bez stavu), **Hotovo dnes** (uzavřený záznam; také rezervace ve stavu Proběhlá bez záznamu).
 - Neobjednaní (dnešní záznamy se stavem návštěvy bez rezervace, `walk_in: true`, `reservation_id: None`)
   jsou v `items` podle lékařky záznamu; bez lékařky jsou v `unassigned`.
 - **Zavolat** = `elite.vet.reception.call_patient(record_id)`, pak se otevře karta zvířete. Záznam bez
   lékařky dostane lékařku volajícího uživatele (když je spárovaný); tlačítko je během volání neaktivní.
-- Texty: „příchod 9:24 · čeká 6 min“, „od 9:30“ (zavoláno).
+- Řádek je sdílená dlaždice pacienta (úkol 26, `patientTile()` → `visitTile()`): velký čas příchodu
+  (nebo rezervace), „obj. 9:20“ / „bez objednání“, stav „Čeká 6 min“ / „V ordinaci od 9:30“, u
+  Dnes ještě přijdou a Hotovo štítek záznamu (Bez záznamu, Rozepsaný, Hotovo – k pokladně).
 - Pravidlo R5: když sestra nebo lékařka otevře kartu (ze seznamu, z tabule, z hledání …) a dnešní
   záznam je ve stavu Čeká, karta jednou zavolá `call_patient`; `card_data` zůstává jen pro čtení.
-  Chyba (např. role recepce) se tiše ignoruje. `_record_data` proto nese i `visit_stage`.
+  Chyba (např. role recepce) se tiše ignoruje. `_record_data` proto nese i `visit_stage`, a od
+  úkolu 26 `arrived_time` a `called_time` (štítek „Čeká od 9:05“ / „V ordinaci od 9:20“ v záhlaví karty).
 - Seznam se obnovuje zprávou na kanálu `elite_vet_reservation/changed` a záložně každých 30 s,
   dokud je vidět úvodní obrazovka.
 

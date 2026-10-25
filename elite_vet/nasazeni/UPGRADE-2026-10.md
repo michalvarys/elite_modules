@@ -738,7 +738,7 @@ Co přibude:
   - v kartě pacienta tlačítko **Zpráva pro majitele** a ikona tiskárny v historii;
   - Tisk u záznamu návštěvy;
   - ikona v pokladně › Dnes › K pokladně.
-- Pole **Číslo KVL** u lékařky. Návod: `elite_vet_reception/doc/ordinace.md`, kapitola 7.
+- Pole **Číslo KVL** u lékařky. Návod: `elite_vet_reception/doc/ordinace.md`, kapitola 8.
 
 Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
 
@@ -776,3 +776,28 @@ Kontrola:
 SELECT id, name, kvl_number FROM elite_vet_doctor WHERE active ORDER BY name;
 SELECT report_name, binding_model_id FROM ir_act_report_xml WHERE report_name = 'elite_vet_clinic.report_visit_document';
 ```
+
+## Doplnění: vzhled ordinací (úkol 26)
+
+Moduly: `elite_vet_clinic` (18.0.1.5.0) a `elite_vet_reception` (18.0.1.12.0).
+
+```bash
+docker compose stop odoo
+docker compose run --rm odoo odoo -d DATABAZE -u elite_vet_clinic,elite_vet_reception --stop-after-init --no-http
+docker compose start odoo
+```
+
+Schéma se nemění (žádný nový sloupec), mění se jen vzhled a přibývá metoda `take_next_patient`
+(tlačítko **Vzít dalšího**). Po aktualizaci obnovte stránku natvrdo (Ctrl+Shift+R) na všech
+počítačích a tabletech v ordinacích.
+
+Kontrola:
+- Ordinace › Ordinace › jedna ordinace: nahoře název, kdo slouží, přepínač ordinací vpravo;
+  sloupce Čekají | V ordinaci | Dnes ještě přijdou; u čekajícího Zavolat a nabídka „…“;
+- když čeká někdo bez ordinace, oranžový pruh s **Vzít dalšího** a **Zobrazit**;
+- Všechny ordinace: souhrn nahoře, přetažení pacienta do jiné ordinace funguje;
+- karta pacienta: větší písmo, velká pole vitálních hodnot, štítek „V ordinaci od …“ v záhlaví;
+- Moji pacienti dnes: stejné dlaždice pacientů jako na obrazovce Ordinace.
+
+Návod s obrázky: `elite_vet_reception/doc/ordinace.md` (kapitoly 2–4 a 7).
+

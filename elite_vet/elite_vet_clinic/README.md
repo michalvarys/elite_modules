@@ -174,6 +174,26 @@ pokladna).
   záznam text, vitální hodnotu nebo položku. Před otevřením PDF se rozepsané uloží. V historii je
   ikona `evpc-tl-print` u záznamů z Odoo.
 
+## Vzhled klinických obrazovek (úkol 26)
+
+Jeden designový systém pro kartu pacienta, Moji pacienti dnes a obrazovku Ordinace
+(elite_vet_reception): `static/src/clinic_ui/`.
+
+- `clinic_ui.scss`: tokeny na kořenové třídě `.ev-clinic` (`--ev-ground`, `--ev-paper`, `--ev-ink`,
+  `--ev-accent` jen pro hlavní akce, stavové barvy `--ev-waiting` / `--ev-in_room` / `--ev-booked` /
+  `--ev-done`, `--ev-alert`, `--ev-note`, poloměry 6 / 10 px, písmo 28 / 20 / 16 / 14 px), tlačítka
+  `.ev-btn`, `.ev-btn-primary`, `.ev-icon-btn` (40 px, dotyková plocha 44 px), štítky `.ev-chip-*`,
+  nadpis skupiny `.ev-group-head`, dlaždice pacienta `.evt` a nabídka `.ev-clinic-menu`. Respektuje
+  `prefers-reduced-motion`, viditelný fokus.
+- `clinic_ui.xml`: `elite_vet_clinic.VisitTileBody` – vnitřek dlaždice (pruh s časem a stavem,
+  zvíře, majitel, úkon, ordinace, lékařka, upozornění, poznámka recepce). Kořen (`div` nebo `button`
+  s `.evt .evt-<stav>`) a akce dává volající.
+- `clinic_ui.js`: `visitTile(item, state, opts)`, `visitStateText()`, `plural()`.
+- Karta: `.evpc` proměnné jsou aliasy tokenů. Základ 16 px; ≥ 1280 px tři sloupce (historie |
+  záznam | účet), 900–1279 px záznam | účet a historie sbalená pod nimi (`state.historyOpen`), pod
+  900 px vše pod sebou. Záhlaví: štítek návštěvy (`visitChip`, z `visit_stage`, `arrived_time`,
+  `called_time` z elite_vet_reception) a „Ošetřuje“. Šablona textu = ikona v záhlaví pole.
+
 ## Testy
 
 `bash elite_vet/nasazeni/testy-clinic.sh` (poprvé, instalace), dál

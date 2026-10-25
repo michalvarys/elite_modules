@@ -23,54 +23,76 @@ počítači v ordinaci a používají ho všechny lékařky, které v ní slouž
 
 Výchozí obrazovka se nastaví sama. Když pole Ordinace smažete, účet se vrátí na kartu pacienta.
 
-## 2. Přepínač nahoře
+## 2. Záhlaví a přepínač
 
-Nahoře je **Všechny ordinace | Ordinace 1 | Ordinace 2 …**. Prohlížeč si volbu pamatuje. Účet
-ordinace ale vždy začne na své ordinaci. Vlastní účet lékařky nebo sestry začne na ordinaci, kde má
-podle Rozpisu lékařů službu (kapitola 6).
+Nahoře je název ordinace a **kdo v ní teď slouží** i s časem služby („Ve službě MVDr. …,
+7:00–14:00“). Když teď nikdo neslouží, je tam „Teď nikdo ve službě“ a dnešní služby. Vpravo je
+čas poslední aktualizace, tlačítko ⟳ a **přepínač ordinací** (rozbalovací seznam, první je
+**Všechny ordinace**). Prohlížeč si volbu pamatuje. Účet ordinace ale vždy začne na své
+ordinaci. Vlastní účet lékařky nebo sestry začne na ordinaci, kde má podle Rozpisu lékařů službu
+(kapitola 6).
 
-Každý pacient má na kartě nebo řádku tyto údaje:
-- čas příchodu, nebo čas rezervace u toho, kdo ještě nepřišel,
-- zvíře (druh) a majitele,
-- úkon,
-- stav: **Čeká N min** / **V ordinaci** / **Objednáno** / **Hotovo**,
-- lékařku a upozornění na pacientovi (červeně),
-- **poznámku recepce** (žlutě, s lístečkem) – co recepce napsala při příjmu, např. „Klient
-  spěchá“. Je interní, klient ji nevidí.
+**Pacient** vypadá všude stejně – na obrazovce Ordinace i v Moji pacienti dnes:
+
+- vlevo **barevný pruh s časem**: barva říká stav – **oranžová čeká**, **zelená je v ordinaci**,
+  **modrošedá je objednaná** (ještě nepřišla), **šedá je hotová**. Velký čas je příchod (u toho,
+  kdo ještě nepřišel, čas rezervace), pod ním „obj. 9:20“, když přišel jindy než na objednaný čas,
+  nebo „bez objednání“, a stav: **Čeká 12 min** / **V ordinaci od 9:25** / **Objednáno** / **Hotovo**;
+- vpravo zvíře (druh), majitel, úkon a lékařka;
+- **upozornění** na pacientovi červeně (kouše, alergie…);
+- **poznámka recepce** žlutě s lístečkem – co recepce napsala při příjmu, např. „Klient
+  spěchá“. Je interní, klient ji nevidí;
+- jedno **hlavní tlačítko** podle stavu: u čekajícího **Zavolat**, u pacienta v ordinaci
+  **Otevřít kartu**. Všechno ostatní je v nabídce **…**: **Otevřít kartu** (u čekajícího
+  a objednaného), **Poznámka recepce…** (upravit nebo smazat) a **Do jiné ordinace** (seznam
+  ordinací přímo v nabídce, a Nepřiřazení).
 
 Obrazovka se obnovuje sama: hned po každé změně (příjem, zavolání, přesun, Hotovo) a nejpozději
 každých 30 sekund. Tlačítkem ⟳ ji obnovíte hned.
 
 ## 3. Všechny ordinace
 
-Sloupce jsou **Nepřiřazení** a pak jedna ordinace vedle druhé. V hlavičce ordinace je, kdo v ní
-**teď slouží** (podle Rozpisu lékařů), nebo „nikdo ve službě“.
+![Všechny ordinace](img/ordinace-vsechny.png)
 
-Ve sloupci jsou části:
-- **V ordinaci**: pacient je zavolaný,
+Nahoře je souhrn: kolik pacientů **čeká**, kolik je **v ordinacích** a kolik je **nepřiřazených**.
+Pod ním jsou sloupce **Nepřiřazení** a pak jedna ordinace vedle druhé. V hlavičce ordinace je,
+kdo v ní **teď slouží** (podle Rozpisu lékařů), nebo „Teď nikdo ve službě“.
+
+Ve sloupci jsou části ve stejném pořadí jako v jedné ordinaci:
 - **Čekají**: pacient přišel a recepce ho přijala,
-- **Objednaní**: dnešní rezervace této ordinace, klient ještě nepřišel. Tyto karty nejdou přesouvat,
-- **Hotovo**: návštěva je uzavřená. Část je sbalená, klikem na ni se rozbalí.
+- **V ordinaci**: pacient je zavolaný,
+- **Dnes ještě přijdou**: dnešní rezervace této ordinace, klient ještě nepřišel. Tyto karty nejdou
+  přesouvat,
+- **Hotovo dnes: N**: uzavřené návštěvy, sbalené; klikem se rozbalí.
 
-**Přesun do ordinace:** kartu pacienta, který už přišel (Čeká nebo V ordinaci), přetáhněte myší do
-sloupce jiné ordinace. Přetažením do **Nepřiřazení** ordinaci zrušíte. Na dotykové obrazovce použijte
-tlačítko **Do ordinace…** na kartě a vyberte ordinaci. Tlačítko **Karta** otevře kartu pacienta.
+Prázdná část se neukazuje; prázdná ordinace má jen „Nikdo tu není.“
+
+**Přesun do ordinace:** pacienta, který už přišel (Čeká nebo V ordinaci), přetáhněte myší do
+sloupce jiné ordinace. Přetažením do **Nepřiřazení** ordinaci zrušíte. Na dotykové obrazovce
+použijte nabídku **…** › **Do jiné ordinace** a vyberte ordinaci.
+
+![Nabídka …](img/ordinace-menu.png)
 
 Přesun mění jen ordinaci návštěvy. **Rezervace zůstane ve své ordinaci**, takže tabule rezervací
 ukazuje pořád původní ordinaci.
 
 ## 4. Jedna ordinace
 
-Nahoře je název ordinace, kdo v ní teď slouží a dnešní služby („Dnes: MVDr. … 8:00–14:00“).
+![Jedna ordinace](img/ordinace-jedna.png)
 
-Pod tím je žlutý blok **Nepřiřazení – čekají na ordinaci**. Jsou v něm přijatí pacienti bez
-ordinace, typicky klienti bez objednání. Tlačítko **Vzít do této ordinace** pacienta přiřadí sem.
+Když na ordinaci čekají přijatí pacienti bez ordinace (typicky klienti bez objednání), je nahoře
+oranžový pruh „**2 pacienti čekají na ordinaci**“:
+- **Vzít dalšího** vezme do této ordinace toho, kdo čeká **nejdéle**;
+- **Zobrazit** rozbalí jejich seznam; u každého je **Vzít do této ordinace**.
 
-Dál je seznam ordinace: V ordinaci, Čekají (s minutami čekání), Objednaní, Hotovo.
+Pod pruhem jsou zleva doprava tři sloupce: **Čekají** (nejdéle čekající nahoře) | **V ordinaci** |
+**Dnes ještě přijdou**. Pod posledním je sbalené **Hotovo dnes: N**. Prázdný sloupec má jen
+krátký řádek („Nikdo nečeká.“). Na tabletu na výšku jsou sloupce pod sebou ve stejném pořadí.
 
 - **Zavolat** (u čekajícího): pacient jde do stavu V ordinaci a do této ordinace.
-- **Otevřít kartu**: otevře kartu pacienta na dnešní návštěvě, stejně jako v „Moji pacienti dnes“.
-  Zpět se vrátíte drobečkovou navigací nahoře (Ordinace).
+- **Otevřít kartu** (u pacienta v ordinaci, ostatní v nabídce …): otevře kartu pacienta na dnešní
+  návštěvě, stejně jako v „Moji pacienti dnes“. Zpět se vrátíte drobečkovou navigací nahoře
+  (Ordinace).
 - Návštěvu uzavírá karta pacienta jako dosud: **Hotovo, k pokladně**.
 
 ### Kdo je zapsaný jako lékařka
@@ -79,13 +101,13 @@ Když pacient nemá lékařku a dostane ordinaci (Zavolat, Vzít do této ordina
 lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
 
 - Slouží jedna lékařka: zapíše se ona.
-- Slouží dvě: obrazovka se zeptá **Kdo pacienta převezme?** Můžete zvolit „Zatím nevybírat“
+- Slouží dvě: obrazovka se zeptá **Kdo pacienta převezme?** (i po Vzít dalšího). Můžete zvolit „Zatím nevybírat“
   a lékařku doplnit v kartě pacienta.
 - Neslouží nikdo: lékařka zůstane prázdná. Doplňte ji v kartě pacienta (pole Lékařka).
 - Pacient, který lékařku už má (z rezervace nebo z příjmu), ji **nezmění** ani při přesunu do jiné
   ordinace. Změnit ji jde kdykoli v kartě pacienta.
 - Lékařka přihlášená **vlastním účtem** (kapitola 6) se zapíše sama, když pacienta zavolá nebo vezme
-  do ordinace – i místo lékařky, která se doplnila automaticky (z rozpisu nebo z rezervace). Ručně
+  do ordinace (i Vzít dalšího) – i místo lékařky, která se doplnila automaticky (z rozpisu nebo z rezervace). Ručně
   vybranou lékařku nemění.
 
 ## 5. Recepce
@@ -95,8 +117,8 @@ lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
   v Nepřiřazení a ordinace si ho vezme.
 - V pokladně v záložce Dnes, ve sloupci **Čekárna a ordinace**, je u pacienta jeho ordinace, pokud
   ji má.
-- Na obrazovce Ordinace může recepce pacienty přesouvat mezi ordinacemi. Zavolat může jen sestra
-  nebo lékařka.
+- Na obrazovce Ordinace může recepce pacienty přesouvat mezi ordinacemi a upravit poznámku recepce
+  (nabídka …). Zavolat může jen sestra nebo lékařka.
 
 „Moji pacienti dnes“ v kartě pacienta ukazují lékařce s vlastním účtem její dnešní pacienty.
 Účty ordinací používají obrazovku Ordinace.
@@ -144,7 +166,23 @@ Nové účty dostanou jazyk čeština, časové pásmo Europe/Prague a žádné 
 výchozí obrazovku a pokladnu (pokladnu dostane jen Recepce). Na konci se ukáže, kolik účtů vzniklo
 a kolik řádků se přeskočilo a proč.
 
-## 7. Tisk zprávy
+## 7. Karta pacienta
+
+![Karta pacienta](img/ordinace-v-ordinaci.png)
+
+- **Záhlaví:** jméno zvířete velkým písmem, pod ním druh, plemeno, pohlaví a věk; majitel
+  s telefonem, váha, čip, očkování. Vpravo stav dnešní návštěvy („**V ordinaci od 9:25**“,
+  „Čeká od 9:05“, „Hotovo, čeká u pokladny“) a **Ošetřuje: MVDr. …**. Upozornění (kouše,
+  alergie…) jsou velké červené štítky; klikem se upraví.
+- **Dnešní záznam** je uprostřed: čtyři velká pole vitálních hodnot s jednotkami, Anamnéza,
+  Vyšetření, Diagnóza a doporučení. Šablonu textu vložíte ikonou listu vpravo nad polem.
+  Záznam se ukládá sám: ikona mráčku = nic neuloženého, „Ukládám…“, pak „✓ Uloženo 9:31“.
+- **Účet** je vpravo: nahoře **Úkon** a **Lék ze skladu**, pod nimi položky, **Poznámka pro
+  recepci**, dole celkem, **Hotovo, k pokladně** a **Zpráva pro majitele**.
+- **Historie** je vlevo. Na menší obrazovce (pod 1280 px) je sbalená pod záznamem a účtem –
+  rozbalí se šipkou u nadpisu. Na tabletu na výšku je všechno pod sebou: záznam, účet, historie.
+
+## 8. Tisk zprávy
 
 **Zpráva z vyšetření** je PDF pro majitele (A4, česky). Tisknout ji může recepce, sestra, lékařka
 i vedení.

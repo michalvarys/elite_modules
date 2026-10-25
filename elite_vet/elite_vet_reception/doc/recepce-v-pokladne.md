@@ -476,17 +476,21 @@ sestra a účet bez spárované lékařky vidí všechny.
 
 ![Moji pacienti dnes](img/ordinace-dnes.png)
 
+Pacient vypadá stejně jako na obrazovce Ordinace: vlevo barevný pruh s časem a stavem
+(oranžová čeká, zelená v ordinaci, modrošedá objednaný, šedá hotovo), vpravo zvíře, majitel,
+úkon, ordinace a lékařka. Klik na pacienta otevře jeho kartu.
+
 | Skupina | Kdo v ní je |
 |---|---|
-| **Čekají** | recepce je přijala, podle příchodu: „příchod 18:09 · čeká 6 min“, tlačítko **Zavolat**. Neobjednaní mají „bez objednání“; neobjednaní bez lékařky mají „**kterákoli lékařka**“ a vidí je všechny lékařky. |
-| **V ordinaci** | zavolaní, „od 18:15“ |
-| **Objednaní – ještě nepřišli** | dnešní rezervace, které recepce ještě nepřijala |
+| **Čekají** | recepce je přijala, podle příchodu: velký čas příchodu, „Čeká 6 min“, tlačítko **Zavolat**. Neobjednaní mají „bez objednání“; neobjednaní bez lékařky mají „**Kterákoli lékařka**“ a vidí je všechny lékařky. |
+| **V ordinaci** | zavolaní, „V ordinaci od 18:15“ |
+| **Dnes ještě přijdou** | dnešní rezervace, které recepce ještě nepřijala |
 | **Hotovo dnes** | uzavřené návštěvy (Hotovo, k pokladně) |
 
 Seznam se obnovuje sám, jakmile recepce někoho přijme (záložně každých 30 s).
 
 Když recepce při příjmu napsala **poznámku recepce**, je u pacienta žlutě (s ikonou lístečku)
-a v kartě pacienta žlutý pruh pod záhlavím „Poznámka recepce: …“. Je interní, klient ji nevidí.
+a v kartě pacienta žlutý pruh pod záhlavím „Poznámka recepce …“. Je interní, klient ji nevidí.
 
 ## 9. Zavolat a ošetření
 
@@ -499,7 +503,8 @@ a v kartě pacienta žlutý pruh pod záhlavím „Poznámka recepce: …“. Je
 
 ![Po zavolání](img/ordinace-v-ordinaci.png)
 
-4. Zapište návštěvu a účet v kartě pacienta (**+ Úkon**, **+ Lék ze skladu**, balíček).
+4. Zapište návštěvu a účet v kartě pacienta (**Úkon**, **Lék ze skladu**, **Přidat balíček**).
+   Jak je karta rozvržená, popisuje [Ordinace – 7. Karta pacienta](ordinace.md#7-karta-pacienta).
 5. Pro recepci můžete nad tlačítkem **Hotovo, k pokladně** napsat **Poznámku pro recepci**
    (interní, klient ji neuvidí) – recepce ji uvidí u účtu v K pokladně a před platbou. Ukládá
    se sama; opravit nebo smazat ji jde i po uzavření záznamu (dokud není zrušený).
