@@ -141,11 +141,13 @@ export class ReservationBoard extends Component {
     // ---------- events ----------
     eventLabel(e) {
         if (e.kind === "block") return e.name;
+        // WinVet calendar entry (elite_vet_winvet): pet (owner) from the card index, else the WinVet text.
         if (e.pet && e.owner) return e.pet + " (" + e.owner + ")";
         return e.pet || e.owner || e.name;
     }
     eventTitle(e) {
         if (e.kind === "block") return e.time_label + "\n" + e.name;
+        if (this.isWinvet(e)) return this.winvetTitle(e);
         const lines = [e.time_label + " · " + this.eventLabel(e)];
         if (e.procedure) lines.push("Úkon: " + e.procedure);
         if (e.doctor) lines.push("Lékařka: " + e.doctor);
@@ -156,6 +158,19 @@ export class ReservationBoard extends Component {
         return lines.join("\n");
     }
     isShort(e) { return e.end - e.start <= 15; }
+    // ---------- WinVet calendar (read-only entries, elite_vet_winvet) ----------
+    isWinvet(e) { return e.kind === "winvet"; }
+    winvetTitle(e) {
+        const lines = ["Z WinVetu · " + e.time_label, this.eventLabel(e)];
+        if (e.procedure) lines.push("Činnost: " + e.procedure);
+        if (e.winvet_title && e.winvet_title !== this.eventLabel(e)) lines.push("Ve WinVetu: " + e.winvet_title);
+        lines.push("Jen pro čtení – mění se ve WinVetu. Termín je obsazený.");
+        return lines.join("\n");
+    }
+    winvetNoteTitle(n) {
+        return "Z WinVetu, celý den: " + n.label + (n.activity ? "\nČinnost: " + n.activity : "") +
+            "\nJen poznámka – termíny neblokuje.";
+    }
 
     // ---------- geometry ----------
     get axis() { return this.state.data.axis; }
@@ -184,6 +199,10 @@ export class ReservationBoard extends Component {
     eventLeft(room) { return 4 + (room.lanes || 0) * (BAND_W + BAND_GAP); }
     eventStyle(room, e) {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
+        if (this.isWinvet(e)) {
+            // grey hatched card with the WinVet colour as the left stripe (styles in board.scss)
+            return style + ";left:" + this.eventLeft(room) + "px;border-left:7px solid " + (e.winvet_color || "#94a3b8");
+        }
         if (e.kind !== "block") {
             style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex + ";color:" + textOn(e.color_hex);
             // Left stripe in the color of the doctor the client is booked with.
@@ -225,8 +244,16 @@ export class ReservationBoard extends Component {
     // Without the right blocks cannot be dragged and open read-only; clicks into the column
     // (also through web-only blocks) still book as before.
     get canEditBlocks() { return Boolean(this.state.data && this.state.data.can_edit_blocks); }
-    isDraggable(e) { return e.kind !== "block" || this.canEditBlocks; }
+    isDraggable(e) { return !this.isWinvet(e) && (e.kind !== "block" || this.canEditBlocks); }
     openEvent(e) {
+        if (this.isWinvet(e)) {
+            // read-only form of the WinVet entry (no actions)
+            this.action.doAction({
+                type: "ir.actions.act_window", res_model: "elite.vet.winvet.calendar.event",
+                res_id: e.winvet_event_id, views: [[false, "form"]], target: "new",
+            });
+            return;
+        }
         if (e.kind === "block" && !this.canEditBlocks) {
             this.openForm(e.id, { form_view_ref: "elite_vet_reservation.view_reservation_block_readonly_form" });
         } else {

@@ -176,7 +176,8 @@ class ReservationBoardSecondRoom(models.Model):
         """Marks the second-room copies of two-doctor procedures (`is_second_room`): the till's
         board offers dragging only for the main reservation."""
         data = super().board_data(day_str)
-        ids = [e["id"] for e in data["events"] if e.get("kind") != "block"]
+        # reservations only: blocks and WinVet calendar entries (negative ids) are not records here
+        ids = [e["id"] for e in data["events"] if e.get("kind") == "reservation"]
         second = set(self.browse(ids).filtered("is_second_room").ids) if ids else set()
         for event in data["events"]:
             event["is_second_room"] = event["id"] in second

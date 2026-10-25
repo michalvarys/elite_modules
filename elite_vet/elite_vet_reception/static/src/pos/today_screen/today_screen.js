@@ -124,18 +124,23 @@ export class ReceptionTodayScreen extends Component {
 
     /** Přijmout: a small dialog with an optional internal note for the room (Enter = Přijmout). */
     checkIn(row) {
-        if (this.state.busy[`in-${row.reservation_id}`]) {
+        const busyKey = `in-${row.key || row.reservation_id}`;
+        if (this.state.busy[busyKey]) {
             return;
         }
+        // WinVet calendar entry (read-only): check_in_winvet creates / reuses the visit record
+        const [method, id] = row.winvet_event_id
+            ? ["check_in_winvet", row.winvet_event_id]
+            : ["check_in", row.reservation_id];
         this.dialog.add(NoteDialog, {
             title: `Přijmout: ${[row.pet_name, row.owner].filter(Boolean).join(" · ")}`,
             label: "Interní poznámka pro ordinaci (nepovinné)",
             hint: "Uvidí ji sestra a lékařka v ordinaci, klient nikde. Enter = Přijmout.",
             confirmLabel: "Přijmout do čekárny",
             onConfirm: (note) =>
-                this.run(`in-${row.reservation_id}`, async () => {
-                    const result = await callReception(this.orm, this.notification, "check_in", [
-                        row.reservation_id,
+                this.run(busyKey, async () => {
+                    const result = await callReception(this.orm, this.notification, method, [
+                        id,
                         this.cashierName,
                         note || null,
                     ]);

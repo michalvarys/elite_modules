@@ -218,7 +218,28 @@ export class BoardDialog extends Component {
     }
 
     isReservation(e) {
-        return e.kind !== "block";
+        return e.kind === "reservation";
+    }
+
+    /** Read-only entry of the WinVet calendar (elite_vet_winvet): no detail, no drag, no actions. */
+    isWinvet(e) {
+        return e.kind === "winvet";
+    }
+
+    winvetTitle(e) {
+        const lines = [`Z WinVetu · ${e.time_label}`, this.eventLabel(e)];
+        if (e.procedure) {
+            lines.push(`Činnost: ${e.procedure}`);
+        }
+        if (e.winvet_title && e.winvet_title !== this.eventLabel(e)) {
+            lines.push(`Ve WinVetu: ${e.winvet_title}`);
+        }
+        lines.push("Jen pro čtení – mění se ve WinVetu. Termín je obsazený.");
+        return lines.join("\n");
+    }
+
+    winvetNoteTitle(n) {
+        return `Z WinVetu, celý den: ${n.label}${n.activity ? "\nČinnost: " + n.activity : ""}\nJen poznámka – termíny neblokuje.`;
     }
 
     /** Only the main reservation moves; its second-room copy follows it. */
@@ -241,6 +262,9 @@ export class BoardDialog extends Component {
     }
 
     eventTitle(e) {
+        if (this.isWinvet(e)) {
+            return this.winvetTitle(e);
+        }
         if (e.kind === "block") {
             return `${e.time_label}\n${e.name}${this.isWebBlock(e) ? "\nJen web – recepce sem objednat smí." : ""}`;
         }
@@ -261,6 +285,7 @@ export class BoardDialog extends Component {
         return {
             o_ev_board_block: e.kind === "block",
             o_ev_board_block_web: this.isWebBlock(e),
+            o_ev_board_winvet: this.isWinvet(e),
             o_ev_board_muted: e.state === "done" || e.state === "no_show",
             o_ev_board_short: this.isShort(e),
             o_ev_board_dragging: this.state.drag?.id === e.id,
@@ -280,6 +305,10 @@ export class BoardDialog extends Component {
 
     eventStyle(room, e) {
         let style = `top:${this.top(e.start)}px;height:${this.height(e.start, e.end)}px`;
+        if (this.isWinvet(e)) {
+            // grey hatched card, the WinVet colour as the left stripe (board_dialog.scss)
+            return `${style};left:${this.eventLeft(room)}px;border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
+        }
         if (e.kind !== "block") {
             style += `;left:${this.eventLeft(room)}px;background:${e.color_hex};color:${textOn(e.color_hex)}`;
             // stripe in the colour of the doctor the client is booked with

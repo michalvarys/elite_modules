@@ -7,7 +7,8 @@ import { ReservationBoard } from "@elite_vet_reservation/board/board";
 
 patch(ReservationBoard.prototype, {
     hasPatientCard(e) {
-        return e.kind !== "block" && !!(e.pet || e.owner) && !["cancelled", "web_new"].includes(e.state);
+        // reservations only: blocks and the read-only WinVet calendar entries have no card button
+        return e.kind === "reservation" && !!(e.pet || e.owner) && !["cancelled", "web_new"].includes(e.state);
     },
     async openPatientCard(e) {
         try {

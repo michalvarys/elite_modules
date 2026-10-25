@@ -43,6 +43,10 @@
                             <div class="o_ev_board_room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
                             <div class="o_ev_board_doctors">
                                 <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge o_ev_board_overlap" t-esc="o.label"/>
+                                <span t-foreach="room.winvet_notes or []" t-as="n" t-key="'wn' + n.id" class="badge o_ev_board_wv_note"
+                                      t-att-style="'border-left-color:' + (n.color or '#94a3b8')" t-att-title="winvetNoteTitle(n)">
+                                    WinVet · <t t-esc="n.label"/>
+                                </span>
                                 <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge o_ev_board_doctor_chip"
                                       t-att-style="'background:' + d.color" t-att-title="d.name + ' ' + d.time_label">
                                     <t t-esc="d.name"/> <t t-esc="d.time_label"/>
@@ -75,6 +79,7 @@
                                     <div class="o_ev_board_ev_line">
                                         <span t-if="e.doctor_initials" class="o_ev_board_initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                         <span class="o_ev_board_ev_text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
+                                        <span t-if="isWinvet(e)" class="o_ev_board_wv_badge" title="Z WinVetu – jen pro čtení">WinVet</span>
                                         <i t-if="e.source === 'web'" class="fa fa-globe o_ev_board_icon" title="Z webu"/>
                                         <i t-if="e.linked" class="fa fa-link o_ev_board_icon" t-att-title="'Společný zákrok, také v: ' + e.linked"/>
                                         <span t-if="e.symbol" class="o_ev_board_symbol" t-att-title="e.procedure" t-esc="e.symbol"/>

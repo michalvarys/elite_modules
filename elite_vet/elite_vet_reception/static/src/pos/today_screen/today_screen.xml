@@ -35,10 +35,14 @@
                                 t-on-click="openWalkIn">+ Bez objednání</button>
                     </div>
                     <div t-if="!state.data.arriving.length" class="o_ev_empty">Nikdo další není objednaný.</div>
-                    <div t-foreach="state.data.arriving" t-as="row" t-key="row.reservation_id" class="o_ev_row">
-                        <span class="o_ev_num o_ev_time" t-esc="row.time"/>
+                    <div t-foreach="state.data.arriving" t-as="row" t-key="row.key or row.reservation_id" class="o_ev_row"
+                         t-att-class="{'o_ev_row_winvet': row.winvet_event_id}">
+                        <span class="o_ev_num o_ev_time" t-esc="row.time or 'celý den'"/>
                         <div class="o_ev_grow">
-                            <div class="fw-bold" t-esc="row.pet_name or 'Bez zvířete'"/>
+                            <div class="fw-bold"><t t-esc="row.pet_name or 'Bez zvířete'"/>
+                                <span t-if="row.winvet_event_id" class="badge o_ev_winvet_badge ms-1"
+                                      title="Objednáno ve WinVetu – záznam je jen pro čtení, přijetí založí návštěvu">WinVet</span>
+                            </div>
                             <small class="text-muted">
                                 <t t-esc="row.owner or 'Bez jména'"/>
                                 <t t-if="row.procedure"> · <t t-esc="row.procedure"/></t>
@@ -46,14 +50,16 @@
                                 <t t-if="row.needs_match"> · nespárováno</t>
                             </small>
                         </div>
+                        <t t-if="!row.winvet_event_id">
                         <button t-if="row.needs_match" class="btn btn-secondary o_ev_match"
                                 title="Najít nebo založit klienta a zvíře k této rezervaci"
                                 t-on-click="() => this.openClient(row)">Spárovat</button>
                         <button t-else="" class="btn btn-secondary o_ev_client"
                                 title="Změnit klienta nebo zvíře rezervace"
                                 t-on-click="() => this.openClient(row)">Klient…</button>
+                        </t>
                         <button t-if="!row.needs_match and isToday" class="btn btn-primary o_ev_check_in"
-                                t-att-disabled="state.busy['in-' + row.reservation_id]"
+                                t-att-disabled="state.busy['in-' + (row.key or row.reservation_id)]"
                                 t-on-click="() => this.checkIn(row)">Přijmout</button>
                     </div>
                 </section>

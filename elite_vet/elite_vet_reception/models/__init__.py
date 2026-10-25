@@ -9,3 +9,4 @@ from . import res_users
 from . import pos_config
 from . import patient_card
 from . import room_board
+from . import winvet_calendar

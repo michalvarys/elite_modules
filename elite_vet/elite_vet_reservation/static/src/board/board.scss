@@ -140,3 +140,17 @@
     &:focus-visible { outline: none; }
 }
 body.evb-resizing, body.evb-resizing * { cursor: col-resize !important; user-select: none !important; }
+
+// ---------- WinVet calendar entries (elite_vet_winvet): read-only, grey hatched, WinVet colour stripe ----------
+.evb-event.evb-winvet {
+    background: repeating-linear-gradient(135deg, #e2e8f0 0 6px, #f1f5f9 6px 12px) !important;
+    color: #334155; border: 1px solid #cbd5e1; cursor: help; box-shadow: none;
+}
+.evb-wv-badge {
+    flex-shrink: 0; margin-left: 4px; padding: 0 4px; border-radius: 3px; background: #475569; color: #fff;
+    font-size: 10px; font-weight: 700; letter-spacing: .02em;
+}
+.evb-wv-note {
+    background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-left: 4px solid #94a3b8;
+    font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;
+}

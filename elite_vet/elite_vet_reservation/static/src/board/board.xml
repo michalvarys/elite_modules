@@ -101,6 +101,10 @@
                                       title="Dvě lékařky v jedné ordinaci: pacient je ale vždy jen jeden naráz.">
                                     <t t-esc="o.label"/>
                                 </span>
+                                <span t-foreach="room.winvet_notes or []" t-as="n" t-key="'wn' + n.id" class="badge evb-wv-note"
+                                      t-att-style="'border-left-color:' + (n.color or '#94a3b8')" t-att-title="winvetNoteTitle(n)">
+                                    WinVet · <t t-esc="n.label"/>
+                                </span>
                                 <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge evb-doctor-chip"
                                       t-att-class="{'evb-editable': state.data.can_edit_shifts}"
                                       t-att-style="'background:' + d.color" t-att-title="bandTitle(d) + (state.data.can_edit_shifts ? '\nKlik = upravit službu' : '')"
@@ -140,7 +144,7 @@
                                       t-on-click.stop="() => this.openEvent(e)">jen web · <t t-esc="e.name"/></span>
                             </div>
                             <div t-foreach="otherEventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
-                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
+                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
                                  t-att-style="eventStyle(room, e)"
                                  t-att-title="eventTitle(e)"
                                  t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
@@ -149,6 +153,7 @@
                                     <!-- Doctor initials on the left next to her stripe, procedure abbreviation on the right. -->
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
+                                    <span t-if="isWinvet(e)" class="evb-wv-badge" title="Z WinVetu – jen pro čtení">WinVet</span>
                                     <span t-if="e.source === 'web'" class="evb-web" title="Z webu">🌐</span>
                                     <span t-if="e.linked" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.linked">🔗</span>
                                     <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
