@@ -118,9 +118,13 @@ export class ReservationBoard extends Component {
             const d = new Date(monday);
             d.setDate(monday.getDate() + i);
             const iso = isoDate(d);
+            const today = iso === this.state.today;
+            // Holidays of the loaded week (board_data.week_holidays); none while loading another week.
+            const holiday = (this.state.data && this.state.data.week_holidays || {})[iso] || "";
             out.push({
                 iso, short: WEEKDAY_ABBR[i], label: d.getDate() + ". " + (d.getMonth() + 1) + ".",
-                selected: iso === this.state.date, today: iso === this.state.today,
+                selected: iso === this.state.date, today, holiday,
+                title: [today ? "Dnes" : "", holiday ? "Státní svátek: " + holiday : ""].filter(Boolean).join(" · "),
             });
         }
         return out;

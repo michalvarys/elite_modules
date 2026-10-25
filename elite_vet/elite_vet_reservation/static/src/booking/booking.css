@@ -34,6 +34,13 @@
 .evbk-day.is-free:hover{background:#ffe999}
 .evbk-day.is-selected{background:var(--ev-accent,#2b7870)!important;color:#fff}
 .evbk-day.is-today{outline:2px solid #e2e8f0}
+/* Czech public holiday: a red dot under the number, the name in the title (free or not) */
+.evbk-day{position:relative}
+.evbk-day.is-holiday{color:#e7a3a3}
+.evbk-day.is-holiday.is-free{color:#b91c1c}
+.evbk-day.is-holiday.is-selected{color:#fff}
+.evbk-day-hol{position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#dc2626;pointer-events:none}
+.evbk-day.is-selected .evbk-day-hol{background:#fff}
 .evbk-slots h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;margin:10px 0 6px}
 .evbk-slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .evbk-slot{border:1.5px solid #e2e8f0;background:#fff;border-radius:8px;padding:8px 0;font-weight:600;color:var(--ev-accent-dark,#1f5a54);cursor:pointer}

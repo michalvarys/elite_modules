@@ -134,9 +134,11 @@
                             <div class="o_ev_days">
                                 <button class="btn btn-light btn-lg o_ev_week_prev" title="Předchozí týden" t-att-disabled="!canGoBack" t-on-click="() => this.shiftWeek(-7)"><i class="fa fa-chevron-left"/></button>
                                 <button t-foreach="state.days or []" t-as="d" t-key="d.day" class="btn o_ev_day"
-                                        t-att-class="(d.day === state.day ? 'btn-primary' : 'btn-light') + (d.count ? '' : ' o_ev_day_empty') + (d.closed ? ' o_ev_day_closed' : '')"
+                                        t-att-class="(d.day === state.day ? 'btn-primary' : 'btn-light') + (d.count ? '' : ' o_ev_day_empty') + (d.closed ? ' o_ev_day_closed' : '') + (d.holiday ? ' o_ev_day_holiday' : '')"
+                                        t-att-title="d.holiday ? 'Státní svátek: ' + d.holiday : ''"
                                         t-att-disabled="d.count === null or d.closed" t-on-click="() => this.selectDay(d.day)">
                                     <span class="d-block o_ev_day_name" t-esc="shortDayLabel(d.day)"/>
+                                    <small t-if="d.holiday" class="d-block o_ev_day_holiday_label">svátek</small>
                                     <small class="d-block">
                                         <t t-if="d.count === null">–</t>
                                         <t t-elif="d.closed">zavřeno</t>
@@ -215,7 +217,9 @@
                 <!-- summary and the one button -->
                 <div class="o_ev_summary">
                     <div class="o_ev_summary_text">
-                        <t t-if="summary"><t t-esc="summary"/></t>
+                        <t t-if="summary"><t t-esc="summary"/>
+                            <span t-if="selectedHoliday" class="o_ev_holiday_note ms-2" title="Recepce v tento den objednává normálně.">Státní svátek: <t t-esc="selectedHoliday"/></span>
+                        </t>
                         <span t-elif="state.move" class="text-muted">Vyberte den a nový čas.</span>
                         <span t-else="" class="text-muted">Vyberte klienta, úkon, den a čas.</span>
                     </div>

@@ -23,7 +23,8 @@ Tabule ukazuje **jeden den**. Každá ordinace má svůj sloupec, vlevo je časo
 - Políčko s datem – skok na libovolný den.
 - **Dnes** – návrat na dnešek.
 - Vedle nadpisu dne je řada **dnů v týdnu** (po–ne). Kliknutím přejdete na daný den.
-  Vybraný den je zelený, dnešek má červený rámeček.
+  Vybraný den je zelený, dnešek má červený rámeček. Státní svátek má světle červené pozadí
+  a červenou tečku; najetím myší se ukáže jeho název.
 
 Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, otevřete
 **Rezervace** a přepněte vpravo nahoře na zobrazení kalendáře (barvy podle úkonu).
@@ -47,7 +48,8 @@ Tabule nemá týdenní mřížku. Když chcete vidět celý týden najednou, ote
 | Bledší karta | Proběhla nebo Nedorazil. |
 | Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 8:15–14:00“, v barvě lékařky. |
 | Žlutý štítek „2 lékařky 10:00–14:00“ | V tomto čase slouží v ordinaci dvě lékařky současně. |
-| Žlutý štítek u nadpisu dne | „Víkend – web neobjednává“ nebo „Státní svátek: … – web neobjednává“. Web ten den nic nenabízí, recepce objednává normálně. |
+| Červený štítek u nadpisu dne | „Státní svátek: Den vzniku samostatného československého státu“ – ukáže se ve svátek vždy. Když web ve svátky neobjednává, je za ním „· web neobjednává“. Recepce objednává normálně. |
+| Žlutý štítek u nadpisu dne | „Víkend – web neobjednává“. Web ten den nic nenabízí, recepce objednává normálně. |
 | „interní“ u názvu | Ordinace, kam se klienti z webu objednat nemohou (např. Sál). |
 | Červená čára | Aktuální čas (jen u dneška). Čas je i na ose. |
 
@@ -376,8 +378,16 @@ vlastní filtr **Blokace jen pro web**).
 
 O víkendech a ve státní svátky web sám **nic nenabízí** (pokud to správce v nastavení
 nevypnul). Nic se nezadává – svátky včetně Velkého pátku a Velikonočního pondělí se
-počítají samy. Na tabuli je u nadpisu dne žlutý štítek, např. „Víkend – web neobjednává“.
+počítají samy. Na tabuli je u nadpisu dne štítek, např. „Víkend – web neobjednává“
+nebo červený „Státní svátek: Den boje za svobodu a demokracii · web neobjednává“.
 Recepce v takový den objednává normálně, mimo ordinační dobu ručním časem.
+
+Svátek je vidět všude, kde je den: na tabuli (štítek a tečka ve dnech týdne), v průvodci
+**Nová rezervace** (žluté upozornění „Státní svátek: … – jen upozornění, rezervaci lze
+uložit.“), v kalendáři **Rezervace**, v **Rozpisu lékařů** a v **Rozpisu služeb** (název
+svátku v buňce dne) a na webu (v kalendáři objednání i na stránce Rozpis služeb).
+Nic neblokuje – klinika ordinuje i v noci a o víkendech; jestli web ve svátky objednává,
+řídí jen nastavení **Státní svátky jen ručně**.
 
 ---
 

@@ -13,6 +13,7 @@ from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
 from odoo.addons.elite_vet_reservation.models.availability import intersect, subtract
+from odoo.addons.elite_vet_reservation.models.holidays import holiday_name
 from odoo.addons.elite_vet_reservation.models.reservation import RECEPTION_HORIZON_DAYS, minutes_label
 
 FREQUENT_COUNT = 6
@@ -187,6 +188,8 @@ class ReceptionBooking(models.AbstractModel):
         `closed` is True for a bookable day that cannot have a free time whatever is booked
         (no opening hours, a full block, no doctor's shift when one is needed): "zavřeno" on the
         screen, "nic volného" is an open but fully booked day.
+        `holiday` is the name of a Czech public holiday on that day, otherwise None: the day is
+        only marked ("svátek"), reception books it normally.
         """
         self._check_reception()
         procedure = self._get_procedure(procedure_id)
@@ -199,7 +202,8 @@ class ReceptionBooking(models.AbstractModel):
             bookable = today <= current <= horizon
             count = len(wizard._free_slots(current)) if bookable else None
             result.append({"day": current.isoformat(), "count": count,
-                           "closed": bool(bookable and not count and self._day_closed(wizard, current))})
+                           "closed": bool(bookable and not count and self._day_closed(wizard, current)),
+                           "holiday": holiday_name(current) or None})
         return result
 
     @api.model

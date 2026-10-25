@@ -13,6 +13,7 @@ from odoo.exceptions import AccessError, UserError
 
 from odoo.addons.elite_vet_clinic.models.clinical_record import local_date
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
+from odoo.addons.elite_vet_reservation.models.holidays import holiday_name
 from odoo.addons.elite_vet_reservation.models.live import notify_board
 from odoo.addons.elite_vet_sale.models.clinical_record import PAYMENT_STATES
 
@@ -135,7 +136,9 @@ class Reception(models.AbstractModel):
 
         paid_count = len(records.filtered(lambda r: r.state == "done" and r.payment_state == "paid"))
         return {"date": date_str(day), "arriving": arriving, "waiting": waiting, "to_pay": self._to_pay(),
-                "paid_count": paid_count}
+                "paid_count": paid_count,
+                # Czech public holiday of the day (header note only; nothing is blocked)
+                "holiday": holiday_name(day) or None}
 
     @api.model
     def _to_pay(self, partner=None):

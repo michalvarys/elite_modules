@@ -171,7 +171,7 @@ export class ReceptionBookingScreen extends Component {
         return term ? this.state.procedures.filter((p) => plain(p.name).includes(term)) : this.state.procedures;
     }
 
-    /** The strip item of the selected day ({day, count, closed}) or null. */
+    /** The strip item of the selected day ({day, count, closed, holiday}) or null. */
     get currentDay() {
         return (this.state.days || []).find((d) => d.day === this.state.day) || null;
     }
@@ -216,6 +216,11 @@ export class ReceptionBookingScreen extends Component {
         return [who, this.procedure?.name, `${dayLabel(this.state.day)} ${slot.time}`, slot.room, slot.doctor]
             .filter(Boolean)
             .join(" · ");
+    }
+
+    /** Name of the public holiday of the selected day once a time is chosen (a warning only). */
+    get selectedHoliday() {
+        return (this.state.selected && this.currentDay && this.currentDay.holiday) || "";
     }
 
     /** Step numbers: without the client step (move mode) every step is one lower. */

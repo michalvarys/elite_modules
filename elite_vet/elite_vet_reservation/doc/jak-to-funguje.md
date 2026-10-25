@@ -35,6 +35,14 @@ a postupuje takto:
    Svátky se počítají v kódu: pevné (1. 1., 1. 5., 8. 5., 5. 7., 6. 7., 28. 9., 28. 10.,
    17. 11., 24.–26. 12.) a pohyblivé Velký pátek a Velikonoční pondělí podle data Velikonoc.
    Recepce tento krok nemá.
+   Kód svátků je v `elite_vet_calendar/models/holidays.py` (nejnižší modul, který svátky
+   ukazuje); `elite_vet_reservation/models/holidays.py` ho jen přebírá, staré importy platí.
+   Svátek se jen **ukazuje** – na tabuli (`board_data`: `holiday` = {name, label, web_closed},
+   `week_holidays` pro dny týdne), v průvodci (`holiday_warning`), v pokladně (`free_days`:
+   `holiday`, `today_data`: `holiday`), v kalendářích přes `js_class="elite_vet_holiday_calendar"`
+   (`elite.vet.shift.holiday_map`) a na webu: `/rezervace/api/days` s parametrem
+   `with_holidays` vrací `{days, holidays, holidays_closed}` (bez parametru dál jen seznam dní
+   – kvůli starším volajícím, např. chatu). Žádné záznamy se nezakládají.
 
 Recepce může navíc v průvodci zadat **ruční čas**: kroky 1, 2, 5, 6 a 7 se pak
 neuplatní vůbec – kontroluje se jen, že termín nekoliduje s jinou rezervací nebo

@@ -15,6 +15,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.misc import clean_context
 
+from ..models.holidays import holiday_name
 from ..models.pet import SPECIES
 from ..models.reservation import WEEKDAY_ABBR, RECEPTION_HORIZON_DAYS, TZ, minutes_label
 
@@ -64,6 +65,8 @@ class ReservationWizard(models.TransientModel):
     slot_doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka termínu")
     slot_ids = fields.One2many("elite.vet.reservation.wizard.slot", "wizard_id", string="Volné časy")
     day_label = fields.Char(compute="_compute_day_label")
+    holiday_warning = fields.Char(compute="_compute_holiday_warning",
+                                  help="Státní svátek v den rezervace - jen upozornění, rezervace jde uložit.")
     warning = fields.Char(string="Upozornění", readonly=True,
                              help="Proč se předvyplněný čas z tabule nepoužil.")
     time_label = fields.Char(compute="_compute_time_label")
@@ -134,6 +137,13 @@ class ReservationWizard(models.TransientModel):
         for w in self:
             d = w.date
             w.day_label = "%s %d. %d. %d" % (WEEKDAY_ABBR[d.weekday()], d.day, d.month, d.year) if d else ""
+
+    @api.depends("date")
+    def _compute_holiday_warning(self):
+        # Reception is only warned, never blocked: the clinic works nights and weekends too.
+        for w in self:
+            name = holiday_name(w.date) if w.date else None
+            w.holiday_warning = ("Státní svátek: %s – jen upozornění, rezervaci lze uložit." % name) if name else False
 
     @api.depends("minute")
     def _compute_time_label(self):

@@ -139,6 +139,17 @@
                 border-style: dashed;
                 opacity: 1;
             }
+            // Czech public holiday: marked only, still selectable
+            &.o_ev_day_holiday:not(.btn-primary) {
+                border-color: #fca5a5;
+            }
+            .o_ev_day_holiday_label {
+                color: #b91c1c;
+                font-weight: 700;
+            }
+            &.btn-primary .o_ev_day_holiday_label {
+                color: #fff;
+            }
         }
     }
     .o_ev_nearest_row:empty {
@@ -264,4 +275,17 @@
             }
         }
     }
+}
+
+// Czech public holiday note (Dnes header, Objednat summary): a warning only, nothing is blocked.
+.o_ev_holiday_note {
+    display: inline-block;
+    padding: 2px 10px;
+    border: 1px solid #fca5a5;
+    border-radius: 12px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
 }

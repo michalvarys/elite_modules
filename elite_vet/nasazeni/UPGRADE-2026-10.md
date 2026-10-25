@@ -299,3 +299,47 @@ blokuje pravidlo; další `-u elite_vet_reservation` skupinu srovná.
 Uživateli předej: kdo z recepce zakládal blokace (oběd, porady), potřebuje je teď zadat přes
 vedení, nebo mu dát skupinu **Správce rezervací** (= role Vedení). Na počítačích s tabulí obnovit
 stránku natvrdo (Ctrl+Shift+R).
+
+## Doplnění: státní svátky
+
+Pro server, na kterém už běží předchozí doplnění (blokace a nastavení jen správce). Státní svátky
+se ukazují samy všude, kde je den – nic se nezadává, nic se neblokuje (recepce je jen upozorněna,
+web dál řídí nastavení **Státní svátky jen ručně**). Cílový kód: `elite_vet_calendar` 18.0.5.3.0,
+`elite_vet_reservation` 18.0.2.3.0, `elite_vet_reception` 18.0.1.2.0.
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_calendar,elite_vet_reservation,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-svatky-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-svatky-*.log      # nesmí nic najít
+```
+
+`-u elite_vet_calendar` aktualizuje i moduly, které na něm závisí; vyjmenované jsou kvůli
+přehlednosti. Data se nemění, žádné záznamy nepřibudou. Kód svátků se přesunul do
+`elite_vet_calendar/models/holidays.py` (`elite_vet_reservation/models/holidays.py` ho přebírá,
+staré importy fungují). Mění se pohledy kalendářů (`js_class="elite_vet_holiday_calendar"`),
+průvodce rezervací (upozornění), stránka /rozpis-lekaru a JS/CSS tabule, pokladny a webového
+kalendáře.
+
+**Co se změní uživatelům:**
+- Tabule (backend i v pokladně): ve svátek červený štítek „Státní svátek: …“ u nadpisu dne
+  (s „· web neobjednává“, když web ve svátky neobjednává); svátky ve dnech týdne mají tečku.
+- Pokladna › Objednat: svátek v řadě dnů s nápisem „svátek“, vybrat jde; v souhrnu upozornění.
+  Pokladna › Dnes: štítek u nadpisu.
+- Nová rezervace (průvodce): žluté upozornění, uložit jde.
+- Rozpis služeb, Rezervace › Rozpis lékařů, kalendář Rezervace: název svátku v buňce / hlavičce dne.
+  Ručně zadané „Státní svátek“ v rozpisu můžou zůstat, nevadí – na webu má ručně zadaná
+  celodenní poznámka přednost a svátek se neukáže dvakrát.
+- Web: /rozpis-lekaru má název svátku v buňce dne; v kalendáři objednání mají svátky červenou
+  tečku a název v bublině (i když web ve svátek objednává).
+
+Kontrola po startu: tabule na 28. 10. a 17. 11. (štítek), /rozpis-lekaru (název svátku v buňce),
+kalendář objednání na webu v měsíci se svátkem (tečka). Když se na /rozpis-lekaru svátek
+neukáže, stránka byla upravená ve webovém editoru a má vlastní kopii pohledu – ověřit:
+
+```sql
+SELECT id, key, website_id FROM ir_ui_view WHERE key = 'elite_vet_calendar.rozpis_lekaru';
+-- víc než jeden řádek = kopie z editoru; změnu je pak potřeba do kopie přenést ručně
+```
+
+Na počítačích s tabulí a na pokladnách obnovit stránku natvrdo (Ctrl+Shift+R).

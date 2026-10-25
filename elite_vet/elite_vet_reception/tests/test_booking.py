@@ -5,6 +5,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
+from odoo.addons.elite_vet_reservation.models.holidays import holiday_name
 from odoo.addons.elite_vet_reservation.models.reservation import RECEPTION_HORIZON_DAYS
 from odoo.addons.elite_vet_reservation.wizard.reservation_wizard import ReservationWizard
 
@@ -118,7 +119,8 @@ class TestBooking(ReceptionCase):
         data = reception.free_days(self.book_proc.id, start.isoformat())
         self.assertEqual([d["day"] for d in data], [(start + timedelta(days=i)).isoformat() for i in range(7)])
         times = {m for m, _room, _doc in self.wizard_lines(self.book_proc, self.day)}
-        self.assertEqual(data[1], {"day": self.day.isoformat(), "count": len(times), "closed": False})
+        self.assertEqual(data[1], {"day": self.day.isoformat(), "count": len(times), "closed": False,
+                                   "holiday": holiday_name(self.day)})
         self.assertTrue(data[1]["count"])
         # the doctor filter is passed on (she has a shift only on self.day)
         mine = reception.free_days(self.book_proc.id, start.isoformat(), self.doctor.id)
@@ -133,9 +135,30 @@ class TestBooking(ReceptionCase):
         self.assertIsNotNone(data[1]["count"])
         far = clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS + 1)
         self.assertEqual(reception.free_days(self.book_proc.id, far.isoformat(), days=1),
-                         [{"day": far.isoformat(), "count": None, "closed": False}])
+                         [{"day": far.isoformat(), "count": None, "closed": False, "holiday": holiday_name(far)}])
         with self.assertRaises(AccessError):
             self.api(self.outsider).free_days(self.book_proc.id, far.isoformat())
+
+    def test_free_days_marks_holidays(self):
+        """Task 17: a public holiday is marked in the strip (`holiday` = its name) and stays
+        bookable; the today screen shows it in the header."""
+        reception = self.api(self.reception)
+        day = clinic_today() + timedelta(days=1)
+        while not holiday_name(day):
+            day += timedelta(days=1)
+        if day > clinic_today() + timedelta(days=RECEPTION_HORIZON_DAYS - 2):
+            self.skipTest("no public holiday within the reception horizon")
+        self.env["elite.vet.setting"].nastaveni().booking_block_holidays = True   # web only
+        data = {d["day"]: d for d in reception.free_days(self.book_proc.id, day.isoformat(), days=2)}
+        self.assertEqual(data[day.isoformat()]["holiday"], holiday_name(day))
+        self.assertTrue(data[day.isoformat()]["count"], "reception still books on a holiday")
+        self.assertFalse(data[day.isoformat()]["closed"])
+        after = day + timedelta(days=1)
+        self.assertEqual(data[after.isoformat()]["holiday"], holiday_name(after))
+        self.assertEqual(reception.today_data(day.isoformat())["holiday"], holiday_name(day))
+        # a fixed date too: 17. 11. 2026, and a normal day
+        self.assertEqual(reception.today_data("2026-11-17")["holiday"], "Den boje za svobodu a demokracii")
+        self.assertIsNone(reception.today_data("2026-11-18")["holiday"])
 
     def test_free_days_closed_or_fully_booked(self):
         """Task 12: `closed` = the day cannot have a free time at all; a fully booked open day is
@@ -158,9 +181,12 @@ class TestBooking(ReceptionCase):
         data = {d["day"]: d for d in reception.free_days(proc.id, self.day.isoformat(), days=5)}
         self.assertEqual(data[self.day.isoformat()]["closed"], False)
         self.assertTrue(data[self.day.isoformat()]["count"])
-        self.assertEqual(data[booked.isoformat()], {"day": booked.isoformat(), "count": 0, "closed": False})
-        self.assertEqual(data[blocked.isoformat()], {"day": blocked.isoformat(), "count": 0, "closed": True})
-        self.assertEqual(data[exception.isoformat()], {"day": exception.isoformat(), "count": 0, "closed": True})
+        self.assertEqual(data[booked.isoformat()], {"day": booked.isoformat(), "count": 0, "closed": False,
+                                                     "holiday": holiday_name(booked)})
+        self.assertEqual(data[blocked.isoformat()], {"day": blocked.isoformat(), "count": 0, "closed": True,
+                                                      "holiday": holiday_name(blocked)})
+        self.assertEqual(data[exception.isoformat()], {"day": exception.isoformat(), "count": 0, "closed": True,
+                                                        "holiday": holiday_name(exception)})
         # a web-only block does not close the day for reception
         web_only = self.day + timedelta(days=4)
         Res.create({"kind": "block", "block_reason": "Jen web test", "block_scope": "web", "room_id": False,

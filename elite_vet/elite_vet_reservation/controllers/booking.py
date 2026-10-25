@@ -6,6 +6,7 @@ from werkzeug.exceptions import NotFound
 from odoo import _, fields, http
 from odoo.http import request
 
+from ..models.holidays import czech_holidays
 from ..models.pet import SPECIES
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
@@ -103,12 +104,32 @@ class BookingController(http.Controller):
         }
 
     @http.route("/rezervace/api/days", type="json", auth="public", website=True, methods=["POST"], csrf=False)
-    def days(self, procedure_id=None, year=None, month=None, **kw):
+    def days(self, procedure_id=None, year=None, month=None, with_holidays=False, **kw):
+        """Free days of the month: a list of ISO dates (unchanged response).
+
+        With `with_holidays` (the booking page sends it) the response is
+        {"days": [...], "holidays": {"YYYY-MM-DD": name}, "holidays_closed": bool}:
+        the Czech public holidays of the month are marked in the calendar, also when the
+        website books on them; `holidays_closed` = setting booking_block_holidays (the day is
+        unavailable). Older callers (the chat widget) keep getting the plain list."""
         proc = self._procedure(procedure_id)
         if not proc:
-            return []
-        doctor, spec = self._filters(kw)
-        return request.env["elite.vet.availability"].sudo().days(proc, int(year), int(month), doctor, spec)
+            free = []
+        else:
+            doctor, spec = self._filters(kw)
+            free = request.env["elite.vet.availability"].sudo().days(proc, int(year), int(month), doctor, spec)
+        if not with_holidays:
+            return free
+        return {"days": free, "holidays": self._month_holidays(year, month),
+                "holidays_closed": bool(self._setting().booking_block_holidays)}
+
+    def _month_holidays(self, year, month):
+        try:
+            year, month = int(year), int(month)
+            holidays = czech_holidays(year)
+        except (TypeError, ValueError, OverflowError):
+            return {}
+        return {day.isoformat(): name for day, name in sorted(holidays.items()) if day.month == month}
 
     @http.route("/rezervace/api/slots", type="json", auth="public", website=True, methods=["POST"], csrf=False)
     def slots(self, procedure_id=None, date=None, **kw):

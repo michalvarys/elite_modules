@@ -15,9 +15,15 @@
                  ru_RU: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"], en_US: ["Mo","Tu","We","Th","Fr","Sa","Su"] };
     var lang = root.dataset.lang || "cs_CZ";
     var months = MONTHS[lang] || MONTHS.cs_CZ, days = DAYS[lang] || DAYS.cs_CZ;
+    // Czech public holidays in the month (the names come from the server in Czech)
+    var HOLIDAY = { cs_CZ: "Státní svátek", de_DE: "Staatsfeiertag", ru_RU: "Государственный праздник", en_US: "Public holiday" };
+    var HOLIDAY_CLOSED = { cs_CZ: "online objednání v tento den není možné", de_DE: "an diesem Tag keine Online-Buchung",
+                           ru_RU: "онлайн-запись в этот день недоступна", en_US: "no online booking on this day" };
+    var holidayWord = HOLIDAY[lang] || HOLIDAY.cs_CZ, holidayClosed = HOLIDAY_CLOSED[lang] || HOLIDAY_CLOSED.cs_CZ;
 
     var state = { options: null, procedure: null, doctor: null, spec: null, date: null, time: null,
-                  slot: null, slotDoctor: null, month: null, year: null, daysOk: [], loadingDays: false };
+                  slot: null, slotDoctor: null, month: null, year: null, daysOk: [], loadingDays: false,
+                  holidays: {}, holidaysClosed: false };
     // Request counters: a slower, older response must not overwrite a newer one
     var seq = { days: 0, slots: 0 };
 
@@ -211,9 +217,14 @@
             grid.innerHTML = ""; grid.classList.add("is-loading"); grid.appendChild(loadingEl());
             q('[data-empty="days"]').hidden = true;
             state.loadingDays = true; updateArrows();
-            var p = filters(); p.year = state.year; p.month = state.month;
-            return rpc("/rezervace/api/days", p).then(function (list) {
+            var p = filters(); p.year = state.year; p.month = state.month; p.with_holidays = true;
+            return rpc("/rezervace/api/days", p).then(function (res) {
                 if (my !== seq.days) return;   // a newer request was made meanwhile
+                // {days, holidays, holidays_closed}; a plain list from an older server
+                var list = Array.isArray(res) ? res : (res && res.days) || [];
+                // kept across months: an empty month skipped by auto may be shown again below
+                Object.assign(state.holidays, (!Array.isArray(res) && res && res.holidays) || {});
+                state.holidaysClosed = !Array.isArray(res) && !!(res && res.holidays_closed);
                 if (auto && !list.length && !nextMonthBeyondHorizon()) {
                     if (++state.month > 12) { state.month = 1; state.year++; }
                     return attempt();
@@ -254,6 +265,13 @@
             var ok = state.daysOk.indexOf(iso) !== -1;
             cell.disabled = !ok;
             if (ok) cell.classList.add("is-free");
+            var holiday = state.holidays[iso];
+            if (holiday) {
+                cell.classList.add("is-holiday");
+                cell.title = holidayWord + ": " + holiday + (!ok && state.holidaysClosed ? " – " + holidayClosed : "");
+                cell.setAttribute("aria-label", d + ". – " + cell.title);
+                cell.appendChild(el("span", "evbk-day-hol"));
+            }
             if (new Date(state.year, state.month - 1, d).getTime() === today.getTime()) cell.classList.add("is-today");
             if (iso === state.date) cell.classList.add("is-selected");
             (function (iso) { cell.addEventListener("click", function () { state.date = iso; renderMonth(); loadSlots(); }); })(iso);

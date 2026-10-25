@@ -8,14 +8,20 @@
                 <button class="btn btn-secondary" t-on-click="() => this.shiftDay(1)">›</button>
                 <button class="btn btn-link" t-on-click="today">Dnes</button>
                 <h3 class="evb-day-title" t-esc="dayTitle"/>
-                <span t-if="!state.loading and state.data and state.data.day_note" class="evb-day-note"
+                <!-- Public holiday: always shown (reception books normally, it is only a reminder). -->
+                <span t-if="!state.loading and state.data and state.data.holiday" class="evb-day-note evb-holiday-note"
+                      t-att-title="state.data.holiday.label + ' – recepce v tento den objednává normálně (i ručním časem).'"
+                      t-esc="state.data.holiday.label"/>
+                <!-- Weekend note (or a holiday note already said by the badge above). -->
+                <span t-if="!state.loading and state.data and state.data.day_note and !(state.data.holiday and state.data.holiday.web_closed)"
+                      class="evb-day-note"
                       t-att-title="state.data.day_note + ' – recepce v tento den objednává normálně (i ručním časem).'"
                       t-esc="state.data.day_note"/>
                 <div class="evb-week" role="group" aria-label="Dny v týdnu">
                     <button t-foreach="weekDays" t-as="d" t-key="d.iso" type="button" class="evb-weekday"
-                            t-att-class="{'evb-weekday-selected': d.selected, 'evb-weekday-today': d.today}"
-                            t-att-title="d.today ? 'Dnes' : ''" t-on-click="() => this.goTo(d.iso)">
-                        <span class="evb-weekday-short" t-esc="d.short"/>
+                            t-att-class="{'evb-weekday-selected': d.selected, 'evb-weekday-today': d.today, 'evb-weekday-holiday': d.holiday}"
+                            t-att-title="d.title" t-on-click="() => this.goTo(d.iso)">
+                        <span class="evb-weekday-short"><t t-esc="d.short"/><span t-if="d.holiday" class="evb-holiday-dot" aria-hidden="true"/></span>
                         <span class="evb-weekday-date" t-esc="d.label"/>
                     </button>
                 </div>

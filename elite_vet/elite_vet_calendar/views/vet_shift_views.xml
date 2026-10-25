@@ -42,7 +42,9 @@
         <field name="name">elite.vet.shift.calendar</field>
         <field name="model">elite.vet.shift</field>
         <field name="arch" type="xml">
-            <calendar string="Rozpis služeb" date_start="date" color="type_id" mode="month" event_limit="6">
+            <calendar string="Rozpis služeb" date_start="date" color="type_id" mode="month" event_limit="6"
+                      js_class="elite_vet_holiday_calendar">
+                <!-- js_class: Czech public holidays in the day cells (static/src/holiday_calendar), nothing entered -->
                 <field name="doctor_id"/>
                 <field name="type_id"/>
             </calendar>

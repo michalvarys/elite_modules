@@ -5,6 +5,8 @@
         <div class="o_ev_today screen h-100 w-100 overflow-auto bg-100 p-2 p-md-3">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                 <h2 class="o_ev_title mb-0 me-2" t-esc="dayTitle"/>
+                <span t-if="state.data and state.data.holiday" class="o_ev_holiday_note me-2"
+                      t-att-title="'Státní svátek: ' + state.data.holiday + ' – recepce objednává normálně.'">Státní svátek: <t t-esc="state.data.holiday"/></span>
                 <div class="btn-group">
                     <button class="btn btn-light btn-lg" title="Předchozí den" t-on-click="() => this.changeDay(-1)">
                         <i class="fa fa-chevron-left"/>

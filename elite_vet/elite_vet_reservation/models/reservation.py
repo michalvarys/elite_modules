@@ -6,6 +6,7 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
+from .holidays import holiday_name
 from .pet import SPECIES
 
 STATES = [
@@ -473,7 +474,37 @@ class VetReservation(models.Model):
                 "axis": {"from": axis_from, "to": axis_to},
                 "rooms": rooms_out, "events": events, "waiting": waiting,
                 # Weekend / public holiday when the website does not book (label only; reception still books).
-                "day_note": A.web_day_note(day) or ""}
+                "day_note": A.web_day_note(day) or "",
+                # Public holiday of the day (always, also when the website books): badge in the day header.
+                "holiday": self._board_holiday(day, s),
+                # {"YYYY-MM-DD": name} of the holidays of the shown week (Mon-Sun): the weekday chips.
+                "week_holidays": self._week_holidays(day)}
+
+    @api.model
+    def _board_holiday(self, day, settings=None):
+        """{name, label, web_closed} of a public holiday on `day`, otherwise False.
+
+        Reception is only warned, never blocked (the clinic works nights and weekends);
+        `web_closed` = the website does not book on holidays (setting booking_block_holidays)."""
+        name = holiday_name(day)
+        if not name:
+            return False
+        settings = settings or self.env["elite.vet.setting"].nastaveni()
+        web_closed = bool(settings.booking_block_holidays)
+        label = "Státní svátek: %s" % name
+        return {"name": name, "web_closed": web_closed,
+                "label": label + (" · web neobjednává" if web_closed else "")}
+
+    @api.model
+    def _week_holidays(self, day):
+        monday = day - timedelta(days=day.weekday())
+        out = {}
+        for offset in range(7):
+            current = monday + timedelta(days=offset)
+            name = holiday_name(current)
+            if name:
+                out[current.isoformat()] = name
+        return out
 
     @api.model
     def board_suggestions(self, res_id):

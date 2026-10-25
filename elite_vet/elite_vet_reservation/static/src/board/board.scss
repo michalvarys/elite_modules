@@ -73,6 +73,17 @@
     max-width: 32ch; overflow: hidden; text-overflow: ellipsis;
 }
 
+.evb-holiday-note { border-color: #fca5a5; background: #fef2f2; color: #b91c1c; max-width: 70ch; }
+.evb-weekday-holiday:not(.evb-weekday-selected) {
+    background: #fef2f2;
+    &:not(.evb-weekday-today) { border-color: #fca5a5; }
+}
+.evb-holiday-dot {
+    display: inline-block; width: 6px; height: 6px; margin-left: 3px; vertical-align: 2px;
+    border-radius: 50%; background: #dc2626;
+}
+.evb-weekday-selected .evb-holiday-dot { background: #fff; }
+
 // ---------- doctor shifts ----------
 // All headers must share one height or the column time axes would drift apart;
 // hence a fixed height, with a scrollbar instead of clipping.

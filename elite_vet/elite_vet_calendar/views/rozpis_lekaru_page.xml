@@ -248,6 +248,8 @@
 
             .rs-slot { display: flex; align-items: flex-start; min-width: 0; }
             .rs-cell-note { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ev-closed); line-height: 1.4; }
+            /* státní svátek (počítá se sám): jako celodenní poznámka, barva zavřeno */
+            .rs-cell-holiday { margin-top: 2px; }
             /* barva textu prichazi z typu smeny jako inline styl */
             .rs-cell-event { font-size: 12px; font-weight: 700; color: var(--ev-accent-dark); line-height: 1.4; background: var(--ev-accent-light); border-radius: 9px; padding: 7px 9px; }
 
@@ -528,6 +530,9 @@
                                 r.type_id.sequence,
                                 r.id
                             )) if ev_has else []"/>
+                        <!-- Státní svátky se počítají samy (nic se nezadává); ručně zadaná celodenní
+                             poznámka v ten den má přednost, aby se svátek neukázal dvakrát. -->
+                        <t t-set="ev_hol" t-value="request.env['elite.vet.shift'].sudo().roster_holidays(ev_first, ev_next) if ev_has else {}"/>
 
                         <!-- Prázdný měsíc se nezobrazuje; první přidaná směna jej automaticky zpřístupní. -->
                         <div class="rs-month" t-if="ev_recs">
@@ -578,6 +583,7 @@
                                                             </div>
                                                         </t>
                                                     </t>
+                                                    <div t-if="ev_hol.get(ev_d)" class="rs-cell-note rs-cell-holiday" t-att-title="ev_hol.get(ev_d)" t-esc="ev_hol.get(ev_d)"/>
                                                 </t>
                                             </div>
                                         </t>

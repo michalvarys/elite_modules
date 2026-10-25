@@ -56,6 +56,12 @@ $ev-board-line: #e2e8f0;
     white-space: nowrap;
 }
 
+.o_ev_board_holiday {
+    border-color: #fca5a5;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
 .o_ev_board_hint {
     font-size: 0.8rem;
     color: $gray-600;

@@ -15,6 +15,11 @@
                 <field name="has_pet" invisible="1"/>
                 <field name="send_email_offered" invisible="1"/>
 
+                <!-- Public holiday on the date: a warning only (reception books normally). -->
+                <div invisible="not holiday_warning" class="alert alert-warning o_ev_holiday_warning" role="status">
+                    <field name="holiday_warning" readonly="1" nolabel="1"/>
+                </div>
+
                 <!-- 1. What and when -->
                 <group invisible="step != 'what'">
                     <group>

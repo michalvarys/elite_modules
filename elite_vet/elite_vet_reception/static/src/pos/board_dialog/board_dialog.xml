@@ -12,7 +12,9 @@
                     </div>
                     <input type="date" class="form-control form-control-lg w-auto o_ev_board_date" t-att-value="state.day" t-on-change="onDayInput"/>
                     <h3 class="o_ev_board_day mb-0" t-esc="dayTitle"/>
-                    <span t-if="state.data and state.data.day_note" class="o_ev_board_day_note"
+                    <span t-if="state.data and state.data.holiday" class="o_ev_board_day_note o_ev_board_holiday"
+                          t-att-title="state.data.holiday.label + ' – recepce v tento den objednává normálně.'" t-esc="state.data.holiday.label"/>
+                    <span t-if="state.data and state.data.day_note and !(state.data.holiday and state.data.holiday.web_closed)" class="o_ev_board_day_note"
                           t-att-title="state.data.day_note + ' – recepce v tento den objednává normálně.'" t-esc="state.data.day_note"/>
                     <i t-if="state.loading or state.moving" class="fa fa-circle-o-notch fa-spin text-muted"/>
                     <span class="flex-grow-1"/>

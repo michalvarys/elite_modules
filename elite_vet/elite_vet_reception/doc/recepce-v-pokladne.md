@@ -68,6 +68,9 @@ Tři sloupce:
 - **Čekárna a ordinace** – přijatí klienti: ordinace, lékařka (u neobjednaných případně
   „kterákoli lékařka“), jak dlouho čekají, a štítek **Čeká** nebo **V ordinaci**.
 - **K pokladně** – účty, které lékařka uzavřela a které čekají na zaplacení, s částkou.
+
+Ve státní svátek je u nadpisu dne červený štítek, např. „Státní svátek: Den vzniku samostatného
+československého státu“. Je to jen připomínka, nic se neblokuje.
   Pod nimi je **Dnes zaplaceno** (počet).
 
 Přehled se obnovuje sám: když lékařka zavolá pacienta nebo uzavře účet, změna je v pokladně
@@ -248,7 +251,8 @@ se ukáže, až je předchozí vyplněný.
    volného“** je otevřený, ale plně obsazený den, šedé **„zavřeno“** den, kdy úkon nejde vůbec
    (ordinace zavřená, celodenní blokace, nebo nikdo ze služby, když je lékařka potřeba) – na ten
    kliknout nejde. Když vybraný den po výběru úkonu volno nemá, přeskočí výběr sám na první den
-   řady s volnem. Šipky **‹ ›** posunou o týden (nejdřív na dnešek), kalendář pod nimi vybere jiné
+   řady s volnem. Státní svátek má v řadě dnů červený rámeček a nápis **svátek** (najetím myší
+   jeho název); vybrat ho jde normálně. Šipky **‹ ›** posunou o týden (nejdřív na dnešek), kalendář pod nimi vybere jiné
    datum. Když vybraný den nemá volno, objeví se tlačítko s **nejbližším dalším volným dnem**.
    Chce-li klient konkrétní lékařku, klikněte vpravo na **jen lékařka…** a vyberte ji; dny,
    ordinace, časy i nejbližší volný čas se pak počítají jen pro ni. Křížkem u jejího jména filtr
@@ -260,7 +264,8 @@ se ukáže, až je předchozí vyplněný.
    jako na tabuli a na webu.
 
 Dole je **souhrn** celé objednávky jednou větou, třeba „Rex · Kontrola · čt 22. 10. 2026 9:30 ·
-Ordinace 2 · MVDr. Malá“, pod ním nepovinná **poznámka** a jediné tlačítko **Objednat**. Zkontrolujte
+Ordinace 2 · MVDr. Malá“ (ve státní svátek s červeným upozorněním „Státní svátek: …“ – objednat
+jde normálně), pod ním nepovinná **poznámka** a jediné tlačítko **Objednat**. Zkontrolujte
 souhrn a klikněte. Objeví se potvrzení „Objednáno: čt 22. 10. 2026 9:30 · Rex“; rezervace je
 potvrzená a je na tabuli i v Přicházejí toho dne.
 
@@ -298,6 +303,8 @@ nepřepíná do jiné stránky.
 - **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, iniciály lékařky, čas,
   zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
   jsou bledé.
+- Ve státní svátek je u data červený štítek „Státní svátek: …“ (když web ve svátky neobjednává,
+  s „· web neobjednává“).
 - **‹ Dnes ›** a pole s datem přepínají den; tabule se posune na „teď“ (dnes), u jiného dne na
   začátek. Při hodně ordinacích se tabule posouvá i do stran.
 - Tabule se sama obnovuje (změna z webu, od kolegyně nebo z backendu se ukáže hned, záložně

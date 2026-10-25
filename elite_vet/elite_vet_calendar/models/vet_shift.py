@@ -1,5 +1,12 @@
+from datetime import timedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+
+from .holidays import holidays_between
+
+# The calendar views ask for at most a few weeks; this caps a hand-made call.
+HOLIDAY_MAP_MAX_DAYS = 400
 
 
 class VetShift(models.Model):
@@ -42,6 +49,31 @@ class VetShift(models.Model):
              "Státní svátek. Vyplňuje se jen u typů s celodenní poznámkou; "
              "když zůstane prázdný, použije se název typu.",
     )
+
+    @api.model
+    def holiday_map(self, date_from, date_to):
+        """{"YYYY-MM-DD": name} of the Czech public holidays from `date_from` to `date_to`
+        (both included; dates or ISO strings). Computed, nothing is stored: the shift
+        calendar, Rozpis lékařů and /rozpis-lekaru show them without anyone entering them."""
+        start, stop = fields.Date.to_date(date_from), fields.Date.to_date(date_to)
+        if not start or not stop or stop < start:
+            return {}
+        if (stop - start).days > HOLIDAY_MAP_MAX_DAYS:
+            stop = start + timedelta(days=HOLIDAY_MAP_MAX_DAYS)
+        return {day.isoformat(): name for day, name in sorted(holidays_between(start, stop).items())}
+
+    @api.model
+    def roster_holidays(self, date_from, date_to):
+        """{date: name} of the holidays in [date_from, date_to) that have no hand-entered
+        full-day note (Zavřeno, Státní svátek …) - /rozpis-lekaru prints these by itself,
+        a note entered by hand wins so the day does not show the holiday twice."""
+        start = fields.Date.to_date(date_from)
+        stop = fields.Date.to_date(date_to) - timedelta(days=1)
+        if stop < start:
+            return {}
+        noted = set(self.sudo().search([("date", ">=", start), ("date", "<=", stop),
+                                        ("type_id.is_note", "=", True)]).mapped("date"))
+        return {day: name for day, name in holidays_between(start, stop).items() if day not in noted}
 
     @api.depends("date", "doctor_id", "type_id", "note")
     def _compute_display_name(self):

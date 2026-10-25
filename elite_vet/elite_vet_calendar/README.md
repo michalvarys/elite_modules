@@ -19,6 +19,12 @@ Vyplní se tři věci a je hotovo:
 (klik do řádku, vyplnit, Enter na další), nebo se vpravo nahoře přepne na
 **kalendář** a kliká se do dní.
 
+**Státní svátky se nezadávají.** V kalendáři Rozpisu služeb (i v Rezervace › Rozpis lékařů
+a v kalendáři Rezervace) je název svátku v buňce dne sám, na webu /rozpis-lekaru také (stejným
+písmem jako celodenní poznámky, červeně). Lékařka, která ve svátek slouží, je v buňce dál. Když
+na ten den ručně zadáte celodenní poznámku (třeba „Zavřeno“), na webu se ukáže jen ona, ne
+dvakrát. Svátky se počítají v kódu (`models/holidays.py`), nezakládají se žádné záznamy.
+
 **Zavřeno, svátek, den otevřených dveří:** vybere se typ, který má zaškrtnutou
 **Celodenní poznámku**. Lékařka se nevyplňuje — pole samo zmizí — a do
 **Poznámky** se napíše text, například `Státní svátek`. Na webu se vypíše přes
@@ -61,6 +67,9 @@ Stránka ukazuje **aktuální a následující měsíc**. Přelomem měsíce se 
 samy. Čísla dnů, prázdné buňky i názvy měsíců se počítají samy.
 
 Po najetí na jméno vyskočí bublina s názvem směny a časem.
+
+Státní svátky se v buňce dne vypíšou samy (název svátku česky, i na německé, anglické
+a ruské verzi stránky). Měsíc bez jediné zadané směny se ale dál nezobrazuje.
 
 ## Navigace
 

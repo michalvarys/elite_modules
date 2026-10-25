@@ -1,0 +1,27 @@
+// Czech public holidays in the calendar views (holiday_calendar.js).
+.o_calendar_widget {
+    .o_ev_holiday {
+        background-color: rgba(185, 28, 28, 0.05);
+    }
+    .o_ev_holiday_name {
+        color: #b91c1c;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .fc-daygrid-day-top .o_ev_holiday_name {
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: calc(100% - 2rem);
+        align-self: center;
+        padding: 0 4px;
+        text-align: left;
+    }
+    .o_ev_holiday_header {
+        display: block;
+        max-width: 100%;
+    }
+}

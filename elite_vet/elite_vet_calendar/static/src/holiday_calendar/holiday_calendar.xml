@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- web.CalendarCommonRendererHeader + the holiday name (week / day). -->
+    <t t-name="elite_vet_calendar.HolidayCalendarHeader">
+        <span class="o_cw_day_name" t-esc="scale == 'day' ? weekdayLong : weekdayShort "/> <span t-if="scale != 'month'" class="fc-day-number o_cw_day_number" t-esc="day"/>
+        <span t-if="holiday" class="o_ev_holiday_name o_ev_holiday_header" t-att-title="'Státní svátek: ' + holiday" t-esc="holiday"/>
+    </t>
+</templates>
