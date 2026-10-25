@@ -343,3 +343,57 @@ SELECT id, key, website_id FROM ir_ui_view WHERE key = 'elite_vet_calendar.rozpi
 ```
 
 Na počítačích s tabulí a na pokladnách obnovit stránku natvrdo (Ctrl+Shift+R).
+
+## Doplnění: požadavky 25. 10.
+
+Pro server, na kterém už běží předchozí doplnění (státní svátky). Sedm požadavků kliniky, každý
+v samostatném commitu (větev `feature/elite-vet-requests-1025`). Cílový kód: `elite_vet_calendar`
+18.0.5.4.0, `elite_vet_clinic` 18.0.1.1.0, `elite_vet_reservation` 18.0.2.4.0,
+`elite_vet_reception` 18.0.1.3.0 (`elite_vet_sale`, `elite_vet_web` beze změny verze).
+
+Pravidla a záloha jako v krocích 2–3 (pokladny zavřené, krok 3). Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_calendar,elite_vet_clinic,elite_vet_reservation,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-pozadavky-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-pozadavky-*.log      # nesmí nic najít
+grep -n "block_reason:" upgrade-pozadavky-*.log                      # migrace důvodu blokace (počet)
+```
+
+Co upgrade udělá s daty:
+- **Důvod blokace** přestává být překládaný (pre-migrace `elite_vet_reservation` 18.0.2.4.0):
+  sloupec `block_reason` se z jsonb převede na text – zůstane česká hodnota, jinak anglická, jinak
+  jakákoli vyplněná. V logu je „block_reason: N values kept as plain text“.
+- Nová pole (prázdná, nic se nedopočítává): záznam návštěvy `reception_note`, `room_note`;
+  rezervace `cancelled_by_id`, `cancelled_at` (vyplní se až při dalším zrušení – u starých
+  zrušených je kdo a kdy v historii zpráv rezervace). Počty „Nedorazil“ se počítají za běhu.
+- Nový průvodce `elite.vet.reservation.restore.wizard` (právo jen Správce rezervací), nová menu
+  **Rezervace › Historie rezervací** (jen Správce rezervací). Nic se nenastavuje.
+
+**Co se změní uživatelům:**
+1. **/rozpis-lekaru:** v buňce dne jen tečka a jméno lékařky; ikony specializací jsou v bublině
+   u jména (najetí myší, klik / ťuknutí na jméno, klávesnice).
+2. **Poznámka recepce pro ordinaci:** Přijmout (Dnes i tabule v pokladně) otevře okno
+   s nepovinnou poznámkou (Enter = Přijmout); Přijmout bez objednání má pole v Kartotéce; v Dnes
+   u čekajících tlačítko Poznámka. Ordinace ji vidí žlutě (Moji pacienti dnes, obrazovka
+   Ordinace, karta pacienta nahoře).
+3. **Poznámka z ordinace pro recepci:** v kartě pacienta nad „Hotovo, k pokladně“ (jde měnit
+   i po uzavření); v pokladně žlutě v K pokladně a v Kartotéce, Zaplatit ji nejdřív ukáže
+   (Pokračovat k platbě). Obě poznámky jsou interní, na účtence ani faktuře nejsou.
+4. **Blokace:** důvod napsaný s profilem v angličtině / němčině se uloží a všichni ho vidí stejně.
+5. **Tabule (backend i pokladna):** přetažení rezervace nebo blokace se nejdřív zeptá
+   „Přesunout … z … na …?“ (i s upozorněním na e-mail klientovi); Zrušit nic nezmění.
+6. **Historie rezervací** (Správce rezervací): všechny rezervace s filtry (Zrušené, Nedorazil,
+   Přesunuté, Dnes / Tento týden / Tento měsíc …), kdo a kdy zrušil, historie změn v kartě
+   a tlačítko **Obnovit** u zrušené rezervace (jen když je termín volný; e-mail klientovi jen se
+   zaškrtnutým „Poslat klientovi potvrzení“).
+7. **Nedorazil:** počet za 12 měsíců u klienta a zvířete – tlačítko na kartě klienta / mazlíčka,
+   štítek v Kartotéce pokladny, upozornění v Objednat a v průvodci Nová rezervace.
+
+Kontrola po startu:
+- /rozpis-lekaru: v buňkách nejsou ikony, najetím na jméno bublina s ikonami. Když se stránka
+  nezměnila, má kopii z webového editoru (SQL u doplnění „státní svátky“ výše) – změnu je
+  potřeba do kopie přenést ručně.
+- Rezervace › Historie rezervací je vidět správci, recepci ne.
+- Upgrade log: řádek `block_reason:` a žádná chyba.
+
+Na počítačích s tabulí, v kartě pacienta a na pokladnách obnovit stránku natvrdo (Ctrl+Shift+R).
