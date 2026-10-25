@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 23: Vytvořit účty – one account per team member of Rozpis služeb › Lékařky. -->
+    <record id="view_account_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.account.wizard.form</field>
+        <field name="model">elite.vet.account.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Vytvořit účty">
+                <div class="alert alert-info" role="status">
+                    Pro každého zaškrtnutého člena týmu se založí účet s vybranou rolí a propojí se
+                    s ním (sloupec <b>Účet</b>). Přihlašovací jméno je e-mail z karty v Náš tým.
+                    Účty nemají heslo – nastavte ho v Nastavení › Uživatelé, nebo pošlete pozvánku.
+                </div>
+                <field name="line_ids" nolabel="1">
+                    <list editable="bottom" create="0">
+                        <field name="create_account" widget="boolean_toggle"/>
+                        <field name="doctor_id" force_save="1" options="{'no_open': True}"/>
+                        <field name="login" required="create_account" placeholder="e-mail"/>
+                        <field name="role"/>
+                    </list>
+                </field>
+                <group>
+                    <field name="send_invitation"/>
+                </group>
+                <footer>
+                    <button name="action_create" type="object" string="Vytvořit účty" class="btn-primary"/>
+                    <button string="Zrušit" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Rozpis služeb › Lékařky › Akce › Vytvořit účty (Vedení only). -->
+    <record id="action_server_account_wizard" model="ir.actions.server">
+        <field name="name">Vytvořit účty</field>
+        <field name="model_id" ref="elite_vet_calendar.model_elite_vet_doctor"/>
+        <field name="binding_model_id" ref="elite_vet_calendar.model_elite_vet_doctor"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+        <field name="state">code</field>
+        <field name="code">action = env["elite.vet.account.wizard"].action_open()</field>
+    </record>
+
+    <!-- Button on the Lékařky list (always visible, Vedení only). -->
+    <record id="view_vet_doctor_list_accounts" model="ir.ui.view">
+        <field name="name">elite.vet.doctor.list.accounts</field>
+        <field name="model">elite.vet.doctor</field>
+        <field name="inherit_id" ref="elite_vet_calendar.view_vet_doctor_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <header>
+                    <button name="%(action_server_account_wizard)d" type="action" string="Vytvořit účty"
+                            class="btn-secondary" display="always"
+                            groups="elite_vet_reservation.group_reservation_manager"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+</odoo>

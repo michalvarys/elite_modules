@@ -8,7 +8,10 @@ groups are removed. Only on a role change: a manual tick or untick afterwards st
 
 Room accounts (task 15): one account per consultation room ("Ordinace 1", …) with the field
 Ordinace (elite_vet_room_id). Its home is the screen Ordinace on that room, instead of the
-doctor/nurse home (Vedení keeps its own)."""
+doctor/nurse home (Vedení keeps its own).
+
+Accounts of team members (task 23): a Sestra / Lékařka account linked to a team member
+(elite.vet.doctor.user_id) also gets the screen Ordinace; it opens the room of her duty."""
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError
 
@@ -23,6 +26,7 @@ ROLE_HOME_ACTIONS = (
 )
 MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
 RECEPTION_GROUP = "elite_vet_reservation.group_reservation_reception"
+NURSE_GROUP = "elite_vet_clinic.group_clinic_nurse"
 ROOM_HOME_ACTION = "elite_vet_reception.action_room_board"
 GROUP_KEYS = ("groups_id",)
 HOME_KEYS = GROUP_KEYS + ("elite_vet_room_id",)
@@ -70,9 +74,12 @@ class ResUsers(models.Model):
 
     def _elite_vet_home_action(self):
         """The role home action of the user (ir.actions record), empty without a role. A room
-        account below Vedení gets the screen Ordinace."""
+        account below Vedení, and a Sestra / Lékařka account linked to a team member (task 23), get
+        the screen Ordinace."""
         self.ensure_one()
-        if self.elite_vet_room_id and self.has_group(RECEPTION_GROUP) and not self.has_group(MANAGER_GROUP):
+        if not self.has_group(MANAGER_GROUP) and (
+                (self.elite_vet_room_id and self.has_group(RECEPTION_GROUP))
+                or (self.sudo().elite_vet_doctor_id and self.has_group(NURSE_GROUP))):
             action = self.env.ref(ROOM_HOME_ACTION, raise_if_not_found=False)
             if action:
                 return action.sudo()

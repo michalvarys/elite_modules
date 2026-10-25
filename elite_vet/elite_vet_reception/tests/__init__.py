@@ -9,3 +9,4 @@ from . import test_visit_notes
 from . import test_no_show
 from . import test_winvet_calendar
 from . import test_pet_form
+from . import test_member_accounts

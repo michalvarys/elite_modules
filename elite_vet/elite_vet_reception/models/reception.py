@@ -287,10 +287,14 @@ class Reception(models.AbstractModel):
             raise UserError(_("Návštěva je už uzavřená."))
         room = self._get_room(room_id) if room_id else record.room_id
         doctor = self._get_doctor(doctor_id)
-        needs_doctor = self._set_room(record, room, doctor) if room or doctor else []
+        taker = self._taking_doctor()
+        needs_doctor = self._set_room(record, room, doctor, taker=taker) if room or doctor else []
+        if not doctor and taker and record.doctor_from_roster:
+            # Task 23: a linked doctor calling the patient replaces the doctor from the roster
+            record.write({"doctor_id": taker.id, "doctor_from_roster": False})
         if not record.doctor_id and not needs_doctor:
             # Ruling R17: an unassigned walk-in is taken by the doctor who calls it in
-            doctor = record._doctor_for_user()
+            doctor = taker or record._doctor_for_user()
             if doctor:
                 record.doctor_id = doctor
         if record.visit_stage != "in_room":

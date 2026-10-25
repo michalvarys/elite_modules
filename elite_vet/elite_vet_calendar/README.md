@@ -32,7 +32,13 @@ celou buňku barvou toho typu. Když poznámku necháte prázdnou, použije se n
 
 ## Lékařky
 
-Jméno a nic víc. Odsud se nabízejí při zadávání směny.
+Jméno, karta v Náš tým a **Účet**. Odsud se nabízejí při zadávání směny.
+
+**Účet** je přihlašovací účet toho člena týmu (jen interní uživatel, jeden účet patří nejvýš
+jednomu člověku). Podle něj Odoo pozná, kdo je přihlášený: Moji pacienti dnes, obrazovka Ordinace,
+kdo pacienta převzal (modul Recepce). Na formuláři uživatele se ukáže jen pro čtení jako **Člen
+týmu**. Účty pro všechny najednou založí vedení tlačítkem **Vytvořit účty** (modul Recepce, návod
+v `elite_vet_reception/doc/ordinace.md`).
 
 Lékařku, která už na klinice nepracuje, není nutné mazat — stačí ji
 archivovat, minulé směny zůstanou v pořádku.

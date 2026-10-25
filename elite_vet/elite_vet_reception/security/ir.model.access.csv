@@ -1,1 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_elite_vet_account_wizard_manager,elite.vet.account.wizard.manager,model_elite_vet_account_wizard,elite_vet_reservation.group_reservation_manager,1,1,1,1
+access_elite_vet_account_wizard_line_manager,elite.vet.account.wizard.line.manager,model_elite_vet_account_wizard_line,elite_vet_reservation.group_reservation_manager,1,1,1,1

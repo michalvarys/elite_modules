@@ -7,6 +7,7 @@
             <list string="Lékařky" editable="bottom">
                 <field name="name" string="Jméno"/>
                 <field name="member_id" string="Karta v týmu"/>
+                <field name="user_id" string="Účet" options="{'no_create': True}"/>
                 <field name="specialization_ids" widget="many2many_tags" string="Specializace"/>
             </list>
         </field>
@@ -28,6 +29,7 @@
                             <field name="specialization_ids" widget="many2many_tags"/>
                         </group>
                         <group>
+                            <field name="user_id" options="{'no_create': True}"/>
                             <field name="active" string="Aktivní"/>
                         </group>
                     </group>
@@ -48,8 +50,25 @@
         <field name="arch" type="xml">
             <search string="Lékařky">
                 <field name="name"/>
+                <field name="user_id"/>
+                <filter name="bez_uctu" string="Bez účtu" domain="[('user_id', '=', False)]"/>
                 <filter name="neaktivni" string="Archivované" domain="[('active', '=', False)]"/>
             </search>
+        </field>
+    </record>
+
+    <!-- User form › Access rights: the team member of the account (task 23, read-only; the link
+         is set in Rozpis služeb › Lékařky › Účet). elite_vet_reception adds its fields here. -->
+    <record id="view_users_form_elite_vet_member" model="ir.ui.view">
+        <field name="name">res.users.form.elite.vet.member</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="Elite Vet" name="elite_vet">
+                    <field name="elite_vet_doctor_id" readonly="1"/>
+                </group>
+            </xpath>
         </field>
     </record>
 

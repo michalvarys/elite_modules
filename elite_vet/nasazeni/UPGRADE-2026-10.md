@@ -598,3 +598,46 @@ Kontrola po startu: Kartotéka → klient → **+ Nové zvíře** (Další údaj
 **Upravit** u zvířete s hmotností z WinVetu (Další údaje otevřené, hmotnost s čárkou). Recepci
 připomenout: u zvířat z WinVetu přenos dál přepisuje pole, která má i WinVet (seznam v návodu
 recepce, kapitola 3 „Souběh s WinVetem“) – měnit je i ve WinVetu.
+
+## Doplnění: účty členů týmu
+
+Každý člen týmu (Rozpis služeb › Lékařky) může mít vlastní účet, propojený ve sloupci **Účet**.
+Propojená lékařka / sestra začíná na obrazovce Ordinace na ordinaci své dnešní služby, lékařka se
+zapisuje k pacientům, které zavolá nebo vezme do ordinace, Moji pacienti dnes jsou podle propojení.
+Vedení zakládá účty průvodcem **Vytvořit účty**. Větev `feature/elite-vet-member-accounts`. Cílový
+kód: `elite_vet_calendar` 18.0.5.5.0, `elite_vet_clinic` 18.0.1.2.0, `elite_vet_reception`
+18.0.1.7.0 (nově závisí na `auth_signup`, který je v Odoo nainstalovaný vždy).
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_calendar,elite_vet_clinic,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-ucty-tymu-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-ucty-tymu-*.log      # nesmí nic najít
+```
+
+Přibudou sloupce `elite_vet_doctor.user_id` (s unikátním omezením) a
+`elite_vet_clinical_record.doctor_from_roster`, dva přechodné modely průvodce a jejich práva (jen
+Vedení). Data se nemění: nikdo zatím propojený není, takže se nic nechová jinak, dokud se účty
+nepropojí. Na počítačích obnovit stránku natvrdo (Ctrl+Shift+R).
+
+**Jak založit účty (vedení, po upgradu):**
+1. Rozpis služeb › **Lékařky** › tlačítko **Vytvořit účty**.
+2. Zkontrolovat řádky: přihlašovací jméno (e-mail z karty v Náš tým; prázdné doplnit nebo řádek
+   nechat nezaškrtnutý), roli (Lékařka u lékařek s rezervacemi, jinak Sestra – recepci přepnout
+   na Recepce), zaškrtnutí **Vytvořit**.
+3. **Hesla** – jedna ze dvou cest:
+   - nechat **Poslat pozvánku e-mailem** vypnuté a heslo nastavit v Nastavení › Uživatelé › účet ›
+     Akce › **Změnit heslo** (sdělit osobně), nebo
+   - zaškrtnout **Poslat pozvánku e-mailem**: každý dostane standardní pozvánku Odoo s odkazem na
+     nastavení hesla (zařadí se do fronty e-mailů a odejde s nejbližším během odesílání, odkaz platí
+     podle `auth_signup.signup_validity_hours`, výchozí 6 dní). Musí fungovat odchozí pošta.
+4. **Vytvořit účty** – zpráva řekne, kolik účtů vzniklo a kolik řádků se přeskočilo.
+5. Existující účet (např. založený dřív ručně) propojit přímo ve sloupci **Účet**; průvodce takový
+   řádek nenabízí, pokud už propojený je, a odmítne přihlašovací jméno, které už má jiný účet.
+
+Kontrola: přihlásit se jedním novým účtem lékařky v den, kdy má v Rozpisu lékařů službu → otevře se
+Ordinace na její ordinaci; Moji pacienti dnes ukazují její rezervace. Účty ordinací se nemění.
+
+```sql
+SELECT d.name, u.login FROM elite_vet_doctor d JOIN res_users u ON u.id = d.user_id ORDER BY d.name;
+```

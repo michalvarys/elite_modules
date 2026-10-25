@@ -137,14 +137,23 @@ class ClinicalRecordCardApi(models.Model):
 
     @api.model
     def _doctor_for_user(self, user=None):
-        """Doctor whose name matches the user's name (titles, case, accents and word order
-        ignored, as WinVet users are matched in elite_vet_winvet). Only a unique match."""
+        """Team member of the user: the linked one (elite.vet.doctor.user_id, task 23) first.
+        A user without a link falls back to the doctor whose name matches the user's name
+        (titles, case, accents and word order ignored, as WinVet users are matched in
+        elite_vet_winvet): only a unique match, and none when a doctor of that name is linked
+        to another account."""
         user = user or self.env.user
+        Doctor = self.env["elite.vet.doctor"]
+        linked = Doctor.search([("user_id", "=", user.id)], limit=1) if user else Doctor
+        if linked:
+            return linked
         key = frozenset(name_words(user.name))
         if not key:
-            return self.env["elite.vet.doctor"]
-        matches = self.env["elite.vet.doctor"].search([]).filtered(lambda d: frozenset(name_words(d.name)) == key)
-        return matches if len(matches) == 1 else self.env["elite.vet.doctor"]
+            return Doctor
+        matches = Doctor.search([]).filtered(lambda d: frozenset(name_words(d.name)) == key)
+        if len(matches) != 1 or matches.user_id:
+            return Doctor
+        return matches
 
     @api.model
     def _species_label(self, pet):

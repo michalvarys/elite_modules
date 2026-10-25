@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Recepce",
-    "version": "18.0.1.6.0",
+    "version": "18.0.1.7.0",
     "category": "Sales/Point of Sale",
     "summary": "Recepce v pokladně: dnešní příchody, čekárna, účty k zaplacení a stavy návštěvy.",
     "description": """
@@ -16,6 +16,7 @@ Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných k
     "depends": [
         "elite_vet_sale",
         "pos_hr",
+        "auth_signup",
     ],
     "data": [
         "security/ir.model.access.csv",
@@ -23,6 +24,7 @@ Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných k
         "data/home_actions.xml",
         "data/menus.xml",
         "views/res_users_views.xml",
+        "views/account_wizard_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

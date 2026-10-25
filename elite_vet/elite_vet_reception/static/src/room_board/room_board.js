@@ -8,6 +8,7 @@
 // Data: elite.vet.reception.room_board (models/room_board.py, shapes in README.md).
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { useSetupAction } from "@web/search/action_hook";
 import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 
 const RECEPTION = "elite.vet.reception";
@@ -59,6 +60,9 @@ export class RoomBoard extends Component {
         const action = this.props.action || {};
         const params = action.params || action.context?.params || {};
         this.paramRoomId = parseInt(params.room_id || 0, 10) || null;
+        // the switch as it was when the user left the screen (back through the breadcrumbs)
+        this.restoredView = this.props.state?.roomView ?? null;
+        useSetupAction({ getLocalState: () => ({ roomView: this.state.view }) });
 
         onWillStart(async () => {
             await this.load();
@@ -85,13 +89,20 @@ export class RoomBoard extends Component {
         if (this.state.drag || this.state.busy) return;
         this.load().catch(() => {});
     }
-    /** A room account opens its own room every time; others the remembered choice. */
+    /** A room account opens its own room every time. An account of a team member (task 23)
+     *  opens the room of her duty now (else her next duty today, else Všechny ordinace) on every
+     *  open; her switch holds while she works in the screen (also back from a card) and is not
+     *  stored in the browser. Others get the choice remembered by this browser. */
     initialView() {
         const data = this.state.data;
+        const perms = data.perms;
         const ids = new Set(data.rooms.map((r) => r.id));
-        const wanted = [this.paramRoomId, data.perms.user_room_id];
-        for (const id of wanted) {
-            if (id && ids.has(id)) return id;
+        const valid = (view) => view === ALL || ids.has(view);
+        if (this.paramRoomId && ids.has(this.paramRoomId)) return this.paramRoomId;
+        if (perms.user_room_id && ids.has(perms.user_room_id)) return perms.user_room_id;
+        if (this.restoredView !== null && valid(this.restoredView)) return this.restoredView;
+        if (perms.member_account) {
+            return perms.roster_room_id && ids.has(perms.roster_room_id) ? perms.roster_room_id : ALL;
         }
         const saved = loadView();
         if (saved && saved !== ALL && ids.has(parseInt(saved, 10))) return parseInt(saved, 10);
@@ -100,7 +111,7 @@ export class RoomBoard extends Component {
     selectView(view) {
         this.state.view = view;
         this.state.pickRoom = null;
-        saveView(view);
+        if (!this.state.data?.perms.member_account) saveView(view);
     }
 
     // ------------------------------------------------------------ getters

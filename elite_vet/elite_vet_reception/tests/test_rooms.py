@@ -230,9 +230,11 @@ class TestRooms(ReceptionCase):
         self.assertFalse(booked_card["draggable"])
         self.assertIsNone(booked_card["record_id"])
         self.assertEqual(booked_card["time"], "15:00")
-        self.assertEqual(data["perms"], {"can_call": False, "user_room_id": None})
+        self.assertEqual(data["perms"], {"can_call": False, "user_room_id": None,
+                                         "member_account": False, "roster_room_id": None})
         self.assertEqual(self.api(self.room_user).room_board()["perms"],
-                         {"can_call": True, "user_room_id": self.room1.id})
+                         {"can_call": True, "user_room_id": self.room1.id,
+                          "member_account": False, "roster_room_id": None})
 
     # ---------------------------------------------------------------- rights
     def test_rights(self):

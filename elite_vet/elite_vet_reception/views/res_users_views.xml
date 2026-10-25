@@ -11,17 +11,16 @@
         <field name="code">action = model.action_elite_vet_set_home_actions()</field>
     </record>
 
-    <!-- User form › Access rights: the room of a room account (task 15). -->
+    <!-- User form › Access rights › Elite Vet (group of elite_vet_calendar with Člen týmu): the
+         room of a room account (task 15). -->
     <record id="view_users_form_elite_vet_room" model="ir.ui.view">
         <field name="name">res.users.form.elite.vet.room</field>
         <field name="model">res.users</field>
-        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="inherit_id" ref="elite_vet_calendar.view_users_form_elite_vet_member"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='access_rights']" position="inside">
-                <group string="Elite Vet" name="elite_vet">
-                    <field name="elite_vet_room_id" options="{'no_create': True}"/>
-                </group>
-            </xpath>
+            <field name="elite_vet_doctor_id" position="after">
+                <field name="elite_vet_room_id" options="{'no_create': True}"/>
+            </field>
         </field>
     </record>
 

@@ -24,6 +24,22 @@ class ClinicalRecordVisitStage(models.Model):
     room_id = fields.Many2one("elite.vet.room", string="Ordinace", compute="_compute_room_id", store=True,
                               readonly=False, index=True, tracking=True, ondelete="set null", copy=False)
 
+    # Task 23: the doctor was filled automatically from the roster (doctor on duty in the room).
+    # A linked doctor who takes the patient replaces such a doctor; any other change of the doctor
+    # (chosen by hand, from the reservation, …) clears the flag, so that doctor is kept.
+    doctor_from_roster = fields.Boolean(string="Lékařka z rozpisu", copy=False, readonly=True)
+
+    def write(self, vals):
+        changed = self.browse()
+        if "doctor_id" in vals and "doctor_from_roster" not in vals:
+            new = vals["doctor_id"]
+            new_id = (new.id if isinstance(new, models.BaseModel) else new) or False
+            changed = self.filtered(lambda r: r.doctor_from_roster and r.doctor_id.id != new_id)
+        res = super().write(vals)
+        if changed:
+            super(ClinicalRecordVisitStage, changed).write({"doctor_from_roster": False})
+        return res
+
     @api.depends("reservation_id")
     def _compute_room_id(self):
         for rec in self:

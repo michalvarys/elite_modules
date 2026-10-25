@@ -6,8 +6,9 @@ a pacienty, kteří ještě žádnou ordinaci nemají (**Nepřiřazení**). Otev
 
 ## 1. Účet ordinace
 
-Klinika nemá účet pro každou lékařku. Každá ordinace má jeden účet, například „Ordinace 1“
-a „Ordinace 2“. Přihlásí se na počítači v ordinaci a používají ho všechny lékařky, které v ní slouží.
+Ordinace může mít jeden společný účet, například „Ordinace 1“ a „Ordinace 2“. Přihlásí se na
+počítači v ordinaci a používají ho všechny lékařky, které v ní slouží. Vedle toho může mít každý
+člen týmu **vlastní účet** (kapitola 6) – ten není svázaný s ordinací.
 
 - Po přihlášení se otevře obrazovka Ordinace rovnou na **své ordinaci**, a to pokaždé.
 - Účet má práva lékařky: kartu pacienta, záznamy návštěv a rezervace, ale ne pokladnu a sklad.
@@ -25,7 +26,8 @@ Výchozí obrazovka se nastaví sama. Když pole Ordinace smažete, účet se vr
 ## 2. Přepínač nahoře
 
 Nahoře je **Všechny ordinace | Ordinace 1 | Ordinace 2 …**. Prohlížeč si volbu pamatuje. Účet
-ordinace ale vždy začne na své ordinaci.
+ordinace ale vždy začne na své ordinaci. Vlastní účet lékařky nebo sestry začne na ordinaci, kde má
+podle Rozpisu lékařů službu (kapitola 6).
 
 Každý pacient má na kartě nebo řádku tyto údaje:
 - čas příchodu, nebo čas rezervace u toho, kdo ještě nepřišel,
@@ -82,6 +84,8 @@ lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
 - Neslouží nikdo: lékařka zůstane prázdná. Doplňte ji v kartě pacienta (pole Lékařka).
 - Pacient, který lékařku už má (z rezervace nebo z příjmu), ji **nezmění** ani při přesunu do jiné
   ordinace. Změnit ji jde kdykoli v kartě pacienta.
+- Lékařka přihlášená **vlastním účtem** (kapitola 6) se zapíše sama, když pacienta zavolá nebo vezme
+  do ordinace – i místo lékařky, která se doplnila z rozpisu. Ručně vybranou lékařku nemění.
 
 ## 5. Recepce
 
@@ -93,5 +97,41 @@ lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
 - Na obrazovce Ordinace může recepce pacienty přesouvat mezi ordinacemi. Zavolat může jen sestra
   nebo lékařka.
 
-„Moji pacienti dnes“ v kartě pacienta zůstávají beze změny pro budoucí osobní účty lékařek. Účty
-ordinací používají obrazovku Ordinace.
+„Moji pacienti dnes“ v kartě pacienta ukazují lékařce s vlastním účtem její dnešní pacienty.
+Účty ordinací používají obrazovku Ordinace.
+
+## 6. Účty členů týmu
+
+Každý člen týmu (Rozpis služeb › **Lékařky** – lékařky, sestry i recepce) může mít vlastní
+přihlašovací účet. Účet **není svázaný s ordinací**: lékařka se přihlásí kdekoli a pracuje v kterékoli
+ordinaci. Propojení je ve sloupci **Účet** (jeden účet = jeden člen týmu). Na formuláři uživatele
+je v Přístupových právech › Elite Vet jen pro čtení **Člen týmu**.
+
+**Co propojený účet dělá:**
+- Lékařka a sestra po přihlášení přistanou na obrazovce **Ordinace**, předvybraná je ordinace, kde
+  mají **teď službu** podle Rozpisu lékařů. Když teď službu nemají, pak ordinace jejich **další
+  dnešní služby**, jinak **Všechny ordinace**. Ruční přepnutí platí, dokud v obrazovce pracují (i po
+  návratu z karty pacienta); při dalším otevření je zase ordinace ze služby.
+- **Kdo pacienta převzal:** když lékařka (role Lékařka) pacienta zavolá, vezme do ordinace nebo
+  přetáhne do ordinace, zapíše se jako jeho lékařka – pokud pacient lékařku nemá nebo ji má jen
+  automaticky z rozpisu. Ručně vybranou lékařku nebo lékařku z rezervace nepřepíše. Sestra, recepce
+  a účet ordinace lékařku dál neurčují (zapisuje se podle rozpisu).
+- **Moji pacienti dnes** v kartě pacienta jsou podle propojení (dřív se lékařka hledala podle jména
+  uživatele).
+- Recepce s vlastním účtem dál začíná v pokladně, vedení na svém přehledu.
+
+**Vytvořit účty (vedení):** Rozpis služeb › Lékařky › tlačítko **Vytvořit účty** (nebo Akce ›
+Vytvořit účty). Otevře se seznam aktivních členů týmu, kteří ještě účet nemají:
+- **Přihlašovací jméno** = e-mail z jejich karty v Náš tým. Kdo e-mail nemá, má řádek prázdný –
+  doplňte ho, jinak ho nejde vytvořit.
+- **Role**: Lékařka u těch, kdo přijímají rezervace, jinak Sestra. Jde změnit na Recepce / Sestra /
+  Lékařka / Správce rezervací.
+- **Vytvořit**: zaškrtnuté řádky se založí. Přihlašovací jména musí být jiná než u všech ostatních
+  účtů; když ne, okno řekne, u kterého řádku.
+- **Poslat pozvánku e-mailem** (vypnuté): po zaškrtnutí dostane každý nový účet standardní pozvánku
+  Odoo s odkazem na nastavení hesla. Bez zaškrtnutí se nic neposílá a heslo nastaví vedení
+  (Nastavení › Uživatelé › účet › Akce › Změnit heslo).
+
+Nové účty dostanou jazyk čeština, časové pásmo Europe/Prague a žádné heslo. Role nastaví samo
+výchozí obrazovku a pokladnu (pokladnu dostane jen Recepce). Na konci se ukáže, kolik účtů vzniklo
+a kolik řádků se přeskočilo a proč.

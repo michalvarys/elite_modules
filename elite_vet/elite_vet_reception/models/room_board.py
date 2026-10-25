@@ -9,6 +9,12 @@ room. API of `elite.vet.reception` (same role check as the rest of it); shapes i
 Doctor of the visit (rule 3): a record without a doctor that gets a room (assigning, Zavolat)
 takes the doctor on duty in that room now; two on duty -> `needs_doctor` (the client asks),
 none -> stays empty. A doctor already on the record is kept.
+
+Task 23 (accounts per team member): a user with the role Lékařka linked to a team member
+(elite.vet.doctor.user_id, not a room account) who assigns a visit to a room ("Vzít do této
+ordinace", dragging) or calls it in takes it herself: she becomes the doctor when the record has
+none or only the one filled from the roster (doctor_from_roster). A doctor chosen explicitly is
+kept. Room accounts and unlinked users keep the roster rule.
 """
 from datetime import datetime
 
@@ -24,6 +30,8 @@ from .booking import natural_key
 from .clinical_record import VISIT_STAGES
 
 NURSE_GROUP = "elite_vet_clinic.group_clinic_nurse"
+# Who takes a visit as its doctor (task 23): a linked account with this role.
+TAKER_GROUP = "elite_vet_clinic.group_clinic_doctor"
 ROOM_SECTIONS = ("in_room", "waiting", "booked", "done")
 UNASSIGNED_LABEL = "Nepřiřazení"
 
@@ -80,11 +88,22 @@ class ReceptionRooms(models.AbstractModel):
         return doctors
 
     @api.model
-    def _set_room(self, record, room, doctor=None):
+    def _taking_doctor(self):
+        """Team member of the current user when she takes visits as their doctor (task 23): an
+        account linked in Rozpis služeb › Lékařky with the role Lékařka, not a room account."""
+        user = self.env.user
+        Doctor = self.env["elite.vet.doctor"]
+        if user.sudo().elite_vet_room_id or not user.has_group(TAKER_GROUP):
+            return Doctor
+        return Doctor.search([("user_id", "=", user.id)], limit=1)
+
+    @api.model
+    def _set_room(self, record, room, doctor=None, taker=None):
         """Room (and doctor) of a visit; returns the doctors to choose from ([] = nothing to ask).
-        `doctor` given: it becomes the doctor. Otherwise a record without a doctor gets the one on
-        duty in the room; with two on duty the user's own doctor (matched by name) is taken if she
-        is one of them, else the client asks."""
+        `doctor` given: it becomes the doctor. `taker` given (a linked doctor taking the visit,
+        see _taking_doctor) and a room: she becomes the doctor unless one was chosen explicitly.
+        Otherwise a record without a doctor gets the one on duty in the room; with two on duty
+        the user's own doctor is taken if she is one of them, else the client asks."""
         vals = {}
         if record.room_id != room:
             vals["room_id"] = room.id or False
@@ -92,13 +111,15 @@ class ReceptionRooms(models.AbstractModel):
         if doctor:
             if record.doctor_id != doctor:
                 vals["doctor_id"] = doctor.id
+        elif room and taker and (not record.doctor_id or record.doctor_from_roster):
+            vals.update(doctor_id=taker.id, doctor_from_roster=False)
         elif room and not record.doctor_id:
             on_duty = self._on_duty_doctors(room)
             if len(on_duty) > 1:
                 own = record._doctor_for_user() & on_duty
                 on_duty = own or on_duty
             if len(on_duty) == 1:
-                vals["doctor_id"] = on_duty.id
+                vals.update(doctor_id=on_duty.id, doctor_from_roster=True)
             elif on_duty:
                 needs_doctor = [{"id": d.id, "name": d.name} for d in on_duty]
         if vals:
@@ -116,7 +137,8 @@ class ReceptionRooms(models.AbstractModel):
             raise UserError(_("Záznam návštěvy nebyl nalezen."))
         if record.date != clinic_today() or record.state != "draft":
             raise UserError(_("Do ordinace jde přiřadit jen dnešní rozepsanou návštěvu."))
-        needs_doctor = self._set_room(record, self._get_room(room_id), self._get_doctor(doctor_id))
+        needs_doctor = self._set_room(record, self._get_room(room_id), self._get_doctor(doctor_id),
+                                      taker=self._taking_doctor())
         notify_board(self.env)
         return dict(self._record_dict(record), needs_doctor=needs_doctor)
 
@@ -169,13 +191,36 @@ class ReceptionRooms(models.AbstractModel):
             on_duty = self._on_duty_doctors(room, day, room_shifts)
             columns.append(self._room_column(room, sections[room.id], room_shifts, on_duty, hour))
         user = self.env.user
+        user_room = user.sudo().elite_vet_room_id
+        member = self.env["elite.vet.doctor"].browse() if user_room else \
+            self.env["elite.vet.doctor"].search([("user_id", "=", user.id)], limit=1)
         return {
             "date": date_str(day), "is_today": is_today, "time": local_time(now),
             "columns": columns,
             "rooms": [{"id": r.id, "name": r.name, "color": r.color_hex} for r in rooms],
             "perms": {"can_call": user.has_group(NURSE_GROUP),
-                      "user_room_id": user.sudo().elite_vet_room_id.id or None},
+                      "user_room_id": user_room.id or None,
+                      # task 23: an account of a team member opens the room of her duty
+                      "member_account": bool(member),
+                      "roster_room_id": self._roster_room(member).id or None},
         }
+
+    @api.model
+    def _roster_room(self, doctor):
+        """Room of the doctor's duty today (task 23): the assignment running now
+        (hour_from <= now < hour_to), else her next one today; empty room otherwise."""
+        Room = self.env["elite.vet.room"]
+        if not doctor:
+            return Room
+        hour = self._clinic_hour_now()
+        shifts = self.env["elite.vet.doctor.assignment"].search(
+            [("date", "=", clinic_today()), ("doctor_id", "=", doctor.id), ("room_id", "!=", False)],
+            order="hour_from, id")
+        for shift in shifts:
+            if shift.hour_from <= hour < shift.hour_to:
+                return shift.room_id
+        upcoming = shifts.filtered(lambda s: s.hour_from > hour)
+        return upcoming[:1].room_id
 
     @api.model
     def _room_column(self, room, sections, shifts, on_duty, hour=None):

@@ -283,8 +283,21 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   Vet). Výchozí obrazovka takového účtu (role Recepce až Lékařka, ne Vedení) je obrazovka Ordinace;
   obrazovka se na účtu ordinace otevře vždy na jeho ordinaci, jinak na volbě uložené v prohlížeči
   (`localStorage` `elite_vet_reception.room_view`, `all` nebo id ordinace).
+- **Účet člena týmu** (úkol 23): `elite.vet.doctor.user_id` (Rozpis služeb › Lékařky › Účet,
+  unikátní, jen interní uživatelé; na uživateli jen pro čtení `elite_vet_doctor_id` „Člen týmu“).
+  Propojený účet s rolí Sestra / Lékařka (ne Vedení, ne účet ordinace) má výchozí obrazovku
+  Ordinace. Obrazovka se mu při každém otevření nastaví na ordinaci, kde má teď službu (jinak další
+  dnešní službu, jinak Všechny ordinace); ruční přepnutí platí, dokud v obrazovce pracuje (i po
+  návratu z karty drobečkovou navigací), do `localStorage` se neukládá.
+  Kdo pacienta převzal: `assign_room` / `call_patient` propojenou **Lékařkou** zapíše za lékařku ji,
+  když záznam lékařku nemá nebo ji má jen z rozpisu (`doctor_from_roster`); ručně vybraná lékařka
+  zůstane. Sestry, recepce a účty ordinací dál podle rozpisu.
+  `_doctor_for_user` (Moji pacienti dnes, R17): nejdřív propojení, shoda jména jen u účtu bez
+  propojení, a ne, když je lékařka toho jména propojená s jiným účtem.
+- **Vytvořit účty** (`elite.vet.account.wizard`, tlačítko v seznamu Lékařky + Akce, jen Vedení):
+  viz [doc/ordinace.md](doc/ordinace.md) kapitola 6.
 - **`room_board(day=None)`** → `{"date", "is_today", "time", "columns": [...], "rooms": [{id, name,
-  color}], "perms": {"can_call", "user_room_id"}}`. `columns[0]` = Nepřiřazení (`key: "unassigned"`,
+  color}], "perms": {"can_call", "user_room_id", "member_account", "roster_room_id"}}`. `columns[0]` = Nepřiřazení (`key: "unassigned"`,
   `room_id: None`), pak jedna za každou aktivní ordinaci v pořadí (`sequence`) a ordinace, které
   mají dnes návštěvu, i když jsou archivované. Sloupec: `key, room_id, name, color, on_duty: [{id,
   name}]` (služby `elite.vet.doctor.assignment` dne, které pokrývají teď; jen dnes), `shifts:
