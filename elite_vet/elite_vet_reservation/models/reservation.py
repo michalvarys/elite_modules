@@ -467,6 +467,8 @@ class VetReservation(models.Model):
                 "procedure": w.procedure_id.with_context(lang=lang).name or "", "duration": w.duration_minutes,
                 "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
                 "doctor": w.doctor_id.name or "",
+                # for the question before confirming (board.js confirmQuestion)
+                "pet": w.pet_id.name or w.pet_name or "", "owner": w.partner_id.name or w.contact_name or "",
                 "past": w.start <= fields.Datetime.now(),
                 # Suggestions computed here: one request per board refresh, not one per card.
                 "suggestions": w.board_suggestions(w.id),

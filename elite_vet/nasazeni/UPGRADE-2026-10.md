@@ -462,3 +462,10 @@ tlačítko **Nedorazil** (potvrzená rezervace z dneška nebo dřív, klient nep
 druhé ordinaci). Zeptá se „Označit … v 9:00 jako nedorazil?“ a nastaví stav Nedorazil stejně
 jako tlačítko v backendu – klientovi nic neodejde, počítá se do „Nedorazil N×“. Data se upgradem
 nemění. Kontrola: Pokladna › Tabule › dnešní nepřijatá rezervace › Nedorazil je v patičce okna.
+
+**Potvrzení žádosti z webu na tabuli** (backend, `elite_vet_reservation`): přetažení žádosti
+z panelu „Čekající z webu“ na tabuli i zelená tlačítka **Potvrdit → …** se nejdřív zeptají
+„Potvrdit žádost Rex (Jana Nováková) na čt 29. 10. 10:00–10:20, Ordinace 1?“ (s větou
+„Klient dostane potvrzovací e-mail (adresa).“, když žádost e-mail má) – **Potvrdit / Zrušit**.
+Teprve Potvrdit žádost potvrdí (a pošle e-mail jako dřív). Data se nemění. Na počítačích
+s tabulí obnovit stránku natvrdo (Ctrl+Shift+R).

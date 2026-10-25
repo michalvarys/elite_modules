@@ -280,7 +280,11 @@ export class ReservationBoard extends Component {
         this.state.drag = null;
         const min = this.minuteFromDrop(ev, ev.currentTarget);
         if (drag.kind === "waiting") {
-            await this.dropCall("board_confirm", [drag.id, this.state.date, min, room.id]);
+            // Task 19: confirming a web request (and the e-mail to the client) also asks first.
+            const w = this.state.data.waiting.find((x) => x.id === drag.id);
+            if (!w) return;
+            this.askConfirmRequest(w, this.state.date, min, room.name,
+                () => this.dropCall("board_confirm", [drag.id, this.state.date, min, room.id]));
             return;
         }
         // Request 25. 10.: a move happens only after the user confirms it (an accidental drop
@@ -318,6 +322,29 @@ export class ReservationBoard extends Component {
         }
         return text;
     }
+    /** "Potvrdit žádost Rex (Novák) na čt 29. 10. 10:00–10:20, Ordinace 2?" (+ the e-mail line
+     *  when the request has an e-mail: board_confirm → action_confirm sends the confirmation). */
+    confirmQuestion(w, dateIso, min, roomName) {
+        const d = parseIso(dateIso);
+        const day = WEEKDAY_ABBR[weekdayIndex(d)] + " " + d.getDate() + ". " + (d.getMonth() + 1) + ".";
+        const who = [w.pet, w.owner ? "(" + w.owner + ")" : ""].filter(Boolean).join(" ") || w.name;
+        let text = "Potvrdit žádost " + who + "\nna " + day + " " + timeLabel(min) + "–" +
+            timeLabel(min + (w.duration || 0)) + ", " + roomName + "?";
+        if (w.email) {
+            text += "\n\nKlient dostane potvrzovací e-mail (" + w.email + ").";
+        }
+        return text;
+    }
+    askConfirmRequest(w, dateIso, min, roomName, confirm) {
+        this.dialog.add(ConfirmationDialog, {
+            title: "Potvrdit žádost?",
+            body: this.confirmQuestion(w, dateIso, min, roomName),
+            confirmLabel: "Potvrdit",
+            cancelLabel: "Zrušit",
+            confirm,
+            cancel: () => {},
+        });
+    }
     async dropCall(method, args) {
         try {
             await this.orm.call("elite.vet.reservation", method, args);
@@ -327,9 +354,13 @@ export class ReservationBoard extends Component {
         }
         await this.load(true);
     }
-    async confirmSuggestion(w, sug) {
+    confirmSuggestion(w, sug) {
         if (this.state.busy) return;
         this.leaveWaiting();
+        this.askConfirmRequest(w, w.date, w.minute, sug.room, () => this.doConfirmSuggestion(w, sug));
+    }
+    async doConfirmSuggestion(w, sug) {
+        if (this.state.busy) return;
         this.state.busy = true;
         try {
             await this.orm.call("elite.vet.reservation", "board_confirm",

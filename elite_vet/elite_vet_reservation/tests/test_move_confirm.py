@@ -47,3 +47,28 @@ class TestMoveConfirm(ReservationCase):
         self.assertEqual(Mail.search_count([("email_to", "ilike", "klient@example.cz")]), before)
         self.env["elite.vet.reservation"].board_move(r.id, self.day.isoformat(), 16 * 60, self.room2.id)
         self.assertEqual(Mail.search_count([("email_to", "ilike", "klient@example.cz")]), before + 1)
+
+    def test_waiting_request_data_for_the_confirm_question(self):
+        """Task 19: the board asks "Potvrdit žádost <pet (client)> na …?" before board_confirm and
+        mentions the confirmation e-mail only for a request with an e-mail - what board_confirm
+        (action_confirm) actually sends."""
+        Mail = self.env["mail.mail"]
+        with_mail = self.reservation(start=self.dt(self.day, 9, 0), state="web_new", source="web",
+                                     room_id=False, contact_name="Jana T23", pet_name="Rex T23",
+                                     contact_email="t23@example.cz")
+        quiet = self.reservation(start=self.dt(self.day, 10, 0), state="web_new", source="web",
+                                 room_id=False, contact_name="Petr T23", pet_name="Bobík T23",
+                                 contact_email=False)
+        waiting = {w["id"]: w for w in self.env["elite.vet.reservation"].board_data(self.day.isoformat())["waiting"]}
+        self.assertEqual((waiting[with_mail.id]["pet"], waiting[with_mail.id]["owner"],
+                          waiting[with_mail.id]["email"]), ("Rex T23", "Jana T23", "t23@example.cz"))
+        self.assertEqual((waiting[quiet.id]["pet"], waiting[quiet.id]["email"]), ("Bobík T23", ""))
+        before = Mail.search_count([("email_to", "ilike", "t23@example.cz")])
+        Res = self.env["elite.vet.reservation"]
+        Res.board_confirm(with_mail.id, self.day.isoformat(), 9 * 60, self.room1.id)
+        self.assertEqual(with_mail.state, "confirmed")
+        self.assertEqual(Mail.search_count([("email_to", "ilike", "t23@example.cz")]), before + 1)
+        mails = Mail.search_count([])
+        Res.board_confirm(quiet.id, self.day.isoformat(), 10 * 60, self.room1.id)
+        self.assertEqual(quiet.state, "confirmed")
+        self.assertEqual(Mail.search_count([]), mails)

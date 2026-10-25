@@ -123,8 +123,10 @@ Pod kartou jsou zelená tlačítka **Potvrdit → Ordinace · lékařka**, např
 požadovaný čas volný a kde slouží lékařka, která úkon dělá.
 
 1. Vyberte vhodné tlačítko a klikněte.
-2. Rezervace se zapíše do ordinace v požadovaném čase a klient dostane e-mail
-   s potvrzením.
+2. Tabule se zeptá „Potvrdit žádost Rex (Jana Nováková) na čt 29. 10. 10:00–10:20,
+   Ordinace 1?“ – když má žádost e-mail, i „Klient dostane potvrzovací e-mail (adresa).“
+3. **Potvrdit**: rezervace se zapíše do ordinace v požadovaném čase a klient dostane e-mail
+   s potvrzením (jen když ho vyplnil). **Zrušit** nic nezmění.
 
 Když se objeví text **„Požadovaný čas už není volný – otevřete a přeplánujte.“**,
 termín mezitím někdo obsadil. Text **„Požadovaný čas už uplynul – otevřete
@@ -134,7 +136,9 @@ a přeplánujte.“** znamená, že termín už začal. V obou případech postu
 ### Přetažení do sloupce
 
 Kartu můžete myší přetáhnout do sloupce ordinace na zvolený čas. Pustíte-li ji,
-rezervace se rovnou **potvrdí** v tomto čase a ordinaci a klient dostane potvrzení.
+tabule se stejně jako u tlačítka zeptá „Potvrdit žádost … na …?“ a teprve po **Potvrdit**
+se rezervace potvrdí v tomto čase a ordinaci a klient dostane potvrzení. **Zrušit** (nebo Esc)
+nic nezmění, karta zůstane v Čekajících.
 
 - Pozor: kartu pouštíte na den, který je právě na tabuli. Chcete-li jiný den,
   nejdřív si ho na tabuli otevřete.
