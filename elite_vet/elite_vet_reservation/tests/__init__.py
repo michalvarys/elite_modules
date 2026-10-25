@@ -20,3 +20,4 @@ from . import test_shift_rooms
 from . import test_manager_only
 from . import test_holidays_shown
 from . import test_block_reason_lang
+from . import test_move_confirm

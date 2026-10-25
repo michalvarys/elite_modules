@@ -355,7 +355,9 @@ rezervace – kopie ve druhé ordinaci se posune s ní (u kopie Přesunout ani p
 ### Přetažení rezervace
 
 Potvrzenou rezervaci můžete myší přetáhnout na jiný čas nebo do jiné ordinace (na dotykové
-obrazovce použijte **Přesunout** v detailu). Platí stejná pravidla jako na backendové tabuli:
+obrazovce použijte **Přesunout** v detailu). Po puštění se pokladna zeptá „Přesunout … z …
+na …?“ (i s poznámkou, že klient dostane e-mail o změně termínu, když ho má). Teprve
+**Přesunout** rezervaci přesune; **Zrušit** nechá vše, jak bylo. Platí stejná pravidla jako na backendové tabuli:
 v ordinaci musí sloužit lékařka, která úkon dělá (jinak se lékařka vymění za tu, která tam
 slouží), a čas musí být volný. Když to nejde, objeví se česká hláška (např. „Termín … je
 obsazený“) a rezervace zůstane, kde byla. Při změně času dostane klient e-mail o přesunu,

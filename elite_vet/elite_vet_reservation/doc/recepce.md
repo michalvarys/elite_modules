@@ -263,6 +263,11 @@ Vraťte se **Zpět** a vyberte jiný čas.
 
 1. Chyťte kartu na tabuli a přetáhněte ji na jiný čas nebo do jiné ordinace.
 2. Čas se zaokrouhlí na nejbližší krok (obvykle 15 minut).
+3. Po puštění se tabule zeptá, např. „Přesunout Rex (Jan Novák) z čt 29. 10. 9:00–9:20,
+   Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?“. Když klient dostane e-mail o změně
+   termínu, okno to napíše i s adresou. **Přesunout** rezervaci přesune, **Zrušit** (nebo Esc)
+   nechá vše, jak bylo – omylem puštěná karta tak nic nezmění. Puštění na stejné místo se na
+   nic neptá. Stejně se ptá i přesun blokace.
 
 Přetahovat jde jen v rámci zobrazeného dne. Na jiný den přesunete rezervaci
 ve formuláři: klikněte na kartu a změňte **Začátek**.

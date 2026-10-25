@@ -451,6 +451,9 @@ class VetReservation(models.Model):
                 "doctor_color": doctor_color(r.doctor_id) if r.doctor_id else False,
                 "linked": r._linked_label(),
                 "source": r.source,
+                # Request 25. 10.: the drop asks first; it says whether the client gets an e-mail
+                # about the new time (mailing.write: a confirmed reservation with a contact e-mail).
+                "mail_on_move": r._mail_on_move(),
             })
         waiting = []
         for w in self.search([("state", "=", "web_new"), ("stop", ">=", fields.Datetime.now())], order="start"):
@@ -589,6 +592,15 @@ class VetReservation(models.Model):
         rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id or None,
                               doctor_id=doctor_id)
         return True
+
+    def _mail_on_move(self):
+        """E-mail address the client is told about a new time at (moving changes the time),
+        or False. The second-room copy tells the client through its main reservation."""
+        self.ensure_one()
+        main = self.linked_reservation_id if self.is_second_room and self.linked_reservation_id else self
+        if self.kind != "reservation" or self.state != "confirmed" or main.state != "confirmed":
+            return False
+        return main.contact_email or False
 
     @api.model
     def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None):

@@ -7,6 +7,7 @@
  */
 import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
@@ -401,10 +402,45 @@ export class BoardDialog extends Component {
             return;
         }
         const minute = this.minuteAt(ev, ev.currentTarget, false);
+        // Request 25. 10.: the move happens only after the user confirms it; dropped back on the
+        // same place = nothing to do. Cancel = nothing changes.
+        const event = (this.state.data?.events || []).find((e) => e.id === drag.id);
+        if (!event || (event.start === minute && (event.room_id || false) === room.id)) {
+            return;
+        }
+        this.dialog.add(ConfirmationDialog, {
+            title: "Přesunout rezervaci?",
+            body: this.moveQuestion(event, minute, room),
+            confirmLabel: "Přesunout",
+            cancelLabel: "Zrušit",
+            confirm: () => this.move(drag.id, minute, room),
+            cancel: () => {},
+        });
+    }
+
+    /** "Přesunout Rex (Novák) z čt 29. 10. 9:00–9:20, Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?" */
+    moveQuestion(event, minute, room) {
+        const day = dayLabel(this.state.day).replace(/ \d{4}$/, "");
+        const oldRoom = (this.state.data.rooms || []).find((r) => r.id === event.room_id)?.name || "";
+        const end = minute + (event.end - event.start);
+        const who = [event.pet, event.owner ? `(${event.owner})` : ""].filter(Boolean).join(" ") || event.name;
+        let text =
+            `Přesunout ${who}\nz ${day} ${event.time_label}${oldRoom ? ", " + oldRoom : ""}` +
+            `\nna ${day} ${hhmm(minute)}–${hhmm(end)}, ${room.name}?`;
+        if (event.mail_on_move && minute !== event.start) {
+            text += `\n\nKlient dostane e-mail o změně termínu (${event.mail_on_move}).`;
+        }
+        return text;
+    }
+
+    async move(reservationId, minute, room) {
+        if (this.state.moving) {
+            return;
+        }
         this.state.moving = true;
         try {
             const result = await callReception(this.orm, this.notification, "move_reservation", [
-                drag.id,
+                reservationId,
                 this.state.day,
                 minute,
                 room.id,

@@ -1,6 +1,7 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { setSoundOn, playChime, isSoundOn } from "@elite_vet_reservation/sound/sound";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
@@ -9,6 +10,7 @@ const BAND_W = 16;        // width of the doctor shift band on the left of a col
 const BAND_GAP = 2;
 
 function pad(n) { return String(n).padStart(2, "0"); }
+function timeLabel(min) { return Math.floor(min / 60) + ":" + pad(min % 60); }   // "9:05", as the server
 function hhmm(min) { return pad(Math.floor(min / 60)) + ":" + pad(min % 60); }
 function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
 // Noon, so shifting by days never skips a day across a DST change.
@@ -49,6 +51,7 @@ export class ReservationBoard extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
+        this.dialog = useService("dialog");
         this.state = useState({
             date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
             data: null, loading: true, drag: null, busy: false,
@@ -274,18 +277,54 @@ export class ReservationBoard extends Component {
         ev.preventDefault();
         const drag = this.state.drag;
         if (!drag) return;
+        this.state.drag = null;
         const min = this.minuteFromDrop(ev, ev.currentTarget);
+        if (drag.kind === "waiting") {
+            await this.dropCall("board_confirm", [drag.id, this.state.date, min, room.id]);
+            return;
+        }
+        // Request 25. 10.: a move happens only after the user confirms it (an accidental drop
+        // changes nothing); dropped back on the same place = nothing to do.
+        const event = this.state.data.events.find((e) => e.id === drag.id);
+        if (!event) return;
+        if (event.start === min && (event.room_id || false) === room.id) return;
+        this.dialog.add(ConfirmationDialog, {
+            title: "Přesunout?",
+            body: this.moveQuestion(event, min, room),
+            confirmLabel: "Přesunout",
+            cancelLabel: "Zrušit",
+            confirm: () => this.dropCall("board_move", [drag.id, this.state.date, min, room.id]),
+            cancel: () => {},
+        });
+    }
+    /** "Přesunout Rex (Novák) z čt 29. 10. 9:00–9:20, Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?" */
+    moveQuestion(event, min, room) {
+        const d = parseIso(this.state.date);
+        const day = WEEKDAY_ABBR[weekdayIndex(d)] + " " + d.getDate() + ". " + (d.getMonth() + 1) + ".";
+        const oldRoom = event.room_id
+            ? (this.state.data.rooms.find((r) => r.id === event.room_id)?.name || "")
+            : "všechny ordinace";
+        const end = min + (event.end - event.start);
+        let who;
+        if (event.kind === "block") {
+            who = "blokaci „" + event.name + "“";
+        } else {
+            who = [event.pet, event.owner ? "(" + event.owner + ")" : ""].filter(Boolean).join(" ") || event.name;
+        }
+        let text = "Přesunout " + who + "\nz " + day + " " + event.time_label + ", " + oldRoom +
+            "\nna " + day + " " + timeLabel(min) + "–" + timeLabel(end) + ", " + room.name + "?";
+        if (event.mail_on_move && min !== event.start) {
+            text += "\n\nKlient dostane e-mail o změně termínu (" + event.mail_on_move + ").";
+        }
+        return text;
+    }
+    async dropCall(method, args) {
         try {
-            if (drag.kind === "waiting") {
-                await this.orm.call("elite.vet.reservation", "board_confirm", [drag.id, this.state.date, min, room.id]);
-            } else {
-                await this.orm.call("elite.vet.reservation", "board_move", [drag.id, this.state.date, min, room.id]);
-            }
+            await this.orm.call("elite.vet.reservation", method, args);
         } catch (e) {
             // The server reports an occupied slot as an error; the card stays where it was.
             this.notification.add(e.data?.message || e.message, { type: "danger" });
         }
-        this.state.drag = null;
         await this.load(true);
     }
     async confirmSuggestion(w, sug) {
