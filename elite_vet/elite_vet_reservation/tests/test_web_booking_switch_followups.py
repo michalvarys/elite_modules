@@ -6,7 +6,7 @@ from odoo.tests import HttpCase, tagged
 
 WINVET_URL = "https://reservation.winvet.cz/booking/t24-test"
 TEXT = "T24 text pod rezervací"
-CENTER_RULE = ".vet-page .evrez-zprava-misto > .evrez-zprava{margin-left:auto;margin-right:auto}"
+CENTER_RULE = ".vet-page .evrez-zprava-misto > .evrez-zprava{margin:26px auto 0}"
 
 
 @tagged("post_install", "-at_install")
