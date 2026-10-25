@@ -59,6 +59,25 @@
             <xpath expr="//field[@name='booking_loading_title']/parent::group" position="attributes">
                 <attribute name="invisible">web_booking_source == 'elite'</attribute>
             </xpath>
+            <!-- The text under the booking shows in both modes (under the WinVet frame and under
+                 our wizard), so it leaves the WinVet-only loading group for a group of its own. -->
+            <xpath expr="//field[@name='booking_loading_title']/parent::group" position="after">
+                <group string="Text pod rezervacemi" name="booking_text_below">
+                    <div colspan="2" class="text-muted">
+                        Ukáže se na stránce /rezervacni-system pod rezervacemi, ve WinVetu
+                        i v Elite Vet. U WinVetu stojí během načítání uprostřed rámečku a po
+                        načtení klesne pod něj. Prázdné pole = žádný text.
+                    </div>
+                </group>
+            </xpath>
+            <!-- position="move" works only as a direct child of an xpath, so in two steps -->
+            <xpath expr="//group[@name='booking_text_below']/div" position="before">
+                <xpath expr="//field[@name='booking_loading_middle']" position="move"/>
+            </xpath>
+            <xpath expr="//field[@name='booking_loading_middle']" position="attributes">
+                <attribute name="string">Text</attribute>
+                <attribute name="placeholder">Např. Mimo ordinační dobu se k ceně připočítává pohotovostní poplatek…</attribute>
+            </xpath>
         </field>
     </record>
 </odoo>
