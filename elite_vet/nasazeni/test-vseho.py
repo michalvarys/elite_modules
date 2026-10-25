@@ -524,7 +524,7 @@ if not lekarka and specializace:
     pridana_specializace = True
 
 if not lekarka or not typ_smeny or not specializace:
-    krok("smajlik stoji pred jmenem", False,
+    krok("smajlik je jen v bublince u jmena", False,
          "v databazi chybi lekarka, typ smeny nebo specializace s ikonou")
 else:
     zkusebni_smena = Smena.create({"date": datetime.date.today(),
@@ -532,10 +532,11 @@ else:
                                    "type_id": typ_smeny.id})
     env.cr.commit()
     rozpis = stahni("/rozpis-lekaru")
-    bunky = [b for b in rozpis.split('<span class="rs-doc">')[1:] if "rs-specs" in b]
-    krok("smajlik stoji pred jmenem", bool(bunky) and all(
-         b.index("rs-specs") < b.index(lekarka.name) for b in bunky if lekarka.name in b),
-         "bunek se smajlikem: %s" % len(bunky))
+    # pozadavek 25. 10.: smajliky jsou jen v bublince u jmena (rs-tip), v bunce samotne ne
+    bunky = [b for b in rozpis.split('<span class="rs-doc"')[1:] if "rs-tip-specs" in b]
+    krok("smajlik je jen v bublince u jmena", bool(bunky) and all(
+         "rs-spec" not in b[:b.index('<span class="rs-tip"')] for b in bunky if lekarka.name in b),
+         "bunek se smajlikem v bublince: %s" % len(bunky))
     zkusebni_smena.unlink()
     if pridana_specializace:
         lekarka.member_id.specialization_ids = [(3, specializace.id)]

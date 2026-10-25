@@ -20,7 +20,7 @@ class VetDoctor(models.Model):
         string="Karta v týmu",
         ondelete="set null",
         help="Propojení na kartu člověka na stránce Náš tým. Díky němu se "
-             "v rozpisu u jména ukážou ikony jeho specializací. Samotné "
+             "v rozpisu v bublině u jména ukážou ikony jeho specializací. Samotné "
              "specializace se nastavují na kartě, tady se nic nepřepisuje.",
     )
     specialization_ids = fields.Many2many(

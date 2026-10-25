@@ -256,19 +256,27 @@
             /* jméno lékařky + bublina s hodinami (pure CSS, bez JS) */
             /* Bezny textovy tok, ne flex: ikony stoji pred jmenem na stejnem radku
                a dlouhe jmeno se lame az za nimi, misto aby skocilo cele pod ne. */
-            .rs-doc { position: relative; display: block; font-size: 12.5px; font-weight: 600; line-height: 1.45; color: var(--ev-primary); cursor: default; }
+            .rs-doc { position: relative; display: block; font-size: 12.5px; font-weight: 600; line-height: 1.45; color: var(--ev-primary); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+            .rs-doc:focus { outline: none; }
+            .rs-doc:focus-visible { outline: 2px solid var(--ev-accent); outline-offset: 2px; border-radius: 4px; }
             .rs-dot { display: inline-block; width: 7px; height: 7px; border-radius: 9999px; background: var(--ev-border); vertical-align: 1px; margin-right: 4px; }
-            /* Ikony specializaci u jmena — bez popisku, aby se vesly do bunky kalendare.
-               Nazev specializace je v title, takze najetim mysi se da precist. */
-            /* Ikony stoji pred jmenem a drzi se ho: nezalamuji se od nej pryc,
-               aby smajlik nikdy nezustal sam na radku. */
-            .rs-specs { display: inline; white-space: nowrap; }
-            .rs-spec { display: inline-block; vertical-align: -4px; margin-right: 2px; }
-            .rs-spec .ev-spec-ico { display: block; object-fit: contain; }
+            /* Ikony specializaci jsou jen v bublince u jmena (pozadavek 25. 10.: v bunce jich bylo moc).
+               Bublina se ukaze najetim mysi, klikem / tuknutim na jmeno a fokusem z klavesnice. */
+            .rs-tip-time { display: block; }
+            .rs-tip { width: max-content; max-width: 300px; }
+            .rs-tip-specs { display: flex; flex-direction: column; gap: 5px; margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,.22); }
+            .rs-tip-doc { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+            .rs-tip-name { width: 100%; font-weight: 800; }
+            .rs-spec { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.12); border-radius: 8px; padding: 2px 8px 2px 3px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+            .rs-spec .ev-spec-ico { display: block; object-fit: contain; background: #fff; border-radius: 5px; padding: 1px; box-sizing: content-box; }
+            /* bublina mimo kalendar (uzke displeje a dotykove displeje) – pozici dopocita skript */
+            .rs-pop { position: fixed; z-index: 1050; max-width: min(320px, calc(100vw - 16px)); background: var(--ev-primary); color: #fff; padding: 8px 14px 10px; border-radius: 11px; font-size: 12.5px; font-weight: 700; line-height: 1.45; box-shadow: 0 16px 34px -14px rgba(9,15,28,.75); }
+            .rs-pop[hidden] { display: none; }
 
             .rs-tip { position: absolute; left: 0; bottom: calc(100% + 9px); transform: translateY(5px); background: var(--ev-primary); color: #fff; padding: 8px 14px; border-radius: 11px; font-size: 12.5px; font-weight: 700; white-space: nowrap; opacity: 0; visibility: hidden; pointer-events: none; z-index: 40; box-shadow: 0 16px 34px -14px rgba(9,15,28,.75); transition: opacity .18s ease, transform .18s ease, visibility .18s ease; }
             .rs-tip::after { content: ""; position: absolute; top: 100%; left: 18px; border: 6px solid transparent; border-top-color: var(--ev-primary); }
-            .rs-doc:hover .rs-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+            @media (hover: hover) { .rs-doc:hover .rs-tip { opacity: 1; visibility: visible; transform: translateY(0); } }
+            .rs-doc:focus-visible .rs-tip, .rs-doc.is-open .rs-tip { opacity: 1; visibility: visible; transform: translateY(0); }
             /* poslední dva sloupce — bublinu zarovnáme doprava, ať nevyleze z kalendáře ven */
             .rs-cal-grid > .rs-cell:nth-child(7n) .rs-tip,
             .rs-cal-grid > .rs-cell:nth-child(7n-1) .rs-tip { left: auto; right: 0; }
@@ -277,8 +285,9 @@
 
             /* dotykové displeje neumí hover — hodiny ukážeme rovnou pod jménem */
             @media (hover: none) {
-                .rs-tip { display: block; margin-top: 1px; position: static; opacity: 1; visibility: visible; transform: none; background: transparent; color: var(--ev-text-secondary); padding: 0; font-size: 12px; font-weight: 600; white-space: normal; box-shadow: none; }
+                .rs-tip { display: block; margin-top: 1px; position: static; opacity: 1; visibility: visible; transform: none; background: transparent; color: var(--ev-text-secondary); padding: 0; font-size: 12px; font-weight: 600; white-space: normal; box-shadow: none; width: auto; max-width: none; }
                 .rs-tip::after { display: none; }
+                .rs-tip .rs-tip-specs { display: none; }
             }
 
 
@@ -326,8 +335,9 @@
                 .rs-cell { min-height: 96px; padding: 8px 10px 10px; }
                 .vet-page .rs-scroll-hint { display: flex; }
                 /* v posouvací oblasti by se bublina ořízla — hodiny proto ukážeme rovnou pod jménem */
-                .rs-tip { display: block; margin-top: 1px; position: static; opacity: 1; visibility: visible; transform: none; background: transparent; color: var(--ev-text-secondary); padding: 0; font-size: 11.5px; font-weight: 600; white-space: normal; box-shadow: none; }
+                .rs-tip { display: block; margin-top: 1px; position: static; opacity: 1; visibility: visible; transform: none; background: transparent; color: var(--ev-text-secondary); padding: 0; font-size: 11.5px; font-weight: 600; white-space: normal; box-shadow: none; width: auto; max-width: none; }
                 .rs-tip::after { display: none; }
+                .rs-tip .rs-tip-specs { display: none; }
             }
             @media (max-width: 768px) {
                 .ev-container { padding: 0 20px; }
@@ -579,7 +589,10 @@
                                                         </t>
                                                         <t t-else="">
                                                             <div class="rs-slot">
-                                                                <span class="rs-doc"><span class="rs-dot" t-attf-style="background: #{ev_typ.color_hex};"></span><t t-foreach="ev_skupina" t-as="ev_r"><t t-if="ev_r_index"> + </t><t t-if="ev_r.doctor_id.specialization_ids"><span class="rs-specs"><t t-foreach="ev_r.doctor_id.specialization_ids" t-as="ev_s"><span class="rs-spec" t-att-title="ev_s.name"><t t-call="elite_vet_team.specialization_icon"><t t-set="ev_icon_rec" t-value="ev_s.icon_id"/><t t-set="ev_size" t-value="18"/></t></span></t></span></t><t t-esc="ev_r.doctor_id.name"/></t><span class="rs-tip"><span t-field="ev_typ.name"></span> · <t t-esc="ev_typ.time_display"/></span></span>
+                                                                <!-- Ikony specializaci jsou jen v bublince (najeti mysi, klik / tuknuti, klavesnice),
+                                                                     v bunce zustava tecka a jmeno. -->
+                                                                <t t-set="ev_spec_docs" t-value="ev_skupina.mapped('doctor_id').filtered('specialization_ids')"/>
+                                                                <span class="rs-doc" tabindex="0" role="button" aria-expanded="false"><span class="rs-dot" t-attf-style="background: #{ev_typ.color_hex};"></span><t t-foreach="ev_skupina" t-as="ev_r"><t t-if="ev_r_index"> + </t><t t-esc="ev_r.doctor_id.name"/></t><span class="rs-tip" role="tooltip"><span class="rs-tip-time"><span t-field="ev_typ.name"></span> · <t t-esc="ev_typ.time_display"/></span><span t-if="ev_spec_docs" class="rs-tip-specs"><t t-foreach="ev_spec_docs" t-as="ev_sd"><span class="rs-tip-doc"><span t-if="len(ev_skupina) &gt; 1" class="rs-tip-name" t-esc="ev_sd.name"/><t t-foreach="ev_sd.specialization_ids" t-as="ev_s"><span class="rs-spec"><t t-call="elite_vet_team.specialization_icon"><t t-set="ev_icon_rec" t-value="ev_s.icon_id"/><t t-set="ev_size" t-value="18"/></t><span class="rs-spec-name" t-field="ev_s.name"/></span></t></span></t></span></span></span>
                                                             </div>
                                                         </t>
                                                     </t>
@@ -663,6 +676,76 @@
                     return false;
                 }
             }, true);
+
+            /* rozpis: bublina u jména (směna, hodiny, specializace). Na PC se ukáže najetím myší
+               (CSS), klikem zůstane otevřená; z klávesnice fokusem / Enter. Na úzkých a dotykových
+               displejích jsou hodiny pod jménem a bublina se ukáže ťuknutím mimo kalendář (fixně),
+               aby ji posouvací kalendář neořízl. Ťuknutí jinam, Esc nebo posun ji zavře. */
+            (function () {
+                var narrow = window.matchMedia ? window.matchMedia('(max-width: 900px), (hover: none)') : null;
+                var pop = null;
+                var current = null;
+                function isNarrow() { return !!(narrow &amp;&amp; narrow.matches); }
+                function close() {
+                    if (current) {
+                        current.classList.remove('is-open');
+                        current.setAttribute('aria-expanded', 'false');
+                        current = null;
+                    }
+                    if (pop) { pop.hidden = true; }
+                }
+                function place(doc) {
+                    if (!pop) {
+                        pop = document.createElement('div');
+                        pop.className = 'rs-pop';
+                        pop.setAttribute('role', 'tooltip');
+                        document.body.appendChild(pop);
+                    }
+                    var tip = doc.querySelector('.rs-tip');
+                    pop.innerHTML = tip ? tip.innerHTML : '';
+                    pop.hidden = false;
+                    var r = doc.getBoundingClientRect();
+                    var w = pop.offsetWidth;
+                    var h = pop.offsetHeight;
+                    var left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+                    var top = r.bottom + 6;
+                    if (top + h &gt; window.innerHeight - 8) { top = Math.max(8, r.top - h - 6); }
+                    pop.style.left = left + 'px';
+                    pop.style.top = top + 'px';
+                }
+                function open(doc) {
+                    close();
+                    current = doc;
+                    doc.classList.add('is-open');
+                    doc.setAttribute('aria-expanded', 'true');
+                    if (isNarrow()) { place(doc); }
+                }
+                function toggle(doc) {
+                    if (current === doc) { close(); } else { open(doc); }
+                }
+                function docOf(target) {
+                    return target &amp;&amp; target.closest ? target.closest('.rs-doc') : null;
+                }
+                document.addEventListener('click', function (e) {
+                    var doc = docOf(e.target);
+                    if (doc) { toggle(doc); return; }
+                    if (current &amp;&amp; !(pop &amp;&amp; pop.contains(e.target))) { close(); }
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { close(); return; }
+                    var doc = docOf(e.target);
+                    if (doc &amp;&amp; (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(doc); }
+                });
+                document.addEventListener('focusin', function (e) {
+                    var doc = docOf(e.target);
+                    if (current &amp;&amp; current !== doc) { close(); }
+                    var keyboard = false;
+                    try { keyboard = !!(doc &amp;&amp; doc.matches(':focus-visible')); } catch (err) { keyboard = false; }
+                    if (keyboard &amp;&amp; isNarrow()) { open(doc); }
+                });
+                document.addEventListener('scroll', function () { if (pop &amp;&amp; !pop.hidden) { close(); } }, true);
+                window.addEventListener('resize', close);
+            })();
 
             /* zavřít popup po kliknutí na odkaz uvnitř */
             document.addEventListener('click', function (e) {

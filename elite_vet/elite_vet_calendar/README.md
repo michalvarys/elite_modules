@@ -66,7 +66,18 @@ ani čas (pole se schovají) a na webu se vypíše přes celou buňku barvou typ
 Stránka ukazuje **aktuální a následující měsíc**. Přelomem měsíce se posunou
 samy. Čísla dnů, prázdné buňky i názvy měsíců se počítají samy.
 
-Po najetí na jméno vyskočí bublina s názvem směny a časem.
+V buňce dne je u služby jen barevná tečka a jméno lékařky. **Ikony specializací v buňce
+nejsou** (bylo jich moc a kalendář byl nepřehledný) – jsou v bublině u jména spolu s názvem
+směny a časem:
+
+* na počítači se bublina ukáže po najetí myší na jméno, klikem na jméno zůstane otevřená;
+* na mobilu a tabletu (a na úzkém okně, kde se kalendář posouvá do strany) je čas směny pod
+  jménem jako dřív a bublina s ikonami se ukáže ťuknutím na jméno; ťuknutí jinam, Esc nebo
+  posunutí stránky ji zavře;
+* z klávesnice: Tab na jméno bublinu ukáže, Enter / mezerník ji otevře nebo zavře.
+
+V bublině jsou ikony s názvy specializací; slouží-li na směně víc lékařek, je u ikon i jméno.
+Lékařka bez specializací (bez propojené karty v Náš tým) v bublině ikony nemá.
 
 Státní svátky se v buňce dne vypíšou samy (název svátku česky, i na německé, anglické
 a ruské verzi stránky). Měsíc bez jediné zadané směny se ale dál nezobrazuje.
