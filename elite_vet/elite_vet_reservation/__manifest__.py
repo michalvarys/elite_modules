@@ -38,6 +38,7 @@ bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
         "wizard/restore_wizard_views.xml",
         "views/menus.xml",
         "views/booking_page.xml",
+        "views/rozpis_page.xml",
         "data/mail_templates.xml",
         "data/cron.xml",
     ],

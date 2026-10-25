@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- /rozpis-lekaru (elite_vet_calendar) has its own WinVet iframe at the bottom. It follows
+         the setting "Rezervace na webu": with WinVet the original frame stays untouched (it only
+         gets a t-if), with Elite Vet a short call to action links to /rezervacni-system, where our
+         wizard is. The switch lives here, so elite_vet_calendar knows nothing about it.
+         Texts are in English (source), Czech/German/Russian live in i18n. -->
+    <template id="rozpis_lekaru_booking" inherit_id="elite_vet_calendar.rozpis_lekaru" name="Elite Vet - Rozpis lékařů: objednání podle přepínače">
+        <xpath expr="//div[hasclass('rs-rez-frame')]" position="attributes">
+            <attribute name="t-if">not ev_rozpis_elite</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('rs-rez-frame')]" position="before">
+            <t t-set="ev_rozpis_elite" t-value="request.env['elite.vet.setting'].sudo().nastaveni().web_booking_source == 'elite'"/>
+            <div t-if="ev_rozpis_elite" class="rs-rez-online">
+                <p class="rs-rez-online-text">We take online bookings on our booking page.</p>
+                <a t-att-href="url_for('/rezervacni-system')" class="rs-cta">
+                    <svg class="rs-cta-ikona" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span class="rs-cta-text">Book online</span>
+                </a>
+            </div>
+        </xpath>
+    </template>
+</odoo>

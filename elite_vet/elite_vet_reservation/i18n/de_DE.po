@@ -1859,3 +1859,13 @@ msgstr "Weitere Untersuchungen bei Ärztinnen dieses Fachgebiets"
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Done by: {name}"
 msgstr "Durchgeführt von: {name}"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
+msgid "We take online bookings on our booking page."
+msgstr "Online-Termine buchen Sie auf unserer Buchungsseite."
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
+msgid "<span class=\"rs-cta-text\">Book online</span>"
+msgstr "<span class=\"rs-cta-text\">Online buchen</span>"

@@ -108,3 +108,7 @@
 .evbk-slot{padding:10px 0}
 .vet-page .evbk ~ .evrez-zprava-misto{padding:0 20px 32px}
 }
+/* /rozpis-lekaru in Elite Vet mode: a call to action to /rezervacni-system in place of the
+   WinVet frame (views/rozpis_page.xml). The button reuses the page's .rs-cta. */
+.rs-rez-online{text-align:center}
+.vet-page .rs-rez-online-text{max-width:520px;margin:0 auto 22px;color:var(--ev-text-secondary,#64748b);font-size:16px;line-height:1.6}
