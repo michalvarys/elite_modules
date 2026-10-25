@@ -1,0 +1,205 @@
+// One design system for the clinical screens (task 26): the patient card with Moji pacienti dnes
+// (this module) and the screen Ordinace (elite_vet_reception). The root of each screen carries
+// the class .ev-clinic; everything below uses these tokens only.
+//
+// - Teal is for primary actions (and the "in the room" state) only.
+// - State colours mean the same everywhere: waiting amber, in the room teal, booked slate,
+//   done muted grey. Alerts red, internal notes yellow.
+// - Paper white on a soft green-grey ground, borders instead of shadows (one shadow for menus).
+// - Radius: 6px controls, 10px panels. Base 16px; 28 name / 20 section / 16 body / 14 meta.
+// - Odoo's font family; times and vitals in tabular numerals.
+
+.ev-clinic {
+    --ev-ground: #edf2f0;
+    --ev-paper: #ffffff;
+    --ev-ink: #142826;
+    --ev-muted: #566a67;
+    --ev-faint: #8a9b98;
+    --ev-line: #d3dedb;
+    --ev-line-strong: #b9c8c4;
+
+    --ev-accent: #1f6e66;
+    --ev-accent-strong: #165750;
+    --ev-accent-soft: #dcede9;
+    --ev-focus: rgba(31, 110, 102, .28);
+
+    // states
+    --ev-waiting: #8a4b00; --ev-waiting-bg: #fbecd2; --ev-waiting-bar: #d98e1f;
+    --ev-in_room: #165750; --ev-in_room-bg: #dcede9; --ev-in_room-bar: #1f6e66;
+    --ev-booked: #44546a; --ev-booked-bg: #e6ebf1; --ev-booked-bar: #8796ab;
+    --ev-done: #66736f; --ev-done-bg: #eceeed; --ev-done-bar: #b5bfbc;
+
+    --ev-alert: #962a2a; --ev-alert-bg: #fadfdb;
+    --ev-ok: #1f6b3a; --ev-ok-bg: #e1f2e6;
+    --ev-note: #5f4900; --ev-note-bg: #fff3bf; --ev-note-line: #e3bf2e;
+
+    --ev-r-sm: 6px;
+    --ev-r-lg: 10px;
+    --ev-shadow-menu: 0 10px 28px rgba(20, 40, 38, .18);
+
+    --ev-fs-name: 28px;
+    --ev-fs-section: 20px;
+    --ev-fs-body: 16px;
+    --ev-fs-meta: 14px;
+
+    font-size: var(--ev-fs-body);
+    line-height: 1.45;
+    color: var(--ev-ink);
+    background: var(--ev-ground);
+
+    :focus-visible { outline: 3px solid var(--ev-focus); outline-offset: 2px; }
+    .ev-num { font-variant-numeric: tabular-nums; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ev-clinic, .ev-clinic * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+// ---------------------------------------------------------------- buttons
+.ev-clinic .ev-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 0 16px; border-radius: var(--ev-r-sm);
+    border: 1px solid var(--ev-line-strong); background: var(--ev-paper); color: var(--ev-ink);
+    font-size: var(--ev-fs-body); font-weight: 600; line-height: 1.2; white-space: nowrap; cursor: pointer;
+    &:hover:not(:disabled) { border-color: var(--ev-accent); color: var(--ev-accent-strong); }
+    &:disabled { opacity: .5; cursor: not-allowed; }
+}
+.ev-clinic .ev-btn-primary {
+    background: var(--ev-accent); border-color: var(--ev-accent); color: #fff;
+    &:hover:not(:disabled) { background: var(--ev-accent-strong); border-color: var(--ev-accent-strong); color: #fff; }
+}
+.ev-clinic .ev-btn-quiet {
+    border-color: transparent; background: transparent; color: var(--ev-muted);
+    &:hover:not(:disabled) { background: var(--ev-paper); border-color: var(--ev-line); color: var(--ev-ink); }
+}
+// Square icon button (Šablona, tisk, menu "…"): 40px visible, 44px to the finger.
+.ev-clinic .ev-icon-btn {
+    position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 40px; height: 40px; padding: 0; border-radius: var(--ev-r-sm);
+    border: 1px solid transparent; background: transparent; color: var(--ev-muted); font-size: 17px; cursor: pointer;
+    &::after { content: ""; position: absolute; inset: -2px; }
+    &:hover:not(:disabled), &[aria-expanded="true"] { background: var(--ev-paper); border-color: var(--ev-line); color: var(--ev-accent-strong); }
+    &:disabled { opacity: .45; cursor: not-allowed; }
+}
+
+// ---------------------------------------------------------------- state chip
+.ev-clinic .ev-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px;
+    font-size: var(--ev-fs-meta); font-weight: 600; white-space: nowrap;
+    background: var(--ev-done-bg); color: var(--ev-done);
+}
+.ev-clinic {
+    .ev-chip-waiting { background: var(--ev-waiting-bg); color: var(--ev-waiting); }
+    .ev-chip-in_room { background: var(--ev-in_room-bg); color: var(--ev-in_room); }
+    .ev-chip-booked { background: var(--ev-booked-bg); color: var(--ev-booked); }
+    .ev-chip-done { background: var(--ev-done-bg); color: var(--ev-done); }
+}
+.ev-clinic .ev-count {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 24px; padding: 0 8px;
+    border-radius: 999px; background: var(--ev-done-bg); color: var(--ev-ink);
+    font-size: var(--ev-fs-meta); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+// ---------------------------------------------------------------- headings
+.ev-clinic .ev-h2 { font-size: var(--ev-fs-section); font-weight: 700; margin: 0; line-height: 1.25; color: var(--ev-ink); }
+.ev-clinic .ev-h3 { font-size: var(--ev-fs-body); font-weight: 700; margin: 0; color: var(--ev-ink); }
+.ev-clinic .ev-meta { font-size: var(--ev-fs-meta); color: var(--ev-muted); }
+.ev-clinic .ev-empty-line { margin: 4px 0; font-size: var(--ev-fs-meta); color: var(--ev-muted); }
+
+// A group heading with a state rule underneath: "Čekají 3".
+.ev-clinic .ev-group-head {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding-bottom: 8px;
+    border-bottom: 3px solid var(--ev-line);
+    font-size: var(--ev-fs-section); font-weight: 700; line-height: 1.2;
+}
+.ev-clinic {
+    .ev-group-waiting > .ev-group-head { border-bottom-color: var(--ev-waiting-bar); .ev-count { background: var(--ev-waiting-bg); color: var(--ev-waiting); } }
+    .ev-group-in_room > .ev-group-head { border-bottom-color: var(--ev-in_room-bar); .ev-count { background: var(--ev-in_room-bg); color: var(--ev-in_room); } }
+    .ev-group-booked > .ev-group-head { border-bottom-color: var(--ev-booked-bar); .ev-count { background: var(--ev-booked-bg); color: var(--ev-booked); } }
+    .ev-group-done > .ev-group-head { border-bottom-color: var(--ev-done-bar); }
+}
+
+// ---------------------------------------------------------------- visit tile
+// The one patient component of the clinical screens (room view, all rooms, Moji pacienti dnes).
+// Left: the time stub in the state colour (time large, the state below), full height. Middle:
+// pet, owner, procedure, alerts, the reception note. Right (or under the text in a narrow
+// column, .evt-stack): one primary action and the "…" menu.
+.ev-clinic .evt {
+    display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; align-items: stretch;
+    width: 100%; min-height: 76px; text-align: left;
+    background: var(--ev-paper); border: 1px solid var(--ev-line); border-radius: var(--ev-r-lg);
+    color: var(--ev-ink); overflow: hidden;
+    --evt-c: var(--ev-booked); --evt-bg: var(--ev-booked-bg); --evt-bar: var(--ev-booked-bar);
+}
+.ev-clinic {
+    .evt-waiting { --evt-c: var(--ev-waiting); --evt-bg: var(--ev-waiting-bg); --evt-bar: var(--ev-waiting-bar); }
+    .evt-in_room { --evt-c: var(--ev-in_room); --evt-bg: var(--ev-in_room-bg); --evt-bar: var(--ev-in_room-bar); }
+    .evt-done { --evt-c: var(--ev-done); --evt-bg: var(--ev-done-bg); --evt-bar: var(--ev-done-bar); }
+    .evt-done .evt-main { color: var(--ev-muted); }
+}
+.ev-clinic button.evt, .ev-clinic .evt-link {
+    cursor: pointer; padding: 0;
+    &:hover { border-color: var(--ev-line-strong); .evt-go { color: var(--ev-accent); } }
+}
+.ev-clinic .evt-stub {
+    grid-row: 1 / span 2; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    padding: 10px 12px; background: var(--evt-bg); color: var(--evt-c); border-right: 4px solid var(--evt-bar);
+}
+.ev-clinic .evt-time { font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.ev-clinic .evt-time-sub { font-size: 13px; font-weight: 600; opacity: .85; font-variant-numeric: tabular-nums; }
+.ev-clinic .evt-state { font-size: var(--ev-fs-meta); font-weight: 700; line-height: 1.25; margin-top: 2px; }
+.ev-clinic .evt-main { grid-column: 2; grid-row: 1; min-width: 0; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.ev-clinic .evt-pet { font-size: 18px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.ev-clinic .evt-species { font-size: var(--ev-fs-body); font-weight: 400; color: var(--ev-muted); margin-left: 6px; }
+.ev-clinic .evt-line { font-size: var(--ev-fs-meta); color: var(--ev-muted); overflow-wrap: anywhere; }
+.ev-clinic .evt-owner { font-size: var(--ev-fs-body); color: var(--ev-ink); }
+.ev-clinic .evt-room { display: inline-flex; align-items: center; gap: 6px; }
+.ev-clinic .evt-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
+.ev-clinic .evt-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.ev-clinic .evt-alert {
+    display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 10px; border-radius: var(--ev-r-sm);
+    background: var(--ev-alert-bg); color: var(--ev-alert); font-size: var(--ev-fs-meta); font-weight: 700;
+    .fa { align-self: center; }
+}
+.ev-clinic .evt-note {
+    display: block; margin-top: 4px; padding: 4px 10px; border-left: 4px solid var(--ev-note-line);
+    border-radius: var(--ev-r-sm); background: var(--ev-note-bg); color: var(--ev-note);
+    font-size: var(--ev-fs-meta); font-weight: 600; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.ev-clinic .evt-actions { grid-column: 3; grid-row: 1; display: flex; align-items: center; gap: 6px; padding: 10px 10px 10px 0; }
+.ev-clinic .evt-go { grid-column: 3; grid-row: 1; align-self: center; padding: 0 16px 0 4px; color: var(--ev-line-strong); font-size: 24px; }
+
+// compact variant (Všechny ordinace)
+.ev-clinic .evt-compact {
+    grid-template-columns: 92px minmax(0, 1fr) auto; min-height: 64px;
+    .evt-stub { padding: 8px 10px; }
+    .evt-time { font-size: 19px; }
+    .evt-time-sub { display: none; }
+    .evt-state { font-size: 13px; }
+    .evt-main { padding: 8px 4px 8px 10px; }
+    .evt-pet { font-size: var(--ev-fs-body); }
+    .evt-species { font-size: var(--ev-fs-meta); }
+    .evt-owner { font-size: var(--ev-fs-meta); }
+    // the text takes the full width, "…" sits in the top right corner
+    position: relative;
+    .evt-main { grid-column: 2 / 4; }
+    .evt-pet { padding-right: 40px; }
+    .evt-actions { position: absolute; top: 4px; right: 4px; padding: 0; }
+}
+
+@media (max-width: 575.98px) {
+    .ev-clinic .evt { grid-template-columns: 92px minmax(0, 1fr) auto; }
+    .ev-clinic .evt-time { font-size: 20px; }
+}
+
+// ---------------------------------------------------------------- "…" menu (Odoo Dropdown)
+.ev-clinic-menu.dropdown-menu, .o-dropdown--menu.ev-clinic-menu {
+    min-width: 260px; padding: 6px; border-radius: var(--ev-r-lg); border: 1px solid #d3dedb;
+    box-shadow: 0 10px 28px rgba(20, 40, 38, .18); font-size: 16px;
+    .dropdown-item { min-height: 44px; display: flex; align-items: center; gap: 10px; border-radius: 6px; padding: 0 12px; color: #142826; }
+    .dropdown-item:hover, .dropdown-item:focus, .dropdown-item.focus { background: #dcede9; color: #142826; }
+    .dropdown-item.ev-menu-current { font-weight: 700; }
+    .dropdown-header { font-size: 14px; color: #566a67; padding: 8px 12px 4px; }
+    .dropdown-divider { margin: 6px 0; border-color: #d3dedb; }
+}
+.ev-clinic-menu .evt-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }

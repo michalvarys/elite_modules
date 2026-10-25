@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- Inside of the visit tile (task 26), shared by the screen Ordinace and Moji pacienti dnes.
+         The caller renders the root (.evt.evt-<state>, a div or a button) and passes `tile`
+         (see visitTile() in clinic_ui.js). -->
+    <t t-name="elite_vet_clinic.VisitTileBody">
+        <span class="evt-stub">
+            <span class="evt-time" t-esc="tile.time or '–'"/>
+            <span t-if="tile.timeSub" class="evt-time-sub" t-esc="tile.timeSub"/>
+            <span class="evt-state" t-esc="tile.stateText"/>
+        </span>
+        <span class="evt-main">
+            <span class="evt-pet"><t t-esc="tile.pet"/><span t-if="tile.species" class="evt-species" t-esc="tile.species"/></span>
+            <span t-if="tile.owner" class="evt-line evt-owner" t-esc="tile.owner"/>
+            <span t-if="tile.procedure" class="evt-line" t-esc="tile.procedure"/>
+            <span t-if="tile.doctor or tile.room" class="evt-line">
+                <span t-if="tile.room" class="evt-room me-3">
+                    <span class="evt-dot" t-att-style="'background:' + (tile.roomColor or '#8796ab')" aria-hidden="true"/><t t-esc="tile.room"/>
+                </span>
+                <t t-if="tile.doctor"><i class="fa fa-user-md me-1" aria-hidden="true"/><t t-esc="tile.doctor"/></t>
+            </span>
+            <span t-if="tile.alerts" class="evt-badges">
+                <span class="evt-alert"><i class="fa fa-exclamation-triangle" aria-hidden="true"/><t t-esc="tile.alerts"/></span>
+            </span>
+            <span t-if="tile.note" class="evt-note" title="Poznámka recepce (interní)"><i class="fa fa-sticky-note me-2" aria-hidden="true"/><t t-esc="tile.note"/></span>
+        </span>
+    </t>
+</templates>
