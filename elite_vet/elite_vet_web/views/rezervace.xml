@@ -912,7 +912,7 @@
                 .evrez-zprava{max-width:680px;margin:26px auto 0;padding:0 24px;text-align:center;font-size:15.5px;line-height:1.7;color:#64748b;white-space:pre-line}
                 /* Pod rameckem (po nacteni) vycentrovat: ".vet-page p{margin:0}" je silnejsi nez auto
                    okraje vyse. Jen v .evrez-zprava-misto, behem nacitani text sedi v hlasce. */
-                .vet-page .evrez-zprava-misto > .evrez-zprava{margin-left:auto;margin-right:auto}
+                .vet-page .evrez-zprava-misto > .evrez-zprava{margin:26px auto 0}
                 @keyframes evrezToci{to{transform:rotate(360deg)}}
                 @media (prefers-reduced-motion:reduce){.evrez-spinner{animation:none}}
                 @media (max-width:900px){
