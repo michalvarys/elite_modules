@@ -28,9 +28,10 @@ class TestClinicSync(ClinicCase):
 
     def test_entities_registered(self):
         entities = self.sync._winvet_entities()
-        # after the base entities (modules installed later, e.g. elite_vet_sale, append their own)
-        start = entities.index("payments") + 1
-        self.assertEqual(entities[start:start + 3], ["bundles", "bundle_lines", "phrases"])
+        # after the base entities, in this order (other modules – e.g. elite_vet_sale or the
+        # WinVet calendar of elite_vet_winvet – may register their own in between or after)
+        order = [entities.index(name) for name in ("payments", "bundles", "bundle_lines", "phrases")]
+        self.assertEqual(order, sorted(order))
         self.assertEqual(entities.index("vitals"), entities.index("visits") + 1)
         self.push_ok("phrases", [self.phrase(1)])
         line = self.env["elite.vet.winvet.status"].get_status().entity_ids.filtered(lambda e: e.entity == "phrases")
