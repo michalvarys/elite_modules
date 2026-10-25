@@ -497,3 +497,79 @@ Data se nemění, hodnota přepínače zůstává, jak je. `--i18n-overwrite` kv
   **Objednat se online** na /rezervacni-system (s jazykovou předponou; de „Online buchen“,
   ru „Записаться онлайн“). Kontrola: /rozpis-lekaru v anonymním okně, v režimu Elite Vet je
   dole tlačítko a žádný rámeček WinVet.
+
+## Doplnění: kalendář z WinVetu
+
+Záznamy kalendáře WinVetu se synchronizují do Odoo: ukážou se na tabuli (backend i pokladna) jako
+„z WinVetu“, obsadí termín pro objednávání v Odoo a v pokladně v Dnes jdou přijmout. Jen jedním
+směrem – most z WinVetu jen čte, Odoo do WinVetu nic nezapisuje; objednává se dál ve WinVetu.
+Větev `feature/elite-vet-winvet-calendar`. Cílový kód: most **4.0.0** (kontrakt v4),
+`elite_vet_winvet` 18.0.1.3.0, `elite_vet_reservation` 18.0.2.7.0, `elite_vet_reception`
+18.0.1.5.0 (`elite_vet_clinic` jen soubor tabule, bez změny verze).
+
+### Odoo
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_reservation,elite_vet_winvet,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-kalendar-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-kalendar-*.log      # nesmí nic najít
+```
+
+Co upgrade udělá s daty: jen nové tabulky (`elite_vet_winvet_calendar_*`, vazby
+`elite_vet_winvet_cal_event_*_rel`) a nový sloupec `elite_vet_clinical_record.winvet_event_id`
+(prázdný). Rezervace, e-maily ani nastavení se nemění. Kalendář je po upgradu **zapnutý**, ale
+prázdný, dokud most 4.0.0 nepošle první data. Na počítačích s tabulí obnovit stránku natvrdo
+(Ctrl+Shift+R), v pokladně znovu načíst.
+
+```sql
+SELECT count(*) FROM elite_vet_winvet_calendar_event;                           -- 0 po upgradu
+SELECT value FROM ir_config_parameter WHERE key = 'elite_vet_winvet.calendar_enabled';  -- žádný řádek = zapnuto
+```
+
+### Most na PC s WinVetem (dělá správce PC, ne agent)
+
+1. Zastavit úlohy / službu mostu, nahradit složku mostu (`C:\WinVetBridge\`) obsahem
+   `modules/elite_vet/winvet_bridge` z větve – **včetně `verified.json`** (nová skupina otisků
+   `calendar`, ověřená pro WinVet 2603); `config.ini` a stavový soubor ponechat.
+2. `py -m winvet_bridge --config config.ini check` – `bridge_version : 4.0.0`, u `calendar`
+   „ok“ a `blocked : -`. Když je WinVet jiné verze než 2603 nebo `calendar` DIFFERS, kalendář je
+   blokovaný (ostatní data běží dál) – předat správci integrace (README mostu, „Co dělat, když
+   aktualizace WinVetu něco zablokuje“).
+3. `py -m winvet_bridge --config config.ini sync --only calendar --dry-run` – vypíše počty
+   (`calendar_events records=…`), nic neposílá.
+4. Plán: hlavní úloha (každých 15 min) a denní plný běh beze změny – kalendář jde s nimi. Navíc
+   **úloha jen pro kalendář každých 5 minut** (`sync --only calendar`, příkaz v README mostu,
+   „Nespouštět novou instanci“). Služba přes NSSM (`run`) to dělá sama
+   (`calendar_interval_minutes = 5`), třetí úloha tam není potřeba.
+5. Volitelně do `config.ini` `[bridge]`: `calendar_days_back = 1`, `calendar_days_ahead = 60`
+   (okno), `calendar_interval_minutes = 5`. Bez nich platí tyto výchozí hodnoty.
+
+Starý most (3.x) kalendář neposílá; nový most se starým Odoo (bez kalendáře) kalendář přeskočí
+s varováním („unknown entity“) a zbytek synchronizuje dál – pořadí upgradu proto nevadí.
+
+### Kontrola po prvním běhu (vedení, Odoo)
+
+1. **WinVet data → Stav synchronizace:** řádky Kalendáře WinVetu, Činnosti kalendáře, Záznamy
+   kalendáře bez chyby.
+2. **WinVet data → Kalendář z WinVetu → Kalendáře → ordinace:** „ORDINACE 1“ → Ordinace 1,
+   „ORDINACE 2“ → Ordinace 2, „Sál“ → Sál, skrytý „Georgiana - sál“ bez ordinace. Jinak ordinaci
+   vybrat ručně (zůstane). Kalendář bez ordinace se v Odoo nikde neukazuje a nic neblokuje.
+3. **Činnosti → úkony:** volitelně – úkon jen doplní název na kartě (čas a obsazení na něm
+   nezávisí).
+4. **Tabule** na den s objednávkami ve WinVetu: šedé karty se štítkem WinVet ve správných
+   ordinacích, celodenní záznamy jako štítky v hlavičce. Nová rezervace v Odoo na čas karty
+   WinVetu musí skončit hláškou „obsazený“.
+5. **Zapnout / vypnout:** počet přenesených záznamů a rozsah dnů.
+
+Lokální ověření (analytická kopie WinVetu, 25. 10.): kalendáře 4, činnosti 44 (11 se samo
+spárovalo s úkonem), záznamy 203 v okně 24. 10. – 24. 12. (166 s časem, 37 celodenních,
+139 výskytů opakovaných záznamů, 23 se zvířetem z kartotéky); druhý běh nic nezměnil.
+
+### Jak kalendář z WinVetu vypnout (přechod na objednávání v Odoo)
+
+Až se bude objednávat jen v Odoo: **WinVet data → Kalendář z WinVetu → Zapnout / vypnout →
+Vypnout kalendář z WinVetu** (Vedení). Karty WinVet zmizí z tabule i z Dnes, nic neblokují
+a další záznamy z mostu se neukládají. **Smazat přenesené záznamy** je pak vymaže (ve WinVetu
+zůstanou). Na PC s WinVetem potom smazat úlohu „WinVet bridge - kalendar“ (běžné běhy kalendář
+dál posílají, Odoo ho ignoruje). Zpět: tlačítko **Zapnout**, další běh mostu okno znovu naplní.

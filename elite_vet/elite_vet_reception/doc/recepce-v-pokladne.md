@@ -102,6 +102,16 @@ neuzavře. Stejné okno má **Přijmout** v tabuli (kapitola 5).
 Když lékařka kartu otevřela dřív, než jste klienta přijali, Přijmout nic nezdvojí – použije se
 záznam, který už existuje.
 
+### Objednaní ve WinVetu (štítek WinVet)
+
+Dokud se objednává i ve WinVetu, jsou v **Přicházejí** i dnešní záznamy z kalendáře WinVetu,
+u kterých most našel zvíře v kartotéce – se štítkem **WinVet** (celodenní záznam má místo času
+„celý den“). **Přijmout** funguje stejně: založí (nebo použije dnešní otevřenou) návštěvu
+zvířete v ordinaci podle kalendáře WinVetu a klient je v Čekárně. Záznam ve WinVetu se tím nijak
+nemění. Klient… ani Spárovat tu nejsou – záznam se mění jen ve WinVetu. Záznam bez zvířete
+z kartotéky nebo označený ve WinVetu jako vyřízený se neukazuje; takového klienta přijměte
+přes **+ Bez objednání**.
+
 ### Přijmout bez objednání (+ Bez objednání)
 
 Klient přišel bez rezervace:
@@ -325,6 +335,11 @@ nepřepíná do jiné stránky.
 - **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, iniciály lékařky, čas,
   zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
   jsou bledé.
+- **Záznamy z WinVetu** jsou šedé šrafované karty se štítkem **WinVet** (proužek v barvě
+  WinVetu, zvíře a majitel z kartotéky, jinak text z WinVetu). Jen pro čtení: nejdou přetáhnout,
+  klik na ně nic nedělá (po najetí ukážou čas a činnost). Jejich čas je obsazený – Objednat ho
+  nenabídne. Celodenní záznamy WinVetu jsou štítky „WinVet · …“ v hlavičce ordinace a nic
+  neblokují.
 - Ve státní svátek je u data červený štítek „Státní svátek: …“ (když web ve svátky neobjednává,
   s „· web neobjednává“).
 - **‹ Dnes ›** a pole s datem přepínají den; tabule se posune na „teď“ (dnes), u jiného dne na

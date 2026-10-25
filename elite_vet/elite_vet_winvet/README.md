@@ -14,7 +14,8 @@ Odoo 18 modul. Přijímá data, která z WinVetu posílá most `elite_vet/winvet
 ## Menu (WinVet data)
 
 Tržby (Tržby podle položek, Úkony, Léky a zboží) · Doklady · Platby · Návštěvy · Očkování ·
-Ceník · Uživatelé WinVet · Stav synchronizace · Konfigurace → API klíč.
+Kalendář z WinVetu (Záznamy; Kalendáře → ordinace, Činnosti → úkony, Zapnout / vypnout jen
+Vedení) · Ceník · Uživatelé WinVet · Stav synchronizace · Konfigurace → API klíč.
 Tržby, doklady, platby, ceník, uživatelé a stav vidí **Správce rezervací**; návštěvy
 a očkování (i na kartě mazlíčka) vidí i **Recepce**.
 
@@ -52,6 +53,44 @@ a očkování (i na kartě mazlíčka) vidí i **Recepce**.
 - Nesmyslná data (např. rok 0218) se uloží prázdná a vypíšou ve *Stavu synchronizace*.
 - **Upozornění:** změna verze WinVetu nebo zablokované oblasti → červený pruh na Stavu
   synchronizace, zpráva a aktivita pro správce. Stejné zablokování se hlásí jen jednou.
+
+## Kalendář z WinVetu (kontrakt v4)
+
+Most 4.0.0 posílá i kalendář WinVetu: kalendáře (`calendar_resources`), činnosti
+(`calendar_activities`) a záznamy (`calendar_events`, okno od včerejška na 60 dní, opakované
+záznamy rozložené na výskyty). Jen jedním směrem – Odoo do WinVetu nikdy nezapisuje.
+
+- **Modely:** `elite.vet.winvet.calendar.resource` (kalendář → ordinace `room_id`),
+  `elite.vet.winvet.calendar.activity` (činnost → úkon `procedure_id`),
+  `elite.vet.winvet.calendar.event` (jeden výskyt, klíč `key`, jen pro čtení – zápis a mazání mimo
+  synchronizaci odmítne). Záznamy nemají chatter, neposílají e-maily, nemají připomínky, nepočítají
+  se do Nedorazil, Historie rezervací ani přehledů rezervací (jsou mimo `elite.vet.reservation`).
+- **Mapování** (menu **WinVet data → Kalendář z WinVetu**, Vedení): kalendář dostane ordinaci se
+  stejným názvem („ORDINACE 1“ = „Ordinace 1“, „Sál“ = „SAL“; velikost písmen, diakritika
+  a mezery se nerozlišují), skrytý kalendář WinVetu (ZOBRAZIT = N, např. „Georgiana - sál“)
+  zůstane bez ordinace. Činnost dostane aktivní úkon stejného názvu (cs nebo en). Ručně zvolená
+  ordinace / úkon se už synchronizací nemění (příznak *Nastaveno ručně*; vyprázdnění = zase
+  automaticky).
+- **Klient a zvíře** se párují podle ID z WinVetu kartotéky (`res.partner.winvet_ref`,
+  `elite.vet.pet.winvet_ref`); bez shody zůstane jen text z WinVetu (TITULEK).
+- **Tabule** (backend i pokladna): záznam s časem v namapované ordinaci = šedá šrafovaná karta
+  s proužkem v barvě WinVetu a štítkem **WinVet**, název = zvíře (majitel) z kartotéky, jinak text
+  z WinVetu; nejde přetáhnout, nemá akce (v backendu se klikem otevře jen pro čtení). Celodenní
+  záznamy jsou štítky **WinVet · …** v hlavičce ordinace a nic neblokují.
+- **Obsazení termínu:** záznam s časem v namapované ordinaci obsadí termín pro všechna objednávání
+  v Odoo (web, chat, průvodce recepce, Objednat v pokladně, přetažení na tabuli, každé uložení) –
+  přes `elite.vet.reservation._busy_external`, druhou půlku jediného pravidla obsazenosti vedle
+  `_busy_domain`. Blokace (oběd, porada) jde přes záznam z WinVetu vložit.
+- **Mazání:** poslední dávka běhu smaže záznamy okna, které ve WinVetu už nejsou; starší
+  záznamy mimo okno zůstanou.
+- **Vypnutí** (WinVet data → Kalendář z WinVetu → Zapnout / vypnout, Vedení): *Vypnout kalendář
+  z WinVetu* = záznamy zmizí z tabule a z Dnes, nic neblokují a nové záznamy z mostu se neukládají
+  (most je dál posílá, Odoo odpoví ok a započítá je jako přeskočené). Pro přechod na objednávání
+  v Odoo. *Smazat přenesené záznamy* smaže všechny přenesené záznamy (ve WinVetu zůstanou; zapnutý
+  kalendář okno další běh mostu znovu naplní). Přepínač je `ir.config_parameter`
+  `elite_vet_winvet.calendar_enabled` (chybí = zapnuto).
+- **Dnes v pokladně** (`elite_vet_reception`): dnešní záznamy se zvířetem z kartotéky jsou
+  v Přicházejí se štítkem WinVet a jdou přijmout (návštěva v namapované ordinaci).
 
 ## Rozšíření o další entity
 
