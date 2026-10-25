@@ -403,12 +403,13 @@ Na počítačích s tabulí, v kartě pacienta a na pokladnách obnovit stránku
 Pro server, na kterém už běží předchozí doplnění (požadavky 25. 10.). Nové nastavení **Rezervace
 na webu** přepíná stránku /rezervacni-system mezi formulářem WinVet (podle adresy) a naším
 rezervačním průvodcem. Větev `feature/elite-vet-booking-switch`. Cílový kód:
-`elite_vet_reservation` 18.0.2.5.0 (ostatní moduly beze změny verze).
+`elite_vet_reservation` 18.0.2.5.0, `elite_vet_reception` 18.0.1.4.0 (ostatní moduly beze změny
+verze).
 
 Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
 
 ```bash
-<odoo> -d <db> -u elite_vet_reservation --i18n-overwrite --stop-after-init 2>&1 | tee upgrade-prepinac-$(date +%F-%H%M).log
+<odoo> -d <db> -u elite_vet_reservation,elite_vet_reception --i18n-overwrite --stop-after-init 2>&1 | tee upgrade-prepinac-$(date +%F-%H%M).log
 grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-prepinac-*.log      # nesmí nic najít
 ```
 
@@ -454,3 +455,10 @@ Stránka /rozpis-lekaru má vlastní formulář WinVet a přepínač ji nemění
 - Webový průvodce: první záložka „Podle problému“ se jmenuje **„Podle úkonu“** (de „Nach
   Leistung“, ru „По услуге“), stejně i věty, které na ni odkazují („Vyberte podle úkonu…“).
   „Popište problém“ ve formuláři zůstává. Potřebuje `--i18n-overwrite` (je v příkazu výše).
+
+**Nedorazil na tabuli v pokladně** (`elite_vet_reception` 18.0.1.4.0, upgrade proto
+`-u elite_vet_reservation,elite_vet_reception`): v detailu rezervace na tabuli v pokladně je
+tlačítko **Nedorazil** (potvrzená rezervace z dneška nebo dřív, klient nepřijatý; ne u kopie ve
+druhé ordinaci). Zeptá se „Označit … v 9:00 jako nedorazil?“ a nastaví stav Nedorazil stejně
+jako tlačítko v backendu – klientovi nic neodejde, počítá se do „Nedorazil N×“. Data se upgradem
+nemění. Kontrola: Pokladna › Tabule › dnešní nepřijatá rezervace › Nedorazil je v patičce okna.

@@ -223,7 +223,8 @@ pokladny zůstávají standardní.
   → `BoardEventDialog` (`board_reservation`): Přijmout (`check_in` hlavní rezervace), Klient…
   (Kartotéka v režimu `reservation` nad tabulí, tabule zůstane otevřená; ne u zrušené, proběhlé
   a nedorazivší), Přesunout (Objednat s `move`; jen `can_move`), Zrušit rezervaci (potvrzení
-  v dialogu, `cancel_reservation`). Přetažení (HTML5 drag & drop, jen potvrzené hlavní rezervace,
+  v dialogu, `cancel_reservation`), Nedorazil (jen `can_no_show`, potvrzení v dialogu,
+  `no_show_reservation`). Přetažení (HTML5 drag & drop, jen potvrzené hlavní rezervace,
   ne kopie druhé ordinace – `is_second_room` v událostech `board_data`) → `move_reservation`.
   Po změně dne se tabule posune na „teď“ (dnešek), jinak na začátek dne. Klik do volného
   místa (i přes blokaci „jen web“) → dialog se zavře, Objednat s `prefill` (vybrané zvíře
@@ -241,8 +242,9 @@ dostupnosti.
 
 | Metoda | Vrací |
 |---|---|
-| `board_reservation(reservation_id)` | detail: `reservation_id, main_id, state, state_label, source, date, date_label, is_today, time, time_label, room_id, room, procedure_id, procedure, doctor_id, doctor, partner_id, owner, pet_id, pet_name, phone, email, problem, note, linked, is_second_room, needs_match, has_record, visit_label, payment_state, payment_state_label, can_check_in, can_move, can_cancel, cancel_sends_email` |
+| `board_reservation(reservation_id)` | detail: `reservation_id, main_id, state, state_label, source, date, date_label, is_today, time, time_label, room_id, room, procedure_id, procedure, doctor_id, doctor, partner_id, owner, pet_id, pet_name, phone, email, problem, note, linked, is_second_room, needs_match, has_record, visit_label, payment_state, payment_state_label, can_check_in, can_move, can_cancel, can_no_show, cancel_sends_email` |
 | `move_reservation(reservation_id, day, minute, room_id=False)` | `board_reservation` po přesunu přes `board_move` (lékařka ve službě, ordinace úkonu, kontrola překryvu při zápisu) |
+| `no_show_reservation(reservation_id)` | `{reservation_id, state}` – Nedorazil přes `action_no_show` z backendu (bez e-mailu; jen potvrzená hlavní rezervace z dneška nebo dřív bez návštěvy, jinak `UserError`; blokace a kopie ve druhé ordinaci ne). Tabule se obnoví přes bus (`write` → `notify_board`), počítá se do „Nedorazil N×“ |
 | `cancel_reservation(reservation_id)` | `{reservation_id, state, email_sent}` – `action_cancel("clinic")` hlavní rezervace (e-mail o zrušení jako v backendu, jen s `contact_email`) |
 
 - U druhé ordinace společného zákroku (`is_second_room`) patří klient, návštěva a zrušení hlavní

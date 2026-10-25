@@ -2,8 +2,8 @@
 
 The day itself is read with `elite.vet.reservation.board_data` (same data as the backend board,
 with the payment state from elite_vet_sale). These methods add what the till needs on top of it:
-the client / pet ids and the visit of one reservation, and the move and cancel actions with the
-role check. Moving goes through the board's own `board_move` (same doctor and room rules, overlap
+the client / pet ids and the visit of one reservation, and the move, cancel and Nedorazil actions
+with the role check. Moving goes through the board's own `board_move` (same doctor and room rules, overlap
 check on write) and cancelling through `action_cancel` (same e-mail rule as in the backend) - both
 with the caller's own rights, reception edits reservations in the backend the same way.
 """
@@ -45,6 +45,13 @@ class ReceptionBoard(models.AbstractModel):
     def _reservation_visit(self, reservation):
         return self._records().search([("reservation_id", "=", reservation.id), ("state", "!=", "cancelled")],
                                       limit=1)
+
+    @api.model
+    def _can_no_show(self, reservation, visit, day, today):
+        """Nedorazil only for the main reservation (the copy follows it), confirmed, of today or
+        earlier, and without a visit record."""
+        return (reservation.state == "confirmed" and not reservation.is_second_room and not visit
+                and day <= today)
 
     # ------------------------------------------------------------------ API
 
@@ -97,6 +104,8 @@ class ReceptionBoard(models.AbstractModel):
             # the second-room copy follows the main reservation (time sync main -> copy only)
             "can_move": state in MOVABLE_STATES and not visit and not reservation.is_second_room,
             "can_cancel": main.state in CANCELLABLE_STATES and not visit,
+            # Nedorazil: a confirmed reservation of today or earlier nobody has checked in
+            "can_no_show": self._can_no_show(reservation, visit, day, today),
             # the backend sends the client an e-mail about the cancellation when it has one
             "cancel_sends_email": bool(main.contact_email),
         }
@@ -138,6 +147,25 @@ class ReceptionBoard(models.AbstractModel):
             raise UserError(_("Klient už je přijatý (návštěva je založená) – rezervaci nejde zrušit."))
         main.action_cancel("clinic")
         return {"reservation_id": main.id, "state": main.state, "email_sent": bool(main.contact_email)}
+
+
+    @api.model
+    def no_show_reservation(self, reservation_id):
+        """Mark a reservation as Nedorazil with the backend's `action_no_show` (the form button):
+        no e-mail to the client, the second-room copy follows, the board refreshes itself (bus)
+        and the no-show counts in the client's "Nedorazil N×"."""
+        self._check_reception()
+        reservation = self._board_reservation(reservation_id)
+        if reservation.is_second_room:
+            raise UserError(_("Druhá ordinace se označuje s hlavní rezervací – otevřete hlavní rezervaci."))
+        if reservation.state != "confirmed":
+            raise UserError(_("Jako nedorazil jde označit jen potvrzenou rezervaci."))
+        if local_date(reservation.start) > clinic_today():
+            raise UserError(_("Rezervace je teprve v budoucnu – jako nedorazil ji jde označit nejdřív v její den."))
+        if self._reservation_visit(reservation):
+            raise UserError(_("Klient už je přijatý (návštěva je založená) – nejde označit jako nedorazil."))
+        reservation.action_no_show()
+        return {"reservation_id": reservation.id, "state": reservation.state}
 
 
 class ReservationBoardSecondRoom(models.Model):

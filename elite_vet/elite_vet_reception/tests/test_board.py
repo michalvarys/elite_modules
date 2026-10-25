@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
@@ -198,3 +200,62 @@ class TestBoard(ReceptionCase):
         with self.assertRaises(AccessError):
             api.cancel_reservation(res.id)
         self.assertEqual(res.state, "confirmed")
+
+    # ---------------------------------------------------------------- Nedorazil (task 19)
+    def test_no_show_from_the_till_board(self):
+        owner = self.env["res.partner"].create({"name": "Nedorazil T23", "phone": "+420 777 333 444"})
+        pet = self.new_pet("Ztracený T23", owner=owner)
+        res = self.board_res(9, 0, pet=pet, contact_email="nedorazil@example.invalid")
+        api = self.api(self.reception)
+        self.assertTrue(api.board_reservation(res.id)["can_no_show"])
+        self.assertEqual(api.owner_data(owner.id)["no_shows"]["count"], 0)
+        mails = self.mails_of(res)   # the confirmation of the new reservation, if any
+        result = api.no_show_reservation(res.id)
+        self.assertEqual(result, {"reservation_id": res.id, "state": "no_show"})
+        self.assertEqual((res.state, res.cancel_reason), ("no_show", "no_show"))
+        self.assertEqual(self.mails_of(res), mails, "the backend Nedorazil sends no e-mail either")
+        self.assertEqual(api.owner_data(owner.id)["no_shows"]["count"], 1)
+        detail = api.board_reservation(res.id)
+        self.assertFalse(detail["can_no_show"] or detail["can_move"] or detail["can_cancel"])
+        with self.assertRaises(UserError):
+            api.no_show_reservation(res.id)
+        # an earlier day works too
+        past = self.board_res(9, 0, pet=self.new_pet("Včerejší T23", owner=owner),
+                              start=self.today_utc(9) - timedelta(days=1),
+                              stop=self.today_utc(9, 20) - timedelta(days=1))
+        self.assertTrue(api.board_reservation(past.id)["can_no_show"])
+        api.no_show_reservation(past.id)
+        self.assertEqual(past.state, "no_show")
+
+    def test_no_show_refused(self):
+        api = self.api(self.reception)
+        future = self.board_res(9, 0, pet=self.new_pet("Zítřejší T23"),
+                                start=self.today_utc(9) + timedelta(days=1),
+                                stop=self.today_utc(9, 20) + timedelta(days=1))
+        self.assertFalse(api.board_reservation(future.id)["can_no_show"])
+        with self.assertRaises(UserError):
+            api.no_show_reservation(future.id)
+        received = self.board_res(9, 30, pet=self.new_pet("Přijatý T23"))
+        api.check_in(received.id)
+        self.assertFalse(api.board_reservation(received.id)["can_no_show"])
+        with self.assertRaises(UserError):
+            api.no_show_reservation(received.id)
+        main = self.board_res(10, 0, pet=self.new_pet("Dvojitý T23"))
+        second = main.add_second_room(self.room2, self.doctor)
+        self.assertFalse(api.board_reservation(second.id)["can_no_show"])
+        with self.assertRaises(UserError):
+            api.no_show_reservation(second.id)
+        block = self.env["elite.vet.reservation"].create({
+            "kind": "block", "state": "confirmed", "room_id": self.room.id, "block_reason": "Porada T23",
+            "start": self.today_utc(11, 0), "stop": self.today_utc(11, 30)})
+        with self.assertRaises(UserError):
+            api.no_show_reservation(block.id)
+        cancelled = self.board_res(11, 30, pet=self.new_pet("Zrušený T23"))
+        cancelled.action_cancel("clinic")
+        with self.assertRaises(UserError):
+            api.no_show_reservation(cancelled.id)
+        self.assertEqual((future.state, received.state, main.state, block.state),
+                         ("confirmed", "confirmed", "confirmed", "confirmed"))
+        with self.assertRaises(AccessError):
+            self.api(self.outsider).no_show_reservation(main.id)
+        self.assertEqual(main.state, "confirmed")

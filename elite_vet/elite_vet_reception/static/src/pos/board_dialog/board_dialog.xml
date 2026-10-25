@@ -141,9 +141,14 @@
                     <button class="btn btn-danger btn-lg me-2 o_ev_board_cancel_yes" t-att-disabled="state.busy" t-on-click="cancel">Ano, zrušit rezervaci</button>
                     <button class="btn btn-light btn-lg" t-att-disabled="state.busy" t-on-click="keep">Ne</button>
                 </div>
+                <div t-if="state.confirmNoShow" class="alert alert-warning mt-3 mb-0 o_ev_board_confirm o_ev_board_no_show_confirm">
+                    <div class="mb-2" t-esc="noShowQuestion"/>
+                    <button class="btn btn-warning btn-lg me-2 o_ev_board_no_show_yes" t-att-disabled="state.busy" t-on-click="noShow">Ano, nedorazil</button>
+                    <button class="btn btn-light btn-lg" t-att-disabled="state.busy" t-on-click="keep">Ne</button>
+                </div>
             </t>
             <t t-set-slot="footer">
-                <t t-if="detail and !state.confirmCancel">
+                <t t-if="detail and !confirming">
                     <button t-if="detail.can_check_in" class="btn btn-primary btn-lg o_ev_board_check_in" t-att-disabled="state.busy" t-on-click="checkIn">Přijmout</button>
                     <button t-if="canChangeClient" class="btn btn-light btn-lg o_ev_board_client" t-att-disabled="state.busy" t-on-click="openClient">
                         <i class="fa fa-address-book-o me-1"/>Klient…
@@ -151,6 +156,7 @@
                     <button t-if="detail.can_move" class="btn btn-light btn-lg o_ev_board_move" t-att-disabled="state.busy" t-on-click="move">
                         <i class="fa fa-arrows me-1"/>Přesunout
                     </button>
+                    <button t-if="detail.can_no_show" class="btn btn-outline-warning btn-lg o_ev_board_no_show" t-att-disabled="state.busy" t-on-click="askNoShow">Nedorazil</button>
                     <button t-if="detail.can_cancel" class="btn btn-outline-danger btn-lg o_ev_board_cancel" t-att-disabled="state.busy" t-on-click="askCancel">Zrušit rezervaci</button>
                 </t>
                 <button class="btn btn-secondary btn-lg" t-on-click="props.close">Zavřít</button>

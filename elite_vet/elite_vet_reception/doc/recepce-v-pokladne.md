@@ -352,6 +352,12 @@ Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas 
   o zrušení.“, nebo bez e-mailu „Opravdu zrušit tuto rezervaci?“) a po **Ano, zrušit rezervaci**
   rezervaci zruší. E-mail o zrušení odejde stejně jako při zrušení v backendu – jen když má
   rezervace e-mail.
+- **Nedorazil** – u potvrzené rezervace z dneška nebo dřívějška, na kterou klient nepřišel
+  (ještě nemá návštěvu). Zeptá se „Označit Rex · Jana Nováková v 9:00 jako nedorazil?“ a po
+  **Ano, nedorazil** dá rezervaci stav Nedorazil – stejně jako tlačítko Nedorazil v backendu,
+  klientovi nic neodejde. Tabule se obnoví a klient má v Kartotéce štítek **Nedorazil N×**.
+  U budoucí rezervace, u přijatého klienta a u kopie ve druhé ordinaci tlačítko není (kopie se
+  označí s hlavní rezervací).
 
 Rezervace, která už má návštěvu (klient je přijatý), se přesunout ani zrušit nedá – Přesunout
 a Zrušit rezervaci se u ní neukážou. U společného zákroku dvou lékařek se přesouvá jen hlavní

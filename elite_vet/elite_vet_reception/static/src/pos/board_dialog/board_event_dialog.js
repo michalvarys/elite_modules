@@ -1,7 +1,8 @@
 /**
  * Detail of a reservation on the till's board: client, pet, procedure, doctor, time and state,
  * and the actions Přijmout (today only, no visit yet), Klient… (Kartotéka for the reservation),
- * Přesunout (Objednat in the move mode) and Zrušit rezervaci (with a confirm step in the dialog).
+ * Přesunout (Objednat in the move mode), Zrušit rezervaci and Nedorazil (both with a confirm step
+ * in the dialog).
  */
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
@@ -26,7 +27,7 @@ export class BoardEventDialog extends Component {
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
-        this.state = useState({ detail: null, busy: false, confirmCancel: false });
+        this.state = useState({ detail: null, busy: false, confirmCancel: false, confirmNoShow: false });
         onWillStart(() => this.load());
     }
 
@@ -67,6 +68,16 @@ export class BoardEventDialog extends Component {
         return this.detail.cancel_sends_email
             ? "Opravdu zrušit? Klientovi odejde e-mail o zrušení."
             : "Opravdu zrušit tuto rezervaci?";
+    }
+
+    get noShowQuestion() {
+        const d = this.detail;
+        const who = [d.pet_name, d.owner].filter(Boolean).join(" · ") || "klienta";
+        return `Označit ${who} v ${d.time} jako nedorazil?`;
+    }
+
+    get confirming() {
+        return this.state.confirmCancel || this.state.confirmNoShow;
     }
 
     async run(action) {
@@ -123,6 +134,29 @@ export class BoardEventDialog extends Component {
 
     keep() {
         this.state.confirmCancel = false;
+        this.state.confirmNoShow = false;
+    }
+
+    askNoShow() {
+        this.state.confirmNoShow = true;
+    }
+
+    /** Nedorazil through the backend's action_no_show (no e-mail to the client). */
+    noShow() {
+        return this.run(async () => {
+            const result = await callReception(this.orm, this.notification, "no_show_reservation", [
+                this.detail.reservation_id,
+            ]);
+            if (result) {
+                const who = this.detail.pet_name || this.detail.owner || "Klient";
+                this.notification.add(`${who}: označeno jako nedorazil.`, { type: "success" });
+                this.props.onChanged();
+                this.props.close();
+            } else {
+                this.state.confirmNoShow = false;
+                await this.load();
+            }
+        });
     }
 
     cancel() {
