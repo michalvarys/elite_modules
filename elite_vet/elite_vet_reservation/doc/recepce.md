@@ -7,7 +7,7 @@ k němu žádné technické znalosti. Jak se počítají volné termíny, vysvě
 
 Vše najdete v aplikaci **Rezervace**. Nahoře je nabídka: **Tabule**, **Nová rezervace**,
 **Čekající z webu**, **Rezervace**, **Rozpis lékařů**, **Klienti**, **Mazlíčci**
-(a **Konfigurace**, kterou vidí jen správce).
+(a **Historie rezervací** a **Konfigurace**, které vidí jen správce rezervací).
 
 ---
 
@@ -333,6 +333,35 @@ Vpravo je stav: **Čekající z webu → Potvrzená → Proběhla**.
 
 Proběhla / Nedorazil jsou nepovinné, slouží pro přehled. Pod formulářem je historie
 změn a zpráv (kdo co kdy změnil).
+
+### Historie rezervací a Obnovit (správce rezervací)
+
+Menu **Rezervace › Historie rezervací** (jen pro správce rezervací) ukazuje všechny rezervace –
+i zrušené, „nedorazil“ a proběhlé – od nejnovější. Na začátku je zapnutý filtr **Tento měsíc**.
+
+- **Filtry:** Zrušené, Nedorazil, Proběhlé, Platné (čekající, potvrzené), **Přesunuté** (změnil se
+  čas nebo ordinace), Z webu; **Dnes**, **Tento týden**, **Tento měsíc**, Datum rezervace, Datum
+  zrušení. Do hledání napište klienta, mazlíčka, telefon, e-mail, ordinaci, lékařku nebo úkon.
+- **Seskupit podle:** Klient (kolikrát a jak), Ordinace, Lékařka, Stav, Zrušil(a), Den.
+- Sloupce **Důvod zrušení**, **Zrušil(a)** a **Zrušeno** (kdy). U zrušení klientem odkazem
+  z e-mailu je jako „Zrušil(a)“ veřejný uživatel webu a důvod „Klient“. Další sloupce
+  (Naposledy změnil(a), Změněno, Založeno, mazlíček, zdroj) zapnete vpravo v hlavičce seznamu.
+- Kliknutím otevřete rezervaci; dole je **historie změn**: kdo a kdy změnil stav, čas, ordinaci,
+  lékařku, úkon, klienta, mazlíčka nebo důvod zrušení.
+
+**Obnovit** zrušenou rezervaci:
+
+1. Otevřete zrušenou rezervaci a klikněte **Obnovit** (tlačítko vidí jen správce rezervací).
+2. V okně je původní **Začátek** a **Ordinace**. Klikněte **Obnovit**.
+3. Je-li termín pořád volný, rezervace je znovu **Potvrzená** a v historii zpráv je „Rezervaci
+   obnovil(a) …“. Klientovi se nic nepošle, pokud nezaškrtnete **Poslat klientovi potvrzení**
+   (je vidět jen u rezervace s e-mailem).
+4. Když termín mezitím obsadila jiná rezervace nebo blokace, okno napíše „Rezervaci nejde
+   obnovit, termín už není volný …“ a zůstane otevřené – změňte začátek nebo ordinaci a klikněte
+   znovu Obnovit (nebo okno zavřete, rezervace zůstane zrušená).
+
+Rezervaci v minulosti obnovit nejde (nastavte nový začátek), stejně jako kopii ve druhé ordinaci
+(obnovte hlavní rezervaci; kopie zůstane zrušená, druhou ordinaci případně přidejte znovu).
 
 ---
 

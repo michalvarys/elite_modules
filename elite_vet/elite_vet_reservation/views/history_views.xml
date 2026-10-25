@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Request 25. 10.: Historie rezervací for Správce rezervací - every reservation incl. the
+         cancelled / no-show / done ones, filters, who cancelled, the chatter with the changes and
+         Obnovit (wizard/restore_wizard.py). -->
+    <record id="view_reservation_history_list" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.list.history</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Historie rezervací" create="0" default_order="start desc"
+                  decoration-muted="state in ('cancelled', 'no_show')" decoration-info="state == 'web_new'">
+                <field name="start" widget="datetime"/>
+                <field name="name"/>
+                <field name="partner_id" optional="show"/>
+                <field name="pet_id" optional="hide"/>
+                <field name="procedure_id" optional="show"/>
+                <field name="room_id"/>
+                <field name="doctor_id" optional="show"/>
+                <field name="source" optional="hide"/>
+                <field name="state" widget="badge" decoration-danger="state == 'cancelled'"
+                       decoration-warning="state == 'no_show'" decoration-success="state == 'done'"
+                       decoration-info="state in ('web_new', 'confirmed')"/>
+                <field name="cancel_reason" optional="show"/>
+                <field name="cancelled_by_id" optional="show" widget="many2one_avatar_user"/>
+                <field name="cancelled_at" optional="show"/>
+                <field name="write_uid" string="Naposledy změnil(a)" optional="hide" widget="many2one_avatar_user"/>
+                <field name="write_date" string="Změněno" optional="hide"/>
+                <field name="create_date" string="Založeno" optional="hide"/>
+                <field name="kind" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reservation_history_search" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.search.history</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search string="Historie rezervací">
+                <field name="name"/>
+                <field name="partner_id" string="Klient"/>
+                <field name="pet_id"/>
+                <field name="contact_phone"/>
+                <field name="contact_email"/>
+                <field name="room_id"/>
+                <field name="doctor_id"/>
+                <field name="procedure_id"/>
+                <filter name="cancelled" string="Zrušené" domain="[('state', '=', 'cancelled')]"/>
+                <filter name="no_show" string="Nedorazil" domain="[('state', '=', 'no_show')]"/>
+                <filter name="done" string="Proběhlé" domain="[('state', '=', 'done')]"/>
+                <filter name="active_states" string="Platné (čekající, potvrzené)"
+                        domain="[('state', 'in', ('web_new', 'confirmed'))]"/>
+                <separator/>
+                <!-- a tracked change of the time or the room in the chatter (models/history.py) -->
+                <filter name="moved" string="Přesunuté" domain="[('was_moved', '=', True)]"/>
+                <filter name="from_web" string="Z webu" domain="[('source', '=', 'web')]"/>
+                <separator/>
+                <filter name="today" string="Dnes"
+                        domain="[('start', '&gt;=', context_today().strftime('%Y-%m-%d')),
+                                 ('start', '&lt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d'))]"/>
+                <filter name="this_week" string="Tento týden"
+                        domain="[('start', '&gt;=', (context_today() + relativedelta(days=-6, weekday=0)).strftime('%Y-%m-%d')),
+                                 ('start', '&lt;', (context_today() + relativedelta(days=1, weekday=0)).strftime('%Y-%m-%d'))]"/>
+                <filter name="this_month" string="Tento měsíc"
+                        domain="[('start', '&gt;=', context_today().strftime('%Y-%m-01')),
+                                 ('start', '&lt;', (context_today() + relativedelta(months=1)).strftime('%Y-%m-01'))]"/>
+                <filter name="start_date" string="Datum rezervace" date="start"/>
+                <filter name="cancelled_date" string="Datum zrušení" date="cancelled_at"/>
+                <group expand="0" string="Seskupit podle">
+                    <filter name="group_partner" string="Klient" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
+                    <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
+                    <filter name="group_cancelled_by" string="Zrušil(a)" context="{'group_by': 'cancelled_by_id'}"/>
+                    <filter name="group_day" string="Den" context="{'group_by': 'start:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_reservation_history" model="ir.actions.act_window">
+        <field name="name">Historie rezervací</field>
+        <field name="res_model">elite.vet.reservation</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('kind', '=', 'reservation')]</field>
+        <field name="context">{'create': False, 'search_default_this_month': 1}</field>
+        <field name="search_view_id" ref="view_reservation_history_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_reservation_history_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_reservation_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">V tomto výběru nejsou žádné rezervace</p>
+            <p>Všechny rezervace i zrušené, nedorazil a proběhlé. Změny (kdo a kdy) jsou v kartě
+                rezervace dole v historii zpráv. Zrušenou rezervaci vrátíte tlačítkem Obnovit.</p>
+        </field>
+    </record>
+
+    <!-- Obnovit in the reservation form + who and when cancelled -->
+    <record id="view_reservation_form_history" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.form.history</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="inherit_id" ref="view_reservation_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='state']" position="before">
+                <button name="action_restore_wizard" type="object" string="Obnovit" class="btn-primary"
+                        invisible="kind != 'reservation' or state != 'cancelled' or is_second_room"
+                        groups="elite_vet_reservation.group_reservation_manager"/>
+            </xpath>
+            <xpath expr="//field[@name='cancel_reason']" position="after">
+                <group invisible="state != 'cancelled'">
+                    <field name="cancelled_by_id" readonly="1"/>
+                    <field name="cancelled_at" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

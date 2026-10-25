@@ -18,6 +18,9 @@
     <menuitem id="menu_reservation_all" name="Rezervace"
               parent="elite_vet_web.menu_rezervace_root" action="action_reservation" sequence="30"
               groups="elite_vet_reservation.group_reservation_reception"/>
+    <menuitem id="menu_reservation_history" name="Historie rezervací"
+              parent="elite_vet_web.menu_rezervace_root" action="action_reservation_history" sequence="35"
+              groups="elite_vet_reservation.group_reservation_manager"/>
     <menuitem id="menu_reservation_assignment" name="Rozpis lékařů"
               parent="elite_vet_web.menu_rezervace_root" action="action_assignment" sequence="40"
               groups="elite_vet_reservation.group_reservation_reception"/>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_restore_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.restore.wizard.form</field>
+        <field name="model">elite.vet.reservation.restore.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Obnovit rezervaci">
+                <field name="reservation_id" invisible="1"/>
+                <p class="text-muted">
+                    Rezervace se vrátí mezi potvrzené, jen když je termín pořád volný. Když už volný
+                    není, změňte tady začátek nebo ordinaci. Klientovi se nic nepošle, pokud
+                    nezaškrtnete „Poslat klientovi potvrzení“.
+                </p>
+                <group>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="cancel_reason" readonly="1"/>
+                        <field name="cancelled_by_id" readonly="1" invisible="not cancelled_by_id"/>
+                        <field name="cancelled_at" readonly="1" invisible="not cancelled_at"/>
+                    </group>
+                    <group>
+                        <field name="start"/>
+                        <field name="room_id" options="{'no_create': True, 'no_open': True}"/>
+                        <field name="contact_email" readonly="1" invisible="not contact_email"/>
+                        <field name="send_confirmation" invisible="not contact_email"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_restore" type="object" string="Obnovit" class="btn-primary"/>
+                    <button special="cancel" string="Zavřít" class="btn-link"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

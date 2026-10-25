@@ -10,3 +10,4 @@ from . import second_room
 from . import availability
 from . import setting
 from . import live
+from . import history
