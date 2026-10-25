@@ -8,6 +8,7 @@
                 <field name="name" string="Jméno"/>
                 <field name="member_id" string="Karta v týmu"/>
                 <field name="user_id" string="Účet" options="{'no_create': True}"/>
+                <field name="kvl_number" optional="show"/>
                 <field name="specialization_ids" widget="many2many_tags" string="Specializace"/>
             </list>
         </field>
@@ -30,6 +31,7 @@
                         </group>
                         <group>
                             <field name="user_id" options="{'no_create': True}"/>
+                            <field name="kvl_number" placeholder="např. 1234"/>
                             <field name="active" string="Aktivní"/>
                         </group>
                     </group>

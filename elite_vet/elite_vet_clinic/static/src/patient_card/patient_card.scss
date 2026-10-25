@@ -366,3 +366,14 @@
     background: rgba(255, 255, 255, .85); color: #1f5c56; font-size: 11px; cursor: pointer;
     &:hover, &:focus-visible { background: #fff; box-shadow: 0 0 0 1px #1f5c56; }
 }
+
+// Task 27: print the visit report of a past record from the history
+.evpc-tl-body { position: relative; }
+.evpc-tl-print {
+    position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--evpc-paper); border: 1px solid var(--evpc-line); border-radius: 6px;
+    color: var(--evpc-muted); font-size: 12px; cursor: pointer;
+    &:hover, &:focus-visible { color: var(--evpc-accent-dark); border-color: var(--evpc-accent); }
+}
+.evpc-tl-record .evpc-tl-head { padding-right: 36px; }

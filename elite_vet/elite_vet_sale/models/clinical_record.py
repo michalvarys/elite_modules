@@ -173,6 +173,40 @@ class ClinicalRecordSale(models.Model):
             "sequence": line.sequence,
         }
 
+    # ------------------------------------------------------------------ visit report (task 27)
+
+    def _visit_report_lots(self):
+        """Lots (and expiry) of the medicines given, for the visit report: known once the bill is
+        paid at the till. Lots chosen on the POS line come first; otherwise the lots the till's
+        delivery took for that product (FEFO). Read as superuser: reception, nurses and doctors
+        have no stock rights here – only the lot name and expiry are printed."""
+        self.ensure_one()
+        lots = super()._visit_report_lots()
+        order = self.sale_order_id.sudo()
+        if not order or not self._has_pos_payment():
+            return lots
+        quotation_lines = order.order_line.filtered(lambda l: not l.display_type)
+        Lot = self.env["stock.lot"].sudo()
+        for line in self.line_ids:
+            product = line.item_id.with_context(active_test=False).product_id
+            if not product or product.tracking == "none":
+                continue
+            sols = quotation_lines.filtered(lambda l: l.product_id == product)
+            sols = sols.filtered(lambda l: l.name == line.name) or sols
+            pos_lines = sols.pos_order_line_ids.filtered(lambda l: l.order_id.state in PAID_POS_STATES)
+            found = Lot
+            for pos_line in pos_lines:
+                for pack in pos_line.pack_lot_ids:
+                    found |= Lot.search([("product_id", "=", product.id), ("name", "=", pack.lot_name)], limit=1)
+            if not found:
+                moves = pos_lines.order_id.picking_ids.move_line_ids.filtered(
+                    lambda ml: ml.product_id == product and ml.lot_id and ml.state == "done")
+                found = moves.lot_id
+            if found:
+                lots[line.id] = [(lot.name, lot.expiration_date and lot.expiration_date.date())
+                                 for lot in found.sorted(lambda l: (l.expiration_date or l.create_date, l.id))]
+        return lots
+
     # ------------------------------------------------------------------ card API
 
     def _record_data(self):

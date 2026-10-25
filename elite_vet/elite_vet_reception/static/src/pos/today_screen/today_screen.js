@@ -110,6 +110,11 @@ export class ReceptionTodayScreen extends Component {
         return this.env.utils.formatCurrency(amount);
     }
 
+    /** Task 27: the visit report for the owner (PDF without the internal notes) in a new tab. */
+    printReport(row) {
+        window.open(`/report/pdf/elite_vet_clinic.report_visit_document/${row.record_id}`, "_blank");
+    }
+
     async run(key, action) {
         if (this.state.busy[key]) {
             return;

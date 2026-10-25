@@ -143,3 +143,41 @@ Vytvořit účty). Otevře se seznam aktivních členů týmu, kteří ještě �
 Nové účty dostanou jazyk čeština, časové pásmo Europe/Prague a žádné heslo. Role nastaví samo
 výchozí obrazovku a pokladnu (pokladnu dostane jen Recepce). Na konci se ukáže, kolik účtů vzniklo
 a kolik řádků se přeskočilo a proč.
+
+## 7. Tisk zprávy
+
+**Zpráva z vyšetření** je PDF pro majitele (A4, česky). Tisknout ji může recepce, sestra, lékařka
+i vedení.
+
+**Kde se tiskne:**
+- **Karta pacienta**, dnešní záznam: tlačítko **Zpráva pro majitele** vedle *Hotovo, k pokladně*.
+  Nejdřív se uloží, co je rozepsané, a PDF se otevře v nové záložce prohlížeče. Odtud se tiskne
+  nebo ukládá. Tlačítko je šedé („Nejdřív vyplňte záznam“), dokud záznam nemá žádný text,
+  vitální hodnotu ani položku účtu.
+- **Karta pacienta › Historie**: ikona tiskárny u každé dřívější návštěvy zapsané v Odoo.
+  Návštěvy z WinVetu se netisknou.
+- **Ordinace › Záznamy návštěv**, formulář nebo seznam: menu **Tisk › Zpráva z vyšetření**. Soubor
+  se stáhne jako `Zprava_<zvíře>_<datum>.pdf`. Ze seznamu jde vytisknout víc záznamů najednou.
+- **Pokladna › Dnes › K pokladně**: ikona tiskárny u účtu, aby recepce mohla zprávu předat
+  u přepážky.
+
+**Co ve zprávě je** (jen vyplněné údaje, prázdné oddíly se vynechají):
+- **hlavička kliniky**: název, adresa, IČO, DIČ, telefon, e-mail a web. Bere se z Nastavení ›
+  Společnosti; co tam chybí (telefon, e-mail, adresa), doplní se z Nastavení webu. Logo jen
+  vlastní, ne výchozí logo Odoo;
+- **pacient**: jméno, druh, plemeno, pohlaví, datum narození a věk v den návštěvy („3 roky
+  2 měsíce“), barva, čip, tetování, číslo pasu;
+- **majitel**: jméno, adresa, telefon;
+- **návštěva**: datum a čas, ošetřující lékař s titulem a **číslem KVL**. Titul se bere z karty
+  v týmu, jinak ze jména lékařky. Číslo KVL je v Rozpis služeb › Lékařky;
+- **Anamnéza**, **Klinické vyšetření** (teplota, hmotnost, tep a dech s jednotkami + text
+  vyšetření) a **Diagnóza a doporučení**. Řádky textu zůstanou, jak byly napsané, a dlouhý text
+  pokračuje na další stránce;
+- **Provedené výkony a podané léky**: název a množství s jednotkou, **bez cen**. U léků je
+  šarže a exspirace, jakmile je účet zaplacený v pokladně (šarže se vezme z výdeje ze skladu);
+- **Další termíny**: příští vakcinace a odčervení zvířete;
+- **Místo a datum** (den tisku), rámeček pro **podpis a razítko lékaře** a čísla stránek.
+
+**Co ve zprávě nikdy není:** poznámka recepce, poznámka pro recepci, upozornění na zvířeti
+(kouše, alergie…), ceny a částky, stav platby, kdo záznam zapsal, poznámky z WinVetu
+a „Důležité“ u zvířete.

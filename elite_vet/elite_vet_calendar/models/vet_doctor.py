@@ -44,6 +44,13 @@ class VetDoctor(models.Model):
              "nejvýš jednomu členovi týmu.",
     )
 
+    # Task 27: printed under the doctor's name on the visit report for the owner.
+    kvl_number = fields.Char(
+        string="Číslo KVL",
+        help="Číslo osvědčení Komory veterinárních lékařů. Tiskne se ve zprávě z vyšetření "
+             "u jména ošetřující lékařky. Nepovinné.",
+    )
+
     _sql_constraints = [
         ("user_unique", "unique(user_id)", "Tento účet už je propojený s jiným členem týmu."),
     ]

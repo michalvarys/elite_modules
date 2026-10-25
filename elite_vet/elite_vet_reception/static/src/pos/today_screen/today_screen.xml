@@ -108,6 +108,10 @@
                                 <i class="fa fa-sticky-note me-1" aria-hidden="true"/><span class="o_ev_note_text" t-esc="row.room_note"/>
                             </div>
                         </div>
+                        <button class="btn btn-light o_ev_print_report me-1" type="button" t-on-click="() => this.printReport(row)"
+                                title="Zpráva z vyšetření pro majitele (PDF, bez interních poznámek)" aria-label="Zpráva pro majitele">
+                            <i class="fa fa-print" aria-hidden="true"/>
+                        </button>
                         <button class="btn btn-primary o_ev_pay" t-att-disabled="state.busy['pay-' + row.record_id]"
                                 t-on-click="() => this.pay(row)">Zaplatit</button>
                     </div>

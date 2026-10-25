@@ -153,6 +153,27 @@ Všechny zápisy kromě `open_today_record` a `reopen_record` vyžadují rozepsa
 | `reopen_record(record_id)` | Jen lékařka/správce: uzavřený záznam zpět do rozepsaných. |
 | `save_room_note(record_id, note)` | Poznámka pro recepci (`room_note`, oříznutá, prázdná = smazat). Na rozdíl od ostatních zápisů jde i u uzavřeného záznamu, jen ne u zrušeného. |
 
+## Zpráva z vyšetření (úkol 27)
+
+QWeb PDF `elite_vet_clinic.report_visit` (`report_name` `elite_vet_clinic.report_visit_document`,
+A4 na výšku, vlastní paperformat `paperformat_visit_report`, soubor `Zprava_<zvíře>_<datum>.pdf`).
+Je v menu Tisk záznamu návštěvy pro skupinu Recepce (a tím i pro Sestru, Lékařku a Správce).
+PDF otevře `/report/pdf/elite_vet_clinic.report_visit_document/<id záznamu>` (karta pacienta,
+pokladna).
+- Šablona `report/visit_report.xml` tiskne jen slovník `_visit_report_data()`
+  (`models/visit_report.py`): hlavičku kliniky (`res.company`, chybějící údaje z `elite.vet.setting`),
+  pacienta, majitele, lékařku (`member_id.name` nebo `name`, `kvl_number`), texty, vitální
+  hodnoty, položky bez cen, příští vakcinaci a odčervení. `reception_note`, `room_note`,
+  upozornění, ceny ani poznámky z WinVetu do něj nikdy nejdou.
+- Šarže a exspirace položek: hook `_visit_report_lots()`. V tomto modulu je prázdný,
+  `elite_vet_sale` ho plní ze zaplaceného účtu: šarže z řádku pokladny, jinak z výdeje skladu
+  pro ten produkt.
+- Styl: `static/src/report/visit_report.scss` v `web.report_assets_common`. Písmo je Roboto,
+  protože Lato v reportech nemá česká písmena v tučném řezu.
+- Karta pacienta: tlačítko **Zpráva pro majitele** (`printReport`). Je povolené, jakmile má
+  záznam text, vitální hodnotu nebo položku. Před otevřením PDF se rozepsané uloží. V historii je
+  ikona `evpc-tl-print` u záznamů z Odoo.
+
 ## Testy
 
 `bash elite_vet/nasazeni/testy-clinic.sh` (poprvé, instalace), dál

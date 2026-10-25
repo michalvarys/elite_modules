@@ -6,3 +6,4 @@ from . import patient_card
 from . import open_card
 from . import sync
 from . import partner_merge
+from . import visit_report

@@ -3,3 +3,4 @@ from . import test_access
 from . import test_card_api
 from . import test_sync
 from . import test_patient_card_ui
+from . import test_visit_report

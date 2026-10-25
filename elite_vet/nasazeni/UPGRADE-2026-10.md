@@ -723,3 +723,56 @@ SELECT key, website_id FROM ir_ui_view WHERE key = 'elite_vet_calendar.rozpis_le
 SELECT m.date, m.body FROM mail_message m
  WHERE m.model = 'elite.vet.reservation' AND m.body LIKE '%nebyl o%informován%' ORDER BY m.id DESC LIMIT 10;
 ```
+
+## Doplnění: zpráva z vyšetření
+
+Tisk zprávy z vyšetření pro majitele bez interních poznámek (větev
+`feature/elite-vet-visit-report`). Cílový kód:
+- `elite_vet_calendar` 18.0.5.7.0
+- `elite_vet_clinic` 18.0.1.4.0
+- `elite_vet_sale` 18.0.1.1.0
+- `elite_vet_reception` 18.0.1.11.0
+
+Co přibude:
+- PDF **Zpráva z vyšetření**:
+  - v kartě pacienta tlačítko **Zpráva pro majitele** a ikona tiskárny v historii;
+  - Tisk u záznamu návštěvy;
+  - ikona v pokladně › Dnes › K pokladně.
+- Pole **Číslo KVL** u lékařky. Návod: `elite_vet_reception/doc/ordinace.md`, kapitola 7.
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_calendar,elite_vet_clinic,elite_vet_sale,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-zprava-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-zprava-*.log      # nesmí nic najít
+```
+
+Přibude jeden sloupec, `elite_vet_doctor.kvl_number` (prázdný), a záznamy reportu a jeho
+paperformatu. Ostatní data se nemění. Po aktualizaci obnovte stránku natvrdo (Ctrl+Shift+R),
+na počítačích i v pokladně.
+
+Po aktualizaci (vedení):
+1. **Rozpis služeb › Lékařky**: vyplňte u každé lékařky **Číslo KVL**. Bez čísla se ve zprávě
+   tiskne jen jméno.
+2. **Nastavení › Společnosti**, vaše společnost:
+   - název kliniky, jak se má tisknout (teď je tam „My Company“);
+   - adresa, **IČO** (Identifikační číslo společnosti) a **DIČ**;
+   - telefon, e-mail, web;
+   - **logo**. Bez vlastního loga zpráva logo nemá. Telefon, e-mail a adresu bez vyplnění vezme
+     zpráva z Nastavení webu.
+3. Odoo musí PDF vytvořit (wkhtmltopdf je v obrazu odoo:18). Server musí umět stáhnout styly sám
+   ze sebe: když PDF vyjde bez formátování, nastavte systémový parametr `report.url` na adresu, na
+   které Odoo uvnitř serveru odpovídá (např. `http://localhost:8069`).
+
+Kontrola:
+- otevřete kartu pacienta s dnešním záznamem → **Zpráva pro majitele**. Otevře se PDF s hlavičkou
+  kliniky, pacientem, majitelem, lékařkou s číslem KVL a vyplněnými oddíly;
+- ověřte, že ve zprávě **není** poznámka recepce, poznámka pro recepci, upozornění ani ceny;
+- Ordinace › Záznamy návštěv → záznam → Tisk › Zpráva z vyšetření → stáhne se
+  `Zprava_<zvíře>_<datum>.pdf`;
+- u zaplaceného účtu s lékem ze skladu je ve zprávě šarže a exspirace.
+
+```sql
+SELECT id, name, kvl_number FROM elite_vet_doctor WHERE active ORDER BY name;
+SELECT report_name, binding_model_id FROM ir_act_report_xml WHERE report_name = 'elite_vet_clinic.report_visit_document';
+```

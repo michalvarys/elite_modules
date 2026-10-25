@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 27: "Zpráva z vyšetření" – the visit report for the owner. It prints only the data of
+         elite.vet.clinical.record._visit_report_data (models/visit_report.py): never the internal
+         notes (reception_note, room_note), pet alerts, prices or WinVet notes. -->
+    <record id="paperformat_visit_report" model="report.paperformat">
+        <field name="name">A4 – zpráva z vyšetření</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">22</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+        <field name="css_margins" eval="False"/>
+    </record>
+
+    <record id="report_visit" model="ir.actions.report">
+        <field name="name">Zpráva z vyšetření</field>
+        <field name="model">elite.vet.clinical.record</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">elite_vet_clinic.report_visit_document</field>
+        <field name="report_file">elite_vet_clinic.report_visit_document</field>
+        <field name="print_report_name">object._visit_report_filename()</field>
+        <field name="paperformat_id" ref="paperformat_visit_report"/>
+        <field name="binding_model_id" ref="model_elite_vet_clinical_record"/>
+        <field name="binding_type">report</field>
+        <!-- Recepce, Sestra, Lékařka and Vedení (the chain implies Recepce). -->
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_reception')])]"/>
+    </record>
+
+    <template id="report_visit_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="r" t-value="o._visit_report_data()"/>
+                <t t-set="clinic" t-value="r['clinic']"/>
+                <div class="article evr" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id" data-oe-lang="cs_CZ">
+                    <!-- clinic letterhead -->
+                    <table class="evr-letterhead">
+                        <tr>
+                            <td class="evr-logo" t-if="clinic['logo']">
+                                <img t-att-src="image_data_uri(clinic['logo'])" alt="Logo"/>
+                            </td>
+                            <td class="evr-clinic">
+                                <div class="evr-clinic-name" t-out="clinic['name']"/>
+                                <div t-foreach="clinic['address']" t-as="line" t-out="line"/>
+                                <div t-if="clinic['ico'] or clinic['dic']">
+                                    <t t-if="clinic['ico']">IČO: <t t-out="clinic['ico']"/></t>
+                                    <t t-if="clinic['ico'] and clinic['dic']"> · </t>
+                                    <t t-if="clinic['dic']">DIČ: <t t-out="clinic['dic']"/></t>
+                                </div>
+                            </td>
+                            <td class="evr-contact">
+                                <div t-if="clinic['phone']">Tel.: <t t-out="clinic['phone']"/></div>
+                                <div t-if="clinic['email']" t-out="clinic['email']"/>
+                                <div t-if="clinic['website']" t-out="clinic['website']"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h1 class="evr-title">Zpráva z vyšetření</h1>
+                    <table class="evr-visit">
+                        <tr>
+                            <td class="evr-visit-when">Datum a čas: <b><t t-out="r['visit_date']"/><t t-if="r['visit_time']">, <t t-out="r['visit_time']"/></t></b></td>
+                            <td t-if="r['doctor']" class="evr-visit-doctor">Ošetřující lékař: <b t-out="r['doctor']['name']"/><t t-if="r['doctor']['kvl']"> · č. KVL <t t-out="r['doctor']['kvl']"/></t></td>
+                        </tr>
+                    </table>
+
+                    <!-- patient + owner -->
+                    <table class="evr-parties">
+                        <tr>
+                            <td class="evr-party evr-patient">
+                                <div class="evr-label">Pacient</div>
+                                <table class="evr-facts">
+                                    <tr t-foreach="r['patient']" t-as="fact">
+                                        <th t-out="fact[0]"/>
+                                        <td t-out="fact[1]"/>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td class="evr-party evr-owner">
+                                <div class="evr-label">Majitel</div>
+                                <table class="evr-facts">
+                                    <tr><th>Jméno</th><td t-out="r['owner']['name']"/></tr>
+                                    <tr t-if="r['owner']['address']"><th>Adresa</th><td t-out="r['owner']['address']"/></tr>
+                                    <tr t-if="r['owner']['phone']"><th>Telefon</th><td t-out="r['owner']['phone']"/></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- medical sections (only when filled) -->
+                    <div t-if="r['anamnesis']" class="evr-section evr-anamnesis">
+                        <h2>Anamnéza</h2>
+                        <div class="evr-text" t-out="r['anamnesis']" t-options="{'widget': 'text'}"/>
+                    </div>
+                    <div t-if="r['show_examination']" class="evr-section evr-examination">
+                        <h2>Klinické vyšetření</h2>
+                        <div t-if="r['vitals']" class="evr-vitals" t-out="' · '.join(r['vitals'])"/>
+                        <div t-if="r['examination']" class="evr-text" t-out="r['examination']" t-options="{'widget': 'text'}"/>
+                    </div>
+                    <div t-if="r['diagnosis']" class="evr-section evr-diagnosis">
+                        <h2>Diagnóza a doporučení</h2>
+                        <div class="evr-text" t-out="r['diagnosis']" t-options="{'widget': 'text'}"/>
+                    </div>
+
+                    <div t-if="r['lines']" class="evr-section evr-lines">
+                        <h2>Provedené výkony a podané léky</h2>
+                        <table class="evr-items">
+                            <thead>
+                                <tr>
+                                    <th class="evr-col-name">Položka</th>
+                                    <th class="evr-col-qty">Množství</th>
+                                    <th t-if="r['has_lots']" class="evr-col-lot">Šarže</th>
+                                    <th t-if="r['has_lots']" class="evr-col-exp">Exspirace</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="r['lines']" t-as="line">
+                                    <td t-out="line['name']"/>
+                                    <td class="evr-col-qty" t-out="line['quantity']"/>
+                                    <td t-if="r['has_lots']" t-out="line['lots']"/>
+                                    <td t-if="r['has_lots']" t-out="line['expiry']"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div t-if="r['next_vaccination'] or r['next_deworming']" class="evr-section evr-next">
+                        <h2>Další termíny</h2>
+                        <div t-if="r['next_vaccination']">Příští vakcinace: <b t-out="r['next_vaccination']"/></div>
+                        <div t-if="r['next_deworming']">Příští odčervení: <b t-out="r['next_deworming']"/></div>
+                    </div>
+
+                    <!-- place, date, signature and stamp -->
+                    <table class="evr-sign">
+                        <tr>
+                            <td class="evr-sign-place">
+                                Místo a datum: <t t-out="', '.join(p for p in (clinic['place'], r['printed']) if p)"/>
+                            </td>
+                            <td class="evr-sign-box">
+                                <div class="evr-sign-space"/>
+                                <div class="evr-sign-line">Podpis a razítko lékaře<t t-if="r['doctor']"><br/><t t-out="r['doctor']['name']"/></t></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="footer evr-footer">
+                    <span class="evr-footer-left"><t t-out="clinic['name']"/> · Zpráva z vyšetření – <t t-out="o.pet_id.name"/>, <t t-out="r['visit_date']"/></span>
+                    <span class="evr-footer-right">Strana <span class="page"/> z <span class="topage"/></span>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

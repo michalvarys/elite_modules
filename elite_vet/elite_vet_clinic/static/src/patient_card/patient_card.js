@@ -556,6 +556,42 @@ export class PatientCard extends Component {
         return s.at ? "Uloženo " + s.at : "Ukládá se samo";
     }
     get canFinish() { return this.editable && !this.state.busy; }
+
+    // ------------------------------------------------------------ visit report (task 27)
+    // "Zpráva pro majitele": the PDF of elite_vet_clinic.report_visit_document in a new tab. The
+    // record needs some content (a text, a vital value or a bill line); what is typed is saved first.
+    get canPrintReport() {
+        const f = this.state.form;
+        const typed = [...TEXT_FIELDS, ...NUMBER_FIELDS].some((k) => String(f[k] ?? "").trim());
+        return !!this.state.record && (typed || this.lines.length > 0);
+    }
+    isPrintableEntry(e) {
+        if (e.type !== "record" || this.isOpenRecord(e)) return false;
+        return !!(e.anamnesis || e.examination || e.diagnosis_text || e.vitals_summary || (e.items && e.items.length));
+    }
+    reportUrl(recordId) {
+        return "/report/pdf/elite_vet_clinic.report_visit_document/" + recordId;
+    }
+    openReport(recordId) {
+        window.open(this.reportUrl(recordId), "_blank");
+    }
+    async printReport() {
+        if (!this.canPrintReport || this.state.busy) return;
+        // Opened right away (still the click), so the browser does not block it as a popup.
+        const tab = window.open("", "_blank");
+        try {
+            await this.flush();
+            const id = this.state.record.id || await this.ensureRecord();
+            if (tab) {
+                tab.location.href = this.reportUrl(id);
+            } else {
+                this.openReport(id);
+            }
+        } catch (e) {
+            tab?.close();
+            this.notification.add(errorMessage(e), { type: "danger" });
+        }
+    }
     get lines() { return this.state.record?.lines || []; }
 
     // ------------------------------------------------------------ autosave

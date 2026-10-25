@@ -1,0 +1,125 @@
+// Task 27: "Zpráva z vyšetření" (report/visit_report.xml). Plain print typography, A4 portrait,
+// black on white; wkhtmltopdf (old WebKit): tables instead of flex/grid, borders in px (thinner
+// borders on blocks are dropped).
+$evr-ink: #1d1d1b;
+$evr-muted: #5f6368;
+$evr-rule: #bfc3c9;
+$evr-soft: #f3f4f6;
+
+.evr, .evr-footer {
+    // The report's Lato lacks Czech letters in bold (č, ě came from a fallback font). Roboto (TTF,
+    // installed in the odoo image) has them in all weights; wkhtmltopdf cannot use the OTF fonts.
+    font-family: "Roboto", "DejaVu Sans", Arial, sans-serif;
+    color: $evr-ink;
+}
+
+.evr {
+    font-size: 10.5pt;
+    line-height: 1.4;
+    padding: 0 16mm;
+
+    // Reset of the report's default table borders; the blocks below draw their own lines.
+    table { width: 100%; border-collapse: collapse; margin: 0; border: 0 none; }
+    table > tbody, table > thead, table > tbody > tr, table > thead > tr, table > tr { border: 0 none; }
+    table > tbody > tr > td, table > tbody > tr > th, table > thead > tr > th,
+    table > tr > td, table > tr > th {
+        border: 0 none;
+        vertical-align: top;
+        text-align: left;
+        background: transparent;
+    }
+
+    .evr-letterhead {
+        border-bottom: 2px solid $evr-ink;
+        margin-bottom: 5mm;
+        td { padding-bottom: 3mm; }
+        .evr-logo { width: 30mm; padding-right: 4mm; }
+        .evr-logo img { max-width: 28mm; max-height: 20mm; }
+        .evr-clinic { font-size: 9.5pt; }
+        .evr-clinic-name { font-size: 14pt; font-weight: bold; line-height: 1.2; margin-bottom: 1mm; }
+        > tbody > tr > td.evr-contact, > tr > td.evr-contact { font-size: 9.5pt; text-align: right; width: 60mm; }
+    }
+
+    .evr-title {
+        font-size: 17pt;
+        font-weight: bold;
+        margin: 0 0 1.5mm;
+        letter-spacing: 0.2pt;
+    }
+
+    .evr-visit {
+        font-size: 10pt;
+        margin-bottom: 4mm;
+        > tbody > tr > td.evr-visit-when, > tr > td.evr-visit-when { width: 62mm; white-space: nowrap; }
+    }
+
+    .evr-parties {
+        margin-bottom: 5mm;
+        > tbody > tr > td.evr-party, > tr > td.evr-party {
+            width: 50%; padding: 2.5mm 3mm; background: $evr-soft; border: 1px solid $evr-rule;
+        }
+    }
+
+    .evr-label {
+        font-size: 8pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.8pt;
+        color: $evr-muted;
+        margin-bottom: 1mm;
+    }
+
+    .evr-facts {
+        > tbody > tr > th, > tr > th { width: 26mm; font-weight: normal; color: $evr-muted; padding: 0.3mm 2mm 0.3mm 0; white-space: nowrap; }
+        > tbody > tr > td, > tr > td { padding: 0.3mm 0; }
+    }
+
+    .evr-section {
+        margin-bottom: 4.5mm;
+        h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0 0 1.5mm;
+            padding-bottom: 0.8mm;
+            border-bottom: 1px solid $evr-rule;
+            page-break-after: avoid;
+        }
+    }
+
+    .evr-text { orphans: 3; widows: 3; }
+    .evr-vitals { font-weight: bold; margin-bottom: 1.5mm; }
+
+    .evr-items {
+        font-size: 10pt;
+        > thead > tr > th {
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: $evr-muted;
+            border-bottom: 1px solid $evr-ink;
+            padding: 1mm 2mm 1mm 0;
+        }
+        > tbody > tr > td { border-bottom: 1px solid $evr-rule; padding: 1.2mm 2mm 1.2mm 0; }
+        tr { page-break-inside: avoid; }
+        .evr-col-qty { width: 28mm; white-space: nowrap; }
+        .evr-col-lot { width: 32mm; }
+        .evr-col-exp { width: 24mm; }
+    }
+
+    .evr-sign {
+        margin-top: 10mm;
+        page-break-inside: avoid;
+        .evr-sign-place { vertical-align: bottom; padding-bottom: 1mm; }
+        > tbody > tr > td.evr-sign-box, > tr > td.evr-sign-box { width: 75mm; text-align: center; }
+        .evr-sign-space { height: 24mm; border: 1px dashed $evr-rule; border-bottom: none; }
+        .evr-sign-line { border-top: 1px solid $evr-ink; padding-top: 1mm; font-size: 9pt; color: $evr-muted; }
+    }
+}
+
+.evr-footer {
+    font-size: 8pt;
+    color: $evr-muted;
+    margin: 0 16mm;
+    padding-top: 1.5mm;
+    border-top: 1px solid $evr-rule;
+    .evr-footer-right { float: right; }
+}
