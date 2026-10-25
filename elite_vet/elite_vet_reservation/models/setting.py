@@ -1,5 +1,21 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import AccessError, ValidationError
+
+
+SETTING_MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
+# Menus and server actions of elite_vet_web that open the settings record: Správce rezervací only.
+# The leaf menus and the actions have no groups in elite_vet_web's XML, so an update of elite_vet_web
+# alone keeps what is set here; the root "Nastavení kontaktu" gets the calendar manager back from
+# that update, but without a visible item it stays hidden for that group.
+SETTING_MENUS = (
+    "elite_vet_web.menu_nastaveni_root",
+    "elite_vet_web.menu_nastaveni_web",
+    "elite_vet_web.menu_rezervace_nastaveni",
+)
+SETTING_ACTIONS = (
+    "elite_vet_web.action_setting_otevrit",
+    "elite_vet_web.action_setting_rezervace",
+)
 
 
 class EliteVetSetting(models.Model):
@@ -49,3 +65,34 @@ class EliteVetSetting(models.Model):
                 raise ValidationError(_("Krok slotů musí být kladný násobek 5 minut."))
             if min(rec.booking_min_hours_before, rec.booking_max_days_ahead, rec.booking_cancel_hours_before) < 0:
                 raise ValidationError(_("Hodnoty časových limitů nesmí být záporné."))
+
+    # ---------- rights (task 16) ----------
+    # Only Správce rezervací changes the settings (booking and the contact data of the website);
+    # a calendar manager of elite_vet_web who is not Správce rezervací only reads them. The record
+    # rules in security/rules.xml say the same; this check gives the clear message first.
+    # Reading (website, public) and sudo (nastaveni() creating the record) are not affected.
+    def _check_setting_rights(self):
+        if not self.env.su and not self.env.user.has_group(SETTING_MANAGER_GROUP):
+            raise AccessError(_("Nastavení může měnit jen správce rezervací."))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        self._check_setting_rights()
+        return super().create(vals_list)
+
+    def write(self, vals):
+        self._check_setting_rights()
+        return super().write(vals)
+
+    def unlink(self):
+        self._check_setting_rights()
+        return super().unlink()
+
+    @api.model
+    def _elite_vet_apply_setting_groups(self):
+        """Called by <function> in views/menus.xml on every install / update of this module."""
+        manager = self.env.ref(SETTING_MANAGER_GROUP)
+        for xmlid in SETTING_MENUS + SETTING_ACTIONS:
+            record = self.env.ref(xmlid, raise_if_not_found=False)
+            if record and record.groups_id != manager:
+                record.groups_id = [(6, 0, manager.ids)]

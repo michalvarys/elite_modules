@@ -95,6 +95,30 @@
         </field>
     </record>
 
+    <!-- Task 16: a block opened from the board by somebody who is not Správce rezervací - the same
+         form, read-only and without the header buttons (Zrušit blokaci). Opened with
+         form_view_ref only, never the default form (priority). -->
+    <record id="view_reservation_block_readonly_form" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.form.block.readonly</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="inherit_id" ref="view_reservation_form"/>
+        <field name="mode">primary</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <xpath expr="/form" position="attributes">
+                <attribute name="edit">0</attribute>
+                <attribute name="create">0</attribute>
+                <attribute name="delete">0</attribute>
+                <attribute name="duplicate">0</attribute>
+            </xpath>
+            <xpath expr="/form/header" position="replace">
+                <header>
+                    <span class="text-muted">Blokace může měnit jen správce rezervací.</span>
+                </header>
+            </xpath>
+        </field>
+    </record>
+
     <record id="view_reservation_calendar" model="ir.ui.view">
         <field name="name">elite.vet.reservation.calendar</field>
         <field name="model">elite.vet.reservation</field>

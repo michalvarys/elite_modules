@@ -17,3 +17,4 @@ from . import test_colors
 from . import test_second_room
 from . import test_pending_requests
 from . import test_shift_rooms
+from . import test_manager_only

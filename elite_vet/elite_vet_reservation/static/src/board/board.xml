@@ -25,7 +25,7 @@
                     <t t-if="state.soundOn">🔔 Zvuk</t><t t-else="">🔕 Bez zvuku</t>
                 </button>
                 <button class="btn btn-primary" t-on-click="() => this.openWizard()">Nová rezervace</button>
-                <button class="btn btn-outline-secondary" t-on-click="newBlock">Nová blokace</button>
+                <button t-if="canEditBlocks" class="btn btn-outline-secondary evb-new-block" t-on-click="newBlock">Nová blokace</button>
             </div>
             <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
             <div t-else="" class="evb-body">
@@ -119,26 +119,26 @@
                             <t t-foreach="globalBlocks" t-as="b" t-key="'g' + b.id">
                                 <div t-if="isWebBlock(b)" class="evb-event evb-block evb-block-web"
                                      t-att-style="eventStyle(room, b)">
-                                    <span class="evb-block-tag" t-att-title="webBlockTitle(b)" t-on-click.stop="() => this.openForm(b.id)">jen web · <t t-esc="b.name"/></span>
+                                    <span class="evb-block-tag" t-att-title="webBlockTitle(b)" t-on-click.stop="() => this.openEvent(b)">jen web · <t t-esc="b.name"/></span>
                                 </div>
                                 <div t-else="" class="evb-event evb-block"
                                      t-att-style="eventStyle(room, b)"
-                                     t-on-click.stop="() => this.openForm(b.id)">
+                                     t-on-click.stop="() => this.openEvent(b)">
                                     <t t-esc="b.name"/>
                                 </div>
                             </t>
                             <div t-foreach="webBlocksFor(room)" t-as="e" t-key="e.id"
                                  class="evb-event evb-block evb-block-web" t-att-style="eventStyle(room, e)">
-                                <span class="evb-block-tag" draggable="true" t-att-title="webBlockTitle(e)"
+                                <span class="evb-block-tag" t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-att-title="webBlockTitle(e)"
                                       t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
-                                      t-on-click.stop="() => this.openForm(e.id)">jen web · <t t-esc="e.name"/></span>
+                                      t-on-click.stop="() => this.openEvent(e)">jen web · <t t-esc="e.name"/></span>
                             </div>
                             <div t-foreach="otherEventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
                                  t-att-class="{'evb-block': e.kind === 'block', 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
                                  t-att-style="eventStyle(room, e)"
                                  t-att-title="eventTitle(e)"
-                                 draggable="true" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
-                                 t-on-click.stop="() => this.openForm(e.id)">
+                                 t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
+                                 t-on-click.stop="() => this.openEvent(e)">
                                 <div class="evb-ev-line">
                                     <!-- Doctor initials on the left next to her stripe, procedure abbreviation on the right. -->
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>

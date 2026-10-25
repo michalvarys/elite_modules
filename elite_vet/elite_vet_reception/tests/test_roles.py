@@ -178,6 +178,23 @@ class TestRoles(ReceptionCase):
         self.assertIn(self.env.ref("elite_vet_reception.menu_room_board").id, loaded)
         self.assertIn(self.env.ref("elite_vet_reservation.menu_reservation_board").id, loaded)
 
+    def test_settings_menus_only_for_management(self):
+        """Task 16: Nastavení kontaktu and Nastavení rezervace for Vedení only."""
+        menus = [self.env.ref(x) for x in ("elite_vet_web.menu_nastaveni_root", "elite_vet_web.menu_nastaveni_web",
+                                            "elite_vet_web.menu_rezervace_nastaveni")]
+        for user in (self.reception, self.nurse, self.doctor_user):
+            visible = self.visible(user)
+            for menu in menus:
+                self.assertNotIn(menu.id, visible, (user.login, menu.name))
+            with self.assertRaises(AccessError):
+                self.env["elite.vet.setting"].nastaveni().with_user(user).write({"booking_slot_step": 30})
+        visible = self.visible(self.manager)
+        for menu in menus:
+            self.assertIn(menu.id, visible, menu.name)
+        # Vedení implies the calendar manager (whose rule only reads) and still saves
+        self.assertTrue(self.manager.has_group("elite_vet_calendar.group_calendar_manager"))
+        self.env["elite.vet.setting"].nastaveni().with_user(self.manager).write({"booking_slot_step": 30})
+
     def test_only_management_sees_website_dashboards_apps(self):
         hidden = ("website.menu_website_configuration", "spreadsheet_dashboard.spreadsheet_dashboard_menu_root",
                   "base.menu_management")

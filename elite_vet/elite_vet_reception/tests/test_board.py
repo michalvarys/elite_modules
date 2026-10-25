@@ -95,6 +95,29 @@ class TestBoard(ReceptionCase):
         with self.assertRaises(UserError):
             self.api(self.reception).board_reservation(block.id)
 
+    def test_blocks_on_the_till_board_are_for_the_manager_only(self):
+        """Task 16: the till does not move or cancel a block, the board says who may edit blocks,
+        and the backend board_move refuses a block for every role below Vedení."""
+        block = self.env["elite.vet.reservation"].create({
+            "kind": "block", "state": "confirmed", "room_id": self.room.id, "block_reason": "Úklid T16",
+            "start": self.today_utc(11, 0), "stop": self.today_utc(11, 30)})
+        for user in (self.reception, self.nurse, self.doctor_user):
+            with self.assertRaises(UserError):
+                self.api(user).move_reservation(block.id, str(clinic_today()), 12 * 60, self.room2.id)
+            with self.assertRaises(UserError):
+                self.api(user).cancel_reservation(block.id)
+            with self.assertRaisesRegex(AccessError, "Blokace může měnit jen správce rezervací."):
+                self.env["elite.vet.reservation"].with_user(user).board_move(
+                    block.id, str(clinic_today()), 12 * 60, self.room2.id)
+            data = self.env["elite.vet.reservation"].with_user(user).board_data(str(clinic_today()))
+            self.assertFalse(data["can_edit_blocks"], user.login)
+            self.assertIn(block.id, [e["id"] for e in data["events"]])
+        self.assertEqual((block.room_id, block.start, block.state), (self.room, self.today_utc(11, 0), "confirmed"))
+        Rm = self.env["elite.vet.reservation"].with_user(self.manager)
+        self.assertTrue(Rm.board_data(str(clinic_today()))["can_edit_blocks"])
+        Rm.board_move(block.id, str(clinic_today()), 12 * 60, self.room2.id)
+        self.assertEqual(block.room_id, self.room2)
+
     # ---------------------------------------------------------------- move
     def test_move_to_another_time_and_room(self):
         pet = self.new_pet("Stěhovaný")

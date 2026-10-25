@@ -50,4 +50,9 @@
         <field name="parent_id" ref="menu_reservation_config"/>
         <field name="sequence">50</field>
     </record>
+
+    <!-- Task 16: the settings record (booking + contact data of the website) is for Správce
+         rezervací only - Nastavení kontaktu, Nastavení rezervace and the two server actions that open
+         it (models/setting.py SETTING_MENUS / SETTING_ACTIONS). Runs on every install / update. -->
+    <function model="elite.vet.setting" name="_elite_vet_apply_setting_groups"/>
 </odoo>

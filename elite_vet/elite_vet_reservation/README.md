@@ -22,6 +22,19 @@ Snímky obrazovek jsou v `doc/img/`.
   **Rezervace**, **Rozpis lékařů**, **Klienti**, **Mazlíčci**, **Konfigurace**
   (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy).
 - Skupiny: **Recepce** (denní práce) a **Správce rezervací** (konfigurace).
+  **Blokace** (`kind = "block"`) zakládá, přesouvá, upravuje a maže jen Správce rezervací:
+  pravidla záznamů v `security/rules.xml` (Recepce zapisuje jen `kind != "block"`, čtení beze
+  změny) a kontrola v `create` / `write` / `unlink` s hláškou „Blokace může měnit jen správce
+  rezervací.“. `board_data` vrací `can_edit_blocks`; bez něj tabule skryje **Nová blokace**,
+  blokace nejdou přetáhnout a otevřou se ve formuláři jen ke čtení
+  (`view_reservation_block_readonly_form`). Cesty přes `sudo` (web, cron) se to netýká.
+- **Nastavení** (`elite.vet.setting` z `elite_vet_web`) ukládá jen Správce rezervací:
+  `elite_vet_web` dává zápis správci kalendáře (ACL), tento modul ho pravidlem záznamu omezí na
+  čtení (pravidla patří tomuto modulu, `-u elite_vet_web` je nezruší) a `write` / `create` /
+  `unlink` hlásí „Nastavení může měnit jen správce rezervací.“. Menu **Nastavení kontaktu**,
+  **Nastavení rezervace** a obě serverové akce, které nastavení otevírají, nastaví
+  `<function>` v `views/menus.xml` (`elite.vet.setting._elite_vet_apply_setting_groups`) při
+  každé instalaci / aktualizaci na Správce rezervací. Čtení (web, veřejnost) zůstává.
 - Lékařka = **Lékařka – přijímá rezervace** v Rozpis služeb → Lékařky; kdo dělá
   který úkon, plyne ze specializací na kartě v Náš tým.
 - **Směny se zadávají jednou, v Rozpisu služeb.** Směna lékařky s **Ordinací**

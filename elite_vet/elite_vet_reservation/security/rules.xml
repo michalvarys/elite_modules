@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 16: blocks and the settings are for Správce rezervací only. Reading stays as it was
+         (the rules have perm_read off). Group rules of one model are OR-ed: a user in both groups
+         gets the wider one. sudo paths (website booking, cron) are not affected. -->
+
+    <!-- Blocks: Recepce (and Sestra, Lékařka, room accounts, which imply it) creates, changes and
+         deletes reservations only. The Python check in models/reservation.py gives the clear message. -->
+    <record id="rule_reservation_reception_no_blocks" model="ir.rule">
+        <field name="name">Rezervace: recepce nemění blokace</field>
+        <field name="model_id" ref="model_elite_vet_reservation"/>
+        <field name="groups" eval="[(6, 0, [ref('group_reservation_reception')])]"/>
+        <field name="domain_force">[('kind', '!=', 'block')]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    <record id="rule_reservation_manager_all" model="ir.rule">
+        <field name="name">Rezervace: správce mění vše</field>
+        <field name="model_id" ref="model_elite_vet_reservation"/>
+        <field name="groups" eval="[(6, 0, [ref('group_reservation_manager')])]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Settings (elite.vet.setting of elite_vet_web, one record): elite_vet_web gives the calendar
+         manager full access (ACL). An ACL cannot be taken away by another ACL, so a rule here limits
+         that group to reading; Správce rezervací keeps write. These records belong to this module,
+         so an update of elite_vet_web alone does not undo them. -->
+    <record id="rule_setting_calendar_manager_read_only" model="ir.rule">
+        <field name="name">Nastavení: správce kalendáře jen čte</field>
+        <field name="model_id" ref="elite_vet_web.model_elite_vet_setting"/>
+        <field name="groups" eval="[(6, 0, [ref('elite_vet_calendar.group_calendar_manager')])]"/>
+        <field name="domain_force">[(0, '=', 1)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    <record id="rule_setting_reservation_manager" model="ir.rule">
+        <field name="name">Nastavení: správce rezervací mění</field>
+        <field name="model_id" ref="elite_vet_web.model_elite_vet_setting"/>
+        <field name="groups" eval="[(6, 0, [ref('group_reservation_manager')])]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>

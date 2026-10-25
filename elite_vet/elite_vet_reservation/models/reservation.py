@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytz
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 from .pet import SPECIES
 
@@ -24,6 +24,9 @@ RECEPTION_HORIZON_DAYS = 400
 BLOCK_SCOPES = [("web", "Jen web"), ("full", "Úplná")]
 # Stable doctor colors on the board (by id), readable with white text.
 DOCTOR_COLORS = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
+# Blocks (kind "block") are created, moved, edited and deleted by Správce rezervací only (task 16);
+# reception and everyone above it (nurse, doctor, room accounts) only see them.
+BLOCK_MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
 TITLES = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
@@ -249,15 +252,34 @@ class VetReservation(models.Model):
                      fields.Datetime.context_timestamp(rec, rec.stop).strftime("%H:%M"),
                      rec.room_id.name or _("všechny"), clash.name))
 
+    # ---------- block rights ----------
+    @api.model
+    def _can_edit_blocks(self):
+        return self.env.su or self.env.user.has_group(BLOCK_MANAGER_GROUP)
+
+    def _check_block_rights(self, vals=None):
+        """Only Správce rezervací changes blocks. The record rules (security/rules.xml) say the same;
+        this check runs first so the user gets a clear message instead of the generic one."""
+        if self._can_edit_blocks():
+            return
+        if (vals and vals.get("kind") == "block") or any(rec.kind == "block" for rec in self):
+            raise AccessError(_("Blokace může měnit jen správce rezervací."))
+
     # ---------- create / write ----------
     @api.model_create_multi
     def create(self, vals_list):
+        # Before super(): its record rule check would answer first, with the generic message.
+        # "Nová blokace" passes the kind as a context default (default_kind).
+        default_kind = self.env.context.get("default_kind")
+        for vals in vals_list:
+            self._check_block_rights({"kind": vals.get("kind", default_kind)})
         for vals in vals_list:
             if vals.get("start") and not vals.get("stop"):
                 proc = self.env["elite.vet.procedure"].browse(vals.get("procedure_id"))
                 minutes = proc.duration if proc else 30
                 vals["stop"] = fields.Datetime.to_datetime(vals["start"]) + timedelta(minutes=minutes)
         records = super().create(vals_list)
+        records._check_block_rights()   # any other default of the kind
         # Copies of a repeated block are created from the original input (all rooms),
         # hence before splitting; each copy is then split according to its own week.
         records._repeat_weekly_blocks()
@@ -304,10 +326,15 @@ class VetReservation(models.Model):
                     "room_id": r.id, "start": s, "stop": e} for r, s, e in rest])
 
     def write(self, vals):
+        self._check_block_rights(vals)
         res = super().write(vals)
         if {"start", "stop", "room_id", "state", "kind", "block_scope"} & set(vals):
             self._check_overlap()
         return res
+
+    def unlink(self):
+        self._check_block_rights()
+        return super().unlink()
 
     def _repeat_weekly_blocks(self):
         """Weekly block repetition = materialized copies, no rrule."""
@@ -440,7 +467,10 @@ class VetReservation(models.Model):
             })
         return {"date": day_str, "step": s.booking_slot_step,
                 # Rozpis služeb managers edit shifts from the board (click on a doctor, + Služba)
-                "can_edit_shifts": self.env.user.has_group("elite_vet_calendar.group_calendar_manager"), "axis": {"from": axis_from, "to": axis_to},
+                "can_edit_shifts": self.env.user.has_group("elite_vet_calendar.group_calendar_manager"),
+                # Nová blokace, dragging and editing blocks: Správce rezervací only
+                "can_edit_blocks": self._can_edit_blocks(),
+                "axis": {"from": axis_from, "to": axis_to},
                 "rooms": rooms_out, "events": events, "waiting": waiting,
                 # Weekend / public holiday when the website does not book (label only; reception still books).
                 "day_note": A.web_day_note(day) or ""}

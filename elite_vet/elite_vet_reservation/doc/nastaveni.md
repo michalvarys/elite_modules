@@ -17,10 +17,21 @@ V **Nastavení → Uživatelé** u každého člověka v části **Rezervace** z
 
 | Skupina | Co smí |
 |---|---|
-| **Recepce** | Tabule, nová rezervace, čekající z webu, rezervace, blokace, klienti a mazlíčci. Rozpis lékařů, ordinace a úkony jen vidí. |
-| **Správce rezervací** | Vše jako Recepce a navíc **Konfigurace** (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy), úpravy **Rozpis lékařů** a akce **Zkopírovat na další týden**. |
+| **Recepce** | Tabule, nová rezervace, čekající z webu, rezervace, klienti a mazlíčci. **Blokace jen vidí** (na tabuli se otevřou jen ke čtení). Rozpis lékařů, ordinace, úkony a nastavení jen vidí. |
+| **Správce rezervací** | Vše jako Recepce a navíc **blokace** (zakládá, přesouvá, upravuje, ruší, maže), **Konfigurace** (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy), **Nastavení kontaktu**, úpravy **Rozpis lékařů** a akce **Zkopírovat na další týden**. |
 
-Správce systému (administrátor) má Správce rezervací automaticky.
+Správce systému (administrátor) má Správce rezervací automaticky. Role Sestra, Lékařka
+a účty ordinací mají práva Recepce, ne Správce rezervací; blokace a nastavení tedy také jen
+vidí. Vedení je Správce rezervací.
+
+**Blokace a nastavení jen správce.** Tabule bez práva správce neukazuje tlačítko **Nová
+blokace**, blokace na ní nejde přetáhnout a klik na blokaci ji otevře jen ke čtení. Klik do
+sloupce (i do blokace jen pro web) dál otevře průvodce novou rezervací. Kdo není správce
+a pokusí se blokaci změnit jinudy (seznam Rezervace), dostane hlášku „Blokace může měnit jen
+správce rezervací.“ Nastavení (Nastavení rezervace i Nastavení kontaktu, je to jeden záznam)
+ukládá jen Správce rezervací. Kdo má jen práva správce kalendáře / webu (Hlavní stránka, Ceník),
+nastavení nevidí v menu, a kdyby ho otevřel, uložení skončí hláškou „Nastavení může měnit jen
+správce rezervací.“ Web nastavení čte dál pro všechny.
 
 Lékařky a specializace se upravují v aplikacích **Rozpis služeb** a **Náš tým**.
 K nim je potřeba mít práva i v těchto aplikacích.

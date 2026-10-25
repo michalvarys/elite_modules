@@ -214,6 +214,18 @@ export class ReservationBoard extends Component {
         this.openWizard({ default_minute: min, default_room_id: room.id });
     }
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
+    // ---------- blocks: Správce rezervací only (can_edit_blocks) ----------
+    // Without the right blocks cannot be dragged and open read-only; clicks into the column
+    // (also through web-only blocks) still book as before.
+    get canEditBlocks() { return Boolean(this.state.data && this.state.data.can_edit_blocks); }
+    isDraggable(e) { return e.kind !== "block" || this.canEditBlocks; }
+    openEvent(e) {
+        if (e.kind === "block" && !this.canEditBlocks) {
+            this.openForm(e.id, { form_view_ref: "elite_vet_reservation.view_reservation_block_readonly_form" });
+        } else {
+            this.openForm(e.id);
+        }
+    }
     // ---------- doctor shifts: edited in Rozpis služeb (roster) right from the board ----------
     openShiftForm(resModel, resId, context = {}) {
         this.action.doAction({
@@ -244,6 +256,10 @@ export class ReservationBoard extends Component {
         this.newAt(room, this.minuteFromDrop(ev, ev.currentTarget, true));
     }
     onDragStart(ev, item, kind) {
+        if (kind === "event" && !this.isDraggable(item)) {
+            ev.preventDefault();
+            return;
+        }
         this.state.drag = { id: item.id, kind };
         ev.dataTransfer.effectAllowed = "move";
         ev.dataTransfer.setData("text/plain", String(item.id));

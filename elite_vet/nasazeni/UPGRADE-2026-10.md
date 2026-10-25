@@ -246,3 +246,56 @@ WHERE r.room_id IS NULL AND v.room_id IS NOT NULL;
 ```
 
 Na počítačích v ordinacích a na pokladně obnovit stránku natvrdo (Ctrl+Shift+R).
+
+## Doplnění: blokace a nastavení jen správce
+
+Pro server, na kterém už běží předchozí doplnění (ordinace). Blokace v rezervacích a nastavení
+(Nastavení rezervace, Nastavení kontaktu) bude měnit jen **Správce rezervací** (vedení). Cílový
+kód: `elite_vet_reservation` 18.0.2.2.0 (`elite_vet_reception` beze změny verze, mění se jen jeho
+testy; `elite_vet_web` se nemění).
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_reservation --stop-after-init 2>&1 | tee upgrade-spravce-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-spravce-*.log      # nesmí nic najít
+```
+
+Data se nemění: přibudou čtyři pravidla záznamů (`security/rules.xml`), formulář blokace jen ke
+čtení a skupiny u menu a akcí nastavení.
+
+**Co se změní uživatelům:**
+- Recepce, sestry, lékařky a účty ordinací: na tabuli **Rezervace › Tabule** zmizí **Nová
+  blokace**, blokace nejdou přetáhnout a klik na ni ji otevře jen ke čtení. Úprava, zrušení
+  nebo smazání blokace jinudy (seznam Rezervace) skončí hláškou „Blokace může měnit jen správce
+  rezervací.“ Rezervace fungují jako dosud, klik do sloupce (i do blokace jen pro web) dál
+  objednává. Tabule v pokladně blokace neměnila ani dřív.
+- Kdo má práva správce kalendáře / webu (Hlavní stránka, Ceník), ale ne Správce rezervací:
+  nevidí **Nastavení kontaktu** ani **Nastavení rezervace** a nastavení neuloží. Web nastavení
+  čte dál.
+- Vedení (Správce rezervací) a administrátor beze změny.
+
+Kontrola (oba dotazy mají vrátit uvedené řádky):
+
+```sql
+-- 4 pravidla
+SELECT name FROM ir_rule WHERE id IN (SELECT res_id FROM ir_model_data
+  WHERE module = 'elite_vet_reservation' AND model = 'ir.rule');
+-- menu a akce nastavení jen se skupinou Správce rezervací (5 řádků, group_xmlid vždy group_reservation_manager)
+SELECT d.name, g.module || '.' || g.name AS group_xmlid
+FROM ir_model_data d
+LEFT JOIN ir_ui_menu_group_rel m ON d.model = 'ir.ui.menu' AND m.menu_id = d.res_id
+LEFT JOIN ir_act_server_group_rel a ON d.model = 'ir.actions.server' AND a.act_id = d.res_id
+JOIN ir_model_data g ON g.model = 'res.groups' AND g.res_id = coalesce(m.gid, a.gid)
+WHERE d.module = 'elite_vet_web'
+  AND d.name IN ('menu_nastaveni_root', 'menu_nastaveni_web', 'menu_rezervace_nastaveni',
+                 'action_setting_otevrit', 'action_setting_rezervace');
+```
+
+Pozor: samotné `-u elite_vet_web` vrátí kořenovému menu Nastavení kontaktu skupinu správce
+kalendáře. Položka pod ním zůstane jen pro Správce rezervací, takže menu zůstane skryté a zápis
+blokuje pravidlo; další `-u elite_vet_reservation` skupinu srovná.
+
+Uživateli předej: kdo z recepce zakládal blokace (oběd, porady), potřebuje je teď zadat přes
+vedení, nebo mu dát skupinu **Správce rezervací** (= role Vedení). Na počítačích s tabulí obnovit
+stránku natvrdo (Ctrl+Shift+R).
