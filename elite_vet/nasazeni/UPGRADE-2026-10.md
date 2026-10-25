@@ -445,7 +445,8 @@ Když je `booking_url` prázdné, stránka ukáže výchozí formulář WinVet k
 5. Návrat: stejné pole zpět na **WinVet (podle adresy)**. Náš systém pak z webu (stránka i chat)
    rezervace nepřijímá, žádosti z dřívějška v Čekajících zůstávají.
 
-Stránka /rozpis-lekaru má vlastní formulář WinVet a přepínač ji nemění.
+Stránka /rozpis-lekaru přepínač sleduje (viz *Navazující úpravy* níže): při WinVet je na ní
+formulář WinVet jako dřív, při Elite Vet tlačítko „Objednat se online“ na /rezervacni-system.
 
 **Další změny ve stejném upgradu:**
 - Text pod rezervací (Nastavení rezervace › „Text uprostřed rámečku“, např. věta o pohotovostním
@@ -469,3 +470,30 @@ z panelu „Čekající z webu“ na tabuli i zelená tlačítka **Potvrdit → 
 „Klient dostane potvrzovací e-mail (adresa).“, když žádost e-mail má) – **Potvrdit / Zrušit**.
 Teprve Potvrdit žádost potvrdí (a pošle e-mail jako dřív). Data se nemění. Na počítačích
 s tabulí obnovit stránku natvrdo (Ctrl+Shift+R).
+
+### Navazující úpravy přepínače (26. 10.)
+
+Větev `feature/elite-vet-switch-followups`. Cílový kód: `elite_vet_web` 18.0.1.21.0,
+`elite_vet_reservation` 18.0.2.6.0 (ostatní beze změny). Když server ještě nemá doplnění výše,
+stačí jeden běh s cílovým kódem obou větví; jinak:
+
+```bash
+<odoo> -d <db> -u elite_vet_web,elite_vet_reservation --i18n-overwrite --stop-after-init 2>&1 | tee upgrade-prepinac2-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-prepinac2-*.log     # nesmí nic najít
+```
+
+Data se nemění, hodnota přepínače zůstává, jak je. `--i18n-overwrite` kvůli novým textům na
+/rozpis-lekaru (cs/de/ru).
+
+- **Text pod rezervací vycentrovaný i u WinVetu.** Dřív ležel pod rámečkem WinVet u levého
+  okraje stránky (stejná příčina jako pod naším průvodcem: `.vet-page p{margin:0}`). Hláška při
+  načítání se nemění – text je během načítání uprostřed rámečku a po načtení klesne pod něj.
+  Kontrola: /rezervacni-system v anonymním okně na PC, v obou režimech – text je uprostřed.
+- **Text pod rezervací jde upravit i v režimu Elite Vet.** Nastavení rezervace má novou skupinu
+  **Text pod rezervacemi** (pole Text), viditelnou v obou režimech. Skupina „Hláška, dokud se
+  rezervace načítá“ (nadpis, druhý řádek) zůstává jen pro WinVet.
+- **/rozpis-lekaru podle přepínače.** WinVet: dole formulář WinVet beze změny. Elite Vet: na jeho
+  místě věta „Online objednávky přijímáme na stránce rezervačního systému.“ a tlačítko
+  **Objednat se online** na /rezervacni-system (s jazykovou předponou; de „Online buchen“,
+  ru „Записаться онлайн“). Kontrola: /rozpis-lekaru v anonymním okně, v režimu Elite Vet je
+  dole tlačítko a žádný rámeček WinVet.

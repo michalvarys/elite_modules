@@ -284,8 +284,12 @@ Ve stejném formuláři jsou i starší části:
   když je na zrušení odkazem pozdě („zavolejte na recepci“).
 - **Odkaz na rozpis služeb pod rezervací** – text a tlačítko pod rezervací na webu.
 - **Rezervace na webu** a **Adresa formuláře WinVet** – viz *Přepnutí rezervací na webu* níže.
-- **Hláška, dokud se rezervace načítá** – patří jen k formuláři WinVet, proto je ve formuláři
-  vidět jen při **Rezervace na webu = WinVet**.
+- **Hláška, dokud se rezervace načítá** (nadpis a druhý řádek) – patří jen k formuláři WinVet,
+  proto je ve formuláři vidět jen při **Rezervace na webu = WinVet**.
+- **Text pod rezervacemi** – pole **Text** (např. věta o pohotovostním poplatku). Je vidět
+  a upravuje se v obou režimech: na /rezervacni-system stojí pod rezervacemi, vycentrovaný,
+  pod rámečkem WinVet i pod naším průvodcem. U WinVetu je během načítání uprostřed rámečku
+  a po načtení klesne pod něj. Prázdné pole = žádný text. Na /rozpis-lekaru se neukazuje.
 
 ### Přepnutí rezervací na webu
 
@@ -308,7 +312,10 @@ kalendář je na stránce **/rezervacni-system**. Mění ho jen **Správce rezer
 - Ověření: otevřít /rezervacni-system v anonymním okně (nebo po odhlášení) a obnovit stránku.
   WinVet = rámeček WinVet s hláškou „Načítáme rezervační systém…“; Elite Vet = kroky
   „1 · Co potřebujete“ a karty úkonů.
-- Stránka **/rozpis-lekaru** má vlastní vložený formulář WinVet a přepínač ji nemění.
+- Stránka **/rozpis-lekaru** přepínač také sleduje. Při **WinVet** je dole na stránce vložený
+  formulář WinVet jako dřív. Při **Elite Vet** je na jeho místě krátká výzva: jedna věta
+  („Online objednávky přijímáme na stránce rezervačního systému.“) a tlačítko **Objednat se
+  online**, které vede na /rezervacni-system (v jazyce stránky: /de/…, /ru/…, /en/…).
 
 **Zálohy:** online platební brána zatím **není**. Při zapnutých zálohách se na webu ukáže
 částka a klient dostane informaci, že platební údaje mu pošle recepce.
@@ -407,7 +414,8 @@ Recepce na tabuli vidí vždy české názvy.
 - [ ] Zkušební zrušení odkazem z e-mailu funguje.
 - [ ] Uživatelé mají skupinu **Recepce** nebo **Správce rezervací**.
 - [ ] Až je všechno nastavené: **Rezervace na webu = Elite Vet (náš kalendář)** a kontrola
-      /rezervacni-system v anonymním okně (kapitola 7, *Přepnutí rezervací na webu*).
+      /rezervacni-system a /rozpis-lekaru v anonymním okně (kapitola 7, *Přepnutí rezervací
+      na webu*).
 
 ### Technické nastavení serveru (pro správce Odoo)
 

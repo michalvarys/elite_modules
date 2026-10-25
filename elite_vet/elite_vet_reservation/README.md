@@ -70,7 +70,11 @@ jen Správce rezervací, viz Nastavení výše):
 Nová instalace i upgrade databáze bez sloupce dostane `winvet` (výchozí hodnota povinného pole,
 ORM ji při přidání sloupce zapíše do stávajícího záznamu). Interní objednávání (průvodce Nová
 rezervace, tabule, pokladna) na přepínači nezávisí. `/rozpis-lekaru` (`elite_vet_calendar`) má
-vlastní iframe WinVet a přepínač ho nemění. Testy: `tests/test_web_booking_switch.py`,
+vlastní iframe WinVet: šablona `rozpis_lekaru_booking` (`views/rozpis_page.xml`) mu dá `t-if`
+a v režimu `elite` místo něj vloží výzvu s odkazem `url_for('/rezervacni-system')`, takže
+`elite_vet_calendar` o přepínači neví. Text pod rezervací (`booking_loading_middle`) má ve
+formuláři vlastní skupinu „Text pod rezervacemi“, viditelnou v obou režimech. Testy:
+`tests/test_web_booking_switch.py`, `tests/test_web_booking_switch_followups.py`,
 `node tests/chat_off_test.js`.
 
 ## Nasazení
