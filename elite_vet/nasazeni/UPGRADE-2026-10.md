@@ -445,3 +445,9 @@ Když je `booking_url` prázdné, stránka ukáže výchozí formulář WinVet k
    rezervace nepřijímá, žádosti z dřívějška v Čekajících zůstávají.
 
 Stránka /rozpis-lekaru má vlastní formulář WinVet a přepínač ji nemění.
+
+**Další změny ve stejném upgradu:**
+- Text pod rezervací (Nastavení rezervace › „Text uprostřed rámečku“, např. věta o pohotovostním
+  poplatku) je pod naším průvodcem vycentrovaný v šířce průvodce; dřív na PC ležel u levého
+  okraje stránky. V režimu WinVet beze změny. Kontrola: /rezervacni-system v režimu Elite Vet na
+  PC – text je pod kartami úkonů uprostřed.

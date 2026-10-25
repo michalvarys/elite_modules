@@ -176,3 +176,19 @@ class TestWebBookingSwitch(HttpCase):
         self.assertLess(arch.index('name="web_booking_source"'), arch.index('name="booking_url"'))
         self.assertIn("required=\"web_booking_source == 'winvet'\"", arch)
         self.assertIn("Adresa formuláře WinVet", arch)
+
+    def test_text_under_the_booking_follows_the_wizard(self):
+        """The text under the booking stays a sibling right after our wizard (booking.css
+        centers it there with the selector `.evbk ~ .evrez-zprava-misto`)."""
+        for lang in ["en_US"] + self.env["res.lang"].search([]).mapped("code"):
+            self.setting.with_context(lang=lang).booking_loading_middle = "T23 text pod rezervací"
+        self.setting.web_booking_source = "elite"
+        html = self.url_open("/rezervacni-system").text
+        wizard, place, text = (html.index('id="ev-booking"'), html.index('class="evrez-zprava-misto"'),
+                               html.index("T23 text pod rezervací"))
+        self.assertLess(wizard, place)
+        self.assertLess(place, text)
+        self.setting.web_booking_source = "winvet"
+        html = self.url_open("/rezervacni-system").text
+        self.assertIn('class="evrez-zprava-misto"', html)
+        self.assertIn("T23 text pod rezervací", html)

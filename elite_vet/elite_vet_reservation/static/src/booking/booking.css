@@ -88,6 +88,13 @@
 .evbk-lg-free::before{background:#fff7cc}
 .evbk-lg-selected::before{background:var(--ev-accent,#2b7870)}
 .evbk-lg-today::before{outline:2px solid #e2e8f0;outline-offset:-2px;background:#fff}
+/* Text under the booking (setting booking_loading_middle of elite_vet_web, p.evrez-zprava).
+   elite_vet_web centers it with margin:auto, but its ".vet-page p{margin:0}" is more specific,
+   so the paragraph sat at the left edge of the page. Under our wizard (only there: .evbk is
+   a sibling in Elite Vet mode) it is centered in a container like the wizard's, at most
+   680 px wide; the WinVet mode is left as it was. */
+.vet-page .evbk ~ .evrez-zprava-misto{box-sizing:border-box;max-width:860px;margin:0 auto;padding:0 24px 40px;background:#fff}
+.vet-page .evbk ~ .evrez-zprava-misto .evrez-zprava{max-width:680px;margin:0 auto;padding:0;text-align:center}
 @media (max-width:640px){
 .evbk-step[data-step="2"]{grid-template-columns:1fr}
 .evbk-steps{font-size:11px;gap:4px;margin-bottom:16px}
@@ -99,4 +106,5 @@
 .evbk-day{height:40px}
 .evbk-slot-grid{grid-template-columns:repeat(3,1fr)}
 .evbk-slot{padding:10px 0}
+.vet-page .evbk ~ .evrez-zprava-misto{padding:0 20px 32px}
 }
