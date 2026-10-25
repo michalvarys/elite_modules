@@ -108,7 +108,7 @@ v Odoo (kromě zrušených) a z vitálních hodnot WinVetu.
 
 **`get_record(record_id)`** → `RECORD`:
 ```text
-{id, name, pet_id, partner_id, doctor_id, doctor_name, user_name, reservation_id, start, date, time,
+{id, name, pet_id, partner_id, doctor_id, doctor_name, doctor_auto, other_doctors, user_name, reservation_id, start, date, time,
  state ("draft"|"done"|"cancelled"), state_label, temperature, weight, heart_rate, respiratory_rate,
  anamnesis, examination, diagnosis, reception_note (poznámka recepce | null),
  room_note (poznámka pro recepci, "" když není), room_note_editable (sestra/lékařka, záznam není zrušený),
@@ -141,7 +141,7 @@ Všechny zápisy kromě `open_today_record` a `reopen_record` vyžadují rozepsa
 
 | Metoda | Co dělá |
 |---|---|
-| `open_today_record(pet_id, reservation_id=False, force_new=False)` | Záznam rezervace, pokud existuje; jinak dnešní rozepsaný záznam pacienta (u rezervace jen bez jiné rezervace; doplní se mu rezervace), jinak dnešní uzavřený; jinak nový rozepsaný. Lékařka z rezervace, jinak podle jména uživatele. `force_new=True` vždy založí nový (druhá návštěva týž den). Rezervace jiného pacienta → `UserError`. |
+| `open_today_record(pet_id, reservation_id=False, force_new=False)` | Záznam rezervace, pokud existuje; jinak dnešní rozepsaný záznam pacienta (u rezervace jen bez jiné rezervace; doplní se mu rezervace), jinak dnešní uzavřený; jinak nový rozepsaný. Lékařka z rezervace, jinak člen týmu uživatele (propojení `elite.vet.doctor.user_id`, bez něj shoda jména); taková lékařka je jen automatická (`doctor_auto`). `force_new=True` vždy založí nový (druhá návštěva týž den). Rezervace jiného pacienta → `UserError`. |
 | `save_record(record_id, vals)` | Zapíše jen `temperature, weight, heart_rate, respiratory_rate, anamnesis, examination, diagnosis, doctor_id`; ostatní klíče se ignorují. Čísla smí být řetězce s čárkou („38,5“), `null`/`""` = prázdné. |
 | `add_item(record_id, item_id, quantity=1)` | Přidá položku ceníku; stejná položka se sloučí (množství se sečte). |
 | `add_free_line(record_id, name, price_unit=0, quantity=1, kind="other")` | Volná položka mimo ceník. |
@@ -158,3 +158,20 @@ Všechny zápisy kromě `open_today_record` a `reopen_record` vyžadují rozepsa
 `bash elite_vet/nasazeni/testy-clinic.sh` (poprvé, instalace), dál
 `bash elite_vet/nasazeni/testy-clinic.sh "" update`. Před testy zastavte server
 (`docker compose stop odoo`), po nich ho spusťte (`docker compose start odoo`).
+
+## Ošetřující lékařka (úkol 23)
+
+Když lékařka přihlášená **vlastním účtem** (propojený v Rozpis služeb › Lékařky › Účet, člen týmu
+s *Lékařka – přijímá rezervace*, role Lékařka, ne účet ordinace) změní obsah záznamu návštěvy –
+vitální hodnoty, anamnézu, vyšetření, diagnózu, poznámku pro recepci, položky účtu, nebo ho uzavře
+(Hotovo) – v kartě pacienta i ve formuláři, zapíše se jako **Lékařka** záznamu, pokud tam žádná není
+nebo je jen automatická (`doctor_auto`: z rozpisu, z rezervace, výchozí při otevření karty).
+- Ručně vybraná lékařka (výběr v kartě, příjem s lékařkou) ani lékařka, kterou už zapsala úprava
+  jiné lékařky, se nemění – první ošetřující vyhrává. Další lékařka, která záznam upraví, se přidá do
+  **Upravovaly také** (`other_doctor_ids`, sledované v historii záznamu).
+- Sestry, recepce, účty ordinací a účty bez propojení lékařku takto nikdy nemění.
+- Karta pacienta ukazuje nad záznamem „**Ošetřuje:** MVDr. …“ (u automatické s poznámkou „doplněno
+  automaticky“) a „upravovaly také“.
+- Logika: `elite.vet.clinical.record._elite_vet_note_treating_doctor` (volá ji `write` u polí
+  `TREATING_FIELDS` a u `state = done`, a create/write/unlink položky účtu); účet ordinace pozná
+  `_elite_vet_is_room_account` (doplňuje elite_vet_reception).

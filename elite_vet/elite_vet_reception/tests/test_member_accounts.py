@@ -248,14 +248,14 @@ class TestMemberAccounts(ReceptionCase):
         record = self.walk_in("Převzatý T23")
         self.api(self.user_a).assign_room(record.id, self.room1.id)
         self.assertEqual(record.doctor_id, self.doc_a, "her, not the roster doctor")
-        self.assertFalse(record.doctor_from_roster)
+        self.assertFalse(record.doctor_auto)
 
     def test_roster_doctor_replaced_by_linked_doctor(self):
         self.duty(self.room1, self.doc_b)
         record = self.walk_in("Z rozpisu T23")
         self.api(self.reception).assign_room(record.id, self.room1.id)
         self.assertEqual(record.doctor_id, self.doc_b)
-        self.assertTrue(record.doctor_from_roster)
+        self.assertTrue(record.doctor_auto)
         result = self.api(self.user_a).call_patient(record.id, self.room1.id)
         self.assertEqual((record.doctor_id, record.visit_stage, result["needs_doctor"]),
                          (self.doc_a, "in_room", []))
@@ -263,14 +263,14 @@ class TestMemberAccounts(ReceptionCase):
     def test_explicit_doctor_kept(self):
         self.duty(self.room1, self.doc_b)
         record = self.walk_in("Vybraná T23", doctor_id=self.doc_b.id)
-        self.assertFalse(record.doctor_from_roster)
+        self.assertFalse(record.doctor_auto)
         self.api(self.user_a).call_patient(record.id, self.room1.id)
         self.assertEqual(record.doctor_id, self.doc_b)
         # roster doctor changed by hand -> explicit
         record2 = self.walk_in("Ručně T23")
         self.api(self.reception).assign_room(record2.id, self.room1.id)
         record2.doctor_id = self.doctor
-        self.assertFalse(record2.doctor_from_roster)
+        self.assertFalse(record2.doctor_auto)
         self.api(self.user_a).assign_room(record2.id, self.room2.id)
         self.assertEqual(record2.doctor_id, self.doctor)
 
@@ -286,7 +286,7 @@ class TestMemberAccounts(ReceptionCase):
         record = self.walk_in("Účet ordinace T23")
         self.api(self.room_user).call_patient(record.id, self.room1.id)
         self.assertEqual(record.doctor_id, self.doc_b)
-        self.assertTrue(record.doctor_from_roster)
+        self.assertTrue(record.doctor_auto)
         record2 = self.walk_in("Nepropojená T23")
         self.api(self.doctor_user).assign_room(record2.id, self.room1.id)
         self.assertEqual(record2.doctor_id, self.doc_b)

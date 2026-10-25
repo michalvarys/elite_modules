@@ -40,6 +40,7 @@
                             <field name="partner_id"/>
                             <field name="start" readonly="state != 'draft'"/>
                             <field name="doctor_id" readonly="state != 'draft'"/>
+                            <field name="other_doctor_ids" widget="many2many_tags" invisible="not other_doctor_ids"/>
                             <field name="user_id" readonly="1"/>
                             <field name="reservation_id" readonly="state != 'draft'"/>
                         </group>

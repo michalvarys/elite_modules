@@ -8,6 +8,11 @@ from odoo.addons.elite_vet_winvet.models.item import KINDS
 TZ = pytz.timezone("Europe/Prague")
 
 STATES = [("draft", "Rozepsaný"), ("done", "Hotovo – k pokladně"), ("cancelled", "Zrušeno")]
+DOCTOR_GROUP = "elite_vet_clinic.group_clinic_doctor"
+# Content of the visit: a linked doctor who changes one of these (or the bill lines, or finishes
+# the visit) becomes its treating doctor (see _elite_vet_note_treating_doctor).
+TREATING_FIELDS = frozenset(("temperature", "weight", "heart_rate", "respiratory_rate", "anamnesis",
+                             "examination", "diagnosis", "room_note"))
 
 
 def local_date(dt):
@@ -29,6 +34,14 @@ class VetClinicalRecord(models.Model):
                              tracking=True)
     partner_id = fields.Many2one(related="pet_id.partner_id", string="Majitel", store=True, index=True)
     doctor_id = fields.Many2one("elite.vet.doctor", string="Lékařka", ondelete="set null", tracking=True)
+    # Task 23: the doctor was filled automatically (roster, reservation, default of the card) and
+    # not chosen. A linked doctor who takes the visit or changes its content replaces it; any
+    # other change of the doctor clears the flag, so that doctor is kept.
+    doctor_auto = fields.Boolean(string="Lékařka doplněná automaticky", copy=False, readonly=True)
+    other_doctor_ids = fields.Many2many(
+        "elite.vet.doctor", "elite_vet_clinical_record_other_doctor_rel", "record_id", "doctor_id",
+        string="Upravovaly také", copy=False, readonly=True, tracking=True,
+        help="Další lékařky (s vlastním účtem), které záznam upravily po ošetřující lékařce.")
     user_id = fields.Many2one("res.users", string="Zapsal(a)", default=lambda self: self.env.user,
                               ondelete="set null")
     reservation_id = fields.Many2one("elite.vet.reservation", string="Rezervace", ondelete="set null", index=True,
@@ -94,10 +107,54 @@ class VetClinicalRecord(models.Model):
         return records
 
     def write(self, vals):
+        cleared = self.browse()
+        if "doctor_id" in vals and "doctor_auto" not in vals:
+            new = vals["doctor_id"]
+            new_id = (new.id if isinstance(new, models.BaseModel) else new) or False
+            cleared = self.filtered(lambda r: r.doctor_auto and r.doctor_id.id != new_id)
         res = super().write(vals)
+        if cleared:
+            cleared.write({"doctor_auto": False})
         if "weight" in vals or vals.get("state") == "done":
             self.filtered(lambda r: r.state == "done")._update_pet_weight()
+        if "doctor_id" not in vals and (TREATING_FIELDS.intersection(vals) or vals.get("state") == "done"):
+            self._elite_vet_note_treating_doctor()
         return res
+
+    # ------------------------------------------------------------------ treating doctor (task 23)
+
+    @api.model
+    def _elite_vet_is_room_account(self, user):
+        """A shared account of a consultation room (elite_vet_reception)."""
+        return False
+
+    @api.model
+    def _elite_vet_treating_doctor(self, user=None):
+        """Team member of the user when her work makes her the treating doctor: an account linked
+        in Rozpis služeb › Lékařky to a doctor who accepts bookings, role Lékařka, not a room
+        account. Nurses and reception never are."""
+        user = user or self.env.user
+        Doctor = self.env["elite.vet.doctor"]
+        if not user or not user.has_group(DOCTOR_GROUP) or self._elite_vet_is_room_account(user):
+            return Doctor
+        doctor = Doctor.sudo().search([("user_id", "=", user.id)], limit=1)
+        return Doctor.browse(doctor.id) if doctor.accepts_bookings else Doctor
+
+    def _elite_vet_note_treating_doctor(self):
+        """The content of the records was changed: a linked doctor (see _elite_vet_treating_doctor)
+        becomes the doctor where it is empty or was filled automatically. A chosen doctor or one
+        set by an earlier doctor's edit is kept (the first treating doctor wins); the later one is
+        added to Upravovaly také (tracked in the history)."""
+        doctor = self._elite_vet_treating_doctor()
+        if not doctor:
+            return
+        for rec in self:
+            if rec.state == "cancelled":
+                continue
+            if not rec.doctor_id or rec.doctor_auto:
+                rec.write({"doctor_id": doctor.id, "doctor_auto": False})
+            elif rec.doctor_id != doctor and doctor not in rec.other_doctor_ids:
+                rec.write({"other_doctor_ids": [(4, doctor.id)]})
 
     def _update_pet_weight(self):
         """The weight measured in a finished record becomes the pet's current weight."""
@@ -182,7 +239,20 @@ class VetClinicalRecordLine(models.Model):
                 item = Item.browse(vals["item_id"])
                 vals["name"] = item.name
                 vals.setdefault("unit", item.unit)
-        return super().create(vals_list)
+        lines = super().create(vals_list)
+        lines.record_id._elite_vet_note_treating_doctor()
+        return lines
+
+    def write(self, vals):
+        res = super().write(vals)
+        self.record_id._elite_vet_note_treating_doctor()
+        return res
+
+    def unlink(self):
+        records = self.record_id
+        res = super().unlink()
+        records.exists()._elite_vet_note_treating_doctor()
+        return res
 
     @api.constrains("quantity")
     def _check_quantity(self):

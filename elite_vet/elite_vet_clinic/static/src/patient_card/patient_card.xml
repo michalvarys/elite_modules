@@ -283,6 +283,11 @@
                                         </select>
                                     </label>
                                 </div>
+                                <div t-if="rec.doctor_name" class="evpc-treating small text-muted mb-2">
+                                    Ošetřuje: <b t-esc="rec.doctor_name"/>
+                                    <t t-if="rec.doctor_auto"> (doplněno automaticky – převezme ji lékařka, která záznam upraví)</t>
+                                    <t t-if="rec.other_doctors and rec.other_doctors.length"> · upravovaly také: <t t-esc="rec.other_doctors.join(', ')"/></t>
+                                </div>
                                 <div t-if="rec.state === 'done'" class="evpc-done-note">
                                     <i class="fa fa-lock me-2" aria-hidden="true"/>Záznam je uzavřený a účet čeká u pokladny.
                                     <button t-if="isDoctor" type="button" class="evpc-btn ms-auto" t-att-disabled="state.busy" t-on-click="reopen">Znovu otevřít</button>

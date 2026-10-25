@@ -604,9 +604,11 @@ recepce, kapitola 3 „Souběh s WinVetem“) – měnit je i ve WinVetu.
 Každý člen týmu (Rozpis služeb › Lékařky) může mít vlastní účet, propojený ve sloupci **Účet**.
 Propojená lékařka / sestra začíná na obrazovce Ordinace na ordinaci své dnešní služby, lékařka se
 zapisuje k pacientům, které zavolá nebo vezme do ordinace, Moji pacienti dnes jsou podle propojení.
-Vedení zakládá účty průvodcem **Vytvořit účty**. Větev `feature/elite-vet-member-accounts`. Cílový
-kód: `elite_vet_calendar` 18.0.5.5.0, `elite_vet_clinic` 18.0.1.2.0, `elite_vet_reception`
-18.0.1.7.0 (nově závisí na `auth_signup`, který je v Odoo nainstalovaný vždy).
+Lékařka s vlastním účtem, která v záznamu návštěvy něco změní, se zapíše jako ošetřující („Ošetřuje:“
+v kartě pacienta). Vedení zakládá účty průvodcem **Vytvořit účty**. Větev
+`feature/elite-vet-member-accounts`. Cílový kód: `elite_vet_calendar` 18.0.5.5.0, `elite_vet_clinic`
+18.0.1.3.0, `elite_vet_reception` 18.0.1.8.0 (nově závisí na `auth_signup`, který je v Odoo
+nainstalovaný vždy).
 
 Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
 
@@ -616,8 +618,9 @@ grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-ucty-tymu-*.log      # nesmí ni
 ```
 
 Přibudou sloupce `elite_vet_doctor.user_id` (s unikátním omezením) a
-`elite_vet_clinical_record.doctor_from_roster`, dva přechodné modely průvodce a jejich práva (jen
-Vedení). Data se nemění: nikdo zatím propojený není, takže se nic nechová jinak, dokud se účty
+`elite_vet_clinical_record.doctor_auto` (u starých záznamů prázdný = lékařka se bere jako vybraná),
+tabulka `elite_vet_clinical_record_other_doctor_rel` (Upravovaly také), dva přechodné modely
+průvodce a jejich práva (jen Vedení). Data se nemění: nikdo zatím propojený není, takže se nic nechová jinak, dokud se účty
 nepropojí. Na počítačích obnovit stránku natvrdo (Ctrl+Shift+R).
 
 **Jak založit účty (vedení, po upgradu):**
@@ -636,7 +639,8 @@ nepropojí. Na počítačích obnovit stránku natvrdo (Ctrl+Shift+R).
    řádek nenabízí, pokud už propojený je, a odmítne přihlašovací jméno, které už má jiný účet.
 
 Kontrola: přihlásit se jedním novým účtem lékařky v den, kdy má v Rozpisu lékařů službu → otevře se
-Ordinace na její ordinaci; Moji pacienti dnes ukazují její rezervace. Účty ordinací se nemění.
+Ordinace na její ordinaci; Moji pacienti dnes ukazují její rezervace; po zápisu do anamnézy
+dnešního pacienta bez vybrané lékařky karta ukáže „Ošetřuje: <ona>“. Účty ordinací se nemění.
 
 ```sql
 SELECT d.name, u.login FROM elite_vet_doctor d JOIN res_users u ON u.id = d.user_id ORDER BY d.name;

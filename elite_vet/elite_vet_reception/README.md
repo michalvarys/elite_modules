@@ -289,9 +289,10 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   Ordinace. Obrazovka se mu při každém otevření nastaví na ordinaci, kde má teď službu (jinak další
   dnešní službu, jinak Všechny ordinace); ruční přepnutí platí, dokud v obrazovce pracuje (i po
   návratu z karty drobečkovou navigací), do `localStorage` se neukládá.
-  Kdo pacienta převzal: `assign_room` / `call_patient` propojenou **Lékařkou** zapíše za lékařku ji,
-  když záznam lékařku nemá nebo ji má jen z rozpisu (`doctor_from_roster`); ručně vybraná lékařka
-  zůstane. Sestry, recepce a účty ordinací dál podle rozpisu.
+  Kdo pacienta převzal: `assign_room` / `call_patient` propojenou **Lékařkou** (člen týmu s rezervacemi) zapíše za lékařku ji,
+  když záznam lékařku nemá nebo ji má jen automaticky (`doctor_auto`: z rozpisu, z rezervace); ručně vybraná lékařka
+  zůstane. Sestry, recepce a účty ordinací dál podle rozpisu. Úpravy obsahu záznamu propojenou
+  lékařkou: viz README modulu elite_vet_clinic, „Ošetřující lékařka“.
   `_doctor_for_user` (Moji pacienti dnes, R17): nejdřív propojení, shoda jména jen u účtu bez
   propojení, a ne, když je lékařka toho jména propojená s jiným účtem.
 - **Vytvořit účty** (`elite.vet.account.wizard`, tlačítko v seznamu Lékařky + Akce, jen Vedení):

@@ -289,9 +289,9 @@ class Reception(models.AbstractModel):
         doctor = self._get_doctor(doctor_id)
         taker = self._taking_doctor()
         needs_doctor = self._set_room(record, room, doctor, taker=taker) if room or doctor else []
-        if not doctor and taker and record.doctor_from_roster:
+        if not doctor and taker and record.doctor_auto:
             # Task 23: a linked doctor calling the patient replaces the doctor from the roster
-            record.write({"doctor_id": taker.id, "doctor_from_roster": False})
+            record.write({"doctor_id": taker.id, "doctor_auto": False})
         if not record.doctor_id and not needs_doctor:
             # Ruling R17: an unassigned walk-in is taken by the doctor who calls it in
             doctor = taker or record._doctor_for_user()

@@ -177,6 +177,7 @@ class ClinicalRecordCardApi(models.Model):
         return {
             "id": rec.id, "name": rec.display_name, "pet_id": rec.pet_id.id, "partner_id": rec.partner_id.id or None,
             "doctor_id": rec.doctor_id.id or None, "doctor_name": rec.doctor_id.name or None,
+            "doctor_auto": rec.doctor_auto, "other_doctors": rec.other_doctor_ids.mapped("name"),
             "user_name": rec.user_id.name or None, "reservation_id": rec.reservation_id.id or None,
             "start": rec.start and rec.start.strftime("%Y-%m-%d %H:%M:%S"), "date": date_str(rec.date),
             "time": local_time(rec.start), "state": rec.state, "state_label": dict(STATES)[rec.state],
@@ -439,14 +440,16 @@ class ClinicalRecordCardApi(models.Model):
             if reservation and not record.reservation_id:
                 record.reservation_id = reservation
             if not record.doctor_id and reservation.doctor_id and record.state == "draft":
-                record.doctor_id = reservation.doctor_id
+                record.write({"doctor_id": reservation.doctor_id.id, "doctor_auto": True})
             return record._record_data()
         if reservation and self.search_count([("reservation_id", "=", reservation.id)]):
             reservation = self.env["elite.vet.reservation"]
+        doctor = reservation.doctor_id or self._doctor_for_user()
         record = self.create({
             "pet_id": pet.id,
             "reservation_id": reservation.id or False,
-            "doctor_id": (reservation.doctor_id or self._doctor_for_user()).id or False,
+            "doctor_id": doctor.id or False,
+            "doctor_auto": bool(doctor),   # task 23: a linked doctor's work replaces it
         })
         return record._record_data()
 

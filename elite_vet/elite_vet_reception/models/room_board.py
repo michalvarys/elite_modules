@@ -13,7 +13,7 @@ none -> stays empty. A doctor already on the record is kept.
 Task 23 (accounts per team member): a user with the role Lékařka linked to a team member
 (elite.vet.doctor.user_id, not a room account) who assigns a visit to a room ("Vzít do této
 ordinace", dragging) or calls it in takes it herself: she becomes the doctor when the record has
-none or only the one filled from the roster (doctor_from_roster). A doctor chosen explicitly is
+none or only one filled automatically (doctor_auto: roster, reservation). A doctor chosen explicitly is
 kept. Room accounts and unlinked users keep the roster rule.
 """
 from datetime import datetime
@@ -30,8 +30,6 @@ from .booking import natural_key
 from .clinical_record import VISIT_STAGES
 
 NURSE_GROUP = "elite_vet_clinic.group_clinic_nurse"
-# Who takes a visit as its doctor (task 23): a linked account with this role.
-TAKER_GROUP = "elite_vet_clinic.group_clinic_doctor"
 ROOM_SECTIONS = ("in_room", "waiting", "booked", "done")
 UNASSIGNED_LABEL = "Nepřiřazení"
 
@@ -90,12 +88,9 @@ class ReceptionRooms(models.AbstractModel):
     @api.model
     def _taking_doctor(self):
         """Team member of the current user when she takes visits as their doctor (task 23): an
-        account linked in Rozpis služeb › Lékařky with the role Lékařka, not a room account."""
-        user = self.env.user
-        Doctor = self.env["elite.vet.doctor"]
-        if user.sudo().elite_vet_room_id or not user.has_group(TAKER_GROUP):
-            return Doctor
-        return Doctor.search([("user_id", "=", user.id)], limit=1)
+        account linked in Rozpis služeb › Lékařky to a doctor who accepts bookings, role Lékařka,
+        not a room account (elite.vet.clinical.record._elite_vet_treating_doctor)."""
+        return self.env["elite.vet.clinical.record"]._elite_vet_treating_doctor()
 
     @api.model
     def _set_room(self, record, room, doctor=None, taker=None):
@@ -111,15 +106,15 @@ class ReceptionRooms(models.AbstractModel):
         if doctor:
             if record.doctor_id != doctor:
                 vals["doctor_id"] = doctor.id
-        elif room and taker and (not record.doctor_id or record.doctor_from_roster):
-            vals.update(doctor_id=taker.id, doctor_from_roster=False)
+        elif room and taker and (not record.doctor_id or record.doctor_auto):
+            vals.update(doctor_id=taker.id, doctor_auto=False)
         elif room and not record.doctor_id:
             on_duty = self._on_duty_doctors(room)
             if len(on_duty) > 1:
                 own = record._doctor_for_user() & on_duty
                 on_duty = own or on_duty
             if len(on_duty) == 1:
-                vals.update(doctor_id=on_duty.id, doctor_from_roster=True)
+                vals.update(doctor_id=on_duty.id, doctor_auto=True)
             elif on_duty:
                 needs_doctor = [{"id": d.id, "name": d.name} for d in on_duty]
         if vals:

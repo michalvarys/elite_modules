@@ -85,7 +85,8 @@ lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
 - Pacient, který lékařku už má (z rezervace nebo z příjmu), ji **nezmění** ani při přesunu do jiné
   ordinace. Změnit ji jde kdykoli v kartě pacienta.
 - Lékařka přihlášená **vlastním účtem** (kapitola 6) se zapíše sama, když pacienta zavolá nebo vezme
-  do ordinace – i místo lékařky, která se doplnila z rozpisu. Ručně vybranou lékařku nemění.
+  do ordinace – i místo lékařky, která se doplnila automaticky (z rozpisu nebo z rezervace). Ručně
+  vybranou lékařku nemění.
 
 ## 5. Recepce
 
@@ -114,8 +115,14 @@ je v Přístupových právech › Elite Vet jen pro čtení **Člen týmu**.
   návratu z karty pacienta); při dalším otevření je zase ordinace ze služby.
 - **Kdo pacienta převzal:** když lékařka (role Lékařka) pacienta zavolá, vezme do ordinace nebo
   přetáhne do ordinace, zapíše se jako jeho lékařka – pokud pacient lékařku nemá nebo ji má jen
-  automaticky z rozpisu. Ručně vybranou lékařku nebo lékařku z rezervace nepřepíše. Sestra, recepce
-  a účet ordinace lékařku dál neurčují (zapisuje se podle rozpisu).
+  automaticky (z rozpisu nebo z rezervace). Ručně vybranou lékařku nepřepíše. Sestra, recepce
+  a účet ordinace lékařku dál neurčují (zapisuje se podle rozpisu). Platí pro členy týmu se
+  zaškrtnutým *Lékařka – přijímá rezervace*.
+- **Ošetřující lékařka v kartě pacienta:** když lékařka s vlastním účtem v záznamu návštěvy něco
+  změní (vitální hodnoty, anamnéza, vyšetření, diagnóza, poznámka pro recepci, položky účtu, Hotovo),
+  zapíše se jako lékařka záznamu – zase jen místo prázdné nebo automatické. Kdo byl první, zůstává;
+  další lékařky, které záznam upraví, se ukážou jako „upravovaly také“ a jsou v historii záznamu.
+  Nad záznamem je „**Ošetřuje:** MVDr. …“. Sestra a recepce lékařku úpravou nemění.
 - **Moji pacienti dnes** v kartě pacienta jsou podle propojení (dřív se lékařka hledala podle jména
   uživatele).
 - Recepce s vlastním účtem dál začíná v pokladně, vedení na svém přehledu.
