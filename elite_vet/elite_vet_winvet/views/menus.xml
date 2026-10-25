@@ -31,6 +31,20 @@
               action="action_vaccination" sequence="50"
               groups="elite_vet_reservation.group_reservation_reception"/>
 
+    <menuitem id="menu_winvet_calendar" name="Kalendář z WinVetu" parent="menu_winvet_root" sequence="55"
+              groups="elite_vet_reservation.group_reservation_reception"/>
+    <menuitem id="menu_winvet_calendar_event" name="Záznamy" parent="menu_winvet_calendar"
+              action="action_winvet_calendar_event" sequence="10"/>
+    <menuitem id="menu_winvet_calendar_resource" name="Kalendáře → ordinace" parent="menu_winvet_calendar"
+              action="action_winvet_calendar_resource" sequence="20"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_calendar_activity" name="Činnosti → úkony" parent="menu_winvet_calendar"
+              action="action_winvet_calendar_activity" sequence="30"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+    <menuitem id="menu_winvet_calendar_settings" name="Zapnout / vypnout" parent="menu_winvet_calendar"
+              action="action_winvet_calendar_settings" sequence="40"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+
     <menuitem id="menu_winvet_item" name="Ceník" parent="menu_winvet_root"
               action="action_winvet_item" sequence="60"
               groups="elite_vet_reservation.group_reservation_manager"/>

@@ -1,8 +1,8 @@
 {
     "name": "Elite Vet - WinVet data",
-    "version": "18.0.1.2.0",
+    "version": "18.0.1.3.0",
     "category": "Services",
-    "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby a jejich analýzy; ruční výdaje a zisk.",
+    "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby a jejich analýzy; ruční výdaje a zisk; kalendář WinVetu na tabuli.",
     "description": """
 Elite Vet - WinVet data
 =======================
@@ -34,6 +34,7 @@ Rozhraní je popsané v elite_vet/winvet_bridge/CONTRACT.md.
         "views/payment_views.xml",
         "views/expense_views.xml",
         "views/dashboard_views.xml",
+        "views/calendar_views.xml",
         "views/menus.xml",
         "data/filters.xml",
     ],

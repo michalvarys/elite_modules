@@ -6,3 +6,4 @@ from . import test_analytics
 from . import test_reconciliation
 from . import test_expense
 from . import test_v2
+from . import test_calendar

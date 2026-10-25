@@ -16,3 +16,4 @@ from . import payment
 from . import sync
 from . import expense
 from . import dashboard
+from . import winvet_calendar

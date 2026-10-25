@@ -207,6 +207,16 @@ class VetReservation(models.Model):
             domain.append(("id", "not in", list(exclude_ids)))
         return domain
 
+    @api.model
+    def _busy_external(self, room_ids, start, stop):
+        """Entries outside this model that occupy rooms at the given time - the second half of the
+        busy rule next to `_busy_domain` (extension point: elite_vet_winvet adds the timed events
+        of the WinVet calendar). Returns a recordset of any model whose records have `start`,
+        `stop`, `name` and `room_ids`; reservations only (blocks may be placed over them).
+        Callers: availability.busy_minutes (web, chat, wizard, POS Objednat), _check_overlap
+        (every save, board drop) and the wizard's manual-time collision check."""
+        return self.browse()
+
     @api.constrains("kind", "state", "room_id")
     def _check_room_required(self):
         for rec in self:
@@ -248,6 +258,8 @@ class VetReservation(models.Model):
                 continue   # a web-only block does not get in anyone's way; it can be created any time
             self._lock_rooms(rooms)
             clash = self.search(self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id]), limit=1)
+            if not clash and rec.kind == "reservation":
+                clash = self._busy_external(rooms, rec.start, rec.stop)[:1]
             if clash:
                 raise ValidationError(_(
                     "Termín %s–%s v ordinaci %s je obsazený: %s."

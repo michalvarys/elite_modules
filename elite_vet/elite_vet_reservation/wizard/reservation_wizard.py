@@ -334,13 +334,14 @@ class ReservationWizard(models.TransientModel):
                      if p[0] == self.room_id.id), None)
 
     def _collision(self, room, minute):
-        """Reservation or full block that would overlap the manual slot (empty otherwise).
+        """Reservation, full block or timed WinVet calendar entry that would overlap the manual slot (empty otherwise).
         Same rule as _check_overlap on save, which has the final say."""
         A = self.env["elite.vet.availability"]
         Res = self.env["elite.vet.reservation"]
         start = A.local_to_utc(self.date, minute)
         stop = start + timedelta(minutes=self._effective_duration())
-        return Res.search(Res._busy_domain([room.id], start, stop, scope="internal"), limit=1)
+        return (Res.search(Res._busy_domain([room.id], start, stop, scope="internal"), limit=1)
+                or Res._busy_external([room.id], start, stop)[:1])
 
     # ---------- steps ----------
     def action_step_time(self):

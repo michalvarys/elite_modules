@@ -103,6 +103,12 @@ class VetAvailability(models.AbstractModel):
             for rid in targets:
                 if rid in out:
                     out[rid].append(iv)
+        # The same rule as _check_overlap: entries of other sources (the WinVet calendar).
+        for e in Res._busy_external(room_ids, start, stop):
+            iv = (self.utc_to_local_minutes(e.start, day), self.utc_to_local_minutes(e.stop, day))
+            for rid in e.room_ids.ids:
+                if rid in out:
+                    out[rid].append(iv)
         return out
 
     @api.model
