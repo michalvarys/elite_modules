@@ -92,5 +92,8 @@ class ResPartner(models.Model):
             partner = self.create({"name": (name or email or phone or "Klient").strip(),
                                    "email": email or False, "phone": phone or False})
         if not partner.is_vet_client:
-            partner.is_vet_client = True
+            # Task 25: the matched contact may be the partner of an Odoo user (a staff member booking
+            # her own pet with her e-mail). Changing a user's partner needs the access-rights admin,
+            # so Recepce / Sestra / Lékařka could not confirm such a request. Only this flag is set.
+            partner.sudo().is_vet_client = True
         return partner
