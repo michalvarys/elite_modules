@@ -98,7 +98,8 @@ class EntityIntegrationTest(IntegrationBase):
             for record in records:
                 self.assertEqual(set(record), CONTRACT_KEYS[name], name)
                 self.assertIsInstance(record["id"], int, name)
-            ids = [r["id"] for r in records]
+            # calendar_events: one record per occurrence, identified by "key" (contract v4)
+            ids = [r["key" if name == "calendar_events" else "id"] for r in records]
             self.assertEqual(len(ids), len(set(ids)), f"{name}: duplicate ids")
 
     def test_stock_layers_sum_to_totals(self):
@@ -135,6 +136,9 @@ class EntityIntegrationTest(IntegrationBase):
         for name, records in self.records.items():
             for record in records:
                 for key, value in record.items():
+                    if name == "calendar_events" and key == "resource_ids":  # contract v4: list of ids
+                        self.assertTrue(all(isinstance(v, int) and v > 0 for v in value), f"{name}.{key}")
+                        continue
                     self.assertIsInstance(value, allowed, f"{name}.{key}")
                     if isinstance(value, str):
                         self.assertEqual(value, value.strip(), f"{name}.{key} not trimmed")
@@ -145,12 +149,27 @@ class EntityIntegrationTest(IntegrationBase):
                     if value is not None and key == "modified":
                         self.assertRegex(value, datetime_re, f"{name}.{key}")
 
+    def test_calendar_events_of_the_window(self):
+        events = self.records["calendar_events"]
+        window = self.readers["calendar_events"].window
+        self.assertIsNotNone(window)
+        for event in events:  # structure only, never the text
+            self.assertLess(event["start"], event["end"], event["key"])
+            self.assertLess(event["start"], window.payload()["to"] + " 99")
+            self.assertGreater(event["end"], window.payload()["from"])
+            if event["all_day"]:
+                self.assertTrue(event["start"].endswith("00:00:00") and event["end"].endswith("00:00:00"))
+        resources = {r["id"] for r in self.records["calendar_resources"]}
+        self.assertTrue(all(set(e["resource_ids"]) <= resources for e in events))
+
     def test_sale_documents_types(self):
         types = {r["type"] for r in self.records["sale_documents"]}
         self.assertTrue(types <= {"UM", "PODP", "FAV", "VRAT"}, types)
 
     def test_read_ids(self):
         for name, reader in self.readers.items():
+            if name == "calendar_events":
+                continue  # always read for the whole window (contract v4)
             sample = [r["id"] for r in self.records[name][:3]]
             got = reader.read_ids(sample + [-987654])
             self.assertEqual(sorted(r["id"] for r in got), sorted(sample), name)

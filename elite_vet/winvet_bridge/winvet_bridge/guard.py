@@ -40,6 +40,8 @@ GROUP_TABLES: Dict[str, Sequence[str]] = {
     "catalog": ("VARIANTA", "VARIANTA_CENIK", "KLASIFIKACE_VYROBKU", "VARIANTA_TYP", "UZIVATEL_NEW"),
     "templates": ("SABLONA_VYKONU", "SABLONA_VYKONU_POLOZKA", "FRAZE"),
     "stock": ("DOKLAD_POLOZKA_SK", "VARIANTA_SKLAD_STAV"),
+    # contract v4: the calendar (resources, activities, events)
+    "calendar": ("KALENDAR_NEW", "KALENDAR_NEW_KALENDAR", "ORD_CINNOST"),
     "journal": ("ZURNAL", "VERZE"),
 }
 GROUPS = tuple(GROUP_TABLES)

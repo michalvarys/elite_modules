@@ -1,4 +1,4 @@
-# WinVet bridge ⇄ Odoo contract (v1 + v2 + v3, see the sections below)
+# WinVet bridge ⇄ Odoo contract (v1 + v2 + v3 + v4, see the sections below)
 
 The bridge (`elite_vet/winvet_bridge`, standalone Python) reads WinVet (Firebird, read-only) and
 pushes JSON to the Odoo module `elite_vet_winvet`. This file is the single source of truth for the
@@ -310,3 +310,88 @@ DOKLAD (column PARTNER_NAZEV), so a change of `sales` blocks it as well; adding 
 used set changed the `sales` fingerprint once (re-approved with v3).
 
 Sizes v3 (analysis copy): stock_lots 836, stock_totals 498.
+
+
+## Contract v4 additions (WinVet calendar → Odoo board, 2026-10-25)
+
+Bridge version 4.0.0. Three new entities, appended to the push order (v4): `…, stock_lots,
+stock_totals, calendar_resources, calendar_activities, calendar_events`. None is journaled
+(KALENDAR_NEW is not in ZURNAL), all are always sent with `mode=full`. One-way only: the bridge
+never writes to WinVet; Odoo keeps the calendar read-only. **v3 receivers answer `{"ok": false,
+"error": "unknown entity"}` → the bridge skips the entity** (v2 forward compatibility); nothing else
+changes. There is no other version negotiation: `status.bridge_version` is informative only.
+
+### calendar_resources  [KALENDAR_NEW_KALENDAR] – the columns (calendars) of the WinVet scheduler
+`id` (ID_KALENDAR_NEW_KALENDAR), `name` (KALENDAR_NAZEV), `color` (BARVA, Delphi TColor →
+`"#rrggbb"`, system colours → `null`), `visible` (ZOBRAZIT='A'), `work_from` / `work_to`
+(PRACOVNI_DOBA_OD/DO, `"HH:MM:SS"` or `null`), `sequence` (PORADI). Full reconciliation like v1
+master data (Odoo archives missing ids).
+
+### calendar_activities  [ORD_CINNOST] – activity types
+`id` (ID_ORD_CINNOST), `name` (ORD_CINNOST_NAZEV), `duration` (DOBA, minutes), `color` (BARVA, as
+above), `symbol` (SYMBOL or `null`), `web` (USE_WEB='A'). Full reconciliation like master data.
+
+### calendar_events  [KALENDAR_NEW] – one record per occurrence inside a window
+Push payload has one extra key, the same in every batch of the run:
+`"window": {"from": "YYYY-MM-DD", "to": "YYYY-MM-DD"}` (both days inclusive, local days).
+Default window = yesterday … today + 60 days (`[bridge] calendar_days_back` / `calendar_days_ahead`).
+
+Record keys:
+`key` (string, the identity: `"<ID_KALENDAR>"` for a plain event, `"<pattern ID_KALENDAR>-<YYYYMMDD>"`
+for an occurrence of a recurring event, the date being the occurrence's original date),
+`id` (ID_KALENDAR of the row the data comes from: the event, the pattern, or the changed occurrence),
+`pattern_id` (ID_KALENDAR of the recurrence pattern or `null`), `recurring` (bool),
+`occurrence_date` (`YYYY-MM-DD` original date of the occurrence or `null`),
+`start`, `end` (`YYYY-MM-DD HH:MM:SS` Europe/Prague local time like every contract datetime; `end` is
+exclusive), `all_day` (bool, VOLBY bit 0; then `start`/`end` are local midnights, `end` = the day after
+the last day), `resource_ids` (list of `calendar_resources` ids, possibly empty or several),
+`activity_id` (ID_ORD_CINNOST), `owner_id` (ID_PARTNER), `patient_id` (ID_PACIENT) – ids 0/negative →
+`null` –, `title` (TITULEK, **personal data: client names**), `busy_status` (STAV, int: 0 free,
+2 busy …), `done` (VYRIZENO='A'), `modified` (POSLEDNI_MODIFIKACE_TS, `YYYY-MM-DD HH:MM:SS`).
+ZPRAVA (notes), reminders and Google ids are never read.
+
+Rules (bridge side):
+
+1. Rows: TYP 0 plain event, TYP 1 recurrence pattern, TYP 3 changed occurrence, TYP 4 deleted
+   occurrence (TYP 3/4 point to the pattern with ID_PREDEK and to the occurrence with
+   OPAKOVANI_INDEX, 0 = the first one – the same matching DevExpress uses). A record is sent when it
+   overlaps the window (`start < to + 1 day` and `end > from`).
+2. Recurrence (OPAKOVANI_INFO, DevExpress `TcxSchedulerEventRecurrenceInfoData`, 40 bytes, layout in
+   `winvet_bridge/scheduler.py`): daily (every n days / every weekday), weekly (days bit 0 Sunday …
+   bit 6 Saturday, every n weeks, weeks start on Monday), monthly and yearly (day of month or n-th
+   [last] weekday). End: Count > 0 occurrences, Count = 0 until Finish (inclusive day), Count = -1
+   none. A changed occurrence replaces its occurrence (own time, resources, texts); a deleted one
+   removes it. Occurrence time = the pattern's time of day and duration.
+3. Resources (ZDROJ_INFO): a streamed Delphi variant (one value or a list) of wide strings; numeric
+   strings are resource ids, other strings resource **names** (resolved case-insensitively against
+   KALENDAR_NEW_KALENDAR). Layout in `scheduler.py`. Undecodable → `resource_ids: []`.
+4. All-day events are stored by WinVet from 23:00 of the previous day to 23:00 of the last day; they
+   are rounded to the nearest local midnight.
+5. Problems (undecodable recurrence, occurrence without pattern, event without time) are counted in
+   the log (counts only) and never stop the run.
+
+Rules (Odoo side):
+
+1. Upsert by `key`. The last batch (`batch == batches`, all batches of the `run_id` present) deletes
+   the stored events overlapping the window whose key was not in any batch of the run. Events outside
+   the window are never touched.
+2. `owner_id` / `patient_id` are matched with the owners / patients of the kartotéka sync
+   (`res.partner.winvet_ref`, `elite.vet.pet.winvet_ref`); unmatched → title only.
+3. Switch "Kalendář z WinVetu" off: pushes are answered `ok: true` with every record `skipped` and
+   nothing stored (the bridge keeps sending; switch it on again or remove the calendar from the
+   bridge later).
+
+### `sync --only calendar`
+`py -m winvet_bridge sync --only calendar` reads and pushes just the three calendar entities
+(no change journal, the cursor and the daily full run stay as they are). A status is sent first as in
+every run. Service mode (`run`) does this itself every `calendar_interval_minutes` (default 5, 0 = off)
+between the normal runs; the normal and the full run always include the calendar too.
+
+### Guard
+New fingerprint group `calendar` (KALENDAR_NEW, KALENDAR_NEW_KALENDAR, ORD_CINNOST); a change blocks
+only the three calendar entities. A bridge v4 with a `verified.json` that has no `calendar` group
+blocks the calendar until `approve` (verified for 2603 on the analysis copy: `df31de3832520240`).
+
+Sizes v4 (analysis copy, data until 16. 11. 2026): calendar_resources 4, calendar_activities 44,
+calendar_events 203 in the default window from 24. 10. (1091 for 26. 8. – 24. 11.; KALENDAR_NEW has
+1005 rows: 964 plain, 12 patterns, 14 changed, 15 deleted occurrences).

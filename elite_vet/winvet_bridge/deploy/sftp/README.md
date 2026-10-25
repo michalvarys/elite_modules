@@ -283,3 +283,13 @@ Zdroje k nastavení:
 - gbak create/restore: https://firebirdsql.org/file/documentation/html/en/firebirddocs/gbak/firebird-gbak.html
 
 Heslová automatizace WinSCP: https://winscp.net/eng/docs/scripting
+
+## Kalendář WinVetu (most 4.0.0)
+
+Plná synchronizace ze zálohy posílá i kalendář WinVetu (okno od dne běhu − 1 na 60 dní). Kalendář
+ze zálohy je ale starý tolik, kolik je stará záloha, a záznamy okna, které v záloze nejsou, Odoo
+smaže. Pro kalendář na tabuli proto používejte most na PC s WinVetem (`sync --only calendar` každých
+5 minut). Když běží jen tento příjem záloh, tabule ukazuje kalendář podle poslední zálohy; vedení ho
+může v Odoo vypnout (WinVet data → Kalendář z WinVetu → Zapnout / vypnout), pak se neukládá.
+Do `/opt/winvet-import/` zkopírujte i nový `verified.json` (skupina otisků `calendar`), jinak zůstane
+kalendář blokovaný.

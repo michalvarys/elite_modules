@@ -54,6 +54,11 @@ class BridgeConfig:
     log_file: Optional[Path] = None
     log_level: str = "INFO"
     odoo_error: Optional[str] = None
+    #: contract v4: calendar window = today - days_back .. today + days_ahead
+    calendar_days_back: int = 1
+    calendar_days_ahead: int = 60
+    #: service mode (``run``): extra calendar-only run every n minutes (0 = only with the normal run)
+    calendar_interval_minutes: int = 5
 
     def require_odoo(self) -> OdooConfig:
         if self.odoo is None:
@@ -139,6 +144,13 @@ def load_config(path: Path) -> BridgeConfig:
         full_time = _dt.datetime.strptime(br.get("full_sync_time", "03:00").strip(), "%H:%M").time()
     except ValueError as exc:
         raise ConfigError("[bridge] full_sync_time must be HH:MM") from exc
+    calendar_back = br.getint("calendar_days_back", 1)
+    calendar_ahead = br.getint("calendar_days_ahead", 60)
+    calendar_interval = br.getint("calendar_interval_minutes", 5)
+    if not 0 <= calendar_back <= 366 or not 1 <= calendar_ahead <= 731:
+        raise ConfigError("[bridge] calendar_days_back must be 0-366 and calendar_days_ahead 1-731")
+    if calendar_interval < 0:
+        raise ConfigError("[bridge] calendar_interval_minutes must be >= 0")
     log_file = br.get("log_file", "").strip()
     verified = br.get("verified_file", "").strip()
     baseline = br.get("schema_baseline_file", "").strip()
@@ -156,4 +168,7 @@ def load_config(path: Path) -> BridgeConfig:
         full_sync_time=full_time,
         log_file=_path(base, log_file) if log_file else None,
         log_level=br.get("log_level", "INFO").strip().upper() or "INFO",
+        calendar_days_back=calendar_back,
+        calendar_days_ahead=calendar_ahead,
+        calendar_interval_minutes=calendar_interval,
     )

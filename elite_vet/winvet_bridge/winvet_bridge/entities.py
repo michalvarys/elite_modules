@@ -26,6 +26,8 @@ bundle_lines    templates SABLONA_VYKONU_POLOZKA
 phrases         templates FRAZE
 stock_lots      stock     DOKLAD_POLOZKA_SK (receipt lines, minus issues), DOKLAD (sales, supplier/date)
 stock_totals    stock     VARIANTA_SKLAD_STAV
+calendar_*      calendar  KALENDAR_NEW_KALENDAR, ORD_CINNOST, KALENDAR_NEW (window read, see
+                          :mod:`winvet_bridge.scheduler`)
 =============== ========= ==========================================
 
 Foreign keys (``*_id``, ``entered_by``) with WinVet's "no reference" values 0 / negative are sent as
@@ -34,12 +36,15 @@ Foreign keys (``*_id``, ``entered_by``) with WinVet's "no reference" values 0 / 
 
 from __future__ import annotations
 
+import datetime as _dt
+import logging
 import re
 from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 from . import ENTITY_ORDER
 from .normalize import (
+    read_blob,
     combine_datetime,
     flag_equals,
     flag_not_equals,
@@ -49,6 +54,9 @@ from .normalize import (
     to_ref,
 )
 from .rvf import rvf_or_plain, rvf_to_text
+from .scheduler import EventBuilder, Window, delphi_color, make_window
+
+log = logging.getLogger(__name__)
 
 ID_CHUNK = 250  # ids per "IN (...)" (Firebird allows at most 1500 list elements)
 
@@ -321,6 +329,33 @@ def _stock_totals(r: dict) -> dict:
     }
 
 
+def _calendar_resources(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_KALENDAR_NEW_KALENDAR"]),
+        "name": norm_value(r["KALENDAR_NAZEV"]),
+        "color": delphi_color(r["BARVA"]),
+        "visible": flag_equals(r["ZOBRAZIT"], "A"),
+        "work_from": norm_value(r["PRACOVNI_DOBA_OD"]),
+        "work_to": norm_value(r["PRACOVNI_DOBA_DO"]),
+        "sequence": to_int(r["PORADI"]),
+    }
+
+
+def _calendar_activities(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_ORD_CINNOST"]),
+        "name": norm_value(r["ORD_CINNOST_NAZEV"]),
+        "duration": to_int(r["DOBA"]),
+        "color": delphi_color(r["BARVA"]),
+        "symbol": norm_value(r["SYMBOL"]),
+        "web": flag_equals(r["USE_WEB"], "A"),
+    }
+
+
+def _calendar_events(r: dict) -> dict:  # pragma: no cover - rows go through EventBuilder
+    raise NotImplementedError("calendar_events are built by CalendarEventReader")
+
+
 # --------------------------------------------------------------------------- specs
 
 
@@ -580,6 +615,54 @@ _spec(
     keys=("id", "item_id", "total"),
 )
 
+_spec(
+    name="calendar_resources",
+    group="calendar",
+    tables=("KALENDAR_NEW_KALENDAR",),
+    sql=(
+        "select c.ID_KALENDAR_NEW_KALENDAR, c.KALENDAR_NAZEV, c.BARVA, c.ZOBRAZIT, c.PRACOVNI_DOBA_OD, "
+        "c.PRACOVNI_DOBA_DO, c.PORADI from KALENDAR_NEW_KALENDAR c"
+    ),
+    id_expr="c.ID_KALENDAR_NEW_KALENDAR",
+    mapper=_calendar_resources,
+    keys=("id", "name", "color", "visible", "work_from", "work_to", "sequence"),
+)
+_spec(
+    name="calendar_activities",
+    group="calendar",
+    tables=("ORD_CINNOST",),
+    sql=(
+        "select o.ID_ORD_CINNOST, o.ORD_CINNOST_NAZEV, o.BARVA, o.DOBA, o.SYMBOL, o.USE_WEB "
+        "from ORD_CINNOST o"
+    ),
+    id_expr="o.ID_ORD_CINNOST",
+    mapper=_calendar_activities,
+    keys=("id", "name", "duration", "color", "symbol", "web"),
+)
+_spec(
+    name="calendar_events",
+    group="calendar",
+    # The reader also reads the resource names with the calendar_resources SQL (an event may store
+    # the name instead of the id); that table is in the same fingerprint group "calendar".
+    tables=("KALENDAR_NEW",),
+    # TITULEK = title (client names: personal data), ZPRAVA (notes) is never read.
+    sql=(
+        "select k.ID_KALENDAR, k.ID_PREDEK, k.TYP, k.ZACATEK, k.KONEC, k.VOLBY, k.TITULEK, "
+        "k.OPAKOVANI_INDEX, k.OPAKOVANI_INFO, k.ZDROJ_INFO, k.STAV, k.ID_PARTNER, k.ID_PACIENT, "
+        "k.ID_ORD_CINNOST, k.VYRIZENO, k.POSLEDNI_MODIFIKACE, k.POSLEDNI_MODIFIKACE_TS "
+        "from KALENDAR_NEW k"
+    ),
+    # every recurrence row (patterns and their exceptions are few) + plain events near the window;
+    # the parameters are the window end and start with one day of margin (all-day storage at 23:00)
+    where="coalesce(k.TYP, 0) <> 0 or (k.ZACATEK < ? and k.KONEC > ?)",
+    id_expr="k.ID_KALENDAR",
+    mapper=_calendar_events,
+    keys=(
+        "key", "id", "pattern_id", "recurring", "occurrence_date", "start", "end", "all_day", "resource_ids",
+        "activity_id", "owner_id", "patient_id", "title", "busy_status", "done", "modified",
+    ),
+)
+
 assert tuple(SPECS) == ENTITY_ORDER
 
 #: entity -> tables it reads (input of the guard's dependency rule)
@@ -631,14 +714,67 @@ class EntityReader:
         return out
 
 
-def get_reader(entity: str, db, chunk_size: int = 500) -> EntityReader:
+class CalendarEventReader(EntityReader):
+    """``calendar_events``: the occurrences of one window (recurrences expanded), contract v4.
+
+    One read-only transaction reads the resource names and the KALENDAR_NEW rows;
+    :class:`winvet_bridge.scheduler.EventBuilder` does the rest in memory. ``window`` of the last
+    read is pushed with every batch so Odoo can remove events that disappeared from WinVet.
+    """
+
+    def __init__(self, spec: EntitySpec, db, chunk_size: int = 500, days_back: int = 1, days_ahead: int = 60,
+                 today: Optional[Callable[[], _dt.date]] = None):
+        super().__init__(spec, db, chunk_size)
+        self.days_back, self.days_ahead = days_back, days_ahead
+        self._today = today
+        self.window: Optional[Window] = None
+        self.problems: Dict[str, int] = {}
+
+    def current_window(self) -> Window:
+        today = self._today() if self._today else _dt.date.today()
+        return make_window(today, self.days_back, self.days_ahead)
+
+    def read_all(self) -> List[dict]:
+        window = self.current_window()
+        margin = _dt.timedelta(days=1)
+        names_spec = SPECS["calendar_resources"]
+        sql = build_sql(self.spec)
+        with self.db.transaction() as tx:
+            names = {}
+            for r in tx.query_dicts(build_sql(names_spec), (), self.chunk_size):
+                name = norm_value(r["KALENDAR_NAZEV"])
+                if name:
+                    names.setdefault(name.lower(), to_int(r["ID_KALENDAR_NEW_KALENDAR"]))
+            rows = []
+            for r in tx.query_dicts(sql, (window.end_dt + margin, window.start_dt - margin), self.chunk_size):
+                # BLOBs must be read before the next fetch
+                rows.append({k: (read_blob(v) if k in ("OPAKOVANI_INFO", "ZDROJ_INFO") else v) for k, v in r.items()})
+        builder = EventBuilder(window, names)
+        records = builder.build(rows)
+        self.window, self.problems = window, builder.problems
+        if builder.problems:  # counts only, never record data
+            log.warning("calendar_events: %s", ", ".join(f"{k} x{v}" for k, v in sorted(builder.problems.items())))
+        return records
+
+    def read_ids(self, ids: Iterable[int]) -> List[dict]:
+        raise NotImplementedError("calendar_events are always read for the whole window")
+
+
+def _reader(spec: EntitySpec, db, chunk_size: int, calendar: Optional[Mapping] = None) -> EntityReader:
+    if spec.name == "calendar_events":
+        return CalendarEventReader(spec, db, chunk_size, **(calendar or {}))
+    return EntityReader(spec, db, chunk_size)
+
+
+def get_reader(entity: str, db, chunk_size: int = 500, calendar: Optional[Mapping] = None) -> EntityReader:
     if entity not in SPECS:
         raise KeyError(f"Unknown entity {entity!r}; known: {', '.join(SPECS)}")
-    return EntityReader(SPECS[entity], db, chunk_size)
+    return _reader(SPECS[entity], db, chunk_size, calendar)
 
 
-def all_readers(db, chunk_size: int = 500) -> Dict[str, EntityReader]:
-    return {name: EntityReader(spec, db, chunk_size) for name, spec in SPECS.items()}
+def all_readers(db, chunk_size: int = 500, calendar: Optional[Mapping] = None) -> Dict[str, EntityReader]:
+    """``calendar``: keyword arguments of :class:`CalendarEventReader` (days_back, days_ahead)."""
+    return {name: _reader(spec, db, chunk_size, calendar) for name, spec in SPECS.items()}
 
 
 # --------------------------------------------------------------------------- used columns

@@ -3,8 +3,10 @@
   "versions": {
     "2603": {
       "approved": "2026-10-22 09:57:54",
+      "calendar_approved": "2026-10-25 (contract v4, analysis copy)",
       "engine": "5.0.1",
       "fingerprints": {
+        "calendar": "df31de3832520240",
         "catalog": "cac72032339edbfa",
         "clinical": "15d972323c953af3",
         "journal": "fbbdb23189da0d91",

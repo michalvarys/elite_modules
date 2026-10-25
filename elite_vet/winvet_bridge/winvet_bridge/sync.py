@@ -9,7 +9,7 @@ import secrets
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Sequence
 
-from . import ENTITY_ORDER, __version__
+from . import CALENDAR_ENTITIES, ENTITY_ORDER, __version__
 from .entities import ENTITY_TABLES, all_readers
 from .guard import GuardResult, SchemaInfo, evaluate, read_schema_info, used_column_map
 from .journal import JOURNAL_TABLES, BridgeState, JournalChanges, StateStore, read_changes, read_max_cursor
@@ -19,16 +19,35 @@ from .schema_watch import SchemaReport, compare, read_snapshot
 log = logging.getLogger(__name__)
 
 #: Entities that are not in the change journal (or are small) and are pushed in full every run.
-ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines", "stock_lots", "stock_totals")
+ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines", "stock_lots", "stock_totals") + CALENDAR_ENTITIES
+
+#: ``sync --only <name>``: groups of entities that can be synchronised on their own.
+ONLY_GROUPS = {"calendar": CALENDAR_ENTITIES}
+
+
+def resolve_only(names: Optional[Sequence[str]]) -> Optional[List[str]]:
+    """``--only`` values (group names or entities of ALWAYS_FULL) -> entities in push order."""
+    if not names:
+        return None
+    wanted = set()
+    for name in names:
+        if name in ONLY_GROUPS:
+            wanted.update(ONLY_GROUPS[name])
+        elif name in ALWAYS_FULL:
+            wanted.add(name)
+        else:
+            raise ValueError(f"--only accepts {', '.join(ONLY_GROUPS)} or one of {', '.join(ALWAYS_FULL)}, "
+                             f"not {name!r}")
+    return [e for e in ENTITY_ORDER if e in wanted]
 
 
 class WinVetSource:
     """Data source backed by a :class:`winvet_bridge.db.ReadOnlyDatabase`."""
 
-    def __init__(self, db, chunk_size: int = 500):
+    def __init__(self, db, chunk_size: int = 500, calendar: Optional[Mapping] = None):
         self.db = db
         self.chunk_size = chunk_size
-        self.readers = all_readers(db, chunk_size)
+        self.readers = all_readers(db, chunk_size, calendar)
 
     def schema_info(self) -> SchemaInfo:
         return read_schema_info(self.db)
@@ -47,6 +66,11 @@ class WinVetSource:
 
     def read_ids(self, entity: str, ids: Sequence[int]) -> List[dict]:
         return self.readers[entity].read_ids(ids)
+
+    def push_extra(self, entity: str) -> dict:
+        """Extra keys of every push of ``entity`` after its read (contract v4: the window)."""
+        window = getattr(self.readers[entity], "window", None)
+        return {"window": window.payload()} if window is not None else {}
 
 
 @dataclass
@@ -83,7 +107,8 @@ def new_run_id(now: _dt.datetime) -> str:
 
 
 def build_batches(
-    entity: str, mode: str, records: Sequence[dict], deleted: Sequence[int], batch_size: int, run_id: str
+    entity: str, mode: str, records: Sequence[dict], deleted: Sequence[int], batch_size: int, run_id: str,
+    extra: Optional[Mapping] = None,
 ) -> List[dict]:
     """Split records/deleted ids into push payloads of at most ``batch_size`` items each.
 
@@ -107,6 +132,7 @@ def build_batches(
                 "batch": index + 1,
                 "batches": count,
                 "run_id": run_id,
+                **dict(extra or {}),
             }
         )
     return batches
@@ -163,7 +189,10 @@ class SyncRunner:
             "message": message,
         }}
 
-    def run(self, full: bool = False, dry_run: bool = False, now: Optional[_dt.datetime] = None) -> RunReport:
+    def run(self, full: bool = False, dry_run: bool = False, now: Optional[_dt.datetime] = None,
+            only: Optional[Sequence[str]] = None) -> RunReport:
+        """``only``: push just these entities of ALWAYS_FULL (e.g. the calendar every 5 minutes);
+        the change journal is not read, the cursor and the daily full run stay as they are."""
         now = now or _dt.datetime.now()
         if not dry_run and self.client is None:
             raise ValueError("An Odoo client is required unless dry_run is set")
@@ -179,7 +208,9 @@ class SyncRunner:
                 log.warning("Schema change: %s", change.describe())
         changes: Optional[JournalChanges] = None
 
-        if guard.journal_blocked or (schema_report is not None and schema_report.journal_changed):
+        if only:
+            mode, cursor_after = "only", cursor_before
+        elif guard.journal_blocked or (schema_report is not None and schema_report.journal_changed):
             mode, cursor_after = "full", cursor_before
         else:
             upto = self.source.journal_max()
@@ -220,7 +251,7 @@ class SyncRunner:
 
         pending = set(state.pending_full)
         for entity in ENTITY_ORDER:
-            if entity not in self.entity_tables:
+            if entity not in self.entity_tables or (only and entity not in only):
                 continue
             if guard.is_blocked(entity):
                 pending.add(entity)
@@ -228,7 +259,7 @@ class SyncRunner:
                 log.warning("Entity %s blocked by the schema guard - not read", entity)
                 continue
             entity_full = (
-                mode == "full" or entity in ALWAYS_FULL or entity in pending or changes is None
+                mode in ("full", "only") or entity in ALWAYS_FULL or entity in pending or changes is None
                 or entity in changes.full
             )
             if entity_full:
@@ -238,7 +269,9 @@ class SyncRunner:
                 ids = changes.changed_ids(entity)
                 records = self.source.read_ids(entity, ids) if ids else []
                 deleted = changes.deleted_ids(entity)
-            batches = build_batches(entity, entity_mode, records, deleted, self.batch_size, run_id)
+            push_extra = getattr(self.source, "push_extra", None)
+            extra = push_extra(entity) if push_extra else {}
+            batches = build_batches(entity, entity_mode, records, deleted, self.batch_size, run_id, extra)
             try:
                 for payload in batches:
                     if not dry_run:
@@ -257,7 +290,14 @@ class SyncRunner:
                 entity, entity_mode, len(records), len(deleted), len(batches), " (dry run)" if dry_run else "",
             )
 
-        if not dry_run:
+        if not dry_run and mode == "only":
+            # A separate schedule may run next to the main one: re-read the state and change only
+            # what this run is about (the pending flags of its entities), never the cursor.
+            fresh = self.state_store.load()
+            fresh.pending_full = [e for e in ENTITY_ORDER
+                                  if (e in fresh.pending_full and e not in only) or (e in only and e in pending)]
+            self.state_store.save(fresh)
+        elif not dry_run:
             # Reached only when every push succeeded: now it is safe to advance the cursor.
             new_state = BridgeState(
                 journal_cursor=cursor_after,
@@ -274,7 +314,8 @@ def make_runner(config, db, client=None, verified: Optional[Mapping] = None) -> 
     from .schema_watch import load_baseline
 
     return SyncRunner(
-        source=WinVetSource(db, config.batch_size),
+        source=WinVetSource(db, config.batch_size, calendar={
+            "days_back": config.calendar_days_back, "days_ahead": config.calendar_days_ahead}),
         state_store=StateStore(config.state_file),
         verified=verified if verified is not None else load_verified(config.verified_file),
         batch_size=config.batch_size,

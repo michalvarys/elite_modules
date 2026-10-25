@@ -47,10 +47,11 @@ Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje
    `check` vypíše verzi WinVetu, otisky schématu a blokované entity (Odoo nekontaktuje).
    `--dry-run` data jen načte a spočítá dávky, nic neodesílá a neukládá stav.
 
-## Co se přenáší (kontrakt v2, most 2.0.0)
+## Co se přenáší (kontrakt v2, most 2.0.0; v3 sklad, v4 kalendář)
 
 Pořadí entit: `users, items, owners, contacts, patients, vaccinations, visits, vitals,
-sale_documents, sale_lines, payments, bundles, bundle_lines, phrases` (podrobně v `CONTRACT.md`).
+sale_documents, sale_lines, payments, bundles, bundle_lines, phrases, stock_lots, stock_totals,
+calendar_resources, calendar_activities, calendar_events` (podrobně v `CONTRACT.md`).
 
 Novinky v2:
 
@@ -68,6 +69,29 @@ Novinky v2:
 - Když Odoo odpoví `unknown entity` (např. chybí modul kliniky pro `bundles`/`phrases`), most
   entitu v tomto běhu přeskočí s varováním a pokračuje dál.
 
+## Kalendář WinVetu (kontrakt v4, most 4.0.0)
+
+Most čte i kalendář WinVetu (`KALENDAR_NEW`, kalendáře `KALENDAR_NEW_KALENDAR`, činnosti
+`ORD_CINNOST`) a posílá ho do Odoo jako `calendar_resources`, `calendar_activities` a
+`calendar_events`. Jen čte – do WinVetu nikdy nic nezapisuje, objednává se dál tam, kde dosud.
+
+- **Okno:** při každém běhu se čte okno od včerejška na 60 dní dopředu (`[bridge]
+  calendar_days_back`, `calendar_days_ahead`). Kalendář není v žurnálu změn, proto se okno čte vždy
+  celé; Odoo smaže záznamy okna, které ve WinVetu už nejsou. Starší záznamy v Odoo zůstanou.
+- **Opakované záznamy** most rozloží na jednotlivé výskyty (změněné a smazané výskyty WinVetu
+  respektuje). Formát binárních sloupců (`OPAKOVANI_INFO`, `ZDROJ_INFO`) je popsaný v
+  `winvet_bridge/scheduler.py`.
+- **Celodenní záznamy** (WinVet je ukládá od 23:00 předchozího dne) se zarovnají na půlnoc.
+- **Nečte se:** `ZPRAVA` (poznámky), připomínky, Google ID. `TITULEK` obsahuje jména klientů – jsou
+  to osobní údaje, do logu se nikdy nepíšou (log má jen počty).
+- **Rychlejší plán jen pro kalendář:** `py -m winvet_bridge sync --only calendar` (žurnál, kurzor
+  ani denní plný běh se nemění). Ve službě (`run`) se to děje samo každých
+  `calendar_interval_minutes` (výchozí 5, 0 = jen s normálním během).
+- **Kontrola verze:** nová skupina otisků `calendar` (3 tabulky); změna struktury zablokuje jen
+  kalendář. Most 4.0.0 se starším `verified.json` (bez skupiny `calendar`) blokuje jen kalendář,
+  dokud se nová verze neověří (`approve`). V repozitáři je skupina ověřená pro WinVet 2603.
+- **Starší Odoo** (bez kalendáře) odpoví `unknown entity` – most kalendář přeskočí a pokračuje.
+
 ## Spouštění
 
 | Příkaz | Co dělá |
@@ -76,7 +100,8 @@ Novinky v2:
 | `py -m winvet_bridge sync` | jeden běh: první běh plný, další jen změny podle žurnálu WinVetu |
 | `py -m winvet_bridge sync --full` | plná synchronizace všeho |
 | `py -m winvet_bridge sync --dry-run` | jen načíst a spočítat, nic neposílat |
-| `py -m winvet_bridge run` | služba: změny každých `interval_minutes` (15 min), plná synchronizace jednou denně v `full_sync_time` (03:00) |
+| `py -m winvet_bridge sync --only calendar` | jen kalendář WinVetu (okno včera … +60 dní), bez žurnálu; vhodné každých 5 minut |
+| `py -m winvet_bridge run` | služba: změny každých `interval_minutes` (15 min), mezi tím kalendář každých `calendar_interval_minutes` (5 min), plná synchronizace jednou denně v `full_sync_time` (03:00) |
 | `py -m winvet_bridge approve --yes` | schválí aktuální verzi WinVetu (viz níže) |
 | `py -m winvet_bridge export --entity owners --out owners.json` | ladicí export jedné entity – **obsahuje osobní údaje**, po použití smažte |
 
@@ -95,6 +120,18 @@ V „Nastavení“ úlohy zvolte „Pokud je úloha již spuštěna: Nespouště
 složku `C:\WinVetBridge`. Pro denní plnou synchronizaci přidejte druhou úlohu
 (`/SC DAILY /ST 03:00`, příkaz `sync --full`).
 
+Kalendář WinVetu (most 4.0.0) jde s každým během. Aby se nové objednávky z WinVetu objevily na
+tabuli Odoo do pár minut, přidejte třetí úlohu jen pro kalendář (každých 5 minut, stejné
+nastavení „Nespouštět novou instanci“):
+
+```
+schtasks /Create /TN "WinVet bridge - kalendar" /SC MINUTE /MO 5 /RU SYSTEM ^
+  /TR "\"C:\Program Files\Python312\python.exe\" -m winvet_bridge --config C:\WinVetBridge\config.ini sync --only calendar"
+```
+
+Běh `--only calendar` nečte žurnál a nemění kurzor; když se potká s během hlavní úlohy, nic se
+nepokazí (každý si načte stav znovu a mění jen svou část).
+
 ### Varianta B: Windows služba přes NSSM
 
 ```
@@ -103,7 +140,8 @@ nssm set WinVetBridge AppDirectory C:\WinVetBridge
 nssm start WinVetBridge
 ```
 
-Režim `run` si sám hlídá interval i denní plný běh (po výpadku PC plný běh doběhne hned po startu).
+Režim `run` si sám hlídá interval i denní plný běh (po výpadku PC plný běh doběhne hned po startu)
+a mezi běhy posílá kalendář každých `calendar_interval_minutes` (výchozí 5) – třetí úloha tu není potřeba.
 
 ## Kontrola verze WinVetu (guard)
 
@@ -122,6 +160,7 @@ neblokuje. Žádná data v otisku nejsou.
 | sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments, stock_lots (sloupec dodavatele) |
 | templates | SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA, FRAZE | bundles, bundle_lines, phrases |
 | stock | DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV | stock_lots (také DOKLAD ze skupiny sales), stock_totals |
+| calendar | KALENDAR_NEW, KALENDAR_NEW_KALENDAR, ORD_CINNOST | calendar_resources, calendar_activities, calendar_events |
 | journal | ZURNAL, VERZE | přírůstková synchronizace |
 
 Ověřené verze a jejich otisky jsou v `verified.json`.

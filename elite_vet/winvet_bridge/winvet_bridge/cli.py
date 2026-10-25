@@ -20,7 +20,7 @@ from .guard import GROUPS, approve, evaluate, load_verified, read_schema_info, u
 from .journal import JOURNAL_TABLES, StateStore
 from .schema_watch import compare, load_baseline, read_snapshot, save_baseline
 from .odoo_client import OdooError, make_client
-from .sync import make_runner
+from .sync import ONLY_GROUPS, make_runner, resolve_only
 
 log = logging.getLogger("winvet_bridge")
 
@@ -123,14 +123,20 @@ def _print_report(report) -> None:
         print(f"message: {report.message}")
 
 
-def sync_once(config: BridgeConfig, full: bool, dry_run: bool):
+def sync_once(config: BridgeConfig, full: bool, dry_run: bool, only=None):
     client = None if dry_run else make_client(config.require_odoo())
     with ReadOnlyDatabase(config.firebird, config.batch_size) as db:
-        return make_runner(config, db, client).run(full=full, dry_run=dry_run)
+        return make_runner(config, db, client).run(full=full, dry_run=dry_run, only=only)
 
 
 def cmd_sync(config: BridgeConfig, args) -> int:
-    report = sync_once(config, full=args.full, dry_run=args.dry_run)
+    try:
+        only = resolve_only(args.only)
+    except ValueError as exc:
+        raise ConfigError(str(exc)) from None
+    if only and args.full:
+        raise ConfigError("--only and --full cannot be combined")
+    report = sync_once(config, full=args.full, dry_run=args.dry_run, only=only)
     _print_report(report)
     return EXIT_BLOCKED if report.guard.blocked_entities else EXIT_OK
 
@@ -140,27 +146,40 @@ def should_run_full(now: _dt.datetime, last_full_date: Optional[str], full_time:
     return now.time() >= full_time and last_full_date != now.date().isoformat()
 
 
+def _run_safely(config: BridgeConfig, full: bool, only=None) -> None:
+    try:
+        sync_once(config, full=full, dry_run=False, only=only)
+    except OdooError as exc:
+        log.error("Run failed (Odoo): %s - cursor not advanced, will retry", exc)
+    except Exception:  # keep the service alive; details (no record data) go to the log
+        log.exception("Run failed - cursor not advanced, will retry")
+
+
 def cmd_run(config: BridgeConfig, args) -> int:
     config.require_odoo()
     interval = config.interval_minutes * 60
-    log.info("Bridge service started: interval=%d min, daily full sync at %s",
-             config.interval_minutes, config.full_sync_time.strftime("%H:%M"))
+    # Contract v4: the calendar has its own, shorter interval (it is also part of every normal run).
+    calendar_interval = config.calendar_interval_minutes * 60
+    calendar = resolve_only(["calendar"])
+    log.info("Bridge service started: interval=%d min, calendar every %s, daily full sync at %s",
+             config.interval_minutes,
+             f"{config.calendar_interval_minutes} min" if calendar_interval else "normal run",
+             config.full_sync_time.strftime("%H:%M"))
     try:
         while True:
             started = time.monotonic()
             now = _dt.datetime.now()
             state = StateStore(config.state_file).load()
             full = should_run_full(now, state.last_full_date, config.full_sync_time)
-            try:
-                sync_once(config, full=full, dry_run=False)
-            except OdooError as exc:
-                log.error("Run failed (Odoo): %s - cursor not advanced, will retry", exc)
-            except Exception:  # keep the service alive; details (no record data) go to the log
-                log.exception("Run failed - cursor not advanced, will retry")
+            _run_safely(config, full)
             if args.once:
                 return EXIT_OK
+            next_calendar = time.monotonic() + calendar_interval
             remaining = interval - (time.monotonic() - started)
             while remaining > 0:
+                if calendar_interval and time.monotonic() >= next_calendar and remaining > calendar_interval / 2:
+                    _run_safely(config, False, only=calendar)
+                    next_calendar = time.monotonic() + calendar_interval
                 time.sleep(min(remaining, 5.0))
                 remaining = interval - (time.monotonic() - started)
     except KeyboardInterrupt:
@@ -199,7 +218,8 @@ def cmd_export(config: BridgeConfig, args) -> int:
         if guard.is_blocked(args.entity):
             log.error("Entity %s is blocked by the schema guard: %s", args.entity, guard.message)
             return EXIT_BLOCKED
-        reader = get_reader(args.entity, db, config.batch_size)
+        reader = get_reader(args.entity, db, config.batch_size, calendar={
+            "days_back": config.calendar_days_back, "days_ahead": config.calendar_days_ahead})
         records = reader.read_ids(args.ids) if args.ids else reader.read_all()
     out = Path(args.out)
     with open(out, "w", encoding="utf-8") as handle:
@@ -220,6 +240,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("sync", help="one synchronisation run")
     p.add_argument("--full", action="store_true", help="full resync of all entities")
     p.add_argument("--dry-run", action="store_true", help="read and batch only, no HTTP, state untouched")
+    p.add_argument("--only", nargs="+", metavar="NAME",
+                   help=f"push only these always-full entities or groups ({', '.join(ONLY_GROUPS)}), "
+                        "e.g. '--only calendar' every 5 minutes; the change journal is not read")
 
     p = sub.add_parser("run", help="service loop: incremental every interval, full once a day")
     p.add_argument("--once", action="store_true", help=argparse.SUPPRESS)

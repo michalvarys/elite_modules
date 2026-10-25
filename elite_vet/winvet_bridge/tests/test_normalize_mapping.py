@@ -42,6 +42,12 @@ CONTRACT_KEYS = {
     "stock_lots": {"id", "item_id", "lot", "expiry", "received", "quantity", "unit_cost", "vat_rate",
                    "cost_includes_vat", "supplier"},
     "stock_totals": {"id", "item_id", "total"},
+    # contract v4
+    "calendar_resources": {"id", "name", "color", "visible", "work_from", "work_to", "sequence"},
+    "calendar_activities": {"id", "name", "duration", "color", "symbol", "web"},
+    "calendar_events": {"key", "id", "pattern_id", "recurring", "occurrence_date", "start", "end", "all_day",
+                        "resource_ids", "activity_id", "owner_id", "patient_id", "title", "busy_status", "done",
+                        "modified"},
 }
 
 
@@ -146,6 +152,8 @@ class MappingTest(unittest.TestCase):
 
     def test_mapper_returns_exact_contract_keys(self):
         for name, spec in SPECS.items():
+            if name == "calendar_events":
+                continue  # built by scheduler.EventBuilder (test_calendar)
             row = {col: None for col in select_columns(spec.sql)}
             record = spec.mapper(row)
             self.assertEqual(set(record), CONTRACT_KEYS[name], name)
