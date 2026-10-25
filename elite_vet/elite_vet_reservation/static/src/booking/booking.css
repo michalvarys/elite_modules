@@ -92,7 +92,7 @@
    elite_vet_web centers it with margin:auto, but its ".vet-page p{margin:0}" is more specific,
    so the paragraph sat at the left edge of the page. Under our wizard (only there: .evbk is
    a sibling in Elite Vet mode) it is centered in a container like the wizard's, at most
-   680 px wide; the WinVet mode is left as it was. */
+   680 px wide. Under the WinVet frame elite_vet_web centers it itself. */
 .vet-page .evbk ~ .evrez-zprava-misto{box-sizing:border-box;max-width:860px;margin:0 auto;padding:0 24px 40px;background:#fff}
 .vet-page .evbk ~ .evrez-zprava-misto .evrez-zprava{max-width:680px;margin:0 auto;padding:0;text-align:center}
 @media (max-width:640px){
