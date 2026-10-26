@@ -133,6 +133,7 @@
                             <t t-set="items" t-value="sectionItems(column, section.key)"/>
                             <div t-if="items.length" class="evrm-section" t-att-class="'ev-group-' + section.key">
                                 <h3 class="evrm-section-title"><t t-esc="section.title"/> <span class="ev-count" t-esc="items.length"/></h3>
+                                <p t-if="section.hint" class="evrm-section-hint" t-esc="section.hint"/>
                                 <t t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomTile"/></t>
                             </div>
                         </t>
@@ -192,6 +193,7 @@
                                  t-att-class="'ev-group-' + section.key">
                             <t t-set="items" t-value="sectionItems(column, section.key)"/>
                             <h2 class="ev-group-head"><t t-esc="section.title"/> <span class="ev-count" t-esc="items.length"/></h2>
+                            <p t-if="section.hint" class="evrm-section-hint" t-esc="section.hint"/>
                             <p t-if="!items.length" class="ev-empty-line" t-esc="section.empty"/>
                             <ol t-else="" class="evrm-list">
                                 <li t-foreach="items" t-as="it" t-key="it.key"><t t-call="elite_vet_reception.RoomTile"/></li>

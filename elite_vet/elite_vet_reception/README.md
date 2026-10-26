@@ -52,7 +52,7 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
   `source` `winvet`, zvíře a klient = `effective_pet_id` / `effective_partner_id` (WinVet, jinak
   spárované v Odoo), úkol 30: `needs_pairing` (bez zvířete → Spárovat…), `paired_manually`,
   `winvet_title`, `search_hint` (začátek textu pro Kartotéku); řazeno podle času. Stejná pravidla
-  a pole mají objednávky WinVetu v `room_board` › Dnes ještě přijdou.
+  a pole mají objednávky WinVetu v `room_board` › Dnes jsou objednaní (`booked`).
 - **waiting** – rozepsané záznamy dne se stavem návštěvy, podle příchodu:
   `record_id, pet_name, owner, doctor, room, stage, stage_label, arrived_time, waiting_minutes,
   reception_note, walk_in` (u V ordinaci minuty od příchodu do zavolání; `walk_in` = bez rezervace
@@ -357,8 +357,10 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
 - **Vzhled (úkol 26):** jeden designový systém pro klinické obrazovky – tokeny, dlaždice pacienta
   (`elite_vet_clinic.VisitTileBody`, `visitTile()`), tlačítka a nabídka „…“ jsou v
   `elite_vet_clinic/static/src/clinic_ui/`, kořen obrazovky má třídu `.ev-clinic`. Jedna ordinace:
-  pruh Nepřiřazení (Vzít dalšího / Zobrazit) a sloupce Čekají | V ordinaci | Dnes ještě přijdou
-  (Hotovo dnes sbalené). U pacienta jedno hlavní tlačítko podle stavu (Čeká → Zavolat, V ordinaci →
+  pruh Nepřiřazení (Vzít dalšího / Zobrazit) a sloupce Dnes jsou objednaní (ještě nepřišli) |
+  Čekají | V ordinaci (Hotovo dnes sbalené pod posledním); pod 1100 px pod sebou s Čekají první
+  (CSS `order`: Čekají, V ordinaci, Dnes jsou objednaní). Části sloupce Všech ordinací mají stejné
+  pořadí a názvy (`ROOM_SECTIONS`). Klíč části zůstává `booked`. U pacienta jedno hlavní tlačítko podle stavu (Čeká → Zavolat, V ordinaci →
   Otevřít kartu), ostatní v nabídce „…“ (komponenta `RoomMenu`, Odoo `Dropdown`): Otevřít kartu,
   Poznámka recepce… (`set_reception_note`), Do jiné ordinace (`assign_room`). Přepínač ordinací je
   `<select>`.
@@ -378,16 +380,16 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
 - `unassigned` (nový klíč odpovědi, pravidlo R17): dnešní rozepsaní neobjednaní bez lékařky ve stavu
   Čeká / V ordinaci, stejný tvar jako `items`. Plní se jen u filtrovaného seznamu lékařky (nefiltrovaný
   je má v `items`); úvodní obrazovka je ukazuje v Čekají s poznámkou „kterákoli lékařka“.
-- Skupiny: **Čekají** (rozepsaný záznam ve stavu Čeká, podle příchodu, „Čeká 6 min“,
-  tlačítko Zavolat), **V ordinaci**, **Dnes ještě přijdou** (rezervace bez záznamu nebo se
-  záznamem bez stavu), **Hotovo dnes** (uzavřený záznam; také rezervace ve stavu Proběhlá bez záznamu).
+- Skupiny (pořadí jako na obrazovce Ordinace, pod 1100 px Čekají první): **Dnes jsou objednaní**
+  (ještě nepřišli; rezervace bez záznamu nebo se záznamem bez stavu), **Čekají** (rozepsaný záznam
+  ve stavu Čeká, podle příchodu, „Čeká 6 min“, tlačítko Zavolat), **V ordinaci**, **Hotovo dnes** (uzavřený záznam; také rezervace ve stavu Proběhlá bez záznamu).
 - Neobjednaní (dnešní záznamy se stavem návštěvy bez rezervace, `walk_in: true`, `reservation_id: None`)
   jsou v `items` podle lékařky záznamu; bez lékařky jsou v `unassigned`.
 - **Zavolat** = `elite.vet.reception.call_patient(record_id)`, pak se otevře karta zvířete. Záznam bez
   lékařky dostane lékařku volajícího uživatele (když je spárovaný); tlačítko je během volání neaktivní.
 - Řádek je sdílená dlaždice pacienta (úkol 26, `patientTile()` → `visitTile()`): velký čas příchodu
   (nebo rezervace), „obj. 9:20“ / „bez objednání“, stav „Čeká 6 min“ / „V ordinaci od 9:30“, u
-  Dnes ještě přijdou a Hotovo štítek záznamu (Bez záznamu, Rozepsaný, Hotovo – k pokladně).
+  Dnes jsou objednaní a Hotovo štítek záznamu (Bez záznamu, Rozepsaný, Hotovo – k pokladně).
 - Pravidlo R5: když sestra nebo lékařka otevře kartu (ze seznamu, z tabule, z hledání …) a dnešní
   záznam je ve stavu Čeká, karta jednou zavolá `call_patient`; `card_data` zůstává jen pro čtení.
   Chyba (např. role recepce) se tiše ignoruje. `_record_data` proto nese i `visit_stage`, a od

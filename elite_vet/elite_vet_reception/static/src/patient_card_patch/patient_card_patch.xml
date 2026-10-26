@@ -28,6 +28,7 @@
                 <section t-foreach="todayGroups" t-as="group" t-key="group.key" class="evrc-group"
                          t-att-class="'evrc-group-' + group.key + ' ev-group-' + group.state" t-att-aria-label="group.title">
                     <h3 class="ev-group-head evrc-group-title"><t t-esc="group.title"/><span class="ev-count" t-esc="group.items.length"/></h3>
+                    <p t-if="group.hint" class="evrc-group-hint" t-esc="group.hint"/>
                     <p t-if="!group.items.length" class="ev-empty-line" t-esc="group.empty"/>
                     <ol t-else="" class="evpc-today-list">
                         <li t-foreach="group.items" t-as="it" t-key="it.key">

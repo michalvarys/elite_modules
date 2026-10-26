@@ -1,6 +1,14 @@
 // Staged "Moji pacienti dnes" (patch of elite_vet_clinic's patient card start screen).
 // Task 26: tiles, group heads and counts come from clinic_ui.scss (.ev-clinic).
 .evrc-groups { display: grid; gap: 28px; }
+.evrc-group-hint { margin: -2px 0 8px; font-size: var(--ev-fs-meta); color: var(--ev-muted); }
+// same as the screen Ordinace: on narrow screens the waiting patients first
+@media (max-width: 1099.98px) {
+    .evrc-group-waiting { order: 1; }
+    .evrc-group-in_room { order: 2; }
+    .evrc-group-arriving { order: 3; }
+    .evrc-group-done { order: 4; }
+}
 .evrc-row { display: flex; align-items: stretch; gap: 10px; }
 .evrc-row .evpc-today-row { flex: 1; min-width: 0; }
 .evrc-call { align-self: center; min-width: 120px; }

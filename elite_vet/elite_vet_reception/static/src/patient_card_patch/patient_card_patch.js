@@ -1,6 +1,6 @@
 /** @odoo-module **/
-// Staged "Moji pacienti dnes" of the patient card (elite_vet_clinic): Čekají (Zavolat),
-// V ordinaci, Objednaní – ještě nepřišli, Hotovo dnes. Items come from my_patients_today
+// Staged "Moji pacienti dnes" of the patient card (elite_vet_clinic): Dnes jsou objednaní
+// (ještě nepřišli), Čekají (Zavolat), V ordinaci, Hotovo dnes; narrow screens: Čekají first. Items come from my_patients_today
 // (extended in models/patient_card.py with group, visit_stage, arrived_time, waiting_minutes).
 // Ruling R5: opening the card on today's waiting record calls the patient in (once).
 import { onWillUnmount, useState } from "@odoo/owl";
@@ -15,9 +15,10 @@ const POLL_MS = 30000;
 
 // Task 26: the same names, order and state colours as the screen Ordinace.
 export const PATIENT_GROUPS = [
+    { key: "arriving", state: "booked", title: "Dnes jsou objednaní", hint: "ještě nepřišli",
+      empty: "Všichni objednaní už přišli." },
     { key: "waiting", state: "waiting", title: "Čekají", empty: "Nikdo nečeká." },
     { key: "in_room", state: "in_room", title: "V ordinaci", empty: "V ordinaci nikdo není." },
-    { key: "arriving", state: "booked", title: "Dnes ještě přijdou", empty: "Všichni objednaní už přišli." },
     { key: "done", state: "done", title: "Hotovo dnes", empty: "Zatím nic hotového." },
 ];
 

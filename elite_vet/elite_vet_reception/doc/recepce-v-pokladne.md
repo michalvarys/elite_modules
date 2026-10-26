@@ -142,6 +142,10 @@ WinVetu jako vyřízené se neukazují.
   **+ Nové zvíře**), vyberte zvíře a stiskněte **Přiřadit k objednávce**. Potom má řádek zvíře
   a **Přijmout** jako ostatní; obrazovka Ordinace u objednávky nabídne Otevřít kartu a tabule
   ukazuje jméno zvířete.
+
+  ![Spárovat s objednávkou z WinVetu](img/ordinace-sparovat.png)
+
+  (Na obrázku je stejný dialog otevřený z obrazovky Ordinace.)
 - Spárování se uloží **jen v Odoo**, ve WinVetu se nic nemění a další přenos z WinVetu ho
   nepřepíše. Když ve WinVetu objednávce pacienta doplní, platí ten z WinVetu.
 - **Zrušit spárování** (u spárovaného řádku a v dialogu Spárovat…) vrátí objednávku mezi
@@ -523,10 +527,13 @@ Pacient vypadá stejně jako na obrazovce Ordinace: vlevo barevný pruh s časem
 
 | Skupina | Kdo v ní je |
 |---|---|
+| **Dnes jsou objednaní** (ještě nepřišli) | dnešní rezervace, které recepce ještě nepřijala |
 | **Čekají** | recepce je přijala, podle příchodu: velký čas příchodu, „Čeká 6 min“, tlačítko **Zavolat**. Neobjednaní mají „bez objednání“; neobjednaní bez lékařky mají „**Kterákoli lékařka**“ a vidí je všechny lékařky. |
 | **V ordinaci** | zavolaní, „V ordinaci od 18:15“ |
-| **Dnes ještě přijdou** | dnešní rezervace, které recepce ještě nepřijala |
 | **Hotovo dnes** | uzavřené návštěvy (Hotovo, k pokladně) |
+
+Pořadí je stejné jako na obrazovce Ordinace; na užší obrazovce (pod 1100 px) jsou Čekají první,
+pak V ordinaci, Dnes jsou objednaní a Hotovo dnes.
 
 Seznam se obnovuje sám, jakmile recepce někoho přijme (záložně každých 30 s).
 

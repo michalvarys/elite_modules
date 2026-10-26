@@ -40,9 +40,12 @@
 .evrm-bar-toggle { color: var(--ev-waiting); &:hover:not(:disabled) { background: rgba(255, 255, 255, .6); color: var(--ev-ink); } }
 .evrm-bar-list { margin: 8px 0 4px; }
 
-// the flow: Čekají | V ordinaci | Dnes ještě přijdou
+// the flow: Dnes jsou objednaní | Čekají | V ordinaci (Hotovo under the last one)
 .evrm-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
 .evrm-stage { min-width: 0; }
+// "ještě nepřišli" under Dnes jsou objednaní: the arrived ones are in Čekají / V ordinaci
+.evrm-section-hint { margin: -2px 0 8px; font-size: var(--ev-fs-meta); color: var(--ev-muted); }
+.evrm-section .evrm-section-hint { margin: -6px 0 0; }
 .evrm-done { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .evrm-done-toggle {
     align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px;
@@ -96,8 +99,12 @@
     .evrm-flow { gap: 16px; }
 }
 @media (max-width: 1099.98px) {
-    // tablet: the flow becomes a list (Čekají, V ordinaci, Dnes ještě přijdou)
+    // tablet (also 1024 px landscape): the flow becomes a list and the waiting patients come first
+    // (Čekají, V ordinaci with Hotovo, Dnes jsou objednaní) – they matter most when space is short
     .evrm-flow { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .evrm-stage.ev-group-waiting { order: 1; }
+    .evrm-stage.ev-group-in_room { order: 2; }
+    .evrm-stage.ev-group-booked { order: 3; }
     .evrm-toolbar { padding: 12px 16px; }
     .evrm-room { padding: 16px; }
     .evrm-columns { padding: 12px 16px; }

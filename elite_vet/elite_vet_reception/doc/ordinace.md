@@ -59,10 +59,10 @@ Pod ním jsou sloupce **Nepřiřazení** a pak jedna ordinace vedle druhé. V hl
 kdo v ní **teď slouží** (podle Rozpisu lékařů), nebo „Teď nikdo ve službě“.
 
 Ve sloupci jsou části ve stejném pořadí jako v jedné ordinaci:
+- **Dnes jsou objednaní** (ještě nepřišli): dnešní objednávky této ordinace, klient ještě nedorazil
+  nebo ho recepce ještě nepřijala. Tyto karty nejdou přesouvat,
 - **Čekají**: pacient přišel a recepce ho přijala,
 - **V ordinaci**: pacient je zavolaný,
-- **Dnes ještě přijdou**: dnešní rezervace této ordinace, klient ještě nepřišel. Tyto karty nejdou
-  přesouvat,
 - **Hotovo dnes: N**: uzavřené návštěvy, sbalené; klikem se rozbalí.
 
 Prázdná část se neukazuje; prázdná ordinace má jen „Nikdo tu není.“
@@ -85,9 +85,14 @@ oranžový pruh „**2 pacienti čekají na ordinaci**“:
 - **Vzít dalšího** vezme do této ordinace toho, kdo čeká **nejdéle**;
 - **Zobrazit** rozbalí jejich seznam; u každého je **Vzít do této ordinace**.
 
-Pod pruhem jsou zleva doprava tři sloupce: **Čekají** (nejdéle čekající nahoře) | **V ordinaci** |
-**Dnes ještě přijdou**. Pod posledním je sbalené **Hotovo dnes: N**. Prázdný sloupec má jen
-krátký řádek („Nikdo nečeká.“). Na tabletu na výšku jsou sloupce pod sebou ve stejném pořadí.
+Pod pruhem jsou zleva doprava tři sloupce, jak den plyne: **Dnes jsou objednaní** (ještě
+nepřišli) | **Čekají** (nejdéle čekající nahoře) | **V ordinaci**. Pod posledním je sbalené
+**Hotovo dnes: N**. Prázdný sloupec má jen krátký řádek („Všichni objednaní už přišli.“,
+„Nikdo nečeká.“). Kdo přišel, už mezi objednanými není – je v Čekají nebo V ordinaci.
+
+Na užší obrazovce (tablet, i 1024 px na šířku) jsou sloupce pod sebou a **Čekají jsou první**,
+pak V ordinaci (s Hotovo dnes) a nakonec Dnes jsou objednaní – když je málo místa, jsou
+nejdůležitější pacienti, kteří už čekají.
 
 - **Zavolat** (u čekajícího): pacient jde do stavu V ordinaci a do této ordinace.
 - **Otevřít kartu** (u pacienta v ordinaci, ostatní v nabídce …): otevře kartu pacienta na dnešní
@@ -121,9 +126,12 @@ lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
   (nabídka …). Zavolat může jen sestra nebo lékařka.
 
 **Objednávky z WinVetu bez karty.** Objednávka z WinVetu, ve které je jen text (bez pacienta),
-je v „Dnes ještě přijdou“ s textem z WinVetu. V nabídce **…** je **Spárovat…**: otevře Kartotéku
+je v „Dnes jsou objednaní“ s textem z WinVetu. V nabídce **…** je **Spárovat…**: otevře Kartotéku
 (stejnou jako v pokladně), kde najdete nebo založíte klienta a zvíře a stisknete **Přiřadit
-k objednávce**. Pak je u objednávky zvíře a v nabídce **Otevřít kartu**. Spárovat můžou recepce,
+k objednávce**. Pak je u objednávky zvíře a v nabídce **Otevřít kartu**.
+
+![Spárovat s objednávkou z WinVetu](img/ordinace-sparovat.png)
+ Spárovat můžou recepce,
 sestra i lékařka; uloží se jen v Odoo (viz návod Recepce v pokladně › Objednaní ve WinVetu).
 
 „Moji pacienti dnes“ v kartě pacienta ukazují lékařce s vlastním účtem její dnešní pacienty.

@@ -3,7 +3,8 @@
 // by consultation room. Top switch Všechny ordinace | <room> …:
 // - Všechny ordinace: columns Nepřiřazení + one per room; arrived patients are dragged between
 //   columns (or "…" › Do jiné ordinace on touch screens).
-// - one room: the flow Čekají | V ordinaci | Dnes ještě přijdou (Hotovo dnes folded under it),
+// - one room: the flow Dnes jsou objednaní | Čekají | V ordinaci (Hotovo dnes folded under the
+//   last one; stacked on narrow screens: Čekají, V ordinaci, Dnes jsou objednaní – CSS order),
 //   above it one bar with the unassigned patients: Vzít dalšího / Zobrazit.
 // Task 26: one design system (.ev-clinic, elite_vet_clinic/static/src/clinic_ui), every patient
 // is the shared visit tile with one primary action by state and the rest in the "…" menu.
@@ -24,11 +25,12 @@ const POLL_MS = 30000;
 const VIEW_KEY = "elite_vet_reception.room_view";   // remembered choice of this browser
 const ALL = "all";
 
-// Left to right in the room, top to bottom in a column of Všechny ordinace; Hotovo is folded.
+// Left to right in the room, top to bottom in a column of Všechny ordinace; Hotovo is folded
+// under the last one. Feedback 26. 10.: the day reads from the booked ones to the room.
 export const ROOM_SECTIONS = [
+    { key: "booked", title: "Dnes jsou objednaní", hint: "ještě nepřišli", empty: "Všichni objednaní už přišli." },
     { key: "waiting", title: "Čekají", empty: "Nikdo nečeká." },
     { key: "in_room", title: "V ordinaci", empty: "V ordinaci nikdo není." },
-    { key: "booked", title: "Dnes ještě přijdou", empty: "Dnes už nikdo objednaný." },
 ];
 
 function errorMessage(e) { return e?.data?.message || e?.message || String(e); }

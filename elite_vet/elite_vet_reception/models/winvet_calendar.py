@@ -82,7 +82,7 @@ class ReceptionWinvetCalendar(models.AbstractModel):
 
     @api.model
     def _winvet_room_booked(self, day):
-        """Items of "Dnes ještě přijdou" on the screen Ordinace for today's WinVet client
+        """Items of "Dnes jsou objednaní" on the screen Ordinace for today's WinVet client
         appointments (`_winvet_client_events`) in the first mapped room of the entry; a pet paired
         at the reception counts like a WinVet match (Otevřít kartu), without one: Spárovat…."""
         if not calendar_enabled(self.env):
@@ -111,7 +111,7 @@ class ReceptionWinvetCalendar(models.AbstractModel):
 
     @api.model
     def room_board(self, day=None):
-        """WinVet appointments of the day join "Dnes ještě přijdou" of their room (read-only)."""
+        """WinVet appointments of the day join "Dnes jsou objednaní" of their room (read-only)."""
         data = super().room_board(day)
         extra = self._winvet_room_booked(self._day(day))
         for column in data["columns"]:

@@ -898,3 +898,8 @@ SELECT count(*) AS sparovano FROM elite_vet_winvet_calendar_event WHERE manual_p
 
 **Tip pro kliniku:** ve WinVetu při objednávání vždy vyberte pacienta (nejen text). Taková
 objednávka se v Odoo spáruje sama.
+
+Ve stejné větvi (stejný `-u`, jen vzhled): obrazovka Ordinace a Moji pacienti dnes mají pořadí
+**Dnes jsou objednaní** (dřív „Dnes ještě přijdou“, s řádkem „ještě nepřišli“) | **Čekají** |
+**V ordinaci**, Hotovo dnes sbalené pod posledním. Na užší obrazovce (pod 1100 px) jsou pod sebou
+s Čekají první.
