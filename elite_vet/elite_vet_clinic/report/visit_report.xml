@@ -65,7 +65,7 @@
                     <table class="evr-visit">
                         <tr>
                             <td class="evr-visit-when">Datum a čas: <b><t t-out="r['visit_date']"/><t t-if="r['visit_time']">, <t t-out="r['visit_time']"/></t></b></td>
-                            <td t-if="r['doctor']" class="evr-visit-doctor">Ošetřující lékař: <b t-out="r['doctor']['name']"/><t t-if="r['doctor']['kvl']"> · č. KVL <t t-out="r['doctor']['kvl']"/></t></td>
+                            <td t-if="r['doctor']" class="evr-visit-doctor">Ošetřující lékař/ka: <b t-out="r['doctor']['name']"/><t t-if="r['doctor']['kvl']"> · č. KVL <t t-out="r['doctor']['kvl']"/></t></td>
                         </tr>
                     </table>
 
@@ -143,7 +143,7 @@
                             </td>
                             <td class="evr-sign-box">
                                 <div class="evr-sign-space"/>
-                                <div class="evr-sign-line">Podpis a razítko lékaře<t t-if="r['doctor']"><br/><t t-out="r['doctor']['name']"/></t></div>
+                                <div class="evr-sign-line">Podpis a razítko lékaře/ky<t t-if="r['doctor']"><br/><t t-out="r['doctor']['name']"/></t></div>
                             </td>
                         </tr>
                     </table>

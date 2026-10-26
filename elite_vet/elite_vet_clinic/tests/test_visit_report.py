@@ -56,7 +56,7 @@ class TestVisitReport(ClinicCase):
                      "Bolestivost karpu vlevo.", "Diagnóza a doporučení", "Distorze karpu.", "Klidový režim 10 dní.",
                      "Provedené výkony a podané léky", "Klinické vyšetření testovací", "Vakcína testovací DHPPi",
                      "0,5 dávka", "Příští vakcinace", "14. 3. 2027", "Příští odčervení", "9. 1. 2027",
-                     "MVDr. Zdeňka Ordinační-Testová", "č. KVL KVL-4711", "Podpis a razítko lékaře",
+                     "MVDr. Zdeňka Ordinační-Testová", "č. KVL KVL-4711", "Ošetřující lékař/ka:", "Podpis a razítko lékaře/ky",
                      "Místo a datum", "09:30"):
             self.assertIn(text, html)
         self.assertRegex(html, r"Kulhá na levou hrudní\.<br\s*/?>\s*Od včerejška\.")   # line breaks kept
