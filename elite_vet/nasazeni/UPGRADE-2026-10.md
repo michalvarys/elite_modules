@@ -801,3 +801,40 @@ Kontrola:
 
 Návod s obrázky: `elite_vet_reception/doc/ordinace.md` (kapitoly 2–4 a 7).
 
+## Doplnění: zpětná vazba 26. 10.
+
+Větev `feature/elite-vet-feedback-1026b`. Cílový kód:
+- `elite_vet_clinic` 18.0.1.6.0 (zpráva „lékař/ka“, zpráva z návštěvy z WinVetu, záhlaví karty
+  a šířka sloupců);
+- `elite_vet_reservation` 18.0.2.10.0 (okno přesunu / potvrzení s časem **Do**);
+- `elite_vet_reception` 18.0.1.13.0 (totéž okno na tabuli v pokladně).
+
+Schéma se nemění (žádný nový sloupec). Přibude jen záznam reportu „Zpráva z vyšetření“ pro
+návštěvy z WinVetu. Pravidla a záloha jako v krocích 2–3, pak:
+
+```bash
+docker compose stop odoo
+docker compose run --rm odoo odoo -d DATABAZE -u elite_vet_reservation,elite_vet_clinic,elite_vet_reception --stop-after-init --no-http 2>&1 | tee upgrade-1026b-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-1026b-*.log      # nesmí nic najít
+docker compose start odoo
+```
+
+Po aktualizaci obnovte stránku natvrdo (Ctrl+Shift+R) na počítačích, tabletech i v pokladně.
+
+Kontrola:
+- tabule rezervací: přetáhněte rezervaci → v okně jsou **Datum**, **Od**, **Do**, **Ordinace**;
+  změna **Do** rezervaci prodlouží / zkrátí, věta „na …“ ukazuje oba časy; obsazený čas
+  v prodloužení okno odmítne a nechá otevřené;
+- stejné okno v pokladně › Tabule a u potvrzení žádosti z webu;
+- formulář rezervace: po změně Začátku se Konec posune se stejnou délkou a dá se přepsat;
+- karta pacienta: záhlaví na dva řádky; při šířce 1280 px a víc jde přetáhnout dělič mezi
+  sloupci, dvojklik vrátí šířku, po obnovení stránky šířka zůstane;
+- karta pacienta › Historie: u návštěvy z WinVetu je ikona tisku → PDF s měřením, textem
+  záznamu, diagnózou a položkami **bez cen**; ve zprávě je „Ošetřující lékař/ka“ a „Podpis
+  a razítko lékaře/ky“. Uživatele WinVetu propojte s lékařkami (WinVet data › Uživatelé WinVet),
+  jinak zpráva z WinVetu lékařku neuvede.
+
+```sql
+SELECT report_name, model FROM ir_act_report_xml WHERE report_name LIKE 'elite_vet_clinic.report_%visit%';
+SELECT name, latest_version FROM ir_module_module WHERE name IN ('elite_vet_reservation','elite_vet_clinic','elite_vet_reception');
+```

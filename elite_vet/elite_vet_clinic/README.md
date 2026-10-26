@@ -194,6 +194,27 @@ Jeden designový systém pro kartu pacienta, Moji pacienti dnes a obrazovku Ordi
   900 px vše pod sebou. Záhlaví: štítek návštěvy (`visitChip`, z `visit_stage`, `arrived_time`,
   `called_time` z elite_vet_reception) a „Ošetřuje“. Šablona textu = ikona v záhlaví pole.
 
+## Zpětná vazba 26. 10. (úkol 28)
+
+- Zpráva: „Ošetřující lékař/ka“, „Podpis a razítko lékaře/ky“ (UI beze změny).
+- **Zpráva z návštěvy z WinVetu**: report `elite_vet_clinic.report_winvet_visit` na
+  `elite.vet.visit` (`report_name` `elite_vet_clinic.report_winvet_visit_document`, stejný
+  paperformat, Tisk pro Recepci a výš). Obě šablony volají společné tělo
+  `elite_vet_clinic.report_visit_body`, které tiskne jen `o._visit_report_data()`. U návštěvy
+  z WinVetu (`WinvetVisitReport` v `models/visit_report.py`): datum a čas, lékařka jen přes
+  `entered_by_id.doctor_id` (jinak nic – zapisovat mohla sestra), měření (`vitals_rows`, jeden
+  řádek na měření), text `notes` (DENNI_ZAZNAM.DEKURS) jako „Záznam z vyšetření“, diagnóza
+  (`diagnosis_name`, jinak `case_name`; případ zvlášť, liší-li se) a řádky `line_ids` (čteno přes
+  sudo, název + množství, bez cen; řádky s jednotkou „měna“ = převody peněz se vynechají).
+  `winvet_note` zvířete je interní a nikdy se netiskne. `_timeline` posílá u návštěvy
+  `printable` (`_visit_report_has_content()`); karta pak ukáže ikonu tisku i u ní.
+- Karta pacienta: záhlaví má dva husté řádky (`.evpc-pat-row`), ~95 px při 1920 px.
+  Sloupce historie | záznam | účet mají při ≥ 1280 px děliče `.evpc-split` (role `separator`):
+  pointer events (myš i dotyk), šipky / Home / End na zaměřeném děliči, dvojklik = výchozí šířka.
+  Šířky (historie 240–560, výchozí 320; účet 300–560, výchozí 380; záznam ≥ 440 px) jsou
+  v `localStorage` pod `elite_vet_clinic.card_columns` (v try/catch), do mřížky jdou jako
+  `--evpc-w-history` / `--evpc-w-bill`. Pod 1280 px děliče nejsou.
+
 ## Testy
 
 `bash elite_vet/nasazeni/testy-clinic.sh` (poprvé, instalace), dál

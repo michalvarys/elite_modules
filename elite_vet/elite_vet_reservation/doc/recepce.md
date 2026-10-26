@@ -295,10 +295,13 @@ Vraťte se **Zpět** a vyberte jiný čas.
 
 1. Chyťte kartu na tabuli a přetáhněte ji na jiný čas nebo do jiné ordinace.
 2. Čas se zaokrouhlí na nejbližší krok (obvykle 15 minut).
-3. Po puštění se otevře okno „Přesunout?“ s políčky **Datum**, **Čas** a **Ordinace**
+3. Po puštění se otevře okno „Přesunout?“ s políčky **Datum**, **Od**, **Do** a **Ordinace**
    předvyplněnými podle místa puštění a větou, např. „Přesunout Rex (Jan Novák) z čt 29. 10.
    9:00–9:20, Ordinace 1 na čt 29. 10. 10:00–10:20, Ordinace 2?“. Netrefili-li jste se, opravte
    čas (po krocích rezervací), datum nebo ordinaci přímo v okně – věta „na …“ se mění s nimi.
+   **Do** je předvyplněné podle dosavadní délky a posouvá se s **Od**; přepsáním **Do** rezervaci
+   prodloužíte nebo zkrátíte (konec musí být po začátku). Volný čas a lékařka ve službě se
+   kontrolují pro celý nový čas od–do.
 4. Když klient dostane e-mail o změně termínu (potvrzená rezervace s e-mailem a jiný den nebo
    čas), okno to napíše i s adresou a ukáže zaškrtnuté **Poslat klientovi e-mail o změně**.
    Odškrtnete-li ho, tento jeden přesun proběhne bez e-mailu a v historii rezervace zůstane
@@ -308,7 +311,9 @@ Vraťte se **Zpět** a vyberte jiný čas.
    i přesun blokace.
 
 Na jiný den přesunete rezervaci také v tomto okně (políčko **Datum**), nebo ve formuláři
-(klikněte na kartu a změňte **Začátek**).
+(klikněte na kartu a změňte **Začátek** a případně **Konec**). Ve formuláři se po změně
+Začátku Konec posune tak, aby rezervace měla stejnou délku jako dosud; pak můžete Konec
+přepsat. Nejdřív tedy měňte Začátek, potom Konec.
 
 Je-li cílový čas obsazený, objeví se v okně červená hláška „Termín … v ordinaci … je
 obsazený: …“, okno zůstane otevřené a rezervace na původním místě – zvolte jiný čas a zkuste

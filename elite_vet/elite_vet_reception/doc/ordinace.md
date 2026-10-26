@@ -170,10 +170,11 @@ a kolik řádků se přeskočilo a proč.
 
 ![Karta pacienta](img/ordinace-v-ordinaci.png)
 
-- **Záhlaví:** jméno zvířete velkým písmem, pod ním druh, plemeno, pohlaví a věk; majitel
-  s telefonem, váha, čip, očkování. Vpravo stav dnešní návštěvy („**V ordinaci od 9:25**“,
-  „Čeká od 9:05“, „Hotovo, čeká u pokladny“) a **Ošetřuje: MVDr. …**. Upozornění (kouše,
-  alergie…) jsou velké červené štítky; klikem se upraví.
+- **Záhlaví** má dva řádky: nahoře jméno zvířete, druh, plemeno, pohlaví a věk, stav dnešní
+  návštěvy („**V ordinaci od 9:25**“, „Čeká od 9:05“, „Hotovo, čeká u pokladny“),
+  **Ošetřuje MVDr. …** a vpravo **Upozornění** a **Upravit pacienta**; pod tím majitel
+  s telefonem, váha, čip, očkování a červené štítky upozornění (kouše, alergie…) – klikem se
+  upraví. Důležitá poznámka u pacienta je oranžový štítek (celý text v bublině).
 - **Dnešní záznam** je uprostřed: čtyři velká pole vitálních hodnot s jednotkami, Anamnéza,
   Vyšetření, Diagnóza a doporučení. Šablonu textu vložíte ikonou listu vpravo nad polem.
   Záznam se ukládá sám: ikona mráčku = nic neuloženého, „Ukládám…“, pak „✓ Uloženo 9:31“.
@@ -181,6 +182,11 @@ a kolik řádků se přeskočilo a proč.
   recepci**, dole celkem, **Hotovo, k pokladně** a **Zpráva pro majitele**.
 - **Historie** je vlevo. Na menší obrazovce (pod 1280 px) je sbalená pod záznamem a účtem –
   rozbalí se šipkou u nadpisu. Na tabletu na výšku je všechno pod sebou: záznam, účet, historie.
+- **Šířka sloupců** (obrazovka 1280 px a širší): mezi Historií, Dnešním záznamem a Účtem je
+  svislý dělič. Chyťte ho myší nebo prstem a táhněte; nebo na něj klikněte (Tab) a použijte
+  šipky ← → (se Shiftem po větších krocích), Home/End = nejužší/nejširší. **Dvojklik** vrátí
+  původní šířku. Dnešní záznam má vždy aspoň 440 px. Šířky si pamatuje prohlížeč (každý počítač
+  a tablet zvlášť); v anonymním okně platí jen do obnovení stránky.
 
 ## 8. Tisk zprávy
 
@@ -192,8 +198,10 @@ i vedení.
   Nejdřív se uloží, co je rozepsané, a PDF se otevře v nové záložce prohlížeče. Odtud se tiskne
   nebo ukládá. Tlačítko je šedé („Nejdřív vyplňte záznam“), dokud záznam nemá žádný text,
   vitální hodnotu ani položku účtu.
-- **Karta pacienta › Historie**: ikona tiskárny u každé dřívější návštěvy zapsané v Odoo.
-  Návštěvy z WinVetu se netisknou.
+- **Karta pacienta › Historie**: ikona tiskárny u každé dřívější návštěvy zapsané v Odoo
+  i u **návštěvy převzaté z WinVetu** (když má text, diagnózu, měření nebo položky).
+- **WinVet data › Návštěvy**, formulář nebo seznam návštěvy z WinVetu: **Tisk › Zpráva
+  z vyšetření**.
 - **Ordinace › Záznamy návštěv**, formulář nebo seznam: menu **Tisk › Zpráva z vyšetření**. Soubor
   se stáhne jako `Zprava_<zvíře>_<datum>.pdf`. Ze seznamu jde vytisknout víc záznamů najednou.
 - **Pokladna › Dnes › K pokladně**: ikona tiskárny u účtu, aby recepce mohla zprávu předat
@@ -214,8 +222,18 @@ i vedení.
 - **Provedené výkony a podané léky**: název a množství s jednotkou, **bez cen**. U léků je
   šarže a exspirace, jakmile je účet zaplacený v pokladně (šarže se vezme z výdeje ze skladu);
 - **Další termíny**: příští vakcinace a odčervení zvířete;
-- **Místo a datum** (den tisku), rámeček pro **podpis a razítko lékaře** a čísla stránek.
+- **Místo a datum** (den tisku), rámeček pro **podpis a razítko lékaře/ky** a čísla stránek.
+  Lékař se ve zprávě jmenuje „Ošetřující lékař/ka“.
+
+**Zpráva z návštěvy z WinVetu** má stejnou hlavičku, pacienta, majitele a podpis. Místo
+Anamnézy a Vyšetření je oddíl **Záznam z vyšetření**: měření z WinVetu (čas, teplota,
+hmotnost, tep, dech, tlak) a text záznamu (*Dekurz*) tak, jak je ve WinVetu napsaný (i s jeho
+nadpisy „Anamnéza:“, „Klinické vyšetření:“). Pak **Diagnóza** (a *Případ*, liší-li se),
+**Provedené výkony a podané léky** z účtu té návštěvy ve WinVetu – název a množství, bez cen;
+převody peněz („Převod nedoplatku…“) se vynechají – a Další termíny. Ošetřující lékař/ka se
+uvede, jen když je uživatel WinVetu, který návštěvu zapsal, propojený s lékařkou v Odoo
+(WinVet data › Uživatelé WinVet); jinak zpráva jméno nemá, protože zapisovat mohla i sestra.
 
 **Co ve zprávě nikdy není:** poznámka recepce, poznámka pro recepci, upozornění na zvířeti
-(kouše, alergie…), ceny a částky, stav platby, kdo záznam zapsal, poznámky z WinVetu
-a „Důležité“ u zvířete.
+(kouše, alergie…), ceny a částky, stav platby, kdo záznam zapsal, poznámka zvířete
+z WinVetu (*Poznámka* v kartě zvířete je interní) a „Důležité“ u zvířete.
