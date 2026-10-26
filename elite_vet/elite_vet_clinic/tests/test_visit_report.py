@@ -26,9 +26,8 @@ class TestVisitReport(ClinicCase):
         cls.full = cls.Record.create({
             "pet_id": cls.pet.id, "doctor_id": cls.doctor.id, "start": cls.today_utc(cls, 9, 30),
             "temperature": 38.6, "weight": 15.4, "heart_rate": 96, "respiratory_rate": 24,
-            "anamnesis": "Kulhá na levou hrudní.\nOd včerejška.",
-            "examination": "Bolestivost karpu vlevo.",
-            "diagnosis": "Distorze karpu.\nKlidový režim 10 dní.",
+            "record_text": "Anamnéza:\nKulhá na levou hrudní.\nOd včerejška.\n\nVyšetření:\nBolestivost karpu vlevo."
+                           "\n\nDiagnóza a doporučení:\nDistorze karpu.\nKlidový režim 10 dní.",
             "reception_note": "RECEPCEINTERNI platí převodem",
             "room_note": "ORDINACEINTERNI objednat na kontrolu",
             "line_ids": [(0, 0, {"item_id": cls.exam.id, "quantity": 1, "price_unit": 777.0}),
@@ -51,9 +50,9 @@ class TestVisitReport(ClinicCase):
         html = self.render(self.full)
         for text in ("Zpráva z vyšetření", "Azor Klinický", "Pes", "bígl", "trikolóra", "203 098 100 555 777",
                      "TT-55", "CZ-PAS-0099", "Majitelka Klinická-Testová", "Lázeňská 12, 360 01 Karlovy Vary",
-                     "777 654 321", "Anamnéza", "Kulhá na levou hrudní.", "Od včerejška.",
-                     "Klinické vyšetření", "teplota 38,6 °C", "hmotnost 15,4 kg", "tep 96/min", "dech 24/min",
-                     "Bolestivost karpu vlevo.", "Diagnóza a doporučení", "Distorze karpu.", "Klidový režim 10 dní.",
+                     "777 654 321", "Záznam z vyšetření", "Kulhá na levou hrudní.", "Od včerejška.",
+                     "teplota 38,6 °C · hmotnost 15,4 kg · tep 96/min · dech 24/min",
+                     "Bolestivost karpu vlevo.", "Diagnóza a doporučení:", "Distorze karpu.", "Klidový režim 10 dní.",
                      "Provedené výkony a podané léky", "Klinické vyšetření testovací", "Vakcína testovací DHPPi",
                      "0,5 dávka", "Příští vakcinace", "14. 3. 2027", "Příští odčervení", "9. 1. 2027",
                      "MVDr. Zdeňka Ordinační-Testová", "č. KVL KVL-4711", "Ošetřující lékař/ka:", "Podpis a razítko lékaře/ky",
@@ -79,20 +78,20 @@ class TestVisitReport(ClinicCase):
     def test_minimal_report_omits_empty_sections(self):
         bare_pet = self.env["elite.vet.pet"].create({"name": "Mourek Holý", "partner_id": self.owner.id,
                                                      "species": "cat"})
-        record = self.Record.create({"pet_id": bare_pet.id, "diagnosis": "Zdráv."})
+        record = self.Record.create({"pet_id": bare_pet.id, "record_text": "Zdráv."})
         html = self.render(record)
         self.assertIn("Zdráv.", html)
         self.assertIn("Kočka", html)
-        for text in ("Anamnéza", "Klinické vyšetření", "Provedené výkony", "Příští vakcinace", "Příští odčervení",
+        for text in ("Anamnéza", "Klinické vyšetření", "Diagnóza", "Provedené výkony", "Příští vakcinace", "Příští odčervení",
                      "Plemeno", "Čip", "Tetování", "Číslo pasu", "Barva", "Narozen", "Ošetřující lékař", "KVL",
                      "Exspirace", "Šarže"):
             self.assertNotIn(text, html, text)
 
-    def test_vitals_only_show_examination_and_no_kvl_without_number(self):
+    def test_vitals_only_show_record_section_and_no_kvl_without_number(self):
         self.doctor.kvl_number = False
         record = self.Record.create({"pet_id": self.pet.id, "doctor_id": self.doctor.id, "weight": 4.25})
         html = self.render(record)
-        self.assertIn("Klinické vyšetření", html)
+        self.assertIn("Záznam z vyšetření", html)
         self.assertIn("hmotnost 4,25 kg", html)
         self.assertNotIn("teplota", html)
         self.assertIn("MVDr. Zdeňka Ordinační-Testová", html)
@@ -118,7 +117,7 @@ class TestVisitReport(ClinicCase):
             self.assertIn(text, html)
 
     def test_several_records_and_filename(self):
-        other = self.Record.create({"pet_id": self.pet.id, "anamnesis": "Druhá návštěva"})
+        other = self.Record.create({"pet_id": self.pet.id, "record_text": "Druhá návštěva"})
         html = self.render(self.full | other)
         self.assertEqual(html.count("evr-title"), 2)
         self.assertEqual(self.full._visit_report_filename(), "Zprava_Azor_Klinicky_%s" % self.full.date.isoformat())

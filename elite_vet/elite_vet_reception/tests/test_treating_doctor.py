@@ -54,7 +54,7 @@ class TestTreatingDoctor(ReceptionCase):
         return record
 
     def save(self, user, record, **vals):
-        return self.as_user(user).save_record(record.id, vals or {"anamnesis": "Text %s" % user.login})
+        return self.as_user(user).save_record(record.id, vals or {"record_text": "Text %s" % user.login})
 
     # ---------------------------------------------------------------- set / replace
     def test_edit_sets_an_empty_doctor(self):
@@ -111,7 +111,7 @@ class TestTreatingDoctor(ReceptionCase):
 
     def test_backend_form_edit(self):
         record = self.new_record()
-        record.with_user(self.user_a).write({"diagnosis": "Zdravý T23"})
+        record.with_user(self.user_a).write({"record_text": "Zdravý T23"})
         self.assertEqual(record.doctor_id, self.doc_a)
 
     # ---------------------------------------------------------------- keep
@@ -126,19 +126,19 @@ class TestTreatingDoctor(ReceptionCase):
     def test_first_treating_doctor_wins(self):
         record = self.new_record()
         self.save(self.user_a, record)
-        data = self.save(self.user_b, record, examination="Nález T23")
+        data = self.save(self.user_b, record, record_text="Nález T23")
         self.assertEqual(record.doctor_id, self.doc_a)
         self.assertEqual(record.other_doctor_ids, self.doc_b)
         self.assertEqual(data["other_doctors"], [self.doc_b.name])
         self.flush_tracking()
         self.assertTrue(record.message_ids.tracking_value_ids.filtered(
             lambda t: t.field_id.name == "other_doctor_ids"), "the later doctor is in the history")
-        self.save(self.user_b, record, diagnosis="Znovu T23")
+        self.save(self.user_b, record, record_text="Znovu T23")
         self.assertEqual(len(record.other_doctor_ids), 1)
 
     def test_own_choice_of_doctor_is_not_overwritten_by_the_same_save(self):
         record = self.new_record()
-        self.save(self.user_a, record, doctor_id=self.doc_c.id, anamnesis="S výběrem T23")
+        self.save(self.user_a, record, doctor_id=self.doc_c.id, record_text="S výběrem T23")
         self.assertEqual(record.doctor_id, self.doc_c, "doctor_id in the same save wins")
 
     # ---------------------------------------------------------------- no change

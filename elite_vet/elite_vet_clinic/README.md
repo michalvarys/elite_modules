@@ -9,9 +9,9 @@ Závisí na `elite_vet_winvet` (a přes něj na rezervacích a rozpisu lékařů
 | Model | Popis |
 |---|---|
 | `elite.vet.pet.alert` | Upozornění na pacientovi: druh `bites` Kouše / `allergy` Alergie / `other` Jiné, poznámka, aktivní. Na mazlíčkovi `alert_ids` a počítané `alert_summary` („Kouše; Alergie: penicilin“). |
-| `elite.vet.clinical.record` | Záznam návštěvy: pacient, majitel (related, uložený), lékařka, zapsal(a), rezervace (max. jeden záznam na rezervaci), čas `start`, den `date` (čas kliniky Europe/Prague), stav `draft` Rozepsaný / `done` Hotovo – k pokladně / `cancelled` Zrušeno (sledovaný v chatteru), teplota, váha, tep, dech, anamnéza, vyšetření, diagnóza a doporučení (čistý text), položky účtu, `amount_total` (CZK), interní `reception_note` Poznámka recepce (píše recepce při příjmu) a `room_note` Poznámka pro recepci (píše ordinace u Hotovo, k pokladně, ukáže se v pokladně) – obě sledované, klient je nikde nevidí. Váha uzavřeného záznamu se zapíše do `pet.weight`. |
+| `elite.vet.clinical.record` | Záznam návštěvy: pacient, majitel (related, uložený), lékařka, zapsal(a), rezervace (max. jeden záznam na rezervaci), čas `start`, den `date` (čas kliniky Europe/Prague), stav `draft` Rozepsaný / `done` Hotovo – k pokladně / `cancelled` Zrušeno (sledovaný v chatteru), teplota, váha, tep, dech, `record_text` Záznam z vyšetření (jeden čistý text; `record_summary` = jeho první řádek bez nadpisů, nestored – sloupec v seznamech). Pole `anamnesis`, `examination`, `diagnosis` jsou od 18.0.1.7.0 **zastaralá**: zůstávají v databázi, nikde se neukazují a kód je nezapisuje (úkol 32). Dál položky účtu, `amount_total` (CZK), interní `reception_note` Poznámka recepce (píše recepce při příjmu) a `room_note` Poznámka pro recepci (píše ordinace u Hotovo, k pokladně, ukáže se v pokladně) – obě sledované, klient je nikde nevidí. Váha uzavřeného záznamu se zapíše do `pet.weight`. |
 | `elite.vet.clinical.record.line` | Položka účtu: položka ceníku (`elite.vet.winvet.item`), název, druh (podle položky, volná položka „Jiné“), množství, jednotka, cena za jednotku (výchozí = cena s DPH z ceníku), částka, `bundle_id` když přišla z balíčku. |
-| `elite.vet.text.template` | Šablona textu: název, oddíl (anamnéza / vyšetření / diagnóza / kterýkoli), text, pořadí, `group_name` (skupina z WinVetu), `winvet_ref`, `edited_in_odoo`. |
+| `elite.vet.text.template` | Šablona textu: název, text, pořadí, `section` (zastaralé – zůstává kvůli datům, v UI není, karta nabízí všechny šablony), `group_name` (skupina z WinVetu), `winvet_ref`, `edited_in_odoo`. |
 | `elite.vet.procedure.bundle` (+ `.line`) | Balíček výkonů: název, kód, popis, položky (položka ceníku, název, množství, jednotka, pořadí), `winvet_ref`, `edited_in_odoo`; počítaný počet položek a cena podle ceníku. |
 
 Menu **Ordinace**: Karta pacienta (klientská akce `elite_vet_clinic.action_patient_card`, tag
@@ -86,18 +86,19 @@ kliniky `"HH:MM"`; prázdná měření (0) jsou `null`; texty záznamu jsou `""`
   },
   timeline: [ ...nejnovější první, řazeno podle (date, time)... ],
   today_record: RECORD | null,          // dnešní rozepsaný, jinak dnešní uzavřený; nic se nezakládá
-  templates: {anamnesis: [TPL], examination: [TPL], diagnosis: [TPL], any: [TPL]},
+  templates: [TPL],                     // všechny šablony (pořadí, název); oddíl už nerozhoduje
   bundles: [{id, code, name, description, line_count, amount}],
   doctors: [{id, name}],
   permissions: {can_write, can_edit_templates, is_manager},
   today: "YYYY-MM-DD"
 }
-TPL = {id, name, body, section, group_name}
+TPL = {id, name, body, group_name}
 ```
 Položky `timeline` (pole `type`):
 ```text
-record:      {type, id, date, time, doctor, diagnosis (1. řádek), summary (zkrácený text),
-              anamnesis, examination, diagnosis_text, state, state_label, vitals_summary, items [názvy], amount_total}
+record:      {type, id, date, time, doctor, title (1. řádek record_text bez nadpisů typu „Anamnéza:“),
+              summary (zkrácený text na jednom řádku), record_text, state, state_label, vitals_summary,
+              items [názvy], amount_total}
 visit:       {type, id, date, time, doctor (lékařka nebo kdo zapsal ve WinVetu), diagnosis, case_name,
               notes (dekurz), vitals: [{time, temperature, heart_rate, respiratory_rate, weight,
               bp_systolic, bp_diastolic, summary}], vitals_summary}
@@ -110,7 +111,7 @@ v Odoo (kromě zrušených) a z vitálních hodnot WinVetu.
 ```text
 {id, name, pet_id, partner_id, doctor_id, doctor_name, doctor_auto, other_doctors, user_name, reservation_id, start, date, time,
  state ("draft"|"done"|"cancelled"), state_label, temperature, weight, heart_rate, respiratory_rate,
- anamnesis, examination, diagnosis, reception_note (poznámka recepce | null),
+ record_text, reception_note (poznámka recepce | null),
  room_note (poznámka pro recepci, "" když není), room_note_editable (sestra/lékařka, záznam není zrušený),
  lines: [LINE], amount_total, currency ("Kč"), editable (rozepsaný a uživatel smí zapisovat)}
 LINE = {id, sequence, item_id, code, name, kind ("service"|"product"|"other"), kind_label, quantity, unit,
@@ -142,13 +143,13 @@ Všechny zápisy kromě `open_today_record` a `reopen_record` vyžadují rozepsa
 | Metoda | Co dělá |
 |---|---|
 | `open_today_record(pet_id, reservation_id=False, force_new=False)` | Záznam rezervace, pokud existuje; jinak dnešní rozepsaný záznam pacienta (u rezervace jen bez jiné rezervace; doplní se mu rezervace), jinak dnešní uzavřený; jinak nový rozepsaný. Lékařka z rezervace, jinak člen týmu uživatele (propojení `elite.vet.doctor.user_id`, bez něj shoda jména); taková lékařka je jen automatická (`doctor_auto`). `force_new=True` vždy založí nový (druhá návštěva týž den). Rezervace jiného pacienta → `UserError`. |
-| `save_record(record_id, vals)` | Zapíše jen `temperature, weight, heart_rate, respiratory_rate, anamnesis, examination, diagnosis, doctor_id`; ostatní klíče se ignorují. Čísla smí být řetězce s čárkou („38,5“), `null`/`""` = prázdné. |
+| `save_record(record_id, vals)` | Zapíše jen `temperature, weight, heart_rate, respiratory_rate, record_text, doctor_id`; ostatní klíče (i zastaralé `anamnesis, examination, diagnosis`) se ignorují. Čísla smí být řetězce s čárkou („38,5“), `null`/`""` = prázdné. |
 | `add_item(record_id, item_id, quantity=1)` | Přidá položku ceníku; stejná položka se sloučí (množství se sečte). |
 | `add_free_line(record_id, name, price_unit=0, quantity=1, kind="other")` | Volná položka mimo ceník. |
 | `add_bundle(record_id, bundle_id)` | Přidá všechny položky balíčku; položka, která už v účtu je, jen navýší množství. |
 | `update_line(line_id, vals)` | Jen `quantity, price_unit, name, unit, kind, sequence`. |
 | `remove_line(line_id)` | Smaže položku účtu. |
-| `apply_template(record_id, template_id, section)` | `section` ∈ `anamnesis, examination, diagnosis`; připojí text šablony za stávající text oddělený prázdným řádkem, uloží a vrátí `{section, text}`. Před voláním uložte rozepsaný text (`save_record`), jinak se připojí k uložené verzi. |
+| `apply_template(record_id, template_id, position=None)` | Úkol 32: vloží celý text šablony do `record_text` na `position` (kurzor, počet znaků od začátku); uprostřed řádku na vlastní řádek. Bez kurzoru (nebo s kurzorem za posledním textem) ho připojí na konec za prázdný řádek; prázdné pole = jen text šablony. Nikdy nic nepřepíše. Uloží a vrátí `{text, caret}` (`caret` = pozice za vloženým textem). Pravidlo je `insert_template_text` v `models/clinical_record.py`. Před voláním uložte rozepsaný text (`save_record`), šablona jde do uložené verze. |
 | `mark_done(record_id)` | Stav „Hotovo – k pokladně“; váha záznamu se zapíše pacientovi. |
 | `reopen_record(record_id)` | Jen lékařka/správce: uzavřený záznam zpět do rozepsaných. |
 | `save_room_note(record_id, note)` | Poznámka pro recepci (`room_note`, oříznutá, prázdná = smazat). Na rozdíl od ostatních zápisů jde i u uzavřeného záznamu, jen ne u zrušeného. |
@@ -162,8 +163,9 @@ PDF otevře `/report/pdf/elite_vet_clinic.report_visit_document/<id záznamu>` (
 pokladna).
 - Šablona `report/visit_report.xml` tiskne jen slovník `_visit_report_data()`
   (`models/visit_report.py`): hlavičku kliniky (`res.company`, chybějící údaje z `elite.vet.setting`),
-  pacienta, majitele, lékařku (`member_id.name` nebo `name`, `kvl_number`), texty, vitální
-  hodnoty, položky bez cen, příští vakcinaci a odčervení. `reception_note`, `room_note`,
+  pacienta, majitele, lékařku (`member_id.name` nebo `name`, `kvl_number`), jeden oddíl
+  „Záznam z vyšetření“ (`vitals_rows` = řádek vitálních hodnot, `record_text`; úkol 32 – zastaralá
+  pole se netisknou), položky bez cen, příští vakcinaci a odčervení. `reception_note`, `room_note`,
   upozornění, ceny ani poznámky z WinVetu do něj nikdy nejdou.
 - Šarže a exspirace položek: hook `_visit_report_lots()`. V tomto modulu je prázdný,
   `elite_vet_sale` ho plní ze zaplaceného účtu: šarže z řádku pokladny, jinak z výdeje skladu
@@ -192,7 +194,10 @@ Jeden designový systém pro kartu pacienta, Moji pacienti dnes a obrazovku Ordi
 - Karta: `.evpc` proměnné jsou aliasy tokenů. Základ 16 px; ≥ 1280 px tři sloupce (historie |
   záznam | účet), 900–1279 px záznam | účet a historie sbalená pod nimi (`state.historyOpen`), pod
   900 px vše pod sebou. Záhlaví: štítek návštěvy (`visitChip`, z `visit_stage`, `arrived_time`,
-  `called_time` z elite_vet_reception) a „Ošetřuje“. Šablona textu = ikona v záhlaví pole.
+  `called_time` z elite_vet_reception) a „Ošetřuje“. Úkol 32: jedno pole `record_text`
+  (`.evpc-record-text`, min. 280 px, roste s textem) a jedno tlačítko **Šablona** v jeho záhlaví
+  (Picker s hledáním; pozici kurzoru si karta pamatuje při opuštění pole, `onRecordTextBlur`,
+  a pošle ji do `apply_template` přepočtenou na znaky – `toCodePoints`).
 
 ## Zpětná vazba 26. 10. (úkol 28)
 
@@ -215,6 +220,24 @@ Jeden designový systém pro kartu pacienta, Moji pacienti dnes a obrazovku Ordi
   v `localStorage` pod `elite_vet_clinic.card_columns` (v try/catch), do mřížky jdou jako
   `--evpc-w-history` / `--evpc-w-bill`. Pod 1280 px děliče nejsou.
 
+## Jeden záznam z vyšetření (úkol 32)
+
+- Text návštěvy je jedno pole `record_text` („Záznam z vyšetření“). Karta, historie, zpráva,
+  ošetřující lékařka (`TREATING_FIELDS`), kontrola obsahu u Zrušit přijetí (elite_vet_reception),
+  seznamy, formulář a vyhledávání v backendu čtou a píšou jen ho.
+- `anamnesis`, `examination`, `diagnosis` jsou zastaralé (docstring modelu): zůstávají
+  v databázi, v pohledech nejsou, kód je nezapisuje.
+- Migrace `migrations/18.0.1.7.0/post-migrate.py` (`migrate_legacy_texts`) vyplní `record_text`
+  u záznamů, které ho mají prázdný a mají aspoň jeden starý text:
+  - jen vyplněné části, každá s nadpisem na vlastním řádku („Anamnéza:“, „Vyšetření:“,
+    „Diagnóza a doporučení:“), mezi nimi prázdný řádek;
+  - jediná vyplněná část = její text bez nadpisu.
+  
+  Je to čisté SQL (bez sledování změn, `write_date` zůstává) a je idempotentní: záznam, který
+  `record_text` už má, se nemění.
+- Šablony: `section` zůstává v modelu (most dál zakládá „any“, ručně zvolený oddíl se nepřepíše),
+  v pohledech není a karta nabízí všechny šablony.
+
 ## Testy
 
 `bash elite_vet/nasazeni/testy-clinic.sh` (poprvé, instalace), dál
@@ -225,7 +248,7 @@ Jeden designový systém pro kartu pacienta, Moji pacienti dnes a obrazovku Ordi
 
 Když lékařka přihlášená **vlastním účtem** (propojený v Rozpis služeb › Lékařky › Účet, člen týmu
 s *Lékařka – přijímá rezervace*, role Lékařka, ne účet ordinace) změní obsah záznamu návštěvy –
-vitální hodnoty, anamnézu, vyšetření, diagnózu, poznámku pro recepci, položky účtu, nebo ho uzavře
+vitální hodnoty, záznam z vyšetření (`record_text`), poznámku pro recepci, položky účtu, nebo ho uzavře
 (Hotovo) – v kartě pacienta i ve formuláři, zapíše se jako **Lékařka** záznamu, pokud tam žádná není
 nebo je jen automatická (`doctor_auto`: z rozpisu, z rezervace, výchozí při otevření karty).
 - Ručně vybraná lékařka (výběr v kartě, příjem s lékařkou) ani lékařka, kterou už zapsala úprava

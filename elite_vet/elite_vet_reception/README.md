@@ -91,7 +91,7 @@ Pravidla přijetí:
   Enter = potvrdit), u Čekárny a ordinace tlačítko Poznámka, v Kartotéce při Přijmout bez objednání
   textové pole.
 - **Zrušit přijetí** (úkol 29, `undo_check_in`, role Recepce a výš): jen dnešní rozepsaný záznam
-  ve stavu Čeká bez obsahu – anamnéza, vyšetření, diagnóza, vitální hodnoty, položky účtu, nabídka
+  ve stavu Čeká bez obsahu – `record_text` (záznam z vyšetření), vitální hodnoty, položky účtu, nabídka
   ani `room_note` (poznámka recepce nevadí). Jinak `UserError`: „Pacient už je v ordinaci – …“,
   „Záznam už má zápis od lékaře/ky – zrušit ho může ordinace.“, „Zrušit jde jen dnešní přijetí.“,
   „Návštěva je už uzavřená – …“, „Přijetí už bylo zrušené.“ Záznam se **zruší** (`action_cancel`,

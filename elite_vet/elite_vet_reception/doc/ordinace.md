@@ -166,7 +166,7 @@ je v Přístupových právech › Elite Vet jen pro čtení **Člen týmu**.
   a účet ordinace lékařku dál neurčují (zapisuje se podle rozpisu). Platí pro členy týmu se
   zaškrtnutým *Lékařka – přijímá rezervace*.
 - **Ošetřující lékařka v kartě pacienta:** když lékařka s vlastním účtem v záznamu návštěvy něco
-  změní (vitální hodnoty, anamnéza, vyšetření, diagnóza, poznámka pro recepci, položky účtu, Hotovo),
+  změní (vitální hodnoty, záznam z vyšetření, poznámka pro recepci, položky účtu, Hotovo),
   zapíše se jako lékařka záznamu – zase jen místo prázdné nebo automatické. Kdo byl první, zůstává;
   další lékařky, které záznam upraví, se ukážou jako „upravovaly také“ a jsou v historii záznamu.
   Nad záznamem je „**Ošetřuje:** MVDr. …“. Sestra a recepce lékařku úpravou nemění.
@@ -199,9 +199,24 @@ a kolik řádků se přeskočilo a proč.
   **Ošetřuje MVDr. …** a vpravo **Upozornění** a **Upravit pacienta**; pod tím majitel
   s telefonem, váha, čip, očkování a červené štítky upozornění (kouše, alergie…) – klikem se
   upraví. Důležitá poznámka u pacienta je oranžový štítek (celý text v bublině).
-- **Dnešní záznam** je uprostřed: čtyři velká pole vitálních hodnot s jednotkami, Anamnéza,
-  Vyšetření, Diagnóza a doporučení. Šablonu textu vložíte ikonou listu vpravo nad polem.
+- **Dnešní záznam** je uprostřed: čtyři velká pole vitálních hodnot s jednotkami a pod nimi jedno
+  velké pole **Záznam z vyšetření**: anamnéza, nález, diagnóza, léčba i doporučení v jednom textu.
+  Pole se zvětšuje s textem. Psát můžete po svém; nadpisy jako „Anamnéza:“ jsou na vás.
   Záznam se ukládá sám: ikona mráčku = nic neuloženého, „Ukládám…“, pak „✓ Uloženo 9:31“.
+- **Šablony** (tlačítko **Šablona** vpravo nad polem Záznam z vyšetření):
+  - Nabízí všechny šablony textů. Nahoře je hledání podle názvu i textu šablony, šipkami ↑ ↓
+    vyberete, Enter vloží, Esc zavře.
+  - Šablona se vloží **celá na místo kurzoru**: klikněte do textu tam, kam má přijít, a pak na
+    Šablona. Uprostřed řádku přijde na vlastní řádek.
+  - Když v poli kurzor nebyl, nebo stojí na konci textu, šablona se připojí **na konec za prázdný
+    řádek**. Prázdné pole dostane jen text šablony.
+  - Nic se nepřepíše, ani označený text. Kurzor pak stojí za vloženým textem, takže můžete psát
+    dál.
+  - Tlačítko jde ovládat i klávesnicí: Tab na Šablona, Enter, napsat hledání, Enter.
+- **Starší záznamy** z doby, kdy měl záznam tři pole: texty se při aktualizaci spojily do jednoho
+  pole s nadpisy „Anamnéza:“, „Vyšetření:“, „Diagnóza a doporučení:“ (jen vyplněné části). Záznam
+  s jedinou vyplněnou částí má jen ten text, bez nadpisu. V historii karty je jako první řádek
+  první věta textu (bez nadpisu).
 - **Účet** je vpravo: nahoře **Úkon** a **Lék ze skladu**, pod nimi položky, **Poznámka pro
   recepci**, dole celkem, **Hotovo, k pokladně** a **Zpráva pro majitele**.
 - **Historie** je vlevo. Na menší obrazovce (pod 1280 px) je sbalená pod záznamem a účtem –
@@ -240,17 +255,17 @@ i vedení.
 - **majitel**: jméno, adresa, telefon;
 - **návštěva**: datum a čas, ošetřující lékař s titulem a **číslem KVL**. Titul se bere z karty
   v týmu, jinak ze jména lékařky. Číslo KVL je v Rozpis služeb › Lékařky;
-- **Anamnéza**, **Klinické vyšetření** (teplota, hmotnost, tep a dech s jednotkami + text
-  vyšetření) a **Diagnóza a doporučení**. Řádky textu zůstanou, jak byly napsané, a dlouhý text
-  pokračuje na další stránce;
+- **Záznam z vyšetření**: jeden oddíl. Nahoře řádek s teplotou, hmotností, tepem a dechem
+  s jednotkami, pod ním text záznamu. Řádky textu zůstanou, jak byly napsané, a dlouhý text
+  pokračuje na další stránce. U návštěvy z WinVetu jsou to měření a dekurz, pod tím Diagnóza;
 - **Provedené výkony a podané léky**: název a množství s jednotkou, **bez cen**. U léků je
   šarže a exspirace, jakmile je účet zaplacený v pokladně (šarže se vezme z výdeje ze skladu);
 - **Další termíny**: příští vakcinace a odčervení zvířete;
 - **Místo a datum** (den tisku), rámeček pro **podpis a razítko lékaře/ky** a čísla stránek.
   Lékař se ve zprávě jmenuje „Ošetřující lékař/ka“.
 
-**Zpráva z návštěvy z WinVetu** má stejnou hlavičku, pacienta, majitele a podpis. Místo
-Anamnézy a Vyšetření je oddíl **Záznam z vyšetření**: měření z WinVetu (čas, teplota,
+**Zpráva z návštěvy z WinVetu** má stejnou hlavičku, pacienta, majitele a podpis. Oddíl
+**Záznam z vyšetření** má měření z WinVetu (čas, teplota,
 hmotnost, tep, dech, tlak) a text záznamu (*Dekurz*) tak, jak je ve WinVetu napsaný (i s jeho
 nadpisy „Anamnéza:“, „Klinické vyšetření:“). Pak **Diagnóza** (a *Případ*, liší-li se),
 **Provedené výkony a podané léky** z účtu té návštěvy ve WinVetu – název a množství, bez cen;

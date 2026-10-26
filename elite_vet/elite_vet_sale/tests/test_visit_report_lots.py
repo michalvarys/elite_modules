@@ -32,7 +32,7 @@ class TestVisitReportLots(SaleCase):
         data = api.open_today_record(self.pet.id, force_new=True)
         api.add_item(data["id"], self.vaccine.id)
         data = api.add_item(data["id"], self.exam.id)
-        api.save_record(data["id"], {"diagnosis": "Vakcinace provedena."})
+        api.save_record(data["id"], {"record_text": "Vakcinace provedena."})
         api.mark_done(data["id"])
         return self.Record.browse(data["id"])
 

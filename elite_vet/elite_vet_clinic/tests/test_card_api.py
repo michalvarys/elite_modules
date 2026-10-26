@@ -56,11 +56,14 @@ class TestCardApi(ClinicCase):
     def test_save_record_whitelist_and_numbers(self):
         rec = self.Card.open_today_record(self.pet.id)
         data = self.Card.save_record(rec["id"], {"temperature": "38,7", "weight": 15.4, "heart_rate": "96",
-                                                 "respiratory_rate": None, "anamnesis": "Kulhá.",
+                                                 "respiratory_rate": None, "record_text": "Kulhá.",
+                                                 "anamnesis": "deprecated, ignored",
                                                  "state": "done", "pet_id": 1, "amount_total": 5})
         self.assertEqual((data["temperature"], data["weight"], data["heart_rate"], data["respiratory_rate"]),
                          (38.7, 15.4, 96, None))
-        self.assertEqual((data["anamnesis"], data["state"], data["pet_id"]), ("Kulhá.", "draft", self.pet.id))
+        self.assertEqual((data["record_text"], data["state"], data["pet_id"]), ("Kulhá.", "draft", self.pet.id))
+        self.assertNotIn("anamnesis", data)
+        self.assertFalse(self.Record.browse(rec["id"]).anamnesis, "the deprecated fields are never written")
         with self.assertRaises(UserError):
             self.Card.save_record(rec["id"], {"temperature": "horko"})
 
@@ -93,17 +96,26 @@ class TestCardApi(ClinicCase):
         self.assertEqual(data["lines"][-1]["kind"], "other")
 
     def test_apply_template(self):
+        """Task 32: into the one record text – at the cursor, or appended without one; never replaces."""
         tpl = self.env["elite.vet.text.template"].create({"name": "Bez nálezu", "section": "examination",
                                                           "body": "Celkový stav dobrý.\n"})
         rec = self.Card.open_today_record(self.pet.id)
+        res = self.Card.apply_template(rec["id"], tpl.id)
+        self.assertEqual(res, {"text": "Celkový stav dobrý.", "caret": 19})
+        self.Card.save_record(rec["id"], {"record_text": "Kulhá.\nSliznice růžové.\n\n"})
+        res = self.Card.apply_template(rec["id"], tpl.id)
+        self.assertEqual(res["text"], "Kulhá.\nSliznice růžové.\n\nCelkový stav dobrý.")
+        self.assertEqual(self.Record.browse(rec["id"]).record_text, res["text"])
+        # at the cursor: after "Kulhá." (end of the first line) – on its own line, nothing lost
+        res = self.Card.apply_template(rec["id"], tpl.id, 6)
+        self.assertEqual(res["text"], "Kulhá.\nCelkový stav dobrý.\nSliznice růžové.\n\nCelkový stav dobrý.")
+        self.assertEqual(res["text"][:res["caret"]], "Kulhá.\nCelkový stav dobrý.")
+        # a position that is not a number (the old section argument) = no cursor
         res = self.Card.apply_template(rec["id"], tpl.id, "examination")
-        self.assertEqual(res, {"section": "examination", "text": "Celkový stav dobrý."})
-        self.Card.save_record(rec["id"], {"examination": "Celkový stav dobrý.\nSliznice růžové.\n\n"})
-        res = self.Card.apply_template(rec["id"], tpl.id, "examination")
-        self.assertEqual(res["text"], "Celkový stav dobrý.\nSliznice růžové.\n\nCelkový stav dobrý.")
-        self.assertEqual(self.Record.browse(rec["id"]).examination, res["text"])
+        self.assertTrue(res["text"].endswith("růžové.\n\nCelkový stav dobrý.\n\nCelkový stav dobrý."))
+        self.assertFalse(self.Record.browse(rec["id"]).examination)
         with self.assertRaises(UserError):
-            self.Card.apply_template(rec["id"], tpl.id, "notes")
+            self.Card.apply_template(rec["id"], 999999999)
 
     def test_mark_done_locks_and_reopen(self):
         rec = self.Card.open_today_record(self.pet.id)
@@ -114,7 +126,7 @@ class TestCardApi(ClinicCase):
         with self.assertRaises(UserError):
             self.Card.add_item(rec["id"], self.exam.id)
         with self.assertRaises(UserError):
-            self.Card.save_record(rec["id"], {"anamnesis": "pozdě"})
+            self.Card.save_record(rec["id"], {"record_text": "pozdě"})
         # the finished record is today's record (no second draft opened automatically)
         self.assertEqual(self.Card.open_today_record(self.pet.id)["id"], rec["id"])
         with self.assertRaises(Exception):
@@ -137,7 +149,8 @@ class TestCardApi(ClinicCase):
                                        "next_date": "2027-03-01", "item_id": None, "item_name": "Nobivac",
                                        "quantity": 1, "unit": "dávka", "kind": 1}])
         old = self.Record.create({"pet_id": self.pet.id, "start": "2026-05-01 08:00:00", "weight": 14.0,
-                                  "diagnosis": "Otitis externa\nKontrola za týden", "state": "done"})
+                                  "record_text": "Diagnóza a doporučení:\nOtitis externa\nKontrola za týden",
+                                  "state": "done"})
         self.pet.weight = 15.0
         rec = self.Card.open_today_record(self.pet.id)
         self.Card.save_record(rec["id"], {"weight": 15.0})
@@ -160,11 +173,16 @@ class TestCardApi(ClinicCase):
         visit = data["timeline"][1]
         self.assertEqual((visit["time"], visit["diagnosis"], visit["notes"]), ("09:30", "Distorze", "Klid 14 dní."))
         self.assertEqual(visit["vitals_summary"], "T 38,4 °C · P 100/min · D 24/min · 14,2 kg")
-        self.assertEqual(data["timeline"][2]["diagnosis"], "Otitis externa")
+        self.assertEqual(data["timeline"][2]["title"], "Otitis externa", "the heading is skipped")
+        self.assertEqual(data["timeline"][2]["record_text"], old.record_text)
+        self.assertEqual(data["timeline"][2]["summary"], "Diagnóza a doporučení: Otitis externa Kontrola za týden")
         self.assertEqual(data["timeline"][2]["id"], old.id)
         self.assertEqual(data["timeline"][3]["next_date"], "2027-03-01")
-        self.assertIn("A", [t["name"] for t in data["templates"]["anamnesis"]])
-        self.assertIn("K", [t["name"] for t in data["templates"]["any"]])
+        # task 32: one list with every template, whatever its (deprecated) section
+        names = [t["name"] for t in data["templates"]]
+        self.assertIn("A", names)
+        self.assertIn("K", names)
+        self.assertNotIn("section", data["templates"][0])
         self.assertTrue(data["permissions"]["can_write"])
         self.assertTrue(data["permissions"]["can_edit_templates"])
 

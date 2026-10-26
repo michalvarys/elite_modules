@@ -18,7 +18,7 @@ class TestVisitReportTill(ClinicCase):
         self.assertIn("/report/pdf/elite_vet_clinic.report_visit_document/", js)
 
     def test_reception_prints_without_notes(self):
-        record = self.Record.create({"pet_id": self.pet.id, "diagnosis": "Zdráv.", "reception_note": "RECNOTE",
+        record = self.Record.create({"pet_id": self.pet.id, "record_text": "Zdráv.", "reception_note": "RECNOTE",
                                      "room_note": "ROOMNOTE"})
         record.action_done()
         html = self.env["ir.actions.report"].with_user(self.reception)._render_qweb_html(

@@ -16,7 +16,7 @@ class TestAccess(ClinicCase):
         self.assertIn(doctor, self.manager.groups_id, "manager implies doctor")
 
     def test_reception_reads_only(self):
-        record = self.Record.create({"pet_id": self.pet.id, "anamnesis": "Kašle"})
+        record = self.Record.create({"pet_id": self.pet.id, "record_text": "Kašle"})
         data = self.as_user(self.reception).card_data(self.pet.id)
         self.assertFalse(data["permissions"]["can_write"])
         self.assertEqual(data["today_record"]["id"], record.id)
@@ -24,20 +24,20 @@ class TestAccess(ClinicCase):
         with self.assertRaises(AccessError):
             self.as_user(self.reception).open_today_record(self.pet.id)
         with self.assertRaises(AccessError):
-            self.as_user(self.reception).save_record(record.id, {"anamnesis": "x"})
+            self.as_user(self.reception).save_record(record.id, {"record_text": "x"})
         with self.assertRaises(AccessError):
-            record.with_user(self.reception).write({"anamnesis": "x"})
+            record.with_user(self.reception).write({"record_text": "x"})
         with self.assertRaises(AccessError):
             self.env["elite.vet.pet.alert"].with_user(self.reception).create({"pet_id": self.pet.id, "kind": "bites"})
 
     def test_nurse_writes_records_not_templates(self):
         Record = self.as_user(self.nurse)
         data = Record.open_today_record(self.pet.id)
-        Record.save_record(data["id"], {"anamnesis": "Zvrací od rána."})
+        Record.save_record(data["id"], {"record_text": "Zvrací od rána."})
         Record.add_item(data["id"], self.exam.id)
         self.env["elite.vet.pet.alert"].with_user(self.nurse).create({"pet_id": self.pet.id, "kind": "bites"})
         record = self.Record.browse(data["id"])
-        self.assertEqual(record.anamnesis, "Zvrací od rána.")
+        self.assertEqual(record.record_text, "Zvrací od rána.")
         with self.assertRaises(AccessError):
             record.with_user(self.nurse).unlink()
         with self.assertRaises(AccessError):

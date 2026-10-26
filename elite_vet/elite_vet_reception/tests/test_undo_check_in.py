@@ -140,7 +140,7 @@ class TestUndoCheckIn(ReceptionCase):
     # ---------------------------------------------------------------- refused
     @mute_logger("odoo.http")
     def test_refused_with_content(self):
-        for field, value in (("anamnesis", "Kašle"), ("examination", "Bez nálezu"), ("diagnosis", "Zdravý"),
+        for field, value in (("record_text", "Kašle"),
                              ("room_note", "Zaplatí zítra"), ("temperature", 38.5), ("weight", 12.0),
                              ("heart_rate", 90), ("respiratory_rate", 20)):
             with self.subTest(field=field):

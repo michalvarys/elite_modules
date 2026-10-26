@@ -276,8 +276,8 @@ class TestToday(ReceptionCase):
         pet = self.new_pet("Chráněný")
         data = self.api(self.reception).walk_in(pet.id)
         with self.assertRaises(AccessError):
-            self.Record.with_user(self.reception).browse(data["record_id"]).write({"anamnesis": "Recepce píše"})
+            self.Record.with_user(self.reception).browse(data["record_id"]).write({"record_text": "Recepce píše"})
         with self.assertRaises(AccessError):
-            self.as_user(self.reception).save_record(data["record_id"], {"anamnesis": "Recepce píše"})
+            self.as_user(self.reception).save_record(data["record_id"], {"record_text": "Recepce píše"})
         with self.assertRaises(AccessError):
             self.as_user(self.reception).open_today_record(pet.id)

@@ -121,7 +121,7 @@ Zrušit jde jen **dnešní** přijetí, dokud pacient **čeká** a v návštěv�
 
 - pacient už je v ordinaci (štítek **V ordinaci**) → „Pacient už je v ordinaci – přijetí už nejde
   zrušit.“ (tlačítko tam není);
-- v návštěvě už je cokoli z ordinace – anamnéza, vyšetření, diagnóza, teplota, hmotnost, tep,
+- v návštěvě už je cokoli z ordinace – záznam z vyšetření, teplota, hmotnost, tep,
   dech, položka účtu nebo poznámka pro recepci → „Záznam už má zápis od lékaře/ky – zrušit ho
   může ordinace.“ Vaše vlastní poznámka recepce zrušení nebrání.
 

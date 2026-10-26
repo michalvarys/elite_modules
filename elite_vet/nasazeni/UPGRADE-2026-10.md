@@ -935,3 +935,51 @@ databázi nezakládejte).
 ```sql
 SELECT name, latest_version FROM ir_module_module WHERE name = 'elite_vet_reception';
 ```
+
+## Doplnění: jeden záznam z vyšetření
+
+Větev `feature/elite-vet-one-record-text`. Cílový kód `elite_vet_clinic` **18.0.1.7.0** (má
+migraci), `elite_vet_reception` bez změny verze (jen kód):
+
+- **Karta pacienta:** místo tří polí Anamnéza / Vyšetření / Diagnóza a doporučení je jedno velké
+  pole **Záznam z vyšetření** s jedním tlačítkem **Šablona**. Šablona se vloží celá na místo
+  kurzoru, bez kurzoru na konec za prázdný řádek; nic nepřepíše. Nabízejí se všechny šablony
+  (oddíl šablony už nerozhoduje a ve formuláři šablony není).
+- **Zpráva z vyšetření:** jeden oddíl „Záznam z vyšetření“ (řádek vitálních hodnot a text).
+- Historie karty, ošetřující lékařka, Zrušit přijetí, seznamy, formulář a vyhledávání
+  v Ordinace › Záznamy návštěv berou jen nové pole.
+
+**Co migrace udělá s existujícími záznamy** (při `-u elite_vet_clinic`, jednou):
+- Záznam, který má nové pole prázdné a aspoň jeden starý text, dostane do nového pole:
+  - jen vyplněné části, každou s nadpisem na vlastním řádku („Anamnéza:“, „Vyšetření:“,
+    „Diagnóza a doporučení:“), mezi částmi prázdný řádek;
+  - když je vyplněná jediná část, jen její text bez nadpisu.
+- Staré texty zůstávají v databázi beze změny (nikde se už neukazují), takže se nic neztratí.
+- Píše se přímo SQL: v historii záznamu (chatter) se nic neobjeví, datum poslední změny zůstává.
+- Záznam bez textu se nemění. Druhé spuštění nic nezmění (záznam s novým textem se přeskočí).
+
+Pravidla a záloha jako v krocích 2–3, pak:
+
+```bash
+docker compose stop odoo
+docker compose run --rm odoo odoo -d DATABAZE -u elite_vet_clinic,elite_vet_reception --stop-after-init --no-http 2>&1 | tee upgrade-1027-zaznam-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-1027-zaznam-*.log      # nesmí nic najít
+grep -n "record_text filled" upgrade-1027-zaznam-*.log                # kolik záznamů migrace spojila
+docker compose start odoo
+```
+
+Po aktualizaci obnovte backend natvrdo (Ctrl+Shift+R).
+
+Kontrola (jen čtení):
+
+```sql
+SELECT name, latest_version FROM ir_module_module WHERE name = 'elite_vet_clinic';   -- 18.0.1.7.0
+-- záznamy se starým textem, ale bez nového pole: musí být 0
+SELECT count(*) FROM elite_vet_clinical_record
+ WHERE coalesce(btrim(record_text), '') = ''
+   AND (coalesce(btrim(anamnesis), '') <> '' OR coalesce(btrim(examination), '') <> ''
+        OR coalesce(btrim(diagnosis), '') <> '');
+```
+
+Pak otevřete kartu pacienta s dřívější návštěvou: v historii je text návštěvy v jednom bloku
+s nadpisy. Šablonu v ostré databázi nevkládejte (zapsala by se do záznamu).
