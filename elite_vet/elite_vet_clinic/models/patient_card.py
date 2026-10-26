@@ -249,6 +249,8 @@ class ClinicalRecordCardApi(models.Model):
                             "weight": or_none(v.weight), "bp_systolic": or_none(v.bp_systolic),
                             "bp_diastolic": or_none(v.bp_diastolic), "summary": v.summary()} for v in vitals],
                 "vitals_summary": " | ".join(s for s in (v.summary() for v in vitals) if s) or None,
+                # task 28: the visit report ("Zpráva z vyšetření") can be printed for it too
+                "printable": visit._visit_report_has_content(),
             })
         for vac in self.env["elite.vet.vaccination"].search([("pet_id", "=", pet.id)], limit=TIMELINE_LIMIT):
             items.append({

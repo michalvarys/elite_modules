@@ -290,7 +290,7 @@
 }
 // Task 27: print the visit report of a past record from the history
 .ev-clinic .evpc-tl-print { position: absolute; top: 2px; right: 2px; }
-.evpc-tl-record .evpc-tl-head { padding-right: 48px; }
+.evpc-tl-record .evpc-tl-head, .evpc-tl-visit .evpc-tl-head { padding-right: 48px; }
 
 // ---------- today's record ----------
 .evpc-rec-head { gap: 8px 16px; }

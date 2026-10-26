@@ -236,7 +236,7 @@
                                         </button>
                                         <button t-if="isPrintableEntry(e)" type="button" class="ev-icon-btn evpc-tl-print"
                                                 title="Vytisknout zprávu pro majitele" aria-label="Vytisknout zprávu pro majitele"
-                                                t-on-click="() => this.openReport(e.id)">
+                                                t-on-click="() => this.openReport(e.id, e.type)">
                                             <i class="fa fa-print" aria-hidden="true"/>
                                         </button>
                                         <div t-if="state.expanded[entryKey(e)]" class="evpc-tl-detail">

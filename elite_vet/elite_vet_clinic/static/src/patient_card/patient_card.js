@@ -704,14 +704,19 @@ export class PatientCard extends Component {
         return !!this.state.record && (typed || this.lines.length > 0);
     }
     isPrintableEntry(e) {
+        // task 28: a visit imported from WinVet prints too (the server says whether it has content)
+        if (e.type === "visit") return !!e.printable;
         if (e.type !== "record" || this.isOpenRecord(e)) return false;
         return !!(e.anamnesis || e.examination || e.diagnosis_text || e.vitals_summary || (e.items && e.items.length));
     }
-    reportUrl(recordId) {
-        return "/report/pdf/elite_vet_clinic.report_visit_document/" + recordId;
+    reportUrl(recordId, type = "record") {
+        const report = type === "visit"
+            ? "elite_vet_clinic.report_winvet_visit_document"
+            : "elite_vet_clinic.report_visit_document";
+        return "/report/pdf/" + report + "/" + recordId;
     }
-    openReport(recordId) {
-        window.open(this.reportUrl(recordId), "_blank");
+    openReport(recordId, type = "record") {
+        window.open(this.reportUrl(recordId, type), "_blank");
     }
     async printReport() {
         if (!this.canPrintReport || this.state.busy) return;

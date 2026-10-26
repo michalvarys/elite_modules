@@ -32,9 +32,38 @@
         <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_reception')])]"/>
     </record>
 
+    <record id="report_winvet_visit" model="ir.actions.report">
+        <field name="name">Zpráva z vyšetření</field>
+        <field name="model">elite.vet.visit</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">elite_vet_clinic.report_winvet_visit_document</field>
+        <field name="report_file">elite_vet_clinic.report_winvet_visit_document</field>
+        <field name="print_report_name">object._visit_report_filename()</field>
+        <field name="paperformat_id" ref="paperformat_visit_report"/>
+        <field name="binding_model_id" ref="elite_vet_winvet.model_elite_vet_visit"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_reception')])]"/>
+    </record>
+
     <template id="report_visit_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
+                <t t-call="elite_vet_clinic.report_visit_body"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- Task 28: the same report for a visit imported from WinVet (elite.vet.visit). -->
+    <template id="report_winvet_visit_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="elite_vet_clinic.report_visit_body"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- One report page of `o` (a clinical record or a WinVet visit): prints only o._visit_report_data(). -->
+    <template id="report_visit_body">
                 <t t-set="r" t-value="o._visit_report_data()"/>
                 <t t-set="clinic" t-value="r['clinic']"/>
                 <div class="article evr" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id" data-oe-lang="cs_CZ">
@@ -102,8 +131,16 @@
                         <div t-if="r['vitals']" class="evr-vitals" t-out="' · '.join(r['vitals'])"/>
                         <div t-if="r['examination']" class="evr-text" t-out="r['examination']" t-options="{'widget': 'text'}"/>
                     </div>
+                    <!-- WinVet visit: the measurements and the clinical text ("Dekurz") as written there -->
+                    <div t-if="r.get('vitals_rows') or r.get('record_text')" class="evr-section evr-record-text">
+                        <h2>Záznam z vyšetření</h2>
+                        <div t-foreach="r.get('vitals_rows') or []" t-as="row" class="evr-vitals" t-out="row"/>
+                        <div t-if="r.get('record_text')" class="evr-text" t-out="r['record_text']" t-options="{'widget': 'text'}"/>
+                    </div>
                     <div t-if="r['diagnosis']" class="evr-section evr-diagnosis">
-                        <h2>Diagnóza a doporučení</h2>
+                        <h2 t-if="'record_text' in r">Diagnóza</h2>
+                        <h2 t-else="">Diagnóza a doporučení</h2>
+                        <div t-if="r.get('case')" class="evr-case">Případ: <t t-out="r['case']"/></div>
                         <div class="evr-text" t-out="r['diagnosis']" t-options="{'widget': 'text'}"/>
                     </div>
 
@@ -152,7 +189,5 @@
                     <span class="evr-footer-left"><t t-out="clinic['name']"/> · Zpráva z vyšetření – <t t-out="o.pet_id.name"/>, <t t-out="r['visit_date']"/></span>
                     <span class="evr-footer-right">Strana <span class="page"/> z <span class="topage"/></span>
                 </div>
-            </t>
-        </t>
     </template>
 </odoo>

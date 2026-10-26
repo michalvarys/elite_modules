@@ -3,6 +3,12 @@
 The QWeb template (report/visit_report.xml) prints only what `_visit_report_data` returns: the
 medical texts, vitals and the performed items without prices. Internal fields (reception_note,
 room_note), pet alerts, prices, tracking and WinVet notes are never put into the data.
+
+Task 28: the same report for a visit imported from WinVet (`elite.vet.visit`, read-only). Its
+`_visit_report_data` returns the same shape from what the visit has: date and time, the doctor
+(only when the WinVet user is linked to a doctor), the clinical text ("Dekurz", DENNI_ZAZNAM.DEKURS),
+the diagnosis / case, the vitals and the WinVet sale lines of the visit without prices. The pet's
+WinVet "Poznámka" (winvet_note) is internal and never printed.
 """
 import re
 import unicodedata
@@ -10,9 +16,12 @@ import unicodedata
 from odoo import api, fields, models
 
 from .clinical_record import TZ
-from .patient_card import clinic_today, czech_plural
+from .patient_card import clinic_today, czech_plural, short_time
 
 REPORT_NAME = "elite_vet_clinic.report_visit"
+WINVET_REPORT_NAME = "elite_vet_clinic.report_winvet_visit"
+# WinVet sale lines that are money, not care (e.g. "Převod nedoplatku z …", unit "měna").
+MONEY_UNITS = ("měna",)
 
 
 def czech_date(value):
@@ -103,8 +112,10 @@ class ClinicalRecordVisitReport(models.Model):
 
     def _visit_report_patient(self):
         """Filled facts of the pet as (label, value) pairs."""
-        pet = self.pet_id
-        on_day = self.date or clinic_today()
+        return self._visit_report_patient_facts(self.pet_id, self.date or clinic_today())
+
+    @api.model
+    def _visit_report_patient_facts(self, pet, on_day):
         if pet.birth_date:
             age = age_long(pet.birth_date, 0, on_day)
             born = czech_date(pet.birth_date) + (" (%s)" % age if age else "")
@@ -127,7 +138,11 @@ class ClinicalRecordVisitReport(models.Model):
         return [(label, value) for label, value in facts if value]
 
     def _visit_report_owner(self):
-        partner = self.pet_id.partner_id.sudo()
+        return self._visit_report_owner_of(self.pet_id)
+
+    @api.model
+    def _visit_report_owner_of(self, pet):
+        partner = pet.partner_id.sudo()
         address = ", ".join(p for p in (
             partner.street, partner.street2, " ".join(p for p in (partner.zip, partner.city) if p)) if p)
         phones = []
@@ -137,7 +152,11 @@ class ClinicalRecordVisitReport(models.Model):
         return {"name": partner.name or "", "address": address, "phone": ", ".join(phones)}
 
     def _visit_report_doctor(self):
-        doctor = self.doctor_id.sudo()
+        return self._visit_report_doctor_of(self.doctor_id)
+
+    @api.model
+    def _visit_report_doctor_of(self, doctor):
+        doctor = doctor.sudo()
         if not doctor:
             return {}
         # "Jméno a titul" of the team card when linked (it may carry more titles).
@@ -198,6 +217,96 @@ class ClinicalRecordVisitReport(models.Model):
             "diagnosis": (rec.diagnosis or "").strip(),
             "lines": lines,
             "has_lots": any(line["lots"] or line["expiry"] for line in lines),
+            "next_vaccination": czech_date(pet.next_vaccination),
+            "next_deworming": czech_date(pet.next_deworming),
+            "printed": czech_date(clinic_today()),
+        }
+
+
+class WinvetVisitReport(models.Model):
+    """Task 28: "Zpráva z vyšetření" for a visit imported from WinVet – the same template and
+    data shape as the clinical record (see the module docstring)."""
+    _inherit = "elite.vet.visit"
+
+    def _visit_report_vitals(self):
+        """One line per WinVet measurement: '16:52 · teplota 38,6 °C · hmotnost 4,2 kg · TK 120/80'."""
+        rows = []
+        for vital in self.vital_ids:
+            parts = []
+            if vital.temperature:
+                parts.append("teplota %s °C" % czech_number(vital.temperature, 1))
+            if vital.weight:
+                parts.append("hmotnost %s kg" % czech_number(vital.weight, 2))
+            if vital.heart_rate:
+                parts.append("tep %d/min" % vital.heart_rate)
+            if vital.respiratory_rate:
+                parts.append("dech %d/min" % vital.respiratory_rate)
+            if vital.bp_systolic or vital.bp_diastolic:
+                parts.append("TK %s/%s" % (vital.bp_systolic or "–", vital.bp_diastolic or "–"))
+            if parts:
+                if len(self.vital_ids) > 1 and vital.time:
+                    parts.insert(0, short_time(vital.time))
+                rows.append(" · ".join(parts))
+        return rows
+
+    def _visit_report_lines(self):
+        """The WinVet sale lines of the visit (read with sudo: the lines and prices are for the
+        managers only) – the name and quantity, never a price or amount."""
+        lines = []
+        for line in self.sudo().line_ids.sorted(lambda l: l.id):
+            if (line.unit or "").strip().lower() in MONEY_UNITS or not (line.item_name or "").strip():
+                continue
+            quantity = czech_number(line.quantity, 3)
+            lines.append({
+                "name": line.item_name.strip(),
+                "quantity": " ".join(p for p in (quantity, line.unit or "") if p),
+                "lots": "", "expiry": "",
+            })
+        return lines
+
+    def _visit_report_has_content(self):
+        """Something to print: the clinical text, a diagnosis, a vital value or a line."""
+        self.ensure_one()
+        return bool((self.notes or "").strip() or (self.diagnosis_name or "").strip()
+                    or (self.case_name or "").strip() or self._visit_report_vitals() or self._visit_report_lines())
+
+    def _visit_report_filename(self):
+        self.ensure_one()
+        parts = ["Zprava", file_part(self.pet_id.name), self.date.isoformat() if self.date else ""]
+        return "_".join(p for p in parts if p)
+
+    def _visit_report_data(self):
+        """The record's data shape (see ClinicalRecordVisitReport._visit_report_data). The doctor is
+        printed only when the WinVet user who entered the visit is linked to a doctor."""
+        self.ensure_one()
+        Record = self.env["elite.vet.clinical.record"]
+        visit = self.sudo()
+        pet = self.pet_id
+        lines = self._visit_report_lines()
+        diagnosis = (visit.diagnosis_name or "").strip()
+        case = (visit.case_name or "").strip()
+        if not diagnosis:
+            diagnosis, case = case, ""
+        elif case.lower() == diagnosis.lower():
+            case = ""
+        notes = (visit.notes or "").strip()
+        return {
+            "clinic": Record._visit_report_clinic(),
+            "patient": Record._visit_report_patient_facts(pet, visit.date or clinic_today()),
+            "owner": Record._visit_report_owner_of(pet),
+            "doctor": Record._visit_report_doctor_of(visit.doctor_id),
+            "visit_date": czech_date(visit.date),
+            "visit_time": short_time(visit.time) or "",
+            "anamnesis": "",
+            "vitals": [],
+            "vitals_rows": self._visit_report_vitals(),
+            "examination": "",
+            "show_examination": False,
+            "record_text": notes,
+            "case": case,
+            "diagnosis": diagnosis,
+            "lines": lines,
+            "has_lots": False,
             "next_vaccination": czech_date(pet.next_vaccination),
             "next_deworming": czech_date(pet.next_deworming),
             "printed": czech_date(clinic_today()),
