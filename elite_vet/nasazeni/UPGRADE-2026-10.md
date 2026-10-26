@@ -903,3 +903,35 @@ Ve stejné větvi (stejný `-u`, jen vzhled): obrazovka Ordinace a Moji pacienti
 **Dnes jsou objednaní** (dřív „Dnes ještě přijdou“, s řádkem „ještě nepřišli“) | **Čekají** |
 **V ordinaci**, Hotovo dnes sbalené pod posledním. Na užší obrazovce (pod 1100 px) jsou pod sebou
 s Čekají první.
+
+## Doplnění: 26. 10. odpoledne
+
+Větev `feature/elite-vet-1026c`. Cílový kód `elite_vet_reception` 18.0.1.16.0, schéma se nemění
+(jen obrazovky a jedna metoda):
+
+- **Všechny ordinace:** ordinace s pacienty mají široké sloupce (aspoň 360 px), ordinace a
+  Nepřiřazení bez nikoho jsou úzké („nikdo“). Když se sloupce nevejdou, tabule se posouvá do
+  strany, hlavičky zůstávají nahoře, dlouhé texty z WinVetu jsou zkrácené (celý text najetím myší).
+- **Kartotéka › + Nový klient:** celý formulář zvířete (Další údaje, Upozornění); klient a zvíře
+  se uloží najednou (`save_owner` s údaji zvířete – když zvíře neprojde kontrolou, nezaloží se ani
+  klient). Tlačítko **Uložit klienta**, ve Spárovat… se zvířetem **Uložit a přiřadit k objednávce**.
+
+Pravidla a záloha jako v krocích 2–3, pak:
+
+```bash
+docker compose stop odoo
+docker compose run --rm odoo odoo -d DATABAZE -u elite_vet_reception --stop-after-init --no-http 2>&1 | tee upgrade-1026c-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-1026c-*.log      # nesmí nic najít
+docker compose start odoo
+```
+
+Po aktualizaci obnovte pokladnu i backend natvrdo (Ctrl+Shift+R).
+
+Kontrola: Ordinace › Všechny ordinace – prázdné ordinace jsou úzké, při mnoha obsazených se
+tabule posouvá do strany. Pokladna › Kartotéka… › + Nový klient – pod klientem je celý formulář
+zvířete s Další údaje (formulář jen otevřete a zavřete Zrušit – zkušebního klienta v ostré
+databázi nezakládejte).
+
+```sql
+SELECT name, latest_version FROM ir_module_module WHERE name = 'elite_vet_reception';
+```

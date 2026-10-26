@@ -139,7 +139,9 @@ WinVetu jako vyřízené se neukazují.
   z WinVetu a štítek **bez karty**, místo Přijmout je **Spárovat…**. Otevře Kartotéku s hledáním
   předvyplněným ze začátku textu (první slova před čárkou nebo pomlčkou, dá se přepsat; když
   nic nenajde, zkusí jen první slovo). Najděte klienta, nebo ho založte (**+ Nový klient**,
-  **+ Nové zvíře**), vyberte zvíře a stiskněte **Přiřadit k objednávce**. Potom má řádek zvíře
+  **+ Nové zvíře**), vyberte zvíře a stiskněte **Přiřadit k objednávce**. Nového klienta i se
+  zvířetem spárujete jedním klikem: **+ Nový klient**, zvíře vyplňte rovnou ve formuláři
+  a stiskněte **Uložit a přiřadit k objednávce**. Potom má řádek zvíře
   a **Přijmout** jako ostatní; obrazovka Ordinace u objednávky nabídne Otevřít kartu a tabule
   ukazuje jméno zvířete.
 
@@ -277,11 +279,18 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
 ### Nový klient, nové zvíře, úpravy
 
 1. **+ Nový klient**: vyplňte jméno (povinné), telefon, mobil, e-mail, adresu. Rovnou můžete
-   zadat i **první zvíře** (jméno a druh) – další přidáte potom.
+   zapsat i **první zvíře** se všemi údaji – je tu stejný formulář jako u **+ Nové zvíře** (bod 3:
+   nahoře jméno, druh, pohlaví, plemeno, narození, čip, pak **Další údaje** a **Upozornění**).
+   Zvíře je nepovinné; když ho zadáváte, vyplňte aspoň jméno a druh. Další zvířata přidáte potom.
 
    ![Nový klient](img/recepce-novy-klient.png)
 
-2. **Uložit.** Otevře se karta nového klienta.
+2. **Uložit klienta.** Klient i zvíře se uloží najednou a otevře se karta nového klienta
+   s vybraným zvířetem. Když je v údajích zvířete chyba (např. hmotnost „hodně“, narození
+   v budoucnosti), neuloží se **nic** – chyba je červeně ve formuláři, všechno napsané zůstává,
+   stačí ji opravit a uložit znovu. V Kartotéce otevřené přes **Spárovat…** (objednávka
+   z WinVetu) je tlačítko **Uložit a přiřadit k objednávce**, když zadáte i zvíře: jedním klikem
+   se klient a zvíře založí a objednávka spáruje.
 3. **+ Nové zvíře**: povinné jsou jen **jméno** a **druh**, všechno ostatní můžete nechat prázdné.
    - Nahoře: jméno, druh, pohlaví, plemeno, narození, čip. U druhu **Jiné** se objeví pole
      **Jiný druh** (např. fretka).
@@ -294,7 +303,7 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
      v kartě pacienta) a poznámka (např. náhubek, penicilin). Koš řádek odebere. Upozornění se
      ukazují jako štítky v kartě majitele, na tabuli i v kartě pacienta.
 4. **Upravit** (u klienta) a **Upravit <jméno>** (u zvířete) otevřou stejný formulář s vyplněnými
-   údaji. **Uložit** změny zapíše, **Zrušit** je zahodí.
+   údaji. **Uložit** (u klienta **Uložit klienta**) změny zapíše, **Zrušit** je zahodí.
 5. Jen při úpravě zvířete (ne při registraci) je dole **Uhynulý** a pak **Datum úhynu**. Po
    Uložit se Kartotéka zeptá „Označit … jako uhynulé?“. Uhynulé zvíře nejde objednat ani přijmout.
    Omylem označené: odškrtněte Uhynulý a uložte (datum úhynu se smaže).

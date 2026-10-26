@@ -118,7 +118,7 @@ a upravuje vlastními právy (bez sudo); pod sudo se čtou jen účty návštěv
 | `card_search(term)` | seznam: zvířata (`kind: "pet"`, tvar `search_patients` karty pacienta – jméno, majitel, čip, číslice telefonu) a majitelé (`kind: "owner"`: `id, partner_id, name, owner, phone, email, pet_count`) podle jména / telefonu / e-mailu, které žádné nalezené zvíře neukazuje (např. bez zvířat); méně než 2 znaky = `[]` |
 | `owner_data(partner_id)` | `{"owner": {id, name, phone, mobile, email, street, city, zip}, "pets": [...], "open_bills": [...], "no_shows": {...}}` (zvíře navíc `no_show_count`) |
 | `client_no_shows(partner_id)` | `no_show_summary` klienta pro upozornění v Objednat: `{count, last_date, last_label, text, items: [{id, date, date_label, procedure, pet}]}` (požadavek 25. 10., rezervace Nedorazil za 12 měsíců, viz `elite_vet_reservation/models/no_show.py`) |
-| `save_owner(vals, partner_id=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client` |
+| `save_owner(vals, partner_id=None, pet_vals=None)` | `owner_data`; klíče `name, phone, mobile, email, street, city, zip` (jiné se ignorují), jméno povinné; nový majitel má `is_vet_client`. `pet_vals` (jen u nového majitele, hodnoty jako `save_pet`): majitel a zvíře se založí najednou pod savepointem – odmítnuté zvíře = nezaloží se nic; výsledek má navíc `new_pet_id` |
 | `save_pet(partner_id, vals, pet_id=None)` | `owner_data`; klíče (Task 22) `name, species, species_other, breed, sex, birth_date, birth_year, chip, tattoo, passport, color, weight, next_vaccination, next_deworming, important_note, note, death_date` (text, prázdné = nic; data `RRRR-MM-DD`; `weight` v kg i s desetinnou čárkou, ≥ 0; `birth_year` 1950 … letos; narození a úhyn ne v budoucnosti, úhyn ne před narozením), `deceased` (bool, jen při úpravě – nové zvíře nejde založit jako uhynulé; `false` smaže `death_date`), `alerts` (`[{id?, kind, note}]` = celý seznam aktivních upozornění: s `id` se upraví, bez `id` přibude, chybějící se archivují; bez klíče se upozornění nemění). `species_other` jen u druhu `other`. Jméno a druh povinné, zvíře musí patřit majiteli |
 | `pet_options()` | `{"species": [{value, label}], "alert_kinds": [{value, label}]}` – druhy zvířete a druhy upozornění (karta pacienta) pro formulář zvířete |
 | `match_reservation(reservation_id, partner_id, pet_id)` | `{reservation_id, time, partner_id, owner, pet_id, pet_name, needs_match}` – rezervace (webová i už spárovaná) dostane majitele a zvíře (i její druhá ordinace); webová pak jde přijmout |
@@ -364,6 +364,13 @@ Recepce a výš). Params `{room_id}` otevře jednu ordinaci. Návod: [doc/ordina
   Otevřít kartu), ostatní v nabídce „…“ (komponenta `RoomMenu`, Odoo `Dropdown`): Otevřít kartu,
   Poznámka recepce… (`set_reception_note`), Do jiné ordinace (`assign_room`). Přepínač ordinací je
   `<select>`.
+- **Šířka sloupců Všech ordinací (úkol 31):** `.evrm-columns` je mřížka, stopy dává
+  `columnTracks` (proměnná `--evrm-cols`): sloupec bez nikoho dnes (`isEmptyColumn`: žádná položka
+  v `booked, waiting, in_room, done`) má 140 px (třída `evrm-col-slim`, text „nikdo“ / u
+  Nepřiřazení „nikdo nečeká“), ostatní `minmax(360px, 1fr)`. Co se nevejde, posouvá se do strany;
+  řádek je `1fr` (výška tabule, nebo nejdelší sloupec), hlavičky `position: sticky`. Na dlaždicích
+  je zvíře / text z WinVetu zkrácený na 3 řádky, ostatní řádky na 2 (`line-clamp`), celý text je
+  v `title` dlaždice (`tileTitle`, když je některý text delší než 40 znaků). Pod 640 px pod sebou.
 
 ## Ordinace: Moji pacienti dnes (karta pacienta)
 

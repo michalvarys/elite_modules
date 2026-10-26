@@ -65,7 +65,17 @@ Ve sloupci jsou části ve stejném pořadí jako v jedné ordinaci:
 - **V ordinaci**: pacient je zavolaný,
 - **Hotovo dnes: N**: uzavřené návštěvy, sbalené; klikem se rozbalí.
 
-Prázdná část se neukazuje; prázdná ordinace má jen „Nikdo tu není.“
+Prázdná část se neukazuje; ordinace, kde dnes ještě někdo bude nebo už byl, ale teď nikdo
+nečeká ani není uvnitř, má „Nikdo tu není.“
+
+**Šířka sloupců.** Ordinace, ve které dnes někdo je (objednaný, čekající, v ordinaci nebo
+hotový), má široký sloupec – aspoň 360 px, a když je místo, sloupce se o něj rozdělí. Ordinace,
+kde dnes **nikdo** není, je jen úzký proužek (název, kdo slouží a „nikdo“); stejně Nepřiřazení,
+když nikdo nečeká na ordinaci („nikdo nečeká“). Do úzkého sloupce jde pacienta přetáhnout
+stejně jako do širokého – sloupec se pak rozšíří. Když se široké sloupce na obrazovku nevejdou,
+nezužují se: tabule se posouvá **do strany** (posuvník dole, kolečko myši se Shiftem nebo
+prstem). Hlavičky sloupců zůstávají nahoře, i když sjedete dolů. Dlouhý text z WinVetu je na
+kartě zkrácený na 2–3 řádky („…“); celý text ukáže najetí myší na kartu.
 
 **Přesun do ordinace:** pacienta, který už přišel (Čeká nebo V ordinaci), přetáhněte myší do
 sloupce jiné ordinace. Přetažením do **Nepřiřazení** ordinaci zrušíte. Na dotykové obrazovce
