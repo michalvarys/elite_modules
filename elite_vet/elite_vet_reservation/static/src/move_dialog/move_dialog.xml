@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <!-- Task 25: confirm a move / a web request with the date, time and room still editable. -->
+    <!-- Task 25: confirm a move / a web request with the date, time and room still editable;
+         task 28: the end time (Do) too. -->
     <t t-name="elite_vet_reservation.MoveConfirmDialog">
         <Dialog title="props.title" size="'md'" contentClass="'o_ev_move_dialog'">
             <div class="o_ev_move_fields">
@@ -9,10 +10,16 @@
                     <input type="date" class="form-control o_ev_move_date" t-att-value="state.date"
                            t-on-change="onDate" t-on-input="onDate"/>
                 </label>
-                <label class="o_ev_move_field">
-                    <span>Čas</span>
+                <label class="o_ev_move_field o_ev_move_field_time">
+                    <span>Od</span>
                     <input type="time" class="form-control o_ev_move_time" t-att-value="state.time"
                            t-att-step="stepSeconds" t-on-change="onTime" t-on-input="onTime"/>
+                </label>
+                <label class="o_ev_move_field o_ev_move_field_time">
+                    <span>Do</span>
+                    <input type="time" class="form-control o_ev_move_end" t-att-value="state.endTime"
+                           t-att-step="stepSeconds" t-on-change="onEndTime" t-on-input="onEndTime"
+                           t-att-class="{'is-invalid': !endValid}"/>
                 </label>
                 <label class="o_ev_move_field o_ev_move_field_room">
                     <span>Ordinace</span>

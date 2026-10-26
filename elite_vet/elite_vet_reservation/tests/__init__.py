@@ -26,3 +26,4 @@ from . import test_no_show
 from . import test_web_booking_switch
 from . import test_web_booking_switch_followups
 from . import test_source_visible
+from . import test_move_end_time

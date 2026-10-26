@@ -131,6 +131,22 @@ class TestBoard(ReceptionCase):
         self.assertEqual(res.doctor_id, self.doctor, "she is on duty there")
         self.assertEqual((data["room_id"], data["time"]), (self.room2.id, "10:30"))
 
+    def test_move_with_a_new_end(self):
+        """Task 28: the till's dialog sends the end time too (longer / shorter, still checked)."""
+        res = self.board_res(9, 0, pet=self.new_pet("Prodloužený"))
+        self.board_res(9, 0, pet=self.new_pet("Soused"), room_id=self.room2.id)
+        api = self.api(self.reception)
+        api.move_reservation(res.id, str(clinic_today()), 8 * 60 + 30, self.room.id, True, 9 * 60 + 30)
+        self.assertEqual((local_time(res.start), local_time(res.stop)), ("08:30", "09:30"))
+        api.move_reservation(res.id, str(clinic_today()), 8 * 60 + 30, self.room.id, True, 8 * 60 + 45)
+        self.assertEqual(res.duration_minutes, 15)
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            api.move_reservation(res.id, str(clinic_today()), 8 * 60 + 30, self.room.id, True, 8 * 60)
+        with self.assertRaises(UserError, msg="the longer visit would run into the neighbour"), \
+                self.env.cr.savepoint():
+            api.move_reservation(res.id, str(clinic_today()), 8 * 60 + 30, self.room2.id, True, 9 * 60 + 10)
+        self.assertEqual((local_time(res.start), local_time(res.stop)), ("08:30", "08:45"))
+
     def test_move_keeps_the_board_rules(self):
         pet = self.new_pet("Neposlušný")
         res = self.board_res(9, 0, pet=pet)

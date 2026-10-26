@@ -205,7 +205,15 @@ class VetReservation(models.Model):
 
     @api.onchange("procedure_id", "start")
     def _onchange_stop(self):
-        if self.start and self.procedure_id and self.kind == "reservation":
+        """Konec follows Začátek. Task 28: a saved reservation moved in the form keeps its own
+        length (it may have been made longer or shorter); a new one / another procedure takes the
+        procedure's duration. Konec can then be changed by hand."""
+        if not (self.start and self.kind == "reservation"):
+            return
+        origin = self._origin
+        if origin.start and origin.stop and origin.procedure_id == self.procedure_id:
+            self.stop = self.start + (origin.stop - origin.start)
+        elif self.procedure_id:
             self.stop = self.start + timedelta(minutes=self.procedure_id.duration)
 
     # ---------- overlaps ----------
@@ -421,10 +429,14 @@ class VetReservation(models.Model):
     def action_no_show(self):
         self.write({"state": "no_show", "cancel_reason": "no_show"})
 
-    def action_reschedule(self, start, room_id=None, doctor_id=None):
+    def action_reschedule(self, start, room_id=None, doctor_id=None, stop=None):
+        """New start (+ room / doctor). `stop` (task 28): the new end; without it the duration is kept."""
         self.ensure_one()
         start = fields.Datetime.to_datetime(start)
-        vals = {"start": start, "stop": start + (self.stop - self.start)}
+        stop = fields.Datetime.to_datetime(stop) if stop else start + (self.stop - self.start)
+        if stop <= start:
+            raise UserError(_("Konec musí být po začátku."))
+        vals = {"start": start, "stop": stop}
         if room_id:
             vals["room_id"] = room_id
         if doctor_id is not None:
@@ -591,7 +603,7 @@ class VetReservation(models.Model):
         A = self.env["elite.vet.availability"]
         return fields.Datetime.to_string(A.local_to_utc(fields.Date.from_string(day_str), int(minute)))
 
-    def _board_doctor_check(self, day_str, minute, room_id, doctor=None, strict=True):
+    def _board_doctor_check(self, day_str, minute, room_id, doctor=None, strict=True, duration=None):
         """May the reservation go on the board into room `room_id` at `minute`?
 
         Same rule as suggestions and the wizard: a doctor who does the procedure
@@ -599,6 +611,8 @@ class VetReservation(models.Model):
         procedure if the procedure needs a doctor; the room must be one of the
         procedure's reception rooms. Collisions are checked on write (_check_overlap).
         Returns the doctor id to set (the only one on duty), False = clear, None = keep.
+        `duration` (minutes, task 28: a new end chosen in the move dialog) replaces the procedure's
+        duration for the "on duty for the whole time" rule.
         """
         self.ensure_one()
         proc = self.procedure_id
@@ -611,7 +625,7 @@ class VetReservation(models.Model):
         if room not in proc.rooms_for_reception():
             raise UserError(_("Úkon %s se v %s nedělá.") % (proc_name, room.name))
         wanted = doctor if strict else None
-        doc_ids = A.serving_doctors(proc, day, room.id, minute, wanted or None)
+        doc_ids = A.serving_doctors(proc, day, room.id, minute, wanted or None, duration=duration)
         if not doc_ids and A.need_doctor(proc, wanted or None):
             if wanted:
                 raise UserError(_("V %s v %s neslouží %s.") % (minutes_label(minute), room.name, wanted.name))
@@ -625,18 +639,35 @@ class VetReservation(models.Model):
         return False if doctor else None
 
     @api.model
-    def board_move(self, res_id, day_str, minute, room_id, notify=True):
+    def _board_interval(self, day_str, minute, end_minute):
+        """(start, stop or None, duration or None) in UTC for the board methods; `end_minute`
+        (minutes from midnight of the same day, task 28) must be after `minute`."""
+        minute = int(minute)
+        if end_minute in (None, False, ""):
+            return self.board_slot_utc(day_str, minute), None, None
+        try:
+            end_minute = int(end_minute)
+        except (TypeError, ValueError):
+            raise UserError(_("Neplatný čas konce: %s") % end_minute) from None
+        if not minute < end_minute <= 1440:
+            raise UserError(_("Konec musí být po začátku."))
+        return (self.board_slot_utc(day_str, minute), self.board_slot_utc(day_str, end_minute),
+                end_minute - minute)
+
+    @api.model
+    def board_move(self, res_id, day_str, minute, room_id, notify=True, end_minute=None):
         """Move on the board. A reservation only where a doctor who does the procedure is on duty
         (if the current doctor has no shift at the new place, she is replaced); a block anywhere.
         notify=False (task 25, the dialog's e-mail checkbox unticked): no e-mail about the new time,
-        a chatter note instead."""
+        a chatter note instead. end_minute (task 28): the new end on that day; without it the
+        duration is kept. The collision and on-duty rules apply to the whole new interval."""
         rec = self.browse(res_id)
         if not notify:
             rec = rec.with_context(ev_no_reschedule_mail=True)
+        start, stop, duration = self._board_interval(day_str, minute, end_minute)
         doctor_id = rec._board_doctor_check(day_str, minute, room_id or rec.room_id.id,
-                                            doctor=rec.doctor_id, strict=False)
-        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id or None,
-                              doctor_id=doctor_id)
+                                            doctor=rec.doctor_id, strict=False, duration=duration)
+        rec.action_reschedule(start, room_id=room_id or None, doctor_id=doctor_id, stop=stop)
         return True
 
     def _mail_on_move(self):
@@ -649,19 +680,20 @@ class VetReservation(models.Model):
         return main.contact_email or False
 
     @api.model
-    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None, notify=True):
+    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None, notify=True, end_minute=None):
         """doctor_id=None keeps the doctor; a number sets it (suggestion from the Waiting panel).
         Checks that a doctor who does the procedure (or the one the client chose) is on
         duty at that time and room; if only one is on duty, she is set.
-        notify=False (task 25): no confirmation e-mail, a chatter note instead."""
+        notify=False (task 25): no confirmation e-mail, a chatter note instead.
+        end_minute (task 28): the end chosen in the dialog (otherwise the duration is kept)."""
         rec = self.browse(res_id)
         if not notify:
             rec = rec.with_context(ev_no_mail=True, ev_no_confirm_mail_note=True)
         doctor = self.env["elite.vet.doctor"].browse(doctor_id) if doctor_id else rec.doctor_id
-        found = rec._board_doctor_check(day_str, minute, room_id, doctor=doctor)
+        start, stop, duration = self._board_interval(day_str, minute, end_minute)
+        found = rec._board_doctor_check(day_str, minute, room_id, doctor=doctor, duration=duration)
         if doctor_id:
             found = doctor_id
-        rec.action_reschedule(self.board_slot_utc(day_str, minute), room_id=room_id,
-                              doctor_id=found)
+        rec.action_reschedule(start, room_id=room_id, doctor_id=found, stop=stop)
         rec.action_confirm()
         return True

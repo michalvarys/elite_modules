@@ -4,8 +4,10 @@
  * request). The target date, time (booking step) and room come prefilled from the drop and can be
  * corrected before "Přesunout" / "Potvrdit"; the "z … na …" text follows the inputs. When the client
  * would get an e-mail, a checkbox (ticked by default) lets this one change go without it.
- * `onConfirm({date, minute, roomId, notify})` calls the server; an error (time not free, no doctor on
- * duty) is shown in the dialog, which stays open for another try. Used by the backend board
+ * Task 28: the end time ("do") too – prefilled start + current duration, it moves with the start
+ * (the duration is kept) and can be set on its own (longer / shorter visit).
+ * `onConfirm({date, minute, endMinute, roomId, notify})` calls the server; an error (time not free,
+ * no doctor on duty) is shown in the dialog, which stays open for another try. Used by the backend board
  * (elite_vet_reservation) and the till's board (elite_vet_reception, POS assets).
  */
 import { Component, useState } from "@odoo/owl";
@@ -15,6 +17,21 @@ const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
 
 function pad(n) {
     return String(n).padStart(2, "0");
+}
+
+/** 545 -> "09:05" (the value of an <input type="time">). */
+function timeValue(minute) {
+    return `${pad(Math.floor(minute / 60))}:${pad(minute % 60)}`;
+}
+
+/** "09:05" -> 545, or null. */
+export function parseTime(value) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(value || "");
+    if (!m) {
+        return null;
+    }
+    const minute = Number(m[1]) * 60 + Number(m[2]);
+    return minute >= 0 && minute < 1440 ? minute : null;
 }
 
 /** "9:05" as the server writes it. */
@@ -69,9 +86,13 @@ export class MoveConfirmDialog extends Component {
         this.origDate = this.props.origDate || this.props.date;
         this.origMinute = this.props.origMinute ?? this.props.minute;
         this.origRoomId = this.props.origRoomId ?? (this.props.roomId || false);
+        // no duration known (a request without a procedure): one booking step
+        const duration = this.props.duration > 0 ? this.props.duration : this.props.step || 15;
+        this.origEnd = this.origMinute + duration;
         this.state = useState({
             date: this.props.date,
-            time: `${pad(Math.floor(this.props.minute / 60))}:${pad(this.props.minute % 60)}`,
+            time: timeValue(this.props.minute),
+            endTime: timeValue(Math.min(this.props.minute + duration, 1439)),
             roomId: this.props.roomId || (this.props.rooms[0] && this.props.rooms[0].id) || false,
             notify: true,
             busy: false,
@@ -85,12 +106,19 @@ export class MoveConfirmDialog extends Component {
 
     /** Minutes from midnight of the time input, or null. */
     get minute() {
-        const m = /^(\d{1,2}):(\d{2})/.exec(this.state.time || "");
-        if (!m) {
-            return null;
-        }
-        const minute = Number(m[1]) * 60 + Number(m[2]);
-        return minute >= 0 && minute < 1440 ? minute : null;
+        return parseTime(this.state.time);
+    }
+
+    /** Minutes from midnight of the end ("do") input, or null. */
+    get endMinute() {
+        return parseTime(this.state.endTime);
+    }
+
+    /** The end is after the start (both filled). */
+    get endValid() {
+        const minute = this.minute;
+        const end = this.endMinute;
+        return minute !== null && end !== null && end > minute;
     }
 
     get roomName() {
@@ -102,7 +130,8 @@ export class MoveConfirmDialog extends Component {
         if (minute === null || !this.state.date) {
             return "";
         }
-        return `${shortDayLabel(this.state.date)} ${timeLabel(minute)}–${timeLabel(minute + this.props.duration)}, ${this.roomName}`;
+        const end = this.endValid ? timeLabel(this.endMinute) : "?";
+        return `${shortDayLabel(this.state.date)} ${timeLabel(minute)}–${end}, ${this.roomName}`;
     }
 
     get question() {
@@ -130,6 +159,7 @@ export class MoveConfirmDialog extends Component {
             this.props.mailOnTimeChange &&
             this.state.date === this.origDate &&
             this.minute === this.origMinute &&
+            this.endMinute === this.origEnd &&
             this.state.roomId === this.origRoomId
         );
     }
@@ -139,8 +169,20 @@ export class MoveConfirmDialog extends Component {
         this.state.error = "";
     }
 
+    /** A new start moves the end with it (the duration stays); the end can then be changed. */
     onTime(ev) {
+        const before = this.minute;
+        const end = this.endMinute;
         this.state.time = ev.target.value;
+        this.state.error = "";
+        const after = this.minute;
+        if (before !== null && after !== null && end !== null && end > before) {
+            this.state.endTime = timeValue(Math.min(after + (end - before), 1439));
+        }
+    }
+
+    onEndTime(ev) {
+        this.state.endTime = ev.target.value;
         this.state.error = "";
     }
 
@@ -162,6 +204,14 @@ export class MoveConfirmDialog extends Component {
             this.state.error = "Vyplňte datum a čas.";
             return;
         }
+        if (this.endMinute === null) {
+            this.state.error = "Vyplňte čas konce (do).";
+            return;
+        }
+        if (!this.endValid) {
+            this.state.error = "Konec musí být po začátku.";
+            return;
+        }
         if (!this.state.roomId) {
             this.state.error = "Vyberte ordinaci.";
             return;
@@ -172,6 +222,7 @@ export class MoveConfirmDialog extends Component {
             await this.props.onConfirm({
                 date: this.state.date,
                 minute,
+                endMinute: this.endMinute,
                 roomId: this.state.roomId,
                 notify: this.mailApplies ? this.state.notify : true,
             });
