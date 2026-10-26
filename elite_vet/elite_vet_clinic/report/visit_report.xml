@@ -121,26 +121,17 @@
                         </tr>
                     </table>
 
-                    <!-- medical sections (only when filled) -->
-                    <div t-if="r['anamnesis']" class="evr-section evr-anamnesis">
-                        <h2>Anamnéza</h2>
-                        <div class="evr-text" t-out="r['anamnesis']" t-options="{'widget': 'text'}"/>
-                    </div>
-                    <div t-if="r['show_examination']" class="evr-section evr-examination">
-                        <h2>Klinické vyšetření</h2>
-                        <div t-if="r['vitals']" class="evr-vitals" t-out="' · '.join(r['vitals'])"/>
-                        <div t-if="r['examination']" class="evr-text" t-out="r['examination']" t-options="{'widget': 'text'}"/>
-                    </div>
-                    <!-- WinVet visit: the measurements and the clinical text ("Dekurz") as written there -->
-                    <div t-if="r.get('vitals_rows') or r.get('record_text')" class="evr-section evr-record-text">
+                    <!-- task 32: one section with the vitals line(s) and the record text, line breaks kept;
+                         a WinVet visit prints its measurements and clinical text ("Dekurz") the same way -->
+                    <div t-if="r['vitals_rows'] or r['record_text']" class="evr-section evr-record-text">
                         <h2>Záznam z vyšetření</h2>
-                        <div t-foreach="r.get('vitals_rows') or []" t-as="row" class="evr-vitals" t-out="row"/>
-                        <div t-if="r.get('record_text')" class="evr-text" t-out="r['record_text']" t-options="{'widget': 'text'}"/>
+                        <div t-foreach="r['vitals_rows']" t-as="row" class="evr-vitals" t-out="row"/>
+                        <div t-if="r['record_text']" class="evr-text" t-out="r['record_text']" t-options="{'widget': 'text'}"/>
                     </div>
+                    <!-- WinVet visit only: the diagnosis / case of the visit -->
                     <div t-if="r['diagnosis']" class="evr-section evr-diagnosis">
-                        <h2 t-if="'record_text' in r">Diagnóza</h2>
-                        <h2 t-else="">Diagnóza a doporučení</h2>
-                        <div t-if="r.get('case')" class="evr-case">Případ: <t t-out="r['case']"/></div>
+                        <h2>Diagnóza</h2>
+                        <div t-if="r['case']" class="evr-case">Případ: <t t-out="r['case']"/></div>
                         <div class="evr-text" t-out="r['diagnosis']" t-options="{'widget': 'text'}"/>
                     </div>
 

@@ -11,8 +11,79 @@ STATES = [("draft", "Rozepsaný"), ("done", "Hotovo – k pokladně"), ("cancell
 DOCTOR_GROUP = "elite_vet_clinic.group_clinic_doctor"
 # Content of the visit: a linked doctor who changes one of these (or the bill lines, or finishes
 # the visit) becomes its treating doctor (see _elite_vet_note_treating_doctor).
-TREATING_FIELDS = frozenset(("temperature", "weight", "heart_rate", "respiratory_rate", "anamnesis",
-                             "examination", "diagnosis", "room_note"))
+TREATING_FIELDS = frozenset(("temperature", "weight", "heart_rate", "respiratory_rate", "record_text",
+                             "room_note"))
+# Task 32: the visit text was split into three fields until 18.0.1.7.0. They stay in the database
+# (deprecated, not shown, not written) and the migration joined them into record_text with these
+# headings.
+LEGACY_TEXT_PARTS = (("anamnesis", "Anamnéza:"), ("examination", "Vyšetření:"),
+                     ("diagnosis", "Diagnóza a doporučení:"))
+SUMMARY_LENGTH = 140
+
+
+def combine_legacy_texts(anamnesis, examination, diagnosis):
+    """The three old texts as one record text: only the filled parts, each under its heading on
+    its own line, separated by a blank line; a single filled part without a heading."""
+    parts = [(heading, (text or "").strip())
+             for (_name, heading), text in zip(LEGACY_TEXT_PARTS, (anamnesis, examination, diagnosis))]
+    parts = [(heading, text) for heading, text in parts if text]
+    if len(parts) == 1:
+        return parts[0][1]
+    return "\n\n".join("%s\n%s" % (heading, text) for heading, text in parts)
+
+
+def migrate_legacy_texts(cr):
+    """Task 32 (migration to 18.0.1.7.0): fill record_text from the three deprecated texts where
+    it is still empty and any of them has text. Plain SQL (no tracking, write_date kept); the old
+    columns are left as they are. Idempotent: a record that has a record text is never touched.
+    Returns the number of records filled."""
+    cr.execute("""
+        SELECT id, anamnesis, examination, diagnosis FROM elite_vet_clinical_record
+         WHERE coalesce(btrim(record_text), '') = ''
+           AND (coalesce(btrim(anamnesis), '') <> '' OR coalesce(btrim(examination), '') <> ''
+                OR coalesce(btrim(diagnosis), '') <> '')
+         ORDER BY id""")
+    rows = [(combine_legacy_texts(a, e, d), rec_id) for rec_id, a, e, d in cr.fetchall()]
+    rows = [(text, rec_id) for text, rec_id in rows if text]
+    if rows:
+        cr.executemany("UPDATE elite_vet_clinical_record SET record_text = %s WHERE id = %s", rows)
+    return len(rows)
+
+
+def record_text_title(text, length=SUMMARY_LENGTH):
+    """First line that says something: headings ("Anamnéza:") and blank lines are skipped."""
+    for line in (text or "").split("\n"):
+        line = line.strip()
+        if line and not line.endswith(":"):
+            return line[:length].rstrip() + ("…" if len(line) > length else "")
+    return ""
+
+
+def insert_template_text(text, body, position=None):
+    """Task 32: the template body put into the record text, never replacing anything.
+
+    `position` is the cursor (an index into `text`): the body goes there, on its own lines when
+    the cursor is inside a line. Without a cursor, or with the cursor after the last character
+    that is not white space, the body is appended after a blank line. Returns (text, caret) –
+    caret is the index right after the inserted body."""
+    text = text or ""
+    body = (body or "").strip()
+    if not body:
+        return text, len(text) if position is None else max(0, min(int(position), len(text)))
+    if position is not None:
+        position = max(0, min(int(position), len(text)))
+    if position is None or not text[position:].strip():
+        current = text.rstrip()
+        new = "%s\n\n%s" % (current, body) if current else body
+        return new, len(new)
+    before, after = text[:position], text[position:]
+    if before.strip() and not before.endswith("\n"):
+        before += "\n"
+    elif not before.strip():
+        before = ""
+    if not after.startswith("\n"):
+        after = "\n" + after
+    return before + body + after, len(before) + len(body)
 
 
 def local_date(dt):
@@ -23,7 +94,12 @@ def local_date(dt):
 
 
 class VetClinicalRecord(models.Model):
-    """Visit record written in Odoo (phase 1 of replacing WinVet)."""
+    """Visit record written in Odoo (phase 1 of replacing WinVet).
+
+    Task 32: the text of the visit is one field, record_text ("Záznam z vyšetření"). The fields
+    anamnesis, examination and diagnosis are DEPRECATED: kept in the database so nothing is lost
+    (the migration to 18.0.1.7.0 copied them into record_text), not shown anywhere and never
+    written by the code."""
 
     _name = "elite.vet.clinical.record"
     _description = "Záznam návštěvy"
@@ -54,9 +130,14 @@ class VetClinicalRecord(models.Model):
     weight = fields.Float(string="Hmotnost (kg)", digits=(6, 2))
     heart_rate = fields.Integer(string="Tep (/min)")
     respiratory_rate = fields.Integer(string="Dech (/min)")
-    anamnesis = fields.Text(string="Anamnéza")
-    examination = fields.Text(string="Vyšetření")
-    diagnosis = fields.Text(string="Diagnóza a doporučení")
+    record_text = fields.Text(string="Záznam z vyšetření",
+                              help="Text návštěvy – anamnéza, vyšetření, diagnóza a doporučení v jednom poli.")
+    record_summary = fields.Char(string="Záznam", compute="_compute_record_summary",
+                                 help="První řádek záznamu z vyšetření (bez nadpisů).")
+    # deprecated (task 32): see the class docstring
+    anamnesis = fields.Text(string="Anamnéza (zastaralé)", copy=False)
+    examination = fields.Text(string="Vyšetření (zastaralé)", copy=False)
+    diagnosis = fields.Text(string="Diagnóza a doporučení (zastaralé)", copy=False)
     # Request 25. 10.: internal note of the reception written when the client is checked in
     # (POS Dnes / Kartotéka), shown in the room. Never printed for the client.
     reception_note = fields.Text(string="Poznámka recepce", tracking=True, copy=False,
@@ -82,6 +163,11 @@ class VetClinicalRecord(models.Model):
     def _compute_date(self):
         for rec in self:
             rec.date = local_date(rec.start)
+
+    @api.depends("record_text")
+    def _compute_record_summary(self):
+        for rec in self:
+            rec.record_summary = record_text_title(rec.record_text) or False
 
     @api.depends("line_ids.amount")
     def _compute_amount_total(self):

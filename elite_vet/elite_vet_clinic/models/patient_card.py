@@ -18,17 +18,15 @@ from odoo.addons.elite_vet_reservation.models.pet import SPECIES, normalize_phon
 from odoo.addons.elite_vet_winvet.models.item import KINDS
 from odoo.addons.elite_vet_winvet.models.winvet_tools import name_words
 
-from .clinical_record import STATES, TZ
+from .clinical_record import STATES, SUMMARY_LENGTH, TZ, insert_template_text, record_text_title
 from .pet_alert import ALERT_KINDS
-from .text_template import RECORD_SECTIONS, SECTIONS
 
 # Fields of the record the card may write (save_record).
-SAVE_FIELDS = ("temperature", "weight", "heart_rate", "respiratory_rate", "anamnesis", "examination",
-               "diagnosis", "doctor_id")
+# Task 32: one text, record_text; the deprecated anamnesis / examination / diagnosis are ignored.
+SAVE_FIELDS = ("temperature", "weight", "heart_rate", "respiratory_rate", "record_text", "doctor_id")
 NUMBER_FIELDS = {"temperature": float, "weight": float, "heart_rate": int, "respiratory_rate": int}
 # Fields of a bill line the card may write (update_line).
 LINE_FIELDS = ("quantity", "price_unit", "name", "unit", "kind", "sequence")
-SUMMARY_LENGTH = 140
 TIMELINE_LIMIT = 300
 
 
@@ -183,7 +181,7 @@ class ClinicalRecordCardApi(models.Model):
             "time": local_time(rec.start), "state": rec.state, "state_label": dict(STATES)[rec.state],
             "temperature": or_none(rec.temperature), "weight": or_none(rec.weight),
             "heart_rate": or_none(rec.heart_rate), "respiratory_rate": or_none(rec.respiratory_rate),
-            "anamnesis": rec.anamnesis or "", "examination": rec.examination or "", "diagnosis": rec.diagnosis or "",
+            "record_text": rec.record_text or "",
             "reception_note": rec.reception_note or None,
             "room_note": rec.room_note or "",
             "room_note_editable": rec.state != "cancelled" and self._can_write(),
@@ -225,14 +223,14 @@ class ClinicalRecordCardApi(models.Model):
     def _timeline(self, pet):
         items = []
         for rec in self.search([("pet_id", "=", pet.id), ("state", "!=", "cancelled")], limit=TIMELINE_LIMIT):
-            text = rec.diagnosis or rec.examination or rec.anamnesis or ""
+            text = rec.record_text or ""
+            flat = " ".join(text.split())
             items.append({
                 "type": "record", "id": rec.id, "date": date_str(rec.date), "time": local_time(rec.start),
                 "doctor": rec.doctor_id.name or rec.user_id.name or None,
-                "diagnosis": (rec.diagnosis or "").strip().split("\n")[0][:SUMMARY_LENGTH] or None,
-                "summary": text[:SUMMARY_LENGTH].strip() + ("…" if len(text) > SUMMARY_LENGTH else ""),
-                "anamnesis": rec.anamnesis or "", "examination": rec.examination or "",
-                "diagnosis_text": rec.diagnosis or "", "state": rec.state, "state_label": dict(STATES)[rec.state],
+                "title": record_text_title(text) or None,
+                "summary": flat[:SUMMARY_LENGTH].strip() + ("…" if len(flat) > SUMMARY_LENGTH else ""),
+                "record_text": text, "state": rec.state, "state_label": dict(STATES)[rec.state],
                 "vitals_summary": self._vitals_summary(rec) or None,
                 "items": rec.line_ids.mapped("name"), "amount_total": rec.amount_total,
             })
@@ -304,10 +302,9 @@ class ClinicalRecordCardApi(models.Model):
             "alerts": [{"id": a.id, "kind": a.kind, "kind_label": kinds.get(a.kind), "note": a.note or None,
                         "label": a.display_name} for a in pet.alert_ids.filtered("active")],
         }
-        templates = {key: [] for key, _label in SECTIONS}
-        for tpl in self.env["elite.vet.text.template"].search([]):
-            templates[tpl.section].append({"id": tpl.id, "name": tpl.name, "body": tpl.body, "section": tpl.section,
-                                           "group_name": tpl.group_name or None})
+        # task 32: one record text, so every template is offered (the section no longer matters)
+        templates = [{"id": tpl.id, "name": tpl.name, "body": tpl.body, "group_name": tpl.group_name or None}
+                     for tpl in self.env["elite.vet.text.template"].search([], order="sequence, name, id")]
         bundles = [{"id": b.id, "code": b.code or None, "name": b.name, "description": b.description or None,
                     "line_count": b.line_count, "amount": b.amount}
                    for b in self.env["elite.vet.procedure.bundle"].search([])]
@@ -563,19 +560,21 @@ class ClinicalRecordCardApi(models.Model):
         return record._record_data()
 
     @api.model
-    def apply_template(self, record_id, template_id, section):
-        """Append the template text to the section (blank line between); returns the new text."""
-        if section not in RECORD_SECTIONS:
-            raise UserError(_("Neznámý oddíl záznamu."))
+    def apply_template(self, record_id, template_id, position=None):
+        """Task 32: insert the whole template text into the record text at `position` (the cursor,
+        in characters), or append it after a blank line without a cursor – never replaces (see
+        insert_template_text). Returns {text, caret}; caret = the position after the inserted text.
+        Save what is being typed first (save_record), the template goes into the saved text."""
         record = self._get_record(record_id)
         template = self.env["elite.vet.text.template"].browse(int(template_id)).exists()
         if not template:
             raise UserError(_("Šablona nebyla nalezena."))
-        current = (record[section] or "").rstrip()
-        body = (template.body or "").strip()
-        text = "%s\n\n%s" % (current, body) if current else body
-        record.write({section: text})
-        return {"section": section, "text": text}
+        if isinstance(position, bool) or not isinstance(position, (int, float)):
+            position = None
+        text, caret = insert_template_text(record.record_text or "", template.body, position)
+        if text != (record.record_text or ""):
+            record.write({"record_text": text})
+        return {"text": text, "caret": caret}
 
     @api.model
     def mark_done(self, record_id):

@@ -1,8 +1,8 @@
 {
     "name": "Elite Vet - Ordinace",
-    "version": "18.0.1.6.0",
+    "version": "18.0.1.7.0",
     "category": "Services",
-    "summary": "Karta pacienta a záznam návštěvy: vitální hodnoty, anamnéza, vyšetření, diagnóza, účet, šablony textů a balíčky výkonů.",
+    "summary": "Karta pacienta a záznam návštěvy: vitální hodnoty, záznam z vyšetření, účet, šablony textů a balíčky výkonů.",
     "description": """
 Elite Vet - Ordinace
 ====================

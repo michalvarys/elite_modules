@@ -255,10 +255,12 @@
                                             </t>
                                             <t t-if="e.type === 'record'">
                                                 <div t-if="e.vitals_summary" class="evpc-tl-vitals evpc-num" t-esc="e.vitals_summary"/>
-                                                <div t-foreach="recordSections(e)" t-as="s" t-key="s.key" class="evpc-tl-sec">
-                                                    <div class="evpc-tl-sec-label" t-esc="s.label"/>
-                                                    <div class="evpc-notes" t-esc="s.text"/>
-                                                </div>
+                                                <t t-if="e.record_text">
+                                                    <div class="evpc-notes" t-att-class="{'evpc-notes-clip': isLongNotes(e.record_text) and !state.showAll[entryKey(e)]}" t-esc="e.record_text"/>
+                                                    <button t-if="isLongNotes(e.record_text)" type="button" class="evpc-link small" t-on-click="() => this.toggleShowAll(e)">
+                                                        <t t-if="state.showAll[entryKey(e)]">Zobrazit méně</t><t t-else="">Zobrazit vše</t>
+                                                    </button>
+                                                </t>
                                                 <div t-if="e.items and e.items.length" class="evpc-tl-sub">
                                                     Účet: <t t-esc="e.items.join(', ')"/> · <span class="evpc-num" t-esc="fmtMoney(e.amount_total)"/>
                                                 </div>
@@ -333,25 +335,28 @@
                                     </label>
                                 </div>
 
-                                <div t-foreach="sections" t-as="s" t-key="s.key" class="evpc-field">
+                                <!-- task 32: one record text, one template button (inserted at the cursor) -->
+                                <div class="evpc-field evpc-field-record">
                                     <div class="evpc-field-row">
-                                        <label class="evpc-field-label" t-att-for="'evpc-' + s.key" t-esc="s.label"/>
-                                        <div t-if="editable and templatesFor(s.key).length" class="evpc-anchor">
-                                            <button type="button" class="ev-icon-btn evpc-tpl-btn"
-                                                    t-att-aria-expanded="state.popover === 'tpl-' + s.key ? 'true' : 'false'"
-                                                    t-att-aria-label="'Vložit šablonu: ' + s.label" title="Vložit šablonu"
-                                                    t-on-click="() => this.togglePopover('tpl-' + s.key)">
-                                                <i class="fa fa-file-text-o" aria-hidden="true"/>
+                                        <label class="evpc-field-label" for="evpc-record_text">Záznam z vyšetření</label>
+                                        <div t-if="editable and templates.length" class="evpc-anchor">
+                                            <button type="button" class="ev-btn evpc-tpl-btn"
+                                                    t-att-aria-expanded="state.popover === 'tpl' ? 'true' : 'false'"
+                                                    aria-haspopup="listbox"
+                                                    aria-label="Vložit šablonu do záznamu z vyšetření"
+                                                    title="Vloží celý text šablony na místo kurzoru (bez kurzoru na konec)"
+                                                    t-on-click="() => this.togglePopover('tpl')">
+                                                <i class="fa fa-file-text-o" aria-hidden="true"/>Šablona
                                             </button>
-                                            <Picker t-if="state.popover === 'tpl-' + s.key" load="loadTemplates(s.key)"
-                                                    onPick="(opt) => this.applyTemplate(s.key, opt)" onClose.bind="closePopover"
+                                            <Picker t-if="state.popover === 'tpl'" load="loadTemplates()"
+                                                    onPick.bind="applyTemplate" onClose.bind="closeTemplates"
                                                     placeholder="'Hledat šablonu…'" emptyText="'Žádná šablona.'" align="'right'"/>
                                         </div>
                                     </div>
-                                    <textarea class="evpc-text" t-att-id="'evpc-' + s.key" t-att-name="s.key"
-                                              t-att-placeholder="editable ? s.placeholder : ''" t-att-readonly="!editable"
-                                              t-att-value="state.form[s.key]"
-                                              t-on-input="(ev) => this.onField(s.key, ev)" t-on-blur="onFieldBlur"/>
+                                    <textarea class="evpc-text evpc-record-text" id="evpc-record_text" name="record_text"
+                                              t-att-placeholder="editable ? recordTextPlaceholder : ''" t-att-readonly="!editable"
+                                              t-att-value="state.form.record_text"
+                                              t-on-input="(ev) => this.onField('record_text', ev)" t-on-blur="onRecordTextBlur"/>
                                 </div>
 
                                 <div t-if="editable" class="evpc-rec-actions">

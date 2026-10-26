@@ -2,8 +2,6 @@ from odoo import api, fields, models
 
 SECTIONS = [("anamnesis", "Anamnéza"), ("examination", "Vyšetření"), ("diagnosis", "Diagnóza a doporučení"),
             ("any", "Kterýkoli")]
-# Text fields of the clinical record a template can be applied to.
-RECORD_SECTIONS = ("anamnesis", "examination", "diagnosis")
 
 
 class VetTextTemplate(models.Model):
@@ -11,11 +9,12 @@ class VetTextTemplate(models.Model):
 
     _name = "elite.vet.text.template"
     _description = "Šablona textu"
-    _order = "section, sequence, name, id"
+    _order = "sequence, name, id"
 
     name = fields.Char(string="Název", required=True)
     section = fields.Selection(SECTIONS, string="Oddíl", required=True, default="any",
-                               help="Ve kterém poli záznamu se šablona nabízí.")
+                               help="Zastaralé: záznam návštěvy má jedno pole a karta nabízí všechny "
+                                    "šablony. Pole zůstává kvůli datům, nikde se nezobrazuje.")
     body = fields.Text(string="Text", required=True)
     sequence = fields.Integer(string="Pořadí", default=10)
     active = fields.Boolean(string="Aktivní", default=True)

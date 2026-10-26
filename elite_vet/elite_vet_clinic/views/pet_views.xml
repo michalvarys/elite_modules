@@ -29,7 +29,7 @@
                         <list>
                             <field name="start"/>
                             <field name="doctor_id"/>
-                            <field name="diagnosis"/>
+                            <field name="record_summary"/>
                             <field name="currency_id" column_invisible="1"/>
                             <field name="amount_total"/>
                             <field name="state"/>

@@ -10,7 +10,7 @@
                 <field name="partner_id"/>
                 <field name="doctor_id"/>
                 <field name="user_id" optional="hide"/>
-                <field name="diagnosis" optional="show"/>
+                <field name="record_summary" optional="show"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="amount_total" sum="Celkem"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'"
@@ -53,11 +53,8 @@
                     </group>
                     <notebook>
                         <page string="Záznam" name="texts">
-                            <group>
-                                <field name="anamnesis" readonly="state != 'draft'"/>
-                                <field name="examination" readonly="state != 'draft'"/>
-                                <field name="diagnosis" readonly="state != 'draft'"/>
-                            </group>
+                            <field name="record_text" readonly="state != 'draft'" nolabel="1"
+                                   placeholder="Anamnéza, vyšetření, diagnóza a doporučení…"/>
                             <group string="Interní poznámky (klient je nevidí)" name="internal_notes">
                                 <field name="reception_note" readonly="state == 'cancelled'"
                                        placeholder="Co recepce napsala při příjmu pacienta"/>
@@ -99,7 +96,7 @@
                 <field name="pet_id"/>
                 <field name="partner_id"/>
                 <field name="doctor_id"/>
-                <field name="diagnosis"/>
+                <field name="record_text"/>
                 <filter name="today" string="Dnes" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter name="draft" string="Rozepsané" domain="[('state', '=', 'draft')]"/>
                 <filter name="done" string="K pokladně" domain="[('state', '=', 'done')]"/>

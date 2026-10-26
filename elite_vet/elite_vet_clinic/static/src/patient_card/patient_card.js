@@ -15,7 +15,8 @@ const SAVE_DELAY = 800;          // autosave after the last keystroke
 const SEARCH_DELAY = 250;
 const STALE_MS = 60000;          // reload the card on window focus when older than this
 const NUMBER_FIELDS = ["temperature", "weight", "heart_rate", "respiratory_rate"];
-const TEXT_FIELDS = ["anamnesis", "examination", "diagnosis"];
+// Task 32: one text of the visit (the old anamnesis / examination / diagnosis are deprecated).
+const TEXT_FIELDS = ["record_text"];
 const NUMBER_RE = /^\d+([.,]\d+)?$/;
 // Task 28: resizable columns History | Today's record | Bill (≥ 1280 px). Widths in px, per browser.
 const COLUMNS_KEY = "elite_vet_clinic.card_columns";
@@ -70,6 +71,18 @@ function nowHHMM() {
 }
 function errorMessage(e) { return e?.data?.message || e?.message || String(e); }
 function firstLine(text) { return (text || "").trim().split("\n")[0].trim(); }
+// First line of a record text that says something: headings ("Anamnéza:") are skipped
+// (the same rule as record_text_title in models/clinical_record.py).
+export function recordTitle(text) {
+    for (let line of (text || "").split("\n")) {
+        line = line.trim();
+        if (line && !line.endsWith(":")) return line;
+    }
+    return "";
+}
+// Task 32: the server counts characters (code points), the textarea UTF-16 units.
+export function toCodePoints(text, index) { return [...(text || "").slice(0, index)].length; }
+export function fromCodePoints(text, count) { return [...(text || "")].slice(0, count).join("").length; }
 // One-line summary of a WinVet note: skips headings ("Anamnéza:") and measurement lines
 // ("Čas: 15:22", "Hmotnost: 2,2") and drops a short "Label:" prefix.
 const META_LINE = /^(čas|hmotnost|teplota|váha|tep|dech)\s*:/i;
@@ -317,7 +330,7 @@ export class PatientCard extends Component {
 
     emptyForm() {
         return { temperature: "", weight: "", heart_rate: "", respiratory_rate: "",
-                 anamnesis: "", examination: "", diagnosis: "" };
+                 record_text: "" };
     }
 
     // ------------------------------------------------------------ column widths (task 28)
@@ -496,7 +509,7 @@ export class PatientCard extends Component {
         return {
             id: false, pet_id: petId, doctor_id: null, doctor_name: null, reservation_id: this.state.reservationId || null,
             time: nowHHMM(), state: "draft", state_label: "Rozepsaný", temperature: null, weight: null,
-            heart_rate: null, respiratory_rate: null, anamnesis: "", examination: "", diagnosis: "",
+            heart_rate: null, respiratory_rate: null, record_text: "",
             lines: [], amount_total: 0, currency: "Kč", editable: true, placeholder: true,
             reception_note: null, room_note: "", room_note_editable: true,
         };
@@ -522,7 +535,10 @@ export class PatientCard extends Component {
     }
     setRecord(record, { replaceForm = false } = {}) {
         this.state.record = record;
-        if (replaceForm) this.roomNoteDirty = false;
+        if (replaceForm) {
+            this.roomNoteDirty = false;
+            this.textCursor = null;
+        }
         if (!this.roomNoteDirty) this.state.roomNote = record?.room_note || "";
         if (!record || !replaceForm) return;
         const form = this.emptyForm();
@@ -644,9 +660,9 @@ export class PatientCard extends Component {
         if (e.type === "record") {
             if (this.state.record && e.id === this.state.record.id) {
                 const f = this.state.form;
-                return firstLine(f.diagnosis) || firstLine(f.examination) || firstLine(f.anamnesis) || "Dnešní záznam (zatím bez textu)";
+                return recordTitle(f.record_text) || "Dnešní záznam (zatím bez textu)";
             }
-            return e.diagnosis || firstLine(e.summary) || "Záznam bez textu";
+            return e.title || firstLine(e.summary) || "Záznam bez textu";
         }
         return e.diagnosis || noteSummary(e.notes) || e.case_name || "Návštěva bez textu";
     }
@@ -662,21 +678,10 @@ export class PatientCard extends Component {
         const k = this.entryKey(e);
         this.state.showAll[k] = !this.state.showAll[k];
     }
-    recordSections(e) {
-        return [
-            { key: "anamnesis", label: "Anamnéza", text: e.anamnesis },
-            { key: "examination", label: "Vyšetření", text: e.examination },
-            { key: "diagnosis", label: "Diagnóza a doporučení", text: e.diagnosis_text },
-        ].filter((s) => s.text);
-    }
-
-    // today's record
-    get sections() {
-        return [
-            { key: "anamnesis", label: "Anamnéza", placeholder: "Důvod návštěvy, potíže, jak dlouho, co už majitel zkoušel…" },
-            { key: "examination", label: "Vyšetření", placeholder: "Celkový stav, sliznice, uzliny, srdce a plíce, břicho…" },
-            { key: "diagnosis", label: "Diagnóza a doporučení", placeholder: "Diagnóza, léčba, kontrola za…" },
-        ];
+    // today's record (task 32: one text field with one template button)
+    get recordTextPlaceholder() {
+        return "Důvod návštěvy a potíže, nález při vyšetření, diagnóza, léčba a doporučení, kontrola za…\n"
+            + "Šablonu vložíte tlačítkem Šablona – vloží se na místo kurzoru.";
     }
     get vitals() {
         return [
@@ -707,7 +712,7 @@ export class PatientCard extends Component {
         // task 28: a visit imported from WinVet prints too (the server says whether it has content)
         if (e.type === "visit") return !!e.printable;
         if (e.type !== "record" || this.isOpenRecord(e)) return false;
-        return !!(e.anamnesis || e.examination || e.diagnosis_text || e.vitals_summary || (e.items && e.items.length));
+        return !!(e.record_text || e.vitals_summary || (e.items && e.items.length));
     }
     reportUrl(recordId, type = "record") {
         const report = type === "visit"
@@ -753,6 +758,13 @@ export class PatientCard extends Component {
     }
     get hasInvalid() { return Object.values(this.state.invalid).some(Boolean); }
     onFieldBlur() { this.flush().catch(() => {}); }
+    /** Task 32: where the cursor was in the record text when it lost focus (the template picker
+     *  takes the focus); null = no cursor, the template is appended. */
+    onRecordTextBlur(ev) {
+        const el = ev.target;
+        this.textCursor = { pos: el.selectionEnd, text: el.value };
+        this.onFieldBlur();
+    }
     onVitalKeydown(ev) { if (ev.key === "Enter") { ev.preventDefault(); ev.target.blur(); } }
 
     // Writes the changed fields (invalid numbers stay unsaved until fixed). Calls are serialised.
@@ -867,14 +879,11 @@ export class PatientCard extends Component {
     togglePopover(name) { this.state.popover = this.state.popover === name ? null : name; }
     closePopover() { this.state.popover = null; }
 
-    templatesFor(section) {
-        const t = this.state.data?.templates || {};
-        return [...(t[section] || []), ...(t.any || [])];
-    }
-    loadTemplates(section) {
+    get templates() { return this.state.data?.templates || []; }
+    loadTemplates() {
         return async (term) => {
             const q = term.trim().toLowerCase();
-            return this.templatesFor(section)
+            return this.templates
                 .filter((t) => !q || (t.name + " " + t.body + " " + (t.group_name || "")).toLowerCase().includes(q))
                 .map((t) => ({ id: t.id, title: t.name, subtitle: (t.body || "").replace(/\s+/g, " ").slice(0, 110), right: t.group_name || "", raw: t }));
         };
@@ -903,21 +912,35 @@ export class PatientCard extends Component {
     }
     freeLabel(term) { return "Přidat mimo ceník: „" + term + "“"; }
 
-    async applyTemplate(section, opt) {
+    recordTextEl() { return this.rootRef.el?.querySelector('textarea[name="record_text"]'); }
+    closeTemplates() {
+        this.closePopover();
+        setTimeout(() => this.recordTextEl()?.focus());
+    }
+    /** Task 32: the whole template goes in at the cursor (or after a blank line at the end when
+     *  there is no cursor) – never replacing the text; the server does the insert
+     *  (apply_template, the same rule tested in Python). */
+    async applyTemplate(opt) {
         this.closePopover();
         await this.run(async () => {
             await this.flush();
-            const res = await this.orm.call(MODEL, "apply_template", [await this.ensureRecord(), opt.id, section]);
-            this.state.form[section] = res.text;
-            this.state.record[section] = res.text;
+            const text = this.state.form.record_text || "";
+            const cursor = this.textCursor;
+            // a cursor counts only while the text is the one it was taken in
+            const position = cursor && cursor.text === text ? toCodePoints(text, cursor.pos) : null;
+            const res = await this.orm.call(MODEL, "apply_template", [await this.ensureRecord(), opt.id, position]);
+            this.state.form.record_text = res.text;
+            this.state.record.record_text = res.text;
             this.state.save = { status: "idle", at: nowHHMM() };
-            // Cursor at the end of the text, ready to continue typing.
+            const caret = fromCodePoints(res.text, res.caret);
+            this.textCursor = { pos: caret, text: res.text };
+            // Cursor right after the inserted text, ready to continue typing.
             setTimeout(() => {
-                const el = this.rootRef.el?.querySelector(`textarea[name="${section}"]`);
+                const el = this.recordTextEl();
                 if (el) {
                     this.autosize(el);
                     el.focus();
-                    el.setSelectionRange(el.value.length, el.value.length);
+                    el.setSelectionRange(caret, caret);
                 }
             });
         });

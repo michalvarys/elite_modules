@@ -277,9 +277,9 @@ class Reception(models.AbstractModel):
 
     @api.model
     def _has_content(self, record):
-        """Anything written in the visit besides the reception's own check-in data: the texts of
-        the room, vitals, bill lines or a quotation."""
-        return bool(record.anamnesis or record.examination or record.diagnosis or record.room_note
+        """Anything written in the visit besides the reception's own check-in data: the record
+        text or the note of the room, vitals, bill lines or a quotation."""
+        return bool((record.record_text or "").strip() or record.room_note
                     or record.temperature or record.weight or record.heart_rate or record.respiratory_rate
                     or record.line_ids or record.sale_order_id)
 

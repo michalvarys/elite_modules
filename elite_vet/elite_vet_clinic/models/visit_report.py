@@ -71,10 +71,9 @@ class ClinicalRecordVisitReport(models.Model):
     # ------------------------------------------------------------------ helpers
 
     def _visit_report_has_content(self):
-        """Something to print: a medical text, a vital value or a bill line."""
+        """Something to print: the record text, a vital value or a bill line."""
         self.ensure_one()
-        texts = (self.anamnesis, self.examination, self.diagnosis)
-        return bool(any((text or "").strip() for text in texts) or self.temperature or self.weight
+        return bool((self.record_text or "").strip() or self.temperature or self.weight
                     or self.heart_rate or self.respiratory_rate or self.line_ids)
 
     def _visit_report_filename(self):
@@ -201,7 +200,6 @@ class ClinicalRecordVisitReport(models.Model):
         start = rec.start and fields.Datetime.context_timestamp(rec.with_context(tz=TZ.zone), rec.start)
         pet = rec.pet_id
         lines = rec._visit_report_lines()
-        examination = (rec.examination or "").strip()
         vitals = rec._visit_report_vitals()
         return {
             "clinic": rec._visit_report_clinic(),
@@ -210,11 +208,12 @@ class ClinicalRecordVisitReport(models.Model):
             "doctor": rec._visit_report_doctor(),
             "visit_date": czech_date(rec.date),
             "visit_time": start.strftime("%H:%M") if start else "",
-            "anamnesis": (rec.anamnesis or "").strip(),
-            "vitals": vitals,
-            "examination": examination,
-            "show_examination": bool(vitals or examination),
-            "diagnosis": (rec.diagnosis or "").strip(),
+            # task 32: one section "Záznam z vyšetření" – the vitals line and the record text
+            # (the deprecated anamnesis / examination / diagnosis are never printed)
+            "vitals_rows": [" · ".join(vitals)] if vitals else [],
+            "record_text": (rec.record_text or "").strip(),
+            "case": "",
+            "diagnosis": "",
             "lines": lines,
             "has_lots": any(line["lots"] or line["expiry"] for line in lines),
             "next_vaccination": czech_date(pet.next_vaccination),
@@ -297,11 +296,7 @@ class WinvetVisitReport(models.Model):
             "doctor": Record._visit_report_doctor_of(visit.doctor_id),
             "visit_date": czech_date(visit.date),
             "visit_time": short_time(visit.time) or "",
-            "anamnesis": "",
-            "vitals": [],
             "vitals_rows": self._visit_report_vitals(),
-            "examination": "",
-            "show_examination": False,
             "record_text": notes,
             "case": case,
             "diagnosis": diagnosis,

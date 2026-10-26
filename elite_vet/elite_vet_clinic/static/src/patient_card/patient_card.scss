@@ -283,7 +283,6 @@
 .evpc-tl-today .evpc-tl-when b { color: var(--evpc-accent-dark); }
 .evpc-tl-detail { padding: 0 10px 10px; display: grid; gap: 8px; }
 .evpc-tl-vitals { font-size: var(--ev-fs-meta); background: var(--evpc-chip); border-radius: 4px; padding: 2px 8px; justify-self: start; }
-.evpc-tl-sec-label { font-size: var(--ev-fs-meta); font-weight: 700; color: var(--evpc-muted); }
 .evpc-notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.55; }
 .evpc-notes-clip {
     max-height: 16em; overflow: hidden;
@@ -353,6 +352,8 @@
     &[readonly] { background: var(--evpc-bg); resize: none; }
     &::placeholder { color: var(--ev-faint); }
 }
+// task 32: the one record text – large, grows with the text, comfortable to read
+.evpc-record-text { min-height: 280px; line-height: 1.65; }
 .evpc-rec-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 // ---------- bill ----------
