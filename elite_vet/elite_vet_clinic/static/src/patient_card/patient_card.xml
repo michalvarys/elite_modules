@@ -127,62 +127,66 @@
 
                 <div t-if="state.loading or !state.data" class="evpc-loading">Načítám kartu…</div>
                 <t t-else="">
-                    <!-- header band -->
+                    <!-- header band (task 28: compact, two dense rows) -->
                     <header class="evpc-pat">
-                        <div class="evpc-pat-id">
+                        <div class="evpc-pat-row">
                             <h1 class="evpc-pat-name">
                                 <t t-esc="pet.name"/>
-                                <span t-if="pet.deceased" class="ev-chip ms-2">† nežije</span>
-                                <span t-if="!pet.active" class="ev-chip ms-2">archivovaný</span>
+                                <span t-if="pet.deceased" class="ev-chip">† nežije</span>
+                                <span t-if="!pet.active" class="ev-chip">archivovaný</span>
                             </h1>
-                            <div class="evpc-pat-facts" t-esc="petFacts"/>
-                        </div>
-                        <dl class="evpc-pat-meta">
-                            <div class="evpc-pat-owner">
-                                <dt>Majitel</dt>
-                                <dd>
-                                    <button type="button" class="evpc-link" t-on-click="openOwner" title="Otevřít kartu klienta" t-esc="owner.name"/>
-                                    <a t-if="ownerPhone" class="evpc-num evpc-phone" t-att-href="'tel:' + ownerPhone" t-esc="ownerPhone"/>
-                                </dd>
+                            <span class="evpc-pat-facts" t-esc="petFacts"/>
+                            <div t-if="state.record" class="evpc-pat-visit">
+                                <t t-set="chip" t-value="visitChip"/>
+                                <span t-if="chip" class="ev-chip evpc-visit-chip" t-att-class="'ev-chip-' + chip.state" t-esc="chip.text"/>
+                                <span t-if="state.record.doctor_name" class="evpc-treating"
+                                      t-att-title="state.record.doctor_auto ? 'Doplněno automaticky. Převezme ji lékařka, která záznam upraví.' : ''">
+                                    Ošetřuje <b t-esc="state.record.doctor_name"/><span t-if="state.record.doctor_auto" class="evpc-treating-auto"> (automaticky)</span>
+                                    <span t-if="state.record.other_doctors and state.record.other_doctors.length" class="evpc-treating-sub"> · upravovaly také <t t-esc="state.record.other_doctors.join(', ')"/></span>
+                                </span>
                             </div>
-                            <div t-if="weightText" t-att-title="weightTitle">
-                                <dt>Váha</dt>
-                                <dd class="evpc-num"><t t-esc="weightText"/>
-                                    <span t-if="weightDelta" class="evpc-delta" t-att-class="weightDelta.cls"> (<t t-esc="weightDelta.text"/>)</span>
-                                </dd>
-                            </div>
-                            <div t-if="pet.chip"><dt>Čip</dt><dd class="evpc-num" t-esc="pet.chip"/></div>
-                            <div t-if="vaccinationInfo"><dt>Očkování</dt>
-                                <dd t-att-class="vaccinationInfo.overdue ? 'evpc-overdue' : ''" t-esc="vaccinationInfo.text"/>
-                            </div>
-                        </dl>
-                        <div t-if="state.record" class="evpc-pat-visit">
-                            <t t-set="chip" t-value="visitChip"/>
-                            <span t-if="chip" class="ev-chip evpc-visit-chip" t-att-class="'ev-chip-' + chip.state" t-esc="chip.text"/>
-                            <div t-if="state.record.doctor_name" class="evpc-treating"
-                                 t-att-title="state.record.doctor_auto ? 'Doplněno automaticky. Převezme ji lékařka, která záznam upraví.' : ''">
-                                Ošetřuje <b t-esc="state.record.doctor_name"/><span t-if="state.record.doctor_auto" class="evpc-treating-auto"> (automaticky)</span>
-                                <span t-if="state.record.other_doctors and state.record.other_doctors.length" class="evpc-treating-sub">upravovaly také <t t-esc="state.record.other_doctors.join(', ')"/></span>
-                            </div>
-                        </div>
-                        <div class="evpc-pat-alerts" t-if="data.header.alerts.length or pet.important_note or perms.can_write">
-                            <button t-foreach="data.header.alerts" t-as="a" t-key="a.id" type="button"
-                                    class="evpc-alert" t-att-class="'evpc-alert-' + a.kind" t-on-click="() => this.openAlert(a)"
-                                    title="Upravit upozornění">
-                                <i t-att-class="'fa ' + (a.kind === 'bites' ? 'fa-hand-paper-o' : a.kind === 'allergy' ? 'fa-medkit' : 'fa-exclamation-triangle')" aria-hidden="true"/>
-                                <t t-esc="a.label"/>
-                            </button>
-                            <span t-if="pet.important_note" class="evpc-alert evpc-alert-note" title="Důležitá poznámka u pacienta">
-                                <i class="fa fa-info-circle" aria-hidden="true"/><t t-esc="pet.important_note"/>
-                            </span>
-                            <span class="evpc-pat-tools">
-                                <button t-if="perms.can_write" type="button" class="ev-btn ev-btn-quiet" t-on-click="addAlert">
+                            <span t-if="perms.can_write" class="evpc-pat-tools">
+                                <button type="button" class="ev-btn ev-btn-quiet evpc-pat-tool" t-on-click="addAlert"
+                                        title="Přidat upozornění k pacientovi">
                                     <i class="fa fa-plus" aria-hidden="true"/>Upozornění
                                 </button>
-                                <button t-if="perms.can_write" type="button" class="ev-btn ev-btn-quiet" t-on-click="editPet">
+                                <button type="button" class="ev-btn ev-btn-quiet evpc-pat-tool" t-on-click="editPet"
+                                        title="Upravit údaje pacienta">
                                     <i class="fa fa-pencil" aria-hidden="true"/>Upravit pacienta
                                 </button>
                             </span>
+                        </div>
+                        <div class="evpc-pat-row evpc-pat-row-2">
+                            <dl class="evpc-pat-meta">
+                                <div class="evpc-pat-owner">
+                                    <dt>Majitel</dt>
+                                    <dd>
+                                        <button type="button" class="evpc-link" t-on-click="openOwner" title="Otevřít kartu klienta" t-esc="owner.name"/>
+                                        <a t-if="ownerPhone" class="evpc-num evpc-phone" t-att-href="'tel:' + ownerPhone" t-esc="ownerPhone"/>
+                                    </dd>
+                                </div>
+                                <div t-if="weightText" t-att-title="weightTitle">
+                                    <dt>Váha</dt>
+                                    <dd class="evpc-num"><t t-esc="weightText"/>
+                                        <span t-if="weightDelta" class="evpc-delta" t-att-class="weightDelta.cls"> (<t t-esc="weightDelta.text"/>)</span>
+                                    </dd>
+                                </div>
+                                <div t-if="pet.chip"><dt>Čip</dt><dd class="evpc-num" t-esc="pet.chip"/></div>
+                                <div t-if="vaccinationInfo"><dt>Očkování</dt>
+                                    <dd t-att-class="vaccinationInfo.overdue ? 'evpc-overdue' : ''" t-esc="vaccinationInfo.text"/>
+                                </div>
+                            </dl>
+                            <div class="evpc-pat-alerts" t-if="data.header.alerts.length or pet.important_note">
+                                <button t-foreach="data.header.alerts" t-as="a" t-key="a.id" type="button"
+                                        class="evpc-alert" t-att-class="'evpc-alert-' + a.kind" t-on-click="() => this.openAlert(a)"
+                                        title="Upravit upozornění">
+                                    <i t-att-class="'fa ' + (a.kind === 'bites' ? 'fa-hand-paper-o' : a.kind === 'allergy' ? 'fa-medkit' : 'fa-exclamation-triangle')" aria-hidden="true"/>
+                                    <t t-esc="a.label"/>
+                                </button>
+                                <span t-if="pet.important_note" class="evpc-alert evpc-alert-note" t-att-title="'Důležitá poznámka u pacienta: ' + pet.important_note">
+                                    <i class="fa fa-info-circle" aria-hidden="true"/><span class="evpc-alert-text" t-esc="pet.important_note"/>
+                                </span>
+                            </div>
                         </div>
                     </header>
                     <div t-if="state.record and state.record.reception_note" class="evpc-visit-note evpc-reception-note" role="note">
@@ -190,7 +194,7 @@
                         <span><b>Poznámka recepce</b> <span class="evpc-visit-note-text" t-esc="state.record.reception_note"/></span>
                     </div>
 
-                    <div class="evpc-grid">
+                    <div class="evpc-grid" t-ref="grid" t-att-style="gridStyle">
                         <!-- ===== history ===== -->
                         <section class="evpc-col evpc-col-history" t-att-class="{'evpc-hist-closed': !state.historyOpen}" aria-labelledby="evpc-h-hist">
                             <div class="evpc-col-head">
@@ -266,6 +270,15 @@
                             </div>
                         </section>
 
+
+                        <!-- task 28: drag (mouse, touch), arrows when focused, double-click resets; ≥ 1280 px only -->
+                        <div class="evpc-split" t-att-class="{'evpc-split-active': state.split.dragging === 'history'}"
+                             role="separator" tabindex="0" aria-orientation="vertical"
+                             aria-label="Šířka sloupce Historie" title="Tažením změníte šířku · dvojklik vrátí původní"
+                             t-att-aria-valuenow="splitNow('history')" t-att-aria-valuemin="splitLimits('history').min"
+                             t-att-aria-valuemax="splitLimits('history').max"
+                             t-on-pointerdown="(ev) => this.onSplitDown(ev, 'history')" t-on-dblclick="() => this.resetSplit('history')"
+                             t-on-keydown="(ev) => this.onSplitKey(ev, 'history')"/>
                         <!-- ===== today's record ===== -->
                         <section class="evpc-col evpc-col-record" aria-labelledby="evpc-h-rec">
                             <t t-if="!state.record">
@@ -355,6 +368,15 @@
                             </t>
                         </section>
 
+
+                        <!-- task 28: drag (mouse, touch), arrows when focused, double-click resets; ≥ 1280 px only -->
+                        <div class="evpc-split" t-att-class="{'evpc-split-active': state.split.dragging === 'bill'}"
+                             role="separator" tabindex="0" aria-orientation="vertical"
+                             aria-label="Šířka sloupce Účet" title="Tažením změníte šířku · dvojklik vrátí původní"
+                             t-att-aria-valuenow="splitNow('bill')" t-att-aria-valuemin="splitLimits('bill').min"
+                             t-att-aria-valuemax="splitLimits('bill').max"
+                             t-on-pointerdown="(ev) => this.onSplitDown(ev, 'bill')" t-on-dblclick="() => this.resetSplit('bill')"
+                             t-on-keydown="(ev) => this.onSplitKey(ev, 'bill')"/>
                         <!-- ===== bill ===== -->
                         <section class="evpc-col evpc-col-bill" aria-labelledby="evpc-h-bill">
                             <h2 id="evpc-h-bill" class="evpc-h">Účet</h2>

@@ -16,6 +16,9 @@ class TestPatientCardAssets(TransactionCase):
             self.assertIn(name, templates)
         # the board extension (t-inherit) with the "Karta" button
         self.assertIn("evpc-board-card", templates)
+        # task 28: compact header rows and the column splitters (separator, keyboard, double-click)
+        for text in ("evpc-pat-row", "evpc-split", 'role="separator"', "onSplitKey", "resetSplit"):
+            self.assertIn(text, templates)
 
     def test_client_action(self):
         action = self.env.ref("elite_vet_clinic.action_patient_card")

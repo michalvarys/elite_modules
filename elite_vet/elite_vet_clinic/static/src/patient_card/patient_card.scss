@@ -137,43 +137,78 @@
 .evpc-bar .evpc-search { flex: 1 1 240px; min-width: 200px; margin-left: auto; max-width: 440px; }
 
 // ---------- card: patient header ----------
+// Task 28: two dense rows instead of a tall block (≈ 100 px at 1920 with alerts):
+// 1) name · facts · visit chip + treating doctor · tools on the right;
+// 2) owner + phone · weight · chip · vaccination (label: value inline) · alert chips.
 .evpc-pat {
-    display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px 32px; padding: 18px 24px 16px;
+    display: flex; flex-direction: column; gap: 6px; padding: 10px 24px 10px;
     background: var(--evpc-paper); border-bottom: 1px solid var(--evpc-line); flex: none;
 }
-.evpc-pat-id { min-width: 0; }
-.evpc-pat-name { font-size: 32px; font-weight: 700; margin: 0; line-height: 1.1; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-.evpc-pat-facts { color: var(--evpc-muted); font-size: 18px; margin-top: 4px; }
-.evpc-pat-meta {
-    display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0;
-    > div { display: flex; flex-direction: column; }
-    dt { font-size: var(--ev-fs-meta); font-weight: 400; color: var(--evpc-muted); }
-    dd { margin: 0; font-weight: 600; font-size: 18px; }
+.evpc-pat-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; min-width: 0; }
+.evpc-pat-name {
+    font-size: 28px; font-weight: 700; margin: 0; line-height: 1.15;
+    display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px;
 }
-.evpc-pat-owner dd { display: flex; flex-direction: column; align-items: flex-start; }
+.evpc-pat-facts { color: var(--evpc-muted); font-size: 17px; }
+.evpc-pat-meta {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 22px; margin: 0;
+    > div { display: flex; align-items: baseline; gap: 6px; }
+    dt { font-size: var(--ev-fs-meta); font-weight: 400; color: var(--evpc-muted); }
+    dd { margin: 0; font-weight: 600; font-size: var(--ev-fs-body); }
+}
+.evpc-pat-owner dd { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; }
 .evpc-phone { color: var(--evpc-ink); text-decoration: none; font-weight: 400; &:hover { color: var(--evpc-accent-dark); } }
 .evpc-delta { font-weight: 400; color: var(--evpc-muted); font-size: var(--ev-fs-meta); &.evpc-up, &.evpc-down { color: var(--evpc-ink); } }
 .evpc-overdue { color: var(--evpc-alert); }
-.evpc-pat-visit { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-left: auto; }
-.evpc-visit-chip { font-size: var(--ev-fs-body); padding: 4px 14px; }
+.evpc-pat-visit { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.evpc-visit-chip { font-size: var(--ev-fs-body); padding: 3px 12px; }
 .evpc-treating { font-size: var(--ev-fs-body); b { font-weight: 700; } }
-.evpc-treating-sub { display: block; font-size: 13px; color: var(--evpc-muted); }
+.evpc-treating-sub { font-size: 13px; color: var(--evpc-muted); }
 .evpc-treating-auto { color: var(--evpc-muted); font-size: var(--ev-fs-meta); }
-.evpc-pat-alerts { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.evpc-pat-alerts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
 .evpc-alert {
-    display: inline-flex; align-items: center; gap: 8px; min-height: 40px; border: 1px solid #f0bcb5; border-radius: 999px;
-    padding: 4px 16px; font-size: var(--ev-fs-body); font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px; min-height: 32px; border: 1px solid #f0bcb5; border-radius: 999px;
+    padding: 2px 12px; font-size: var(--ev-fs-body); font-weight: 700; line-height: 1.25;
     background: var(--evpc-alert-bg); color: var(--evpc-alert); cursor: pointer;
     &:hover { border-color: currentColor; }
 }
 .evpc-alert-other, .evpc-alert-note { background: var(--evpc-warn-bg); color: var(--evpc-warn); border-color: #efd3a3; }
-.evpc-alert-note { cursor: default; font-weight: 600; max-width: 520px; &:hover { border-color: #efd3a3; } }
-.evpc-pat-tools { display: inline-flex; gap: 4px; margin-left: auto; }
+.evpc-alert-note { cursor: default; font-weight: 600; max-width: 420px; &:hover { border-color: #efd3a3; } }
+.evpc-alert-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.evpc-pat-tools { display: inline-flex; gap: 2px; margin-left: auto; }
+.ev-clinic .evpc-pat-tool { min-height: 36px; padding: 0 10px; font-size: 15px; gap: 6px; }
 
 // ---------- card: columns ----------
-.evpc-grid { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) minmax(320px, 400px); align-items: start; }
-.evpc-col { padding: 18px 20px 28px; min-width: 0; border-right: 1px solid var(--evpc-line); }
-.evpc-col:last-child { border-right: 0; }
+// Task 28: History | splitter | record | splitter | Bill; the widths come from the card (style
+// --evpc-w-history / --evpc-w-bill, dragged by the user, kept in localStorage).
+.evpc-grid {
+    display: grid; align-items: start;
+    grid-template-columns: var(--evpc-w-history, 320px) 10px minmax(0, 1fr) 10px var(--evpc-w-bill, 380px);
+}
+.evpc-col { padding: 18px 20px 28px; min-width: 0; }
+.evpc-split {
+    position: relative; align-self: stretch; cursor: col-resize; touch-action: none; user-select: none; outline: none;
+    background: transparent;
+    // the visible line; wider and accent-coloured on hover, focus and while dragging
+    &::before {
+        content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-50%);
+        background: var(--evpc-line); transition: width .12s, background-color .12s;
+    }
+    // a grip in the middle of the visible area
+    &::after {
+        content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 36px;
+        border-radius: 2px; background: var(--ev-line-strong); opacity: 0; transition: opacity .12s;
+    }
+    &:hover, &:focus-visible, &.evpc-split-active {
+        &::before { width: 4px; background: var(--evpc-accent); }
+        &::after { opacity: 0; }
+    }
+    &:focus-visible { box-shadow: inset 0 0 0 2px var(--ev-focus); }
+}
+@media (hover: none) {
+    // touch screens: show the grip, there is no hover
+    .evpc-split::after { opacity: 1; }
+}
 .evpc-col-record { background: var(--evpc-paper); }
 .evpc-col-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 14px; }
 .evpc-hist-toggle { display: none; }
@@ -187,8 +222,10 @@
     .evpc-scroll-card .evpc-bill-foot { position: sticky; bottom: 0; }
 }
 @media (max-width: 1279.98px) {
-    // record | bill; the history folds below them
+    // record | bill; the history folds below them; no splitters (task 28)
     .evpc-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); }
+    .evpc-split { display: none; }
+    .evpc-col-record { border-right: 1px solid var(--evpc-line); }
     .evpc-col-record { order: 1; }
     .evpc-col-bill { order: 2; border-right: 0; }
     .evpc-col-history { order: 3; grid-column: 1 / -1; border-right: 0; border-top: 1px solid var(--evpc-line); padding-bottom: 18px; }
@@ -200,13 +237,12 @@
     .evpc-hist-closed .evpc-hist-body { display: none; }
     .evpc-hist-closed .evpc-filter { display: none; }
     .evpc-hist-closed .evpc-col-head { margin-bottom: 0; }
-    .evpc-pat-visit { margin-left: 0; }
 }
 @media (max-width: 899.98px) {
     .evpc-grid { grid-template-columns: minmax(0, 1fr); }
     .evpc-col { border-right: 0; border-bottom: 1px solid var(--evpc-line); padding: 16px; }
     .evpc-col-history { grid-column: auto; }
-    .evpc-pat { padding: 16px; }
+    .evpc-pat { padding: 10px 16px; }
 }
 
 // ---------- history ----------

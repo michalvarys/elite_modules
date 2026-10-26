@@ -17,6 +17,34 @@ const STALE_MS = 60000;          // reload the card on window focus when older t
 const NUMBER_FIELDS = ["temperature", "weight", "heart_rate", "respiratory_rate"];
 const TEXT_FIELDS = ["anamnesis", "examination", "diagnosis"];
 const NUMBER_RE = /^\d+([.,]\d+)?$/;
+// Task 28: resizable columns History | Today's record | Bill (≥ 1280 px). Widths in px, per browser.
+const COLUMNS_KEY = "elite_vet_clinic.card_columns";
+const SPLIT = {
+    history: { def: 320, min: 240, max: 560 },
+    bill: { def: 380, min: 300, max: 560 },
+};
+const SPLIT_WIDTH = 10;          // the splitter itself (CSS .evpc-split)
+const RECORD_MIN = 440;          // today's record never gets narrower
+const SPLIT_STEP = 16;           // arrow key; Shift + arrow = 4 steps
+function loadColumns() {
+    try {
+        const saved = JSON.parse(window.localStorage.getItem(COLUMNS_KEY) || "{}");
+        const out = {};
+        for (const k of Object.keys(SPLIT)) {
+            if (Number.isFinite(saved[k])) out[k] = saved[k];
+        }
+        return out;
+    } catch {
+        return {};
+    }
+}
+function saveColumns(widths) {
+    try {
+        window.localStorage.setItem(COLUMNS_KEY, JSON.stringify(widths));
+    } catch {
+        // no storage (private window, blocked): the widths last until the page is reloaded
+    }
+}
 
 // ---------------------------------------------------------------- formatting (cs-CZ, fixed)
 const NF = {};
@@ -249,7 +277,10 @@ export class PatientCard extends Component {
             busy: false, flashLine: null,
             roomNote: "",            // Poznámka pro recepci (saved on its own, also after Hotovo)
             roomNoteSave: { status: "idle", at: null },
+            // column widths (task 28): saved px per column, the one being dragged, window width
+            split: { widths: loadColumns(), dragging: null, vw: window.innerWidth },
         });
+        this.gridRef = useRef("grid");
         this.dirty = new Set();
         this.roomNoteDirty = false;
         this.lastLoad = 0;
@@ -272,6 +303,7 @@ export class PatientCard extends Component {
         onMounted(() => this.autosizeAll());
         onPatched(() => this.autosizeAll());
         useExternalListener(window, "focus", () => this.onWindowFocus());
+        useExternalListener(window, "resize", () => { this.state.split.vw = window.innerWidth; });
         // Leaving the page or the window: write what was typed right away.
         useExternalListener(window, "blur", () => this.flush().catch(() => {}));
         useExternalListener(window, "beforeunload", () => { this.flush().catch(() => {}); });
@@ -286,6 +318,88 @@ export class PatientCard extends Component {
     emptyForm() {
         return { temperature: "", weight: "", heart_rate: "", respiratory_rate: "",
                  anamnesis: "", examination: "", diagnosis: "" };
+    }
+
+    // ------------------------------------------------------------ column widths (task 28)
+    // Two splitters between History | Today's record | Bill at ≥ 1280 px (CSS hides them below):
+    // drag with the mouse or a finger (pointer events), arrows on a focused splitter, double-click
+    // resets. Widths are clamped so the record keeps RECORD_MIN; remembered in localStorage.
+    gridWidth() {
+        return this.gridRef.el?.clientWidth || this.state.split.vw;
+    }
+    splitLimits(key) {
+        const other = key === "history" ? "bill" : "history";
+        const room = this.gridWidth() - 2 * SPLIT_WIDTH - RECORD_MIN - this.splitValue(other);
+        const max = Math.max(SPLIT[key].min, Math.min(SPLIT[key].max, room));
+        return { min: SPLIT[key].min, max };
+    }
+    splitValue(key) {
+        const saved = this.state.split.widths[key];
+        const value = Number.isFinite(saved) ? saved : SPLIT[key].def;
+        return Math.round(Math.min(SPLIT[key].max, Math.max(SPLIT[key].min, value)));
+    }
+    clampedSplit(key, value) {
+        const { min, max } = this.splitLimits(key);
+        return Math.round(Math.min(max, Math.max(min, value)));
+    }
+    splitNow(key) {
+        return this.clampedSplit(key, this.splitValue(key));
+    }
+    get gridStyle() {
+        // read so that a window resize re-renders and re-clamps
+        void this.state.split.vw;
+        const history = this.clampedSplit("history", this.splitValue("history"));
+        const bill = this.clampedSplit("bill", this.splitValue("bill"));
+        return `--evpc-w-history: ${history}px; --evpc-w-bill: ${bill}px;`;
+    }
+    setSplit(key, value, save = true) {
+        this.state.split.widths[key] = this.clampedSplit(key, value);
+        if (save) saveColumns({ ...this.state.split.widths });
+    }
+    resetSplit(key) {
+        delete this.state.split.widths[key];
+        saveColumns({ ...this.state.split.widths });
+    }
+    onSplitDown(ev, key) {
+        if (ev.pointerType === "mouse" && ev.button !== 0) return;
+        ev.preventDefault();
+        const handle = ev.currentTarget;
+        const startX = ev.clientX;
+        const startWidth = this.clampedSplit(key, this.splitValue(key));
+        // the history grows to the right, the bill to the left
+        const sign = key === "history" ? 1 : -1;
+        handle.focus();
+        try {
+            handle.setPointerCapture(ev.pointerId);
+        } catch {
+            // the pointer is already gone
+        }
+        this.state.split.dragging = key;
+        const move = (e) => this.setSplit(key, startWidth + sign * (e.clientX - startX), false);
+        const end = () => {
+            handle.removeEventListener("pointermove", move);
+            handle.removeEventListener("pointerup", end);
+            handle.removeEventListener("pointercancel", end);
+            this.state.split.dragging = null;
+            saveColumns({ ...this.state.split.widths });
+        };
+        handle.addEventListener("pointermove", move);
+        handle.addEventListener("pointerup", end);
+        handle.addEventListener("pointercancel", end);
+    }
+    onSplitKey(ev, key) {
+        const step = ev.shiftKey ? 4 * SPLIT_STEP : SPLIT_STEP;
+        const sign = key === "history" ? 1 : -1;
+        const current = this.clampedSplit(key, this.splitValue(key));
+        const limits = this.splitLimits(key);
+        let value = null;
+        if (ev.key === "ArrowRight") value = current + sign * step;
+        else if (ev.key === "ArrowLeft") value = current - sign * step;
+        else if (ev.key === "Home") value = limits.min;
+        else if (ev.key === "End") value = limits.max;
+        if (value === null) return;
+        ev.preventDefault();
+        this.setSplit(key, value);
     }
 
     // ------------------------------------------------------------ navigation
