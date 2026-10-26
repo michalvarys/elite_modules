@@ -85,6 +85,10 @@
                         </div>
                     </t>
                     <t t-elif="column">
+                        <button type="button" class="evrm-back" t-on-click="() => this.selectView('all')"
+                                title="Zpět na všechny ordinace">
+                            <i class="fa fa-arrow-left me-1" aria-hidden="true"/>Všechny ordinace
+                        </button>
                         <h1 class="evrm-room-name">
                             <span class="evrm-room-dot" t-att-style="'background:' + (column.color or '#8796ab')" aria-hidden="true"/>
                             <t t-esc="column.name"/>
@@ -122,8 +126,12 @@
                          t-att-class="{'evrm-col-unassigned': !column.room_id, 'evrm-col-drop': state.dropKey === column.key, 'evrm-col-slim': isEmptyColumn(column)}"
                          t-att-data-column="column.key"
                          t-on-dragover="(ev) => this.onDragOver(ev, column)" t-on-drop="(ev) => this.onDrop(ev, column)">
-                    <header class="evrm-col-head" t-att-style="column.color ? 'border-top-color:' + column.color : ''">
-                        <h2 class="ev-h3 evrm-col-name" t-esc="column.name"/>
+                    <header class="evrm-col-head" t-att-style="column.color ? 'border-top-color:' + column.color : ''"
+                            t-att-class="{'evrm-col-head-link': column.room_id}"
+                            t-att-role="column.room_id ? 'button' : null" t-att-tabindex="column.room_id ? 0 : null"
+                            t-att-title="column.room_id ? 'Otevřít ' + column.name : null"
+                            t-on-click="() => this.openRoom(column)" t-on-keydown="(ev) => this.onHeadKey(ev, column)">
+                        <h2 class="ev-h3 evrm-col-name"><t t-esc="column.name"/><i t-if="column.room_id" class="fa fa-angle-right evrm-col-go" aria-hidden="true"/></h2>
                         <div class="evrm-col-duty" t-att-class="{'evrm-duty-none': column.room_id and !column.on_duty.length}">
                             <t t-if="column.room_id"><i class="fa fa-user-md me-1" aria-hidden="true"/></t><t t-esc="dutyText(column)"/>
                         </div>

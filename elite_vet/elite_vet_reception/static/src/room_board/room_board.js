@@ -147,6 +147,16 @@ export class RoomBoard extends Component {
         if (saved && saved !== ALL && ids.has(parseInt(saved, 10))) return parseInt(saved, 10);
         return ALL;
     }
+    /** Všechny ordinace: the head of a room column opens that room (Enter / Space too). */
+    openRoom(column) {
+        if (column.room_id) this.selectView(column.room_id);
+    }
+    onHeadKey(ev, column) {
+        if (column.room_id && (ev.key === "Enter" || ev.key === " ")) {
+            ev.preventDefault();
+            this.openRoom(column);
+        }
+    }
     selectView(view) {
         this.state.view = view;
         this.state.showUnassigned = false;
