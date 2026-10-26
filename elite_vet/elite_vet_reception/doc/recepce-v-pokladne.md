@@ -103,6 +103,28 @@ neuzavře. Stejné okno má **Přijmout** v tabuli (kapitola 5).
 Když lékařka kartu otevřela dřív, než jste klienta přijali, Přijmout nic nezdvojí – použije se
 záznam, který už existuje.
 
+### Zrušit přijetí (přijato omylem)
+
+Přijali jste špatného klienta nebo klient odešel dřív, než ho zavolali? U pacienta se štítkem
+**Čeká** ve sloupci **Čekárna a ordinace** je tlačítko **Zrušit přijetí** (šipka zpět).
+
+1. Klikněte **Zrušit přijetí**. Pokladna se zeptá: „Zrušit přijetí Rex? Pacient se vrátí mezi
+   Přicházejí.“ – u klienta bez objednání „… Pacient zmizí z čekárny.“
+2. **Zrušit přijetí** potvrdí, **Ponechat** okno zavře a nic se nemění.
+3. Objednaný klient (rezervace v Odoo i záznam z WinVetu) je zase v **Přicházejí** a jde znovu
+   **Přijmout** – vznikne nová návštěva. Klient bez objednání z čekárny zmizí.
+
+Zrušená návštěva se nemaže: zůstane jako **Zrušeno** a v její historii (i u rezervace) je
+poznámka „Přijetí zrušila recepce (jméno)“. Klientovi nic nechodí.
+
+Zrušit jde jen **dnešní** přijetí, dokud pacient **čeká** a v návštěvě nic není:
+
+- pacient už je v ordinaci (štítek **V ordinaci**) → „Pacient už je v ordinaci – přijetí už nejde
+  zrušit.“ (tlačítko tam není);
+- v návštěvě už je cokoli z ordinace – anamnéza, vyšetření, diagnóza, teplota, hmotnost, tep,
+  dech, položka účtu nebo poznámka pro recepci → „Záznam už má zápis od lékaře/ky – zrušit ho
+  může ordinace.“ Vaše vlastní poznámka recepce zrušení nebrání.
+
 ### Objednaní ve WinVetu (štítek WinVet)
 
 Dokud se objednává i ve WinVetu, jsou v **Přicházejí** i dnešní záznamy z kalendáře WinVetu,

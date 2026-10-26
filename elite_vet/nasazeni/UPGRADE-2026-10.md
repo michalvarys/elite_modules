@@ -838,3 +838,28 @@ Kontrola:
 SELECT report_name, model FROM ir_act_report_xml WHERE report_name LIKE 'elite_vet_clinic.report_%visit%';
 SELECT name, latest_version FROM ir_module_module WHERE name IN ('elite_vet_reservation','elite_vet_clinic','elite_vet_reception');
 ```
+
+## Doplnění: zrušení přijetí
+
+Větev `feature/elite-vet-undo-check-in`. Cílový kód `elite_vet_reception` 18.0.1.14.0: v pokladně
+› Dnes u pacienta, který **čeká**, tlačítko **Zrušit přijetí** (přijato omylem). Objednaný se vrátí
+mezi Přicházejí, neobjednaný z čekárny zmizí; návštěva zůstane jako Zrušeno s poznámkou
+v chatteru. Jde to jen dnes, než pacienta zavolají a než v návštěvě něco je.
+
+Schéma se nemění. Pravidla a záloha jako v krocích 2–3, pak:
+
+```bash
+docker compose stop odoo
+docker compose run --rm odoo odoo -d DATABAZE -u elite_vet_reception --stop-after-init --no-http 2>&1 | tee upgrade-undo-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-undo-*.log      # nesmí nic najít
+docker compose start odoo
+```
+
+Po aktualizaci obnovte pokladnu natvrdo (Ctrl+Shift+R).
+
+Kontrola: přijměte zkušební rezervaci → v Čekárně a ordinaci je u ní **Zrušit přijetí** → potvrďte
+→ rezervace je zase v Přicházejí a jde znovu přijmout. U pacienta **V ordinaci** tlačítko není.
+
+```sql
+SELECT name, latest_version FROM ir_module_module WHERE name = 'elite_vet_reception';
+```

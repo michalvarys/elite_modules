@@ -90,6 +90,12 @@
                                 t-on-click="() => this.editNote(row)">
                             <i class="fa fa-pencil" aria-hidden="true"/><span class="d-none d-xl-inline ms-1">Poznámka</span>
                         </button>
+                        <button t-if="isToday and row.stage === 'waiting'" class="btn btn-light o_ev_undo_check_in"
+                                t-att-disabled="state.busy['undo-' + row.record_id]"
+                                title="Přijetí omylem: vrátit pacienta mezi Přicházejí (bez objednání: z čekárny pryč)"
+                                aria-label="Zrušit přijetí" t-on-click="() => this.undoCheckIn(row)">
+                            <i class="fa fa-undo" aria-hidden="true"/><span class="d-none d-xl-inline ms-1">Zrušit přijetí</span>
+                        </button>
                     </div>
                 </section>
                 <!-- K pokladně -->

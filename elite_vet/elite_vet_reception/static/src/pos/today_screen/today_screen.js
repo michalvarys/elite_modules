@@ -2,6 +2,7 @@
 import { Component, onMounted, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
 import { NoteDialog } from "@elite_vet_reception/pos/note_dialog/note_dialog";
@@ -175,6 +176,34 @@ export class ReceptionTodayScreen extends Component {
                     await this.load();
                     return Boolean(result);
                 }),
+        });
+    }
+
+    /** Task 29: Zrušit přijetí of a waiting visit (checked in by mistake), after a confirmation.
+     * A booked client goes back to Přicházejí, a walk-in leaves the waiting room. */
+    undoCheckIn(row) {
+        const busyKey = `undo-${row.record_id}`;
+        if (this.state.busy[busyKey]) {
+            return;
+        }
+        const after = row.walk_in ? "Pacient zmizí z čekárny." : "Pacient se vrátí mezi Přicházejí.";
+        this.dialog.add(ConfirmationDialog, {
+            title: "Zrušit přijetí",
+            body: `Zrušit přijetí ${row.pet_name}? ${after}`,
+            confirmLabel: "Zrušit přijetí",
+            cancelLabel: "Ponechat",
+            confirm: () =>
+                this.run(busyKey, async () => {
+                    const result = await callReception(this.orm, this.notification, "undo_check_in", [
+                        row.record_id,
+                        this.cashierName,
+                    ]);
+                    if (result) {
+                        this.notification.add(`Přijetí ${result.pet_name} je zrušené.`, { type: "success" });
+                    }
+                    await this.load();
+                }),
+            cancel: () => {},
         });
     }
 

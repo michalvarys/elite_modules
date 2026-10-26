@@ -35,6 +35,7 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 | `check_in(reservation_id, employee_name=None, note=None)` | záznam (`record_id`, `stage`, …) |
 | `check_in_winvet(event_id, employee_name=None, note=None)` | záznam; dnešní záznam kalendáře WinVetu se zvířetem z kartotéky (návštěva v ordinaci podle mapování, `winvet_event_id` na záznamu návštěvy; záznam WinVetu se nemění) |
 | `walk_in(pet_id, doctor_id=False, employee_name=None, room_id=False, note=None)` | záznam |
+| `undo_check_in(record_id, employee_name=None)` | `{record_id, pet_name, state, reservation_id, winvet_event_id}`; zruší omylem udělané přijetí (úkol 29, viz níže) |
 | `set_reception_note(record_id, note)` | záznam; poznámka recepce rozepsané návštěvy (prázdná = smazat) |
 | `call_patient(record_id, room_id=None, doctor_id=False)` | záznam + `needs_doctor`; jen sestra a lékařka |
 | `assign_room(record_id, room_id=False, doctor_id=False)` | záznam + `needs_doctor` |
@@ -48,7 +49,8 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
   `reservation_id` None, `source` `winvet`, `time` None u celodenních; řazeno podle času.
 - **waiting** – rozepsané záznamy dne se stavem návštěvy, podle příchodu:
   `record_id, pet_name, owner, doctor, room, stage, stage_label, arrived_time, waiting_minutes,
-  reception_note` (u V ordinaci minuty od příchodu do zavolání).
+  reception_note, walk_in` (u V ordinaci minuty od příchodu do zavolání; `walk_in` = bez rezervace
+  i bez záznamu z WinVetu).
 - **to_pay** – všechny nezaplacené účty návštěv (Čeká na platbu / Částečně zaplaceno) bez ohledu
   na den, nejstarší první:
   `record_id, sale_order_id, pet_name, owner, partner_id, amount, payment_state, payment_state_label,
@@ -82,6 +84,19 @@ Pravidla přijetí:
   nedostane. Pokladna: Přijmout v Dnes i v tabuli otevře `NoteDialog` (`static/src/pos/note_dialog/`,
   Enter = potvrdit), u Čekárny a ordinace tlačítko Poznámka, v Kartotéce při Přijmout bez objednání
   textové pole.
+- **Zrušit přijetí** (úkol 29, `undo_check_in`, role Recepce a výš): jen dnešní rozepsaný záznam
+  ve stavu Čeká bez obsahu – anamnéza, vyšetření, diagnóza, vitální hodnoty, položky účtu, nabídka
+  ani `room_note` (poznámka recepce nevadí). Jinak `UserError`: „Pacient už je v ordinaci – …“,
+  „Záznam už má zápis od lékaře/ky – zrušit ho může ordinace.“, „Zrušit jde jen dnešní přijetí.“,
+  „Návštěva je už uzavřená – …“, „Přijetí už bylo zrušené.“ Záznam se **zruší** (`action_cancel`,
+  stav Zrušeno – zůstane pro historii, nemaže se; stejně jako ostatní zrušené návštěvy ho nikde
+  nepočítáme) a **odpojí od rezervace** (`reservation_id` prázdné – stejně jako `check_in` u zrušené
+  návštěvy; jinak by karta pacienta otevřená z rezervace našla zrušený záznam). Rezervace i záznam
+  z WinVetu jsou zase v `arriving` (oba seznamy zrušené záznamy přeskakují) a nové přijetí založí
+  nový záznam; neobjednaný z čekárny zmizí. Na záznam (a rezervaci) poznámka do chatteru
+  „Přijetí zrušila recepce (<zaměstnanec pokladny / uživatel>).“ (interní, bez e-mailu),
+  `notify_board`. Pokladna: tlačítko **Zrušit přijetí** jen u řádků Čeká dneška, potvrzení
+  `ConfirmationDialog`, chyba v notifikaci.
 - Každá změna pošle zprávu na tabuli (`notify_board`, kanál `elite_vet_reservation/changed`);
   stejně i uzavření (Hotovo, k pokladně), znovuotevření a zrušení záznamu, takže sloupec
   K pokladně v pokladně se mění hned.

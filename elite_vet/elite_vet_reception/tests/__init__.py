@@ -14,3 +14,4 @@ from . import test_treating_doctor
 from . import test_source_visible
 from . import test_role_confirm
 from . import test_visit_report_till
+from . import test_undo_check_in

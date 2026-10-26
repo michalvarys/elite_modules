@@ -141,6 +141,9 @@ class Reception(models.AbstractModel):
                 "arrived_time": local_time(since),
                 "waiting_minutes": max(0, int((until - since).total_seconds() // 60)) if since else None,
                 "reception_note": rec.reception_note or None,
+                # Task 29: "Zrušit přijetí" of a waiting row; a walk-in disappears, a booked
+                # client goes back to Přicházejí (the confirm text differs)
+                "walk_in": not rec._booked_at(),
             })
 
         paid_count = len(records.filtered(lambda r: r.state == "done" and r.payment_state == "paid"))
@@ -271,6 +274,52 @@ class Reception(models.AbstractModel):
         record.reception_note = self._clean_note(note)
         notify_board(self.env)
         return self._record_dict(record)
+
+    @api.model
+    def _has_content(self, record):
+        """Anything written in the visit besides the reception's own check-in data: the texts of
+        the room, vitals, bill lines or a quotation."""
+        return bool(record.anamnesis or record.examination or record.diagnosis or record.room_note
+                    or record.temperature or record.weight or record.heart_rate or record.respiratory_rate
+                    or record.line_ids or record.sale_order_id)
+
+    @api.model
+    def undo_check_in(self, record_id, employee_name=None):
+        """Task 29: take back a check-in done by mistake (Dnes › Zrušit přijetí).
+
+        Only today's open visit that still waits and has nothing written in it. The record is
+        cancelled (kept for the history, like any cancelled visit) and detached from its
+        reservation, so the reservation is back among Přicházejí and a new check-in creates a
+        new record (as check_in does for a cancelled visit). A WinVet entry is back as well
+        (cancelled records never hold it); a walk-in disappears from the waiting room."""
+        self._check_reception()
+        record = self._records().browse(int(record_id)).exists()
+        if not record:
+            raise UserError(_("Záznam návštěvy nebyl nalezen."))
+        if record.state == "cancelled":
+            raise UserError(_("Přijetí už bylo zrušené."))
+        if record.state != "draft":
+            raise UserError(_("Návštěva je už uzavřená – přijetí už nejde zrušit."))
+        if record.date != clinic_today():
+            raise UserError(_("Zrušit jde jen dnešní přijetí."))
+        if record.visit_stage == "in_room":
+            raise UserError(_("Pacient už je v ordinaci – přijetí už nejde zrušit."))
+        if record.visit_stage != "waiting":
+            raise UserError(_("Pacient není v čekárně – není co rušit."))
+        if self._has_content(record):
+            raise UserError(_("Záznam už má zápis od lékaře/ky – zrušit ho může ordinace."))
+        who = (employee_name or "").strip() or self.env.user.name
+        body = _("Přijetí zrušila recepce (%s).") % who
+        reservation = record.reservation_id
+        record.action_cancel()
+        if reservation:
+            record.reservation_id = False   # the reservation can be checked in again (unique link)
+            reservation.message_post(body=body, subtype_xmlid="mail.mt_note")
+        record.message_post(body=body, subtype_xmlid="mail.mt_note")
+        notify_board(self.env)
+        return {"record_id": record.id, "pet_name": record.pet_id.name, "state": record.state,
+                "reservation_id": reservation.id or None,
+                "winvet_event_id": record.winvet_event_id.id or None}
 
     @api.model
     def call_patient(self, record_id, room_id=None, doctor_id=False):
