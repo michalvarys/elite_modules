@@ -4,6 +4,9 @@
     <t t-name="elite_vet_reception.CardIndexDialog">
         <Dialog title="title" size="'xl'" contentClass="'o_ev_card_index o_ev_card_index_' + mode">
             <p class="text-muted mb-2 o_ev_purpose" t-esc="hint"/>
+            <div t-if="mode === 'winvet' and props.winvet and props.winvet.winvet_title" class="o_ev_winvet_text mb-2">
+                <span class="badge o_ev_winvet_badge me-1">WinVet</span><span class="o_ev_winvet_title" t-esc="props.winvet.winvet_title"/>
+            </div>
             <form class="d-flex gap-2 mb-3" t-on-submit="onSearchSubmit">
                 <input type="search" class="form-control form-control-lg o_ev_search" t-model="state.term"
                        placeholder="Hledat: jméno, telefon, čip, zvíře …" autofocus="autofocus"/>
@@ -257,10 +260,15 @@
                             t-att-disabled="!canUsePet" t-on-click="matchReservation">Přiřadit k rezervaci</button>
                     <button t-elif="mode === 'walk_in'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_walk_in"
                             t-att-disabled="!canUsePet" t-on-click="walkIn">Přijmout</button>
+                    <button t-elif="mode === 'winvet'" type="button" class="btn btn-primary btn-lg o_ev_primary o_ev_pair_winvet"
+                            t-att-disabled="!canUsePet" t-on-click="pairWinvet">Přiřadit k objednávce</button>
                     <span t-if="needsPet and !pets.length" class="text-muted align-self-center o_ev_need_pet">Přidejte zvíře (+ Nové zvíře).</span>
                     <span t-elif="needsPet and !pet" class="text-muted align-self-center o_ev_need_pet">Vyberte zvíře.</span>
                     <span t-elif="needsPet and pet.deceased" class="text-muted align-self-center o_ev_need_pet">Zvíře je vedené jako uhynulé.</span>
                 </t>
+                <button t-if="mode === 'winvet' and props.winvet and props.winvet.paired_manually and !editing" type="button"
+                        class="btn btn-light btn-lg o_ev_unpair_winvet" t-att-disabled="state.saving" t-on-click="unpairWinvet"
+                        title="Objednávka bude zase bez karty">Zrušit spárování</button>
                 <button type="button" class="btn btn-light btn-lg ms-md-auto o_ev_close" t-on-click="props.close">Zavřít</button>
             </t>
         </Dialog>

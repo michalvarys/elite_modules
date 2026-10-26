@@ -39,14 +39,16 @@
                          t-att-class="{'o_ev_row_winvet': row.winvet_event_id}">
                         <span class="o_ev_num o_ev_time" t-esc="row.time or 'celý den'"/>
                         <div class="o_ev_grow">
-                            <div class="fw-bold"><t t-esc="row.pet_name or 'Bez zvířete'"/>
+                            <div class="fw-bold"><t t-esc="row.pet_name or row.winvet_title or 'Bez zvířete'"/>
                                 <span t-if="row.winvet_event_id" class="badge o_ev_winvet_badge ms-1"
                                       title="Objednáno ve WinVetu – záznam je jen pro čtení, přijetí založí návštěvu">WinVet</span>
+                                <span t-if="row.needs_pairing" class="badge o_ev_no_card_badge ms-1"
+                                      title="Ve WinVetu objednáno jen textem, bez pacienta – spárujte ho s kartou (Spárovat…)">bez karty</span>
                                 <span t-elif="row.from_web" class="badge o_ev_web_badge ms-1"
                                       title="Rezervace z webu – objednal(a) se klient sám">WEB</span>
                             </div>
                             <small class="text-muted">
-                                <t t-esc="row.owner or 'Bez jména'"/>
+                                <t t-esc="row.owner or (row.needs_pairing ? 'klient zatím nespárovaný' : 'Bez jména')"/>
                                 <t t-if="row.procedure"> · <t t-esc="row.procedure"/></t>
                                 <t t-if="row.doctor"> · <t t-esc="row.doctor"/></t>
                                 <t t-if="row.needs_match"> · nespárováno</t>
@@ -60,7 +62,18 @@
                                 title="Změnit klienta nebo zvíře rezervace"
                                 t-on-click="() => this.openClient(row)">Klient…</button>
                         </t>
-                        <button t-if="!row.needs_match and isToday" class="btn btn-primary o_ev_check_in"
+                        <t t-else="">
+                        <button t-if="row.paired_manually" class="btn btn-light o_ev_unpair_winvet"
+                                t-att-disabled="state.busy['unpair-' + row.winvet_event_id]"
+                                title="Spárováno v Odoo: zrušit spárování s kartou (objednávka bude zase bez karty)"
+                                aria-label="Zrušit spárování" t-on-click="() => this.unpairWinvet(row)">
+                            <i class="fa fa-chain-broken" aria-hidden="true"/><span class="d-none d-xl-inline ms-1">Zrušit spárování</span>
+                        </button>
+                        <button t-if="row.needs_pairing" class="btn btn-primary o_ev_pair_winvet"
+                                title="Najít nebo založit klienta a zvíře k této objednávce z WinVetu"
+                                t-on-click="() => this.pairWinvet(row)">Spárovat…</button>
+                        </t>
+                        <button t-if="!row.needs_match and !row.needs_pairing and isToday" class="btn btn-primary o_ev_check_in"
                                 t-att-disabled="state.busy['in-' + (row.key or row.reservation_id)]"
                                 t-on-click="() => this.checkIn(row)">Přijmout</button>
                     </div>

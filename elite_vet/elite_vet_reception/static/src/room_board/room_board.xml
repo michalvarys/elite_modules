@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <!-- "…" menu of a patient (component RoomMenu, props.it, props.board): Otevřít kartu,
-         Poznámka recepce, Do jiné ordinace (rooms right in the menu, also for touch screens). -->
+         Spárovat… (WinVet appointment without a pet, task 30), Poznámka recepce, Do jiné ordinace (rooms right in the menu, also for touch screens). -->
     <t t-name="elite_vet_reception.RoomMenu">
         <t t-set="it" t-value="props.it"/>
         <t t-set="board" t-value="props.board"/>
@@ -13,6 +13,9 @@
             <t t-set-slot="content">
                 <DropdownItem t-if="board.canOpenFromMenu(it)" class="'evrm-open'" onSelected="() => board.openCard(props.it)">
                     <i class="fa fa-folder-open-o fa-fw" aria-hidden="true"/>Otevřít kartu
+                </DropdownItem>
+                <DropdownItem t-if="board.canPair(it)" class="'evrm-pair-winvet'" onSelected="() => board.pairWinvet(props.it)">
+                    <i class="fa fa-link fa-fw" aria-hidden="true"/>Spárovat…
                 </DropdownItem>
                 <DropdownItem t-if="board.canNote(it)" class="'evrm-note-edit'" onSelected="() => board.editNote(props.it)">
                     <i class="fa fa-sticky-note-o fa-fw" aria-hidden="true"/>Poznámka recepce…

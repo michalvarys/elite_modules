@@ -77,6 +77,7 @@
                 <field name="activity_id"/>
                 <field name="pet_id" optional="hide"/>
                 <field name="partner_id" optional="hide"/>
+                <field name="manual_pet_id" optional="hide"/>
                 <field name="title" optional="hide"/>
                 <field name="recurring" optional="hide"/>
                 <field name="done" optional="show"/>
@@ -124,6 +125,16 @@
                             <field name="owner_ref"/>
                             <field name="patient_ref"/>
                             <field name="winvet_modified"/>
+                        </group>
+                    </group>
+                    <group string="Spárováno na recepci" invisible="not manual_pet_id">
+                        <group>
+                            <field name="manual_pet_id"/>
+                            <field name="manual_partner_id"/>
+                        </group>
+                        <group>
+                            <field name="matched_by_id"/>
+                            <field name="matched_at"/>
                         </group>
                     </group>
                 </sheet>

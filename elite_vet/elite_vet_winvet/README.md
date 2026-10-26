@@ -89,8 +89,15 @@ záznamy rozložené na výskyty). Jen jedním směrem – Odoo do WinVetu nikdy
   v Odoo. *Smazat přenesené záznamy* smaže všechny přenesené záznamy (ve WinVetu zůstanou; zapnutý
   kalendář okno další běh mostu znovu naplní). Přepínač je `ir.config_parameter`
   `elite_vet_winvet.calendar_enabled` (chybí = zapnuto).
-- **Dnes v pokladně** (`elite_vet_reception`): dnešní záznamy se zvířetem z kartotéky jsou
-  v Přicházejí se štítkem WinVet a jdou přijmout (návštěva v namapované ordinaci).
+- **Dnes v pokladně** (`elite_vet_reception`): dnešní objednávky (s časem; klient, zvíře nebo
+  činnost) jsou v Přicházejí se štítkem WinVet a jdou přijmout (návštěva v namapované ordinaci).
+- **Spárování v Odoo** (úkol 30): objednávku bez pacienta z WinVetu (jen TITULEK) recepce spáruje
+  se zvířetem kartotéky (Dnes / Ordinace › Spárovat…). Uloží se do `manual_pet_id`,
+  `manual_partner_id`, `matched_by_id`, `matched_at` – jediná pole záznamu, která Odoo samo zapisuje,
+  a jen přes `_set_manual_match` / `_clear_manual_match` (kontext `winvet_manual_match`, jiná pole
+  zápis odmítne). Synchronizace tato pole nikdy nemění (ze zápisu se zahodí). Všude se používá
+  `effective_pet_id` / `effective_partner_id` (uložené, počítané): zvíře z WinVetu, když ho WinVet
+  pošle (to vyhraje), jinak spárované v Odoo. Spárování zůstane jako záloha.
 
 ## Rozšíření o další entity
 

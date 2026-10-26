@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Recepce",
-    "version": "18.0.1.14.0",
+    "version": "18.0.1.15.0",
     "category": "Sales/Point of Sale",
     "summary": "Recepce v pokladně: dnešní příchody, čekárna, účty k zaplacení a stavy návštěvy.",
     "description": """
@@ -30,6 +30,10 @@ Pracoviště recepce v pokladně Odoo: přijetí objednaných i neobjednaných k
         "web.assets_backend": [
             "elite_vet_reception/static/src/patient_card_patch/*",
             "elite_vet_reception/static/src/room_board/*",
+            # task 30: Spárovat… of the screen Ordinace opens the Kartotéka dialog of the till
+            "elite_vet_reception/static/src/pos/reception_api.js",
+            "elite_vet_reception/static/src/pos/reception.scss",
+            "elite_vet_reception/static/src/pos/card_index_dialog/*",
         ],
         "point_of_sale._assets_pos": [
             # task 25: the move dialog of the boards (date, time, room, e-mail checkbox)

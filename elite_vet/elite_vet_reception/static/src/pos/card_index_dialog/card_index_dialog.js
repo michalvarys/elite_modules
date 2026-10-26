@@ -6,13 +6,16 @@
  * - `booking` (Objednat, field Klient a zvíře): Vybrat → `onSelect(pet)` fills the booking form;
  * - `order` (Pokladna, button Klient): Vybrat k účtu → customer of the open order;
  * - `reservation` (Dnes Klient… / Spárovat, board detail Klient…): Přiřadit k rezervaci;
- * - `walk_in` (Dnes + Bez objednání): Přijmout with a doctor (any / a specific one) and optionally a room.
+ * - `walk_in` (Dnes + Bez objednání): Přijmout with a doctor (any / a specific one) and optionally a room;
+ * - `winvet` (task 30: Dnes / screen Ordinace Spárovat… of a WinVet appointment without a pet):
+ *   Přiřadit k objednávce (pair_winvet), Zrušit spárování when it is paired already.
+ * The dialog runs in the POS and in the backend (screen Ordinace): the POS service is optional and
+ * used only by the till modes (order, walk_in cashier).
  */
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { useService } from "@web/core/utils/hooks";
-import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { callReception, errorMessage, shortDate } from "@elite_vet_reception/pos/reception_api";
 
 const OWNER_FIELDS = ["name", "phone", "mobile", "email", "street", "city", "zip"];
@@ -28,13 +31,14 @@ const PET_MORE_FIELDS = [
     "important_note", "note",
 ];
 
-export const CARD_INDEX_MODES = ["browse", "booking", "order", "reservation", "walk_in"];
+export const CARD_INDEX_MODES = ["browse", "booking", "order", "reservation", "walk_in", "winvet"];
 
 const MODE_TITLES = {
     browse: "Kartotéka",
     booking: "Vybrat klienta a zvíře pro objednání",
     order: "Klient k účtu v pokladně",
     walk_in: "Přijmout bez objednání",
+    winvet: "Spárovat s objednávkou z WinVetu",
 };
 
 const MODE_HINTS = {
@@ -43,6 +47,7 @@ const MODE_HINTS = {
     order: "Najděte nebo založte klienta a stiskněte Vybrat k účtu – bude zákazníkem rozdělaného účtu.",
     reservation: "Najděte nebo založte klienta, vyberte zvíře a stiskněte Přiřadit k rezervaci.",
     walk_in: "Najděte nebo založte klienta, vyberte zvíře a lékařku a stiskněte Přijmout – půjde do čekárny.",
+    winvet: "Najděte nebo založte klienta, vyberte zvíře a stiskněte Přiřadit k objednávce. Uloží se jen v Odoo, WinVet se nemění.",
 };
 
 function formValues(source, fields) {
@@ -79,6 +84,9 @@ export class CardIndexDialog extends Component {
         // reservation mode: {reservation_id, time, procedure, owner, partner_id, pet_id, pet_name}
         // (today_data row / board detail); its client and pet are preloaded
         reservation: { type: Object, optional: true },
+        // winvet mode: the WinVet row {winvet_event_id, time, winvet_title, search_hint, pet_id,
+        // partner_id, paired_manually} (today_data / room_board item)
+        winvet: { type: Object, optional: true },
         // booking / order mode: the client shown first {partner_id, pet_id}
         client: { type: Object, optional: true },
         // booking mode: (pet: {id, name, owner, partner_id}) => void
@@ -92,12 +100,13 @@ export class CardIndexDialog extends Component {
     static defaultProps = { mode: "browse" };
 
     setup() {
-        this.pos = usePos();
+        // POS only (the backend screen Ordinace opens the dialog in the winvet mode)
+        this.pos = this.env.services.pos || null;
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.state = useState({
-            term: (this.props.mode === "reservation" && this.props.reservation?.owner) || "",
+            term: this.initialTerm(),
             results: null,
             searching: false,
             data: null, // owner_data()
@@ -140,6 +149,14 @@ export class CardIndexDialog extends Component {
             }
             if (this.state.term.trim().length >= 2) {
                 await this.search();
+                // WinVet text "Jméno Příjmení": nothing for both words -> the first one alone
+                const words = this.state.term.trim().split(/\s+/);
+                if (this.mode === "winvet" && !this.state.results?.length && words.length > 1) {
+                    this.state.term = words[0];
+                    if (words[0].length >= 2) {
+                        await this.search();
+                    }
+                }
             }
         });
     }
@@ -150,10 +167,23 @@ export class CardIndexDialog extends Component {
         return this.props.mode;
     }
 
+    initialTerm() {
+        if (this.props.mode === "reservation") {
+            return this.props.reservation?.owner || "";
+        }
+        if (this.props.mode === "winvet") {
+            return this.props.winvet?.search_hint || "";
+        }
+        return "";
+    }
+
     get title() {
         if (this.mode === "reservation") {
             const res = this.props.reservation || {};
             return ["Klient k rezervaci", res.time, res.procedure].filter(Boolean).join(" ");
+        }
+        if (this.mode === "winvet") {
+            return [MODE_TITLES.winvet, this.props.winvet?.time].filter(Boolean).join(" ");
         }
         return MODE_TITLES[this.mode];
     }
@@ -167,10 +197,13 @@ export class CardIndexDialog extends Component {
         if (this.mode === "reservation") {
             return this.props.reservation;
         }
+        if (this.mode === "winvet") {
+            return this.props.winvet?.pet_id ? this.props.winvet : null;
+        }
         if (this.props.client) {
             return this.props.client;
         }
-        if (this.mode === "order") {
+        if (this.mode === "order" && this.pos) {
             const partner = this.pos.get_order()?.get_partner();
             return partner ? { partner_id: partner.id } : null;
         }
@@ -179,7 +212,7 @@ export class CardIndexDialog extends Component {
 
     /** The primary action needs a selected (live) pet; Vybrat k účtu needs the owner only. */
     get needsPet() {
-        return ["booking", "reservation", "walk_in"].includes(this.mode);
+        return ["booking", "reservation", "walk_in", "winvet"].includes(this.mode);
     }
 
     get owner() {
@@ -224,7 +257,11 @@ export class CardIndexDialog extends Component {
     }
 
     formatAmount(amount) {
-        return this.env.utils.formatCurrency(amount);
+        if (this.env.utils?.formatCurrency) {
+            return this.env.utils.formatCurrency(amount);
+        }
+        // backend (screen Ordinace): no POS currency helper - the clinic bills in CZK
+        return new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK" }).format(amount || 0);
     }
 
     formatDate(isoDay) {
@@ -314,10 +351,12 @@ export class CardIndexDialog extends Component {
 
     newOwner() {
         const res = this.mode === "reservation" ? this.props.reservation : null;
+        // winvet: the name as the search was prefilled (from the WinVet text, editable)
+        const name = res?.owner || (this.mode === "winvet" ? this.state.term.trim() : "");
         this.state.petForm = null;
         this.state.ownerForm = {
             isNew: true,
-            values: formValues({ name: res?.owner || "" }, OWNER_FIELDS),
+            values: formValues({ name }, OWNER_FIELDS),
             firstPet: { name: res?.pet_name || "", species: "dog" },
         };
     }
@@ -494,7 +533,7 @@ export class CardIndexDialog extends Component {
             const result = await callReception(this.orm, this.notification, "walk_in", [
                 this.pet.id,
                 Number(this.state.walkInDoctorId) || false,
-                this.pos.get_cashier()?.name || null,
+                this.pos?.get_cashier()?.name || null,
                 Number(this.state.walkInRoomId) || false,
                 this.state.walkInNote.trim() || null,
             ]);
@@ -524,7 +563,7 @@ export class CardIndexDialog extends Component {
 
     /** order: Vybrat k účtu - customer of the open order (Task 5 rules). */
     async selectForOrder() {
-        if (!this.owner) {
+        if (!this.owner || !this.pos) {
             return;
         }
         const id = this.owner.id;
@@ -577,6 +616,51 @@ export class CardIndexDialog extends Component {
                     `Klient je přiřazený k rezervaci ${result.time}: ${result.pet_name} (${result.owner}).`,
                     { type: "success" }
                 );
+                this.props.onChanged?.();
+                this.props.close();
+            }
+        } finally {
+            this.state.saving = false;
+        }
+    }
+
+    /** winvet: Přiřadit k objednávce - the pet of a WinVet appointment without a patient (task 30). */
+    async pairWinvet() {
+        const row = this.props.winvet;
+        if (!row || !this.canUsePet) {
+            return;
+        }
+        this.state.saving = true;
+        try {
+            const result = await callReception(this.orm, this.notification, "pair_winvet", [
+                row.winvet_event_id,
+                this.owner.id,
+                this.pet.id,
+            ]);
+            if (result) {
+                this.notification.add(
+                    `Objednávka ${result.time} je spárovaná: ${result.pet_name} (${result.owner}).`,
+                    { type: "success" }
+                );
+                this.props.onChanged?.();
+                this.props.close();
+            }
+        } finally {
+            this.state.saving = false;
+        }
+    }
+
+    /** winvet: Zrušit spárování - the appointment is without a pet again. */
+    async unpairWinvet() {
+        const row = this.props.winvet;
+        if (!row?.paired_manually) {
+            return;
+        }
+        this.state.saving = true;
+        try {
+            const result = await callReception(this.orm, this.notification, "unpair_winvet", [row.winvet_event_id]);
+            if (result) {
+                this.notification.add("Spárování je zrušené.", { type: "success" });
                 this.props.onChanged?.();
                 this.props.close();
             }

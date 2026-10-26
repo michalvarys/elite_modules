@@ -35,6 +35,8 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 | `check_in(reservation_id, employee_name=None, note=None)` | záznam (`record_id`, `stage`, …) |
 | `check_in_winvet(event_id, employee_name=None, note=None)` | záznam; dnešní záznam kalendáře WinVetu se zvířetem z kartotéky (návštěva v ordinaci podle mapování, `winvet_event_id` na záznamu návštěvy; záznam WinVetu se nemění) |
 | `walk_in(pet_id, doctor_id=False, employee_name=None, room_id=False, note=None)` | záznam |
+| `pair_winvet(event_id, partner_id, pet_id)` | `{winvet_event_id, time, pet_id, pet_name, partner_id, owner}`; úkol 30: objednávka WinVetu bez pacienta patří zvířeti kartotéky (jen v Odoo, `manual_pet_id`; ne vyřízená, ne přijatá, ne se zvířetem z WinVetu, ne uhynulé zvíře) |
+| `unpair_winvet(event_id)` | `{winvet_event_id, winvet_title}`; zruší spárování v Odoo (jen před přijetím) |
 | `undo_check_in(record_id, employee_name=None)` | `{record_id, pet_name, state, reservation_id, winvet_event_id}`; zruší omylem udělané přijetí (úkol 29, viz níže) |
 | `set_reception_note(record_id, note)` | záznam; poznámka recepce rozepsané návštěvy (prázdná = smazat) |
 | `call_patient(record_id, room_id=None, doctor_id=False)` | záznam + `needs_doctor`; jen sestra a lékařka |
@@ -44,9 +46,13 @@ záznamy pod sudo – recepce sama do záznamu psát nesmí. Den a časy jsou v 
 - **arriving** – potvrzené rezervace dne (bez druhých ordinací) bez nezrušeného záznamu, podle času:
   `reservation_id, time, pet_id|None, pet_name, owner, partner_id, procedure, doctor, room, needs_match`
   (`needs_match` = webová rezervace bez spárovaného zvířete), navíc `key` (`r-<rezervace>`) a
-  `source` (`odoo`). Se zapnutým kalendářem z WinVetu (elite_vet_winvet) i dnešní záznamy WinVetu se
-  zvířetem z kartotéky, nevyřízené a ještě nepřijaté: `key` `w-<záznam>`, `winvet_event_id`,
-  `reservation_id` None, `source` `winvet`, `time` None u celodenních; řazeno podle času.
+  `source` (`odoo`). Se zapnutým kalendářem z WinVetu (elite_vet_winvet) i dnešní objednávky WinVetu
+  s časem (klient, zvíře nebo činnost – bez nich je to poznámka personálu), nevyřízené, bez
+  uhynulého zvířete a ještě nepřijaté: `key` `w-<záznam>`, `winvet_event_id`, `reservation_id` None,
+  `source` `winvet`, zvíře a klient = `effective_pet_id` / `effective_partner_id` (WinVet, jinak
+  spárované v Odoo), úkol 30: `needs_pairing` (bez zvířete → Spárovat…), `paired_manually`,
+  `winvet_title`, `search_hint` (začátek textu pro Kartotéku); řazeno podle času. Stejná pravidla
+  a pole mají objednávky WinVetu v `room_board` › Dnes ještě přijdou.
 - **waiting** – rozepsané záznamy dne se stavem návštěvy, podle příchodu:
   `record_id, pet_name, owner, doctor, room, stage, stage_label, arrived_time, waiting_minutes,
   reception_note, walk_in` (u V ordinaci minuty od příchodu do zavolání; `walk_in` = bez rezervace

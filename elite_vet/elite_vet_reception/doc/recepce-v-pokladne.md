@@ -127,13 +127,31 @@ Zrušit jde jen **dnešní** přijetí, dokud pacient **čeká** a v návštěv�
 
 ### Objednaní ve WinVetu (štítek WinVet)
 
-Dokud se objednává i ve WinVetu, jsou v **Přicházejí** i dnešní záznamy z kalendáře WinVetu,
-u kterých most našel zvíře v kartotéce – se štítkem **WinVet** (celodenní záznam má místo času
-„celý den“). **Přijmout** funguje stejně: založí (nebo použije dnešní otevřenou) návštěvu
-zvířete v ordinaci podle kalendáře WinVetu a klient je v Čekárně. Záznam ve WinVetu se tím nijak
-nemění. Klient… ani Spárovat tu nejsou – záznam se mění jen ve WinVetu. Záznam bez zvířete
-z kartotéky nebo označený ve WinVetu jako vyřízený se neukazuje; takového klienta přijměte
-přes **+ Bez objednání**.
+Dokud se objednává i ve WinVetu, jsou v **Přicházejí** i všechny dnešní objednávky z kalendáře
+WinVetu (se štítkem **WinVet**): záznamy s časem, které mají klienta, zvíře nebo činnost WinVetu.
+Poznámky personálu („Oběd“, „Příjmy“, prázdný záznam), celodenní záznamy a záznamy označené ve
+WinVetu jako vyřízené se neukazují.
+
+- **Se zvířetem z kartotéky** (ve WinVetu vybrali při objednání pacienta): **Přijmout** funguje
+  jako u rezervace – založí (nebo použije dnešní otevřenou) návštěvu zvířete v ordinaci podle
+  kalendáře WinVetu a klient je v Čekárně.
+- **Bez karty** (ve WinVetu je jen text, např. „Nováková Jana, přeočkování“): řádek ukazuje text
+  z WinVetu a štítek **bez karty**, místo Přijmout je **Spárovat…**. Otevře Kartotéku s hledáním
+  předvyplněným ze začátku textu (první slova před čárkou nebo pomlčkou, dá se přepsat; když
+  nic nenajde, zkusí jen první slovo). Najděte klienta, nebo ho založte (**+ Nový klient**,
+  **+ Nové zvíře**), vyberte zvíře a stiskněte **Přiřadit k objednávce**. Potom má řádek zvíře
+  a **Přijmout** jako ostatní; obrazovka Ordinace u objednávky nabídne Otevřít kartu a tabule
+  ukazuje jméno zvířete.
+- Spárování se uloží **jen v Odoo**, ve WinVetu se nic nemění a další přenos z WinVetu ho
+  nepřepíše. Když ve WinVetu objednávce pacienta doplní, platí ten z WinVetu.
+- **Zrušit spárování** (u spárovaného řádku a v dialogu Spárovat…) vrátí objednávku mezi
+  „bez karty“ – jen dokud klient není přijatý (potom nejdřív **Zrušit přijetí**).
+- Uhynulé zvíře spárovat nejde.
+
+> **Tip pro kliniku:** ve WinVetu při objednávání vždy vyberte pacienta. Pak se objednávka
+> v Odoo spáruje sama a recepce nemusí nic dělat.
+
+Klient… tu není – objednávka se mění jen ve WinVetu.
 
 ### Přijmout bez objednání (+ Bez objednání)
 

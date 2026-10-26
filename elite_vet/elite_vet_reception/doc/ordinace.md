@@ -120,6 +120,12 @@ lékařka, která v té ordinaci **teď slouží** podle Rozpisu lékařů.
 - Na obrazovce Ordinace může recepce pacienty přesouvat mezi ordinacemi a upravit poznámku recepce
   (nabídka …). Zavolat může jen sestra nebo lékařka.
 
+**Objednávky z WinVetu bez karty.** Objednávka z WinVetu, ve které je jen text (bez pacienta),
+je v „Dnes ještě přijdou“ s textem z WinVetu. V nabídce **…** je **Spárovat…**: otevře Kartotéku
+(stejnou jako v pokladně), kde najdete nebo založíte klienta a zvíře a stisknete **Přiřadit
+k objednávce**. Pak je u objednávky zvíře a v nabídce **Otevřít kartu**. Spárovat můžou recepce,
+sestra i lékařka; uloží se jen v Odoo (viz návod Recepce v pokladně › Objednaní ve WinVetu).
+
 „Moji pacienti dnes“ v kartě pacienta ukazují lékařce s vlastním účtem její dnešní pacienty.
 Účty ordinací používají obrazovku Ordinace.
 

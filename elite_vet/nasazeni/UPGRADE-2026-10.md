@@ -863,3 +863,38 @@ Kontrola: přijměte zkušební rezervaci → v Čekárně a ordinaci je u ní *
 ```sql
 SELECT name, latest_version FROM ir_module_module WHERE name = 'elite_vet_reception';
 ```
+
+## Doplnění: spárování objednávek z WinVetu
+
+Větev `feature/elite-vet-winvet-pairing`. Cílový kód `elite_vet_winvet` 18.0.1.4.0 a
+`elite_vet_reception` 18.0.1.15.0: v pokladně › Dnes jsou v Přicházejí **všechny** dnešní
+objednávky z WinVetu, i ty jen s textem (štítek **bez karty**). Recepce je spáruje s kartou
+(**Spárovat…** → Kartotéka → **Přiřadit k objednávce**) a pak přijme. Totéž je na obrazovce
+Ordinace v nabídce … u objednávky bez karty. Spárování je jen v Odoo, do WinVetu se nezapisuje.
+
+Schéma: nová pole na `elite_vet_winvet_calendar_event` (`manual_pet_id`, `manual_partner_id`,
+`matched_by_id`, `matched_at`, uložená počítaná `effective_pet_id`, `effective_partner_id` –
+při aktualizaci se dopočítají pro všechny přenesené záznamy). Pravidla a záloha jako v krocích
+2–3, pak (oba moduly v jednom běhu):
+
+```bash
+docker compose stop odoo
+docker compose run --rm odoo odoo -d DATABAZE -u elite_vet_winvet,elite_vet_reception --stop-after-init --no-http 2>&1 | tee upgrade-pairing-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-pairing-*.log      # nesmí nic najít
+docker compose start odoo
+```
+
+Po aktualizaci obnovte pokladnu i backend natvrdo (Ctrl+Shift+R).
+
+Kontrola: v Dnes › Přicházejí je objednávka z WinVetu jen s textem se štítkem **bez karty**
+a tlačítkem **Spárovat…** → spárujte ji se zkušebním zvířetem → řádek má zvíře a **Přijmout** →
+**Zrušit spárování** ji vrátí. Opravdové objednávky klientů nepárujte zkušebními zvířaty.
+
+```sql
+SELECT name, latest_version FROM ir_module_module
+ WHERE name IN ('elite_vet_winvet', 'elite_vet_reception');
+SELECT count(*) AS sparovano FROM elite_vet_winvet_calendar_event WHERE manual_pet_id IS NOT NULL;
+```
+
+**Tip pro kliniku:** ve WinVetu při objednávání vždy vyberte pacienta (nejen text). Taková
+objednávka se v Odoo spáruje sama.

@@ -216,6 +216,41 @@ export class ReceptionTodayScreen extends Component {
         });
     }
 
+    /** Task 30: Spárovat… of a WinVet appointment without a pet (title only): Kartotéka in the
+     * mode `winvet`, search prefilled from the WinVet text, "Přiřadit k objednávce". */
+    pairWinvet(row) {
+        this.dialog.add(CardIndexDialog, {
+            mode: "winvet",
+            winvet: row,
+            onChanged: () => this.load(),
+        });
+    }
+
+    /** Zrušit spárování of a WinVet appointment paired in Odoo (before the check-in). */
+    unpairWinvet(row) {
+        const busyKey = `unpair-${row.winvet_event_id}`;
+        if (this.state.busy[busyKey]) {
+            return;
+        }
+        this.dialog.add(ConfirmationDialog, {
+            title: "Zrušit spárování",
+            body: `Zrušit spárování objednávky ${row.time || ""} s ${row.pet_name}? Objednávka bude zase bez karty.`,
+            confirmLabel: "Zrušit spárování",
+            cancelLabel: "Ponechat",
+            confirm: () =>
+                this.run(busyKey, async () => {
+                    const result = await callReception(this.orm, this.notification, "unpair_winvet", [
+                        row.winvet_event_id,
+                    ]);
+                    if (result) {
+                        this.notification.add("Spárování je zrušené.", { type: "success" });
+                    }
+                    await this.load();
+                }),
+            cancel: () => {},
+        });
+    }
+
     /** + Bez objednání: Kartotéka in the walk-in mode, "Přijmout" with a doctor. */
     openWalkIn() {
         this.dialog.add(CardIndexDialog, {

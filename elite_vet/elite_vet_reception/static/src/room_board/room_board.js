@@ -16,6 +16,7 @@ import { useService } from "@web/core/utils/hooks";
 import { useSetupAction } from "@web/search/action_hook";
 import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { plural, visitTile } from "@elite_vet_clinic/clinic_ui/clinic_ui";
+import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
 
 const RECEPTION = "elite.vet.reception";
 const BUS_MESSAGE = "elite_vet_reservation/changed";
@@ -204,7 +205,9 @@ export class RoomBoard extends Component {
     }
     canNote(it) { return !!(it.record_id && it.stage !== "done"); }
     canOpenFromMenu(it) { return !!((it.record_id || it.pet_id) && this.primaryAction(it) !== "open"); }
-    hasMenu(it) { return this.canOpenFromMenu(it) || this.canNote(it) || !!it.draggable; }
+    /** Task 30: a WinVet appointment without a pet (title only) is paired with a card first. */
+    canPair(it) { return !!(it.source === "winvet" && it.winvet_event_id && it.needs_pairing); }
+    hasMenu(it) { return this.canOpenFromMenu(it) || this.canNote(it) || this.canPair(it) || !!it.draggable; }
 
     sectionItems(column, key) { return column.sections[key] || []; }
     isDoneOpen(column) { return !!this.state.openDone[column.key]; }
@@ -307,6 +310,14 @@ export class RoomBoard extends Component {
         this.state.pickDoctor = null;
         if (!pick || !doctor) return;
         await this.run("assign_room", [pick.item.record_id, pick.roomId || false, doctor.id]);
+    }
+    /** Spárovat…: the Kartotéka dialog of the till in the mode `winvet` (same rules, same API). */
+    pairWinvet(it) {
+        this.dialog.add(CardIndexDialog, {
+            mode: "winvet",
+            winvet: it,
+            onChanged: () => this.load().catch(() => {}),
+        });
     }
     /** Same as the rows of "Moji pacienti dnes": the card of the pet on today's record. */
     async openCard(it) {

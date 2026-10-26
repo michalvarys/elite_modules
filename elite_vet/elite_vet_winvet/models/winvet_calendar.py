@@ -33,6 +33,9 @@ CALENDAR_MODELS = {
     "calendar_activities": "elite.vet.winvet.calendar.activity",
 }
 EVENT_GREY = "#94a3b8"
+# Task 30: the only fields of an event Odoo itself writes (reception pairing), under this context
+MANUAL_MATCH_CONTEXT = "winvet_manual_match"
+MANUAL_MATCH_FIELDS = ("manual_partner_id", "manual_pet_id", "matched_by_id", "matched_at")
 COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
@@ -174,6 +177,19 @@ class WinvetCalendarEvent(models.Model):
     busy_status = fields.Integer(string="Stav (WinVet)", readonly=True)
     done = fields.Boolean(string="Vyřízeno", readonly=True)
     winvet_modified = fields.Datetime(string="Změněno ve WinVetu", readonly=True)
+    # Task 30: pairing done at the reception (Spárovat…) for an entry without a WinVet patient.
+    # Written only by `_set_manual_match` / `_clear_manual_match`, never by the sync.
+    manual_partner_id = fields.Many2one("res.partner", string="Klient (spárováno v Odoo)", readonly=True,
+                                        ondelete="set null")
+    manual_pet_id = fields.Many2one("elite.vet.pet", string="Zvíře (spárováno v Odoo)", readonly=True,
+                                    ondelete="set null")
+    matched_by_id = fields.Many2one("res.users", string="Spároval(a)", readonly=True, ondelete="set null")
+    matched_at = fields.Datetime(string="Spárováno", readonly=True)
+    # the pet / client used everywhere in Odoo: the WinVet match wins, the manual pairing is the fallback
+    effective_pet_id = fields.Many2one("elite.vet.pet", string="Zvíře v Odoo", compute="_compute_effective",
+                                       store=True, index=True)
+    effective_partner_id = fields.Many2one("res.partner", string="Klient v Odoo", compute="_compute_effective",
+                                           store=True)
     name = fields.Char(string="Název", compute="_compute_name", store=True)
     color_hex = fields.Char(string="Barva", compute="_compute_color_hex")
 
@@ -196,11 +212,25 @@ class WinvetCalendarEvent(models.Model):
         for rec in self:
             rec.room_ids = rec.resource_ids.room_id
 
-    @api.depends("pet_id.name", "partner_id.name", "title", "activity_id.name")
+    @api.depends("pet_id.partner_id", "partner_id", "manual_pet_id.partner_id", "manual_partner_id")
+    def _compute_effective(self):
+        for rec in self:
+            if rec.pet_id:
+                rec.effective_pet_id = rec.pet_id
+                rec.effective_partner_id = rec.partner_id or rec.pet_id.partner_id
+            elif rec.manual_pet_id:
+                rec.effective_pet_id = rec.manual_pet_id
+                rec.effective_partner_id = rec.manual_partner_id or rec.manual_pet_id.partner_id
+            else:
+                rec.effective_pet_id = False
+                rec.effective_partner_id = rec.partner_id
+
+    @api.depends("effective_pet_id.name", "effective_partner_id.name", "title", "activity_id.name")
     def _compute_name(self):
         for rec in self:
-            if rec.pet_id or rec.partner_id:
-                rec.name = " / ".join(p for p in (rec.pet_id.name, rec.partner_id.name) if p)
+            pet, partner = rec.effective_pet_id, rec.effective_partner_id
+            if pet or partner:
+                rec.name = " / ".join(p for p in (pet.name, partner.name) if p)
             else:
                 rec.name = rec.title or rec.activity_id.name or "WinVet"
 
@@ -211,9 +241,25 @@ class WinvetCalendarEvent(models.Model):
     # ------------------------------------------------------------------ read-only
 
     def write(self, vals):
+        if self.env.context.get(MANUAL_MATCH_CONTEXT) and set(vals) <= set(MANUAL_MATCH_FIELDS):
+            return super().write(vals)
         if not self.env.context.get("winvet_sync"):
             raise UserError(_("Záznamy z WinVetu nejde v Odoo měnit – změňte je ve WinVetu."))
-        return super().write(vals)
+        # the sync never touches the pairing done in Odoo
+        vals = {k: v for k, v in vals.items() if k not in MANUAL_MATCH_FIELDS}
+        return super().write(vals) if vals else True
+
+    def _set_manual_match(self, pet):
+        """Task 30 (reception Spárovat…): the entry without a WinVet patient belongs to `pet`.
+        The caller checks the rights and the rules; this writes only the pairing fields."""
+        self.sudo().with_context(**{MANUAL_MATCH_CONTEXT: True}).write({
+            "manual_pet_id": pet.id, "manual_partner_id": pet.partner_id.id,
+            "matched_by_id": self.env.user.id, "matched_at": fields.Datetime.now(),
+        })
+
+    def _clear_manual_match(self):
+        self.sudo().with_context(**{MANUAL_MATCH_CONTEXT: True}).write(
+            {"manual_pet_id": False, "manual_partner_id": False, "matched_by_id": False, "matched_at": False})
 
     def unlink(self):
         if not self.env.context.get("winvet_sync"):
@@ -248,11 +294,12 @@ class WinvetCalendarEvent(models.Model):
         return timed, all_day
 
     def _label(self):
-        """'Rex (Jana Nováková)' / the WinVet text."""
+        """'Rex (Jana Nováková)' / the WinVet text (the pet paired in Odoo counts as well)."""
         self.ensure_one()
-        if self.pet_id and self.partner_id:
-            return "%s (%s)" % (self.pet_id.name, self.partner_id.name)
-        return self.pet_id.name or self.partner_id.name or self.title or self.activity_id.name or "WinVet"
+        pet, partner = self.effective_pet_id, self.effective_partner_id
+        if pet and partner:
+            return "%s (%s)" % (pet.name, partner.name)
+        return pet.name or partner.name or self.title or self.activity_id.name or "WinVet"
 
 
 class WinvetCalendarSettings(models.TransientModel):
@@ -480,7 +527,7 @@ class ReservationWinvetCalendar(models.Model):
                     "id": -ev.id, "winvet_event_id": ev.id, "kind": "winvet", "state": "winvet",
                     "block_scope": False, "room_id": room.id, "start": ev_start, "end": ev_end,
                     "time_label": "%d:%02d–%d:%02d" % (ev_start // 60, ev_start % 60, ev_end // 60, ev_end % 60),
-                    "name": label, "pet": ev.pet_id.name or "", "owner": ev.partner_id.name or "",
+                    "name": label, "pet": ev.effective_pet_id.name or "", "owner": ev.effective_partner_id.name or "",
                     "winvet_title": ev.title or "",
                     "color_hex": "#e2e8f0", "winvet_color": ev.color_hex, "symbol": ev.activity_id.symbol or "",
                     "phone": "", "email": "", "problem": "", "procedure": ev.activity_id.name or "",
