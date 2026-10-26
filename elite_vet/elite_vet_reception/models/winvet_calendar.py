@@ -52,6 +52,57 @@ class ReceptionWinvetCalendar(models.AbstractModel):
         return rows
 
     @api.model
+    def _winvet_room_booked(self, day):
+        """Items of "Dnes ještě přijdou" on the screen Ordinace for today's timed WinVet entries:
+        client appointments (a client, a pet or a WinVet activity – not "Oběd" and other notes),
+        not marked done in WinVet, not checked in yet; in the first mapped room of the entry."""
+        if not calendar_enabled(self.env):
+            return {}
+        Event = self.env["elite.vet.winvet.calendar.event"].sudo()
+        events = Event.search([("date", "<=", day), ("end_date", ">=", day), ("all_day", "=", False),
+                               ("done", "=", False), ("room_ids", "!=", False)], order="start, id")
+        events = events.filtered(lambda e: (e.partner_id or e.pet_id or e.activity_id)
+                                 and not (e.pet_id and e.pet_id.deceased))
+        if not events:
+            return {}
+        taken = set(self._records().search([("winvet_event_id", "in", events.ids),
+                                             ("state", "!=", "cancelled")]).winvet_event_id.ids)
+        out = {}
+        for ev in events.filtered(lambda e: e.id not in taken):
+            pet, partner = ev.pet_id, ev.partner_id or ev.pet_id.partner_id
+            time = local_time(ev.start)
+            out.setdefault(ev.room_ids[:1].id, []).append({
+                "key": "wv%d" % ev.id, "winvet_event_id": ev.id, "source": "winvet",
+                "record_id": None, "reservation_id": None, "walk_in": False,
+                "stage": "booked", "stage_label": None,
+                "time": time, "reservation_time": time, "arrived_time": None, "called_time": None,
+                "waiting_minutes": None,
+                "pet_id": pet.id or None, "pet_name": pet.name or ev.title or None,
+                "species_label": self._records()._species_label(pet) if pet else None,
+                "owner": partner.name or None, "partner_id": partner.id or None,
+                "procedure": ev.procedure_id.name or ev.activity_id.name or None,
+                "doctor": None, "doctor_id": None, "room_id": ev.room_ids[:1].id,
+                "alerts": pet.alert_summary or None if pet else None, "reception_note": None,
+                "draggable": False, "sort": ev.start.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+        return out
+
+    @api.model
+    def room_board(self, day=None):
+        """WinVet appointments of the day join "Dnes ještě přijdou" of their room (read-only)."""
+        data = super().room_board(day)
+        extra = self._winvet_room_booked(self._day(day))
+        for column in data["columns"]:
+            items = extra.get(column["room_id"])
+            if not items:
+                continue
+            booked = column["sections"]["booked"] + items
+            booked.sort(key=lambda i: (i["sort"] or "", i["key"]))
+            column["sections"]["booked"] = booked
+            column["counts"]["booked"] = len(booked)
+        return data
+
+    @api.model
     def today_data(self, day=None):
         data = super().today_data(day)
         for row in data["arriving"]:

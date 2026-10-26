@@ -61,6 +61,35 @@ class TestWinvetCalendarReception(ReceptionCase):
         self.assertEqual(event.write_date, written)
         self.assertIn(record.id, [w["record_id"] for w in self.api(self.reception).today_data()["waiting"]])
 
+    def booked_on_room_screen(self):
+        data = self.api(self.reception).room_board()
+        column = [c for c in data["columns"] if c["room_id"] == self.room.id][0]
+        return column, [i for i in column["sections"]["booked"] if i.get("source") == "winvet"]
+
+    def test_room_screen_lists_winvet_appointments(self):
+        pet = self.new_pet("Winvetík Ordinace")
+        with_pet = self.event("t35-1", 9, pet=pet)
+        title_only = self.event("t35-2", 10, title="Synthetic client without card",
+                                partner_id=pet.partner_id.id)   # a client, no pet matched
+        self.event("t35-3", 12, title="Synthetic lunch")        # no client, no activity: a note
+        self.event("t35-4", 11, pet=pet, done=True)             # done in WinVet
+        self.event("t35-5", 0, pet=pet, all_day=True)           # all-day note
+        self.event("t35-6", 9, pet=pet, days=1)                 # tomorrow
+        # the sync writes the entries in its own request; here their stored day / room
+        # (computed) must be written before the screen searches them
+        self.env.flush_all()
+        column, items = self.booked_on_room_screen()
+        self.assertEqual([i["winvet_event_id"] for i in items], [with_pet.id, title_only.id])
+        self.assertEqual(column["counts"]["booked"], len(column["sections"]["booked"]))
+        first = items[0]
+        self.assertEqual((first["pet_id"], first["stage"], first["draggable"], first["record_id"]),
+                         (pet.id, "booked", False, None))
+        self.assertEqual(items[1]["pet_name"], "Synthetic client without card")
+        # checked in at the till: leaves "Dnes ještě přijdou" (the visit record takes over)
+        self.api(self.reception).check_in_winvet(with_pet.id)
+        _column, items = self.booked_on_room_screen()
+        self.assertEqual([i["winvet_event_id"] for i in items], [title_only.id])
+
     def test_refused_cases_and_switch_off(self):
         pet = self.new_pet("Zítřek")
         tomorrow = self.event("t25-10", 9, pet=pet, days=1)

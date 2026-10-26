@@ -194,7 +194,8 @@ export class RoomBoard extends Component {
         }
         return { now: false, text: column.shifts.map((s) => s.doctor + " " + s.label).join(", ") };
     }
-    tile(it) { return visitTile(it, it.stage); }
+    // a WinVet appointment says so instead of "Objednáno" (it is read-only, booked in WinVet)
+    tile(it) { return visitTile(it, it.stage, it.source === "winvet" ? { stateText: "z WinVetu" } : {}); }
     /** One primary action by state: Čeká -> Zavolat (nurse, doctor), V ordinaci -> Otevřít kartu. */
     primaryAction(it) {
         if (it.stage === "waiting" && it.record_id && this.canCall) return "call";
