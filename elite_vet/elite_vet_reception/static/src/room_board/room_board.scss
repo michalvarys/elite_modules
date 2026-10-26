@@ -64,14 +64,39 @@
 }
 
 // ---------- Všechny ordinace ----------
-.evrm-columns { display: flex; gap: 16px; flex: 1; min-height: 0; overflow: auto; padding: 16px 24px 24px; align-items: flex-start; }
-.evrm-col {
-    flex: 1 0 280px; max-width: 420px; background: var(--ev-paper); border: 1px solid var(--ev-line);
-    border-radius: var(--ev-r-lg); display: flex; flex-direction: column; min-height: 160px;
+// Task 31: a column with patients is at least 360 px wide and grows to share the space; a column
+// with nobody today is slim (140 px) - the tracks come from the screen (--evrm-cols). When the
+// columns do not fit, the board scrolls sideways (visible scrollbar) and never narrows a tile below
+// the minimum. Every column is as tall as the board (or the longest one), so the column heads stay
+// on top while scrolling down and every column is a drop target over the whole height.
+.evrm-columns {
+    display: grid; grid-template-columns: var(--evrm-cols, repeat(auto-fill, minmax(360px, 1fr)));
+    grid-template-rows: 1fr; column-gap: 16px; align-items: stretch; // 1fr = the board height or the longest column
+    flex: 1; min-height: 0; overflow: auto; padding: 0 24px 24px;
+    scrollbar-width: auto; scrollbar-color: var(--ev-line-strong) transparent;
+    &::-webkit-scrollbar { height: 12px; width: 12px; }
+    &::-webkit-scrollbar-thumb { background: var(--ev-line-strong); border-radius: 6px; border: 2px solid var(--ev-paper); }
+    &::-webkit-scrollbar-track { background: transparent; }
 }
+.evrm-col {
+    min-width: 0; margin-top: 16px; background: var(--ev-paper); border: 1px solid var(--ev-line);
+    border-radius: var(--ev-r-lg); display: flex; flex-direction: column; // min-height auto: the longest column sets the row
+}
+.evrm-col-slim .evrm-col-head { padding: 10px 10px 8px; }
+.evrm-col-slim .evrm-col-name { font-size: var(--ev-fs-body); overflow-wrap: anywhere; }
+.evrm-col-nobody { padding: 10px; .ev-empty-line { margin: 0; } }
 .evrm-col-unassigned { background: #f6f8f7; }
 .evrm-col-drop { outline: 3px dashed var(--ev-accent); outline-offset: -3px; }
-.evrm-col-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--ev-line); border-top: 5px solid var(--ev-done-bar); border-radius: var(--ev-r-lg) var(--ev-r-lg) 0 0; }
+.evrm-col-head {
+    position: sticky; top: 0; z-index: 2; background: inherit;
+    padding: 12px 14px 10px; border-bottom: 1px solid var(--ev-line); border-top: 5px solid var(--ev-done-bar); border-radius: var(--ev-r-lg) var(--ev-r-lg) 0 0;
+}
+// long WinVet titles: at most 3 lines (pet line) / 2 lines (owner, procedure), full text in the tooltip
+.evrm-columns .evt-pet, .evrm-columns .evt-line {
+    display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;
+}
+.evrm-columns .evt-pet { -webkit-line-clamp: 3; line-clamp: 3; }
+.evrm-columns .evt-line { -webkit-line-clamp: 2; line-clamp: 2; }
 .evrm-col-name { font-size: 18px; }
 .evrm-col-duty { font-size: var(--ev-fs-meta); color: var(--ev-accent-strong); }
 .evrm-col-body { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
@@ -107,11 +132,11 @@
     .evrm-stage.ev-group-booked { order: 3; }
     .evrm-toolbar { padding: 12px 16px; }
     .evrm-room { padding: 16px; }
-    .evrm-columns { padding: 12px 16px; }
+    .evrm-columns { padding: 0 16px 12px; }
+    .evrm-col { margin-top: 12px; }
 }
 @media (max-width: 640px) {
-    .evrm-columns { flex-direction: column; align-items: stretch; }
-    .evrm-col { max-width: none; flex-basis: auto; }
+    .evrm-columns { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; row-gap: 0; }
     .evrm-tools { width: 100%; margin-left: 0; }
     .evrm-select { flex: 1; min-width: 0; }
 }

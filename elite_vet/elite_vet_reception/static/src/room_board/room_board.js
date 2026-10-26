@@ -24,6 +24,8 @@ const BUS_MESSAGE = "elite_vet_reservation/changed";
 const POLL_MS = 30000;
 const VIEW_KEY = "elite_vet_reception.room_view";   // remembered choice of this browser
 const ALL = "all";
+// Všechny ordinace: a tile text longer than this may be clamped (2–3 lines) -> tooltip
+const TILE_TEXT_CLAMP = 40;
 
 // Left to right in the room, top to bottom in a column of Všechny ordinace; Hotovo is folded
 // under the last one. Feedback 26. 10.: the day reads from the booked ones to the room.
@@ -212,6 +214,19 @@ export class RoomBoard extends Component {
     hasMenu(it) { return this.canOpenFromMenu(it) || this.canNote(it) || this.canPair(it) || !!it.draggable; }
 
     sectionItems(column, key) { return column.sections[key] || []; }
+    /** Všechny ordinace: nobody today (booked, waiting, in the room, done) -> a slim column. */
+    isEmptyColumn(column) {
+        return ![...ROOM_SECTIONS.map((s) => s.key), "done"].some((key) => this.sectionItems(column, key).length);
+    }
+    /** Všechny ordinace: grid tracks - slim for nobody today, else at least 360 px sharing the rest. */
+    get columnTracks() {
+        return this.columns.map((c) => (this.isEmptyColumn(c) ? "140px" : "minmax(360px, 1fr)")).join(" ");
+    }
+    /** Všechny ordinace: long texts are clamped on the tile, the full text is the tooltip. */
+    tileTitle(it) {
+        const parts = [it.pet_name, it.owner, it.procedure].filter(Boolean);
+        return parts.some((p) => p.length > TILE_TEXT_CLAMP) ? parts.join("\n") : false;
+    }
     isDoneOpen(column) { return !!this.state.openDone[column.key]; }
     toggleDone(column) { this.state.openDone[column.key] = !this.state.openDone[column.key]; }
 

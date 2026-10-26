@@ -43,6 +43,7 @@
         <t t-set="primary" t-value="primaryAction(it)"/>
         <div class="evt evrm-card" t-att-class="'evt-' + it.stage + (compact ? ' evt-compact' : '') + (state.drag === it.key ? ' evrm-card-drag' : '') + (compact and it.draggable ? ' evrm-draggable' : '')"
              t-att-draggable="compact and it.draggable ? 'true' : 'false'"
+             t-att-title="compact ? tileTitle(it) : false"
              t-on-dragstart="(ev) => this.onDragStart(ev, it)" t-on-dragend="onDragEnd"
              t-att-data-key="it.key">
             <t t-call="elite_vet_clinic.VisitTileBody"/>
@@ -116,9 +117,9 @@
             <div t-if="state.loading" class="p-4 ev-meta">Načítám…</div>
 
             <!-- Všechny ordinace -->
-            <div t-elif="state.view === 'all'" class="evrm-columns">
+            <div t-elif="state.view === 'all'" class="evrm-columns" t-att-style="'--evrm-cols: ' + columnTracks">
                 <section t-foreach="columns" t-as="column" t-key="column.key" class="evrm-col"
-                         t-att-class="{'evrm-col-unassigned': !column.room_id, 'evrm-col-drop': state.dropKey === column.key}"
+                         t-att-class="{'evrm-col-unassigned': !column.room_id, 'evrm-col-drop': state.dropKey === column.key, 'evrm-col-slim': isEmptyColumn(column)}"
                          t-att-data-column="column.key"
                          t-on-dragover="(ev) => this.onDragOver(ev, column)" t-on-drop="(ev) => this.onDrop(ev, column)">
                     <header class="evrm-col-head" t-att-style="column.color ? 'border-top-color:' + column.color : ''">
@@ -127,7 +128,10 @@
                             <t t-if="column.room_id"><i class="fa fa-user-md me-1" aria-hidden="true"/></t><t t-esc="dutyText(column)"/>
                         </div>
                     </header>
-                    <div class="evrm-col-body">
+                    <div t-if="isEmptyColumn(column)" class="evrm-col-body evrm-col-nobody">
+                        <p class="ev-empty-line"><t t-if="column.room_id">nikdo</t><t t-else="">nikdo nečeká</t></p>
+                    </div>
+                    <div t-else="" class="evrm-col-body">
                         <t t-set="compact" t-value="true"/>
                         <t t-foreach="sections" t-as="section" t-key="section.key">
                             <t t-set="items" t-value="sectionItems(column, section.key)"/>
