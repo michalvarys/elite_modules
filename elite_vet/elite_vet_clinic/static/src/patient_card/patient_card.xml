@@ -139,6 +139,8 @@
                             <div t-if="state.record" class="evpc-pat-visit">
                                 <t t-set="chip" t-value="visitChip"/>
                                 <span t-if="chip" class="ev-chip evpc-visit-chip" t-att-class="'ev-chip-' + chip.state" t-esc="chip.text"/>
+                                <span t-if="chip and state.record.booked_time" class="evpc-booked">objednáno na <b t-esc="state.record.booked_time"/></span>
+                                <span t-elif="chip and state.record.walk_in" class="evpc-booked">bez objednání</span>
                                 <span t-if="state.record.doctor_name" class="evpc-treating"
                                       t-att-title="state.record.doctor_auto ? 'Doplněno automaticky. Převezme ji lékařka, která záznam upraví.' : ''">
                                     Ošetřuje <b t-esc="state.record.doctor_name"/><span t-if="state.record.doctor_auto" class="evpc-treating-auto"> (automaticky)</span>

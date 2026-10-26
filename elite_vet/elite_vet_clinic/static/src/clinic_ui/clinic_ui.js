@@ -25,21 +25,21 @@ export function plural(n, one, few, many) {
 /**
  * Data of a tile from an item of room_board or my_patients_today.
  * state: waiting | in_room | booked | done. opts: {stateText, doctor, room, roomColor}.
- * The big time is the arrival (or the booked time before arrival); the second line says when
- * it was booked when that differs, or "bez objednání".
+ * The big time is the booked time (doctors take patients in that order); the second line says
+ * when the client arrived, or "bez objednání" for a walk-in (whose big time is the arrival).
  */
 export function visitTile(it, state, opts = {}) {
     const arrived = it.arrived_time;
-    const booked = it.reservation_time || (it.walk_in ? null : it.time);
+    const booked = it.walk_in ? null : it.reservation_time || it.time;
     let timeSub = null;
     if (it.walk_in) {
         timeSub = "bez objednání";
-    } else if (arrived && booked && booked !== arrived) {
-        timeSub = "obj. " + booked;
+    } else if (arrived && state !== "booked") {
+        timeSub = "příchod " + arrived;
     }
     return {
         state,
-        time: arrived || it.time || null,
+        time: booked || arrived || it.time || null,
         timeSub,
         stateText: opts.stateText || visitStateText(state, it),
         pet: it.pet_name || "Bez mazlíčka",

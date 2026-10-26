@@ -60,6 +60,12 @@ class TestWinvetCalendarReception(ReceptionCase):
         self.assertEqual(again["record_id"], record.id)
         self.assertEqual(event.write_date, written)
         self.assertIn(record.id, [w["record_id"] for w in self.api(self.reception).today_data()["waiting"]])
+        # checked in from WinVet = booked, not a walk-in: the booked time travels with the visit
+        data = record._record_data()
+        self.assertEqual((data["booked_time"], data["walk_in"]), ("09:00", False))
+        column = [c for c in self.api(self.reception).room_board()["columns"] if c["room_id"] == self.room.id][0]
+        item = [i for i in column["sections"]["waiting"] if i["record_id"] == record.id][0]
+        self.assertEqual((item["reservation_time"], item["walk_in"], item["source"]), ("09:00", False, "winvet"))
 
     def booked_on_room_screen(self):
         data = self.api(self.reception).room_board()

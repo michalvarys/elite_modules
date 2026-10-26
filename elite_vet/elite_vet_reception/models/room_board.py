@@ -264,13 +264,16 @@ class ReceptionRooms(models.AbstractModel):
             stage = "booked"
         since = rec.arrived_at
         until = rec.called_at if stage == "in_room" and rec.called_at else now
-        sort_at = {"in_room": rec.called_at or since, "waiting": since}.get(stage) or res.start or rec.start
+        booked = res.start or (rec._booked_at() if rec else False)   # incl. a checked-in WinVet entry
+        # waiting: in the order of the bookings (walk-ins by arrival) – doctors take them so
+        sort_at = {"in_room": rec.called_at or since, "waiting": booked or since}.get(stage) or booked or rec.start
         return {
             "key": "r%d" % rec.id if rec else "b%d" % res.id,
             "record_id": rec.id or None, "reservation_id": res.id or None,
-            "walk_in": not res, "stage": stage, "stage_label": dict(VISIT_STAGES).get(stage),
-            "time": local_time(since or res.start or rec.start),
-            "reservation_time": local_time(res.start),
+            "source": "winvet" if not res and rec and rec.winvet_event_id else None,
+            "walk_in": not booked, "stage": stage, "stage_label": dict(VISIT_STAGES).get(stage),
+            "time": local_time(since or booked or rec.start),
+            "reservation_time": local_time(booked) if booked else None,
             "arrived_time": local_time(since),
             "called_time": local_time(rec.called_at),
             "waiting_minutes": max(0, int((until - since).total_seconds() // 60))

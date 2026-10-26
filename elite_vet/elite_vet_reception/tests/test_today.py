@@ -132,16 +132,16 @@ class TestToday(ReceptionCase):
         self.assertEqual(self.Record.search_count([("reservation_id", "=", res.id)]), 1)
 
     def test_check_in_after_doctor_opened_card(self):
-        """Review Focus 1: the doctor opened the card first -> same record, stays in_room."""
+        """Review Focus 1: the doctor opened the card first -> the same record; opening the card
+        does not call the patient in, check-in makes it waiting."""
         pet = self.new_pet("Už v ordinaci")
         res = self.reservation(9, 0, pet=pet)
         opened = self.as_user(self.doctor_user).open_today_record(pet.id, res.id)
         record = self.Record.browse(opened["id"])
-        self.assertEqual(record.visit_stage, "in_room")
-        self.assertTrue(record.called_at)
+        self.assertFalse(record.called_at)
         data = self.api(self.reception).check_in(res.id)
         self.assertEqual(data["record_id"], record.id)
-        self.assertEqual(data["stage"], "in_room")
+        self.assertEqual(data["stage"], "waiting")
         self.assertEqual(self.Record.search_count([("pet_id", "=", pet.id)]), 1)
 
     def test_check_in_web_reservation_without_pet(self):
@@ -262,13 +262,14 @@ class TestToday(ReceptionCase):
         self.assertEqual(record.visit_stage, "in_room")
         self.assertTrue(record.called_at)
 
-    def test_open_today_record_moves_waiting_to_in_room(self):
+    def test_open_today_record_keeps_waiting(self):
+        """Only Zavolat / assigning moves a patient into the room – opening the card does not."""
         pet = self.new_pet("Otevřený z karty")
         data = self.api(self.reception).walk_in(pet.id)
         self.as_user(self.doctor_user).open_today_record(pet.id)
         record = self.Record.browse(data["record_id"])
-        self.assertEqual(record.visit_stage, "in_room")
-        self.assertTrue(record.called_at)
+        self.assertEqual(record.visit_stage, "waiting")
+        self.assertFalse(record.called_at)
 
     # ---------------------------------------------------------------- rights
     def test_reception_cannot_write_record_texts(self):

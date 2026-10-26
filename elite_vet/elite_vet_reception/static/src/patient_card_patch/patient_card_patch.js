@@ -95,20 +95,4 @@ patch(PatientCard.prototype, {
         await this.openReservation(it);
     },
 
-    async loadCard() {
-        await super.loadCard(...arguments);
-        this.callInWaitingRecord();
-    },
-
-    /** R5: a nurse or doctor looking at today's waiting record has called the patient in. */
-    callInWaitingRecord() {
-        const rec = this.state.record;
-        if (!rec?.id || rec.visit_stage !== "waiting" || rec.state !== "draft") return;
-        if (!this.perms.can_write || rec.date !== this.todayIso || this.calledRecords.has(rec.id)) return;
-        this.calledRecords.add(rec.id);
-        this.orm.call(RECEPTION, "call_patient", [rec.id]).then(() => {
-            if (this.state.record?.id === rec.id) this.state.record.visit_stage = "in_room";
-            this.refreshToday();
-        }).catch(() => {});   // e.g. the reception role: silently ignored
-    },
 });

@@ -163,6 +163,7 @@
 .evpc-pat-visit { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .evpc-visit-chip { font-size: var(--ev-fs-body); padding: 3px 12px; }
 .evpc-treating { font-size: var(--ev-fs-body); b { font-weight: 700; } }
+.evpc-booked { font-size: var(--ev-fs-body); color: var(--ev-ink-soft, inherit); b { font-weight: 700; color: var(--ev-ink, inherit); } }
 .evpc-treating-sub { font-size: 13px; color: var(--evpc-muted); }
 .evpc-treating-auto { color: var(--evpc-muted); font-size: var(--ev-fs-meta); }
 .evpc-pat-alerts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }

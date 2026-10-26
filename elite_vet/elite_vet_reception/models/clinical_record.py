@@ -65,13 +65,3 @@ class ClinicalRecordVisitStage(models.Model):
         if todo:
             todo.write({"visit_stage": "in_room", "called_at": fields.Datetime.now()})
         return todo
-
-    @api.model
-    def open_today_record(self, pet_id, reservation_id=False, force_new=False):
-        data = super().open_today_record(pet_id, reservation_id=reservation_id, force_new=force_new)
-        if not self.env.context.get(RECEPTION_CONTEXT) \
-                and self.env.user.has_group("elite_vet_clinic.group_clinic_nurse"):
-            record = self.browse(data["id"])
-            if record._call_in():
-                data = record._record_data()
-        return data

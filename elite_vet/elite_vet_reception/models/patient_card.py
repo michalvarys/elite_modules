@@ -20,9 +20,22 @@ def item_group(record, reservation_state=None):
 class ClinicalRecordPatientList(models.Model):
     _inherit = "elite.vet.clinical.record"
 
+    def _booked_at(self):
+        """When the client was booked (UTC): the Odoo reservation, else the WinVet entry the
+        reception checked in (task 21); False = came without a booking."""
+        self.ensure_one()
+        if self.reservation_id:
+            return self.reservation_id.sudo().start
+        event = self.sudo().winvet_event_id
+        return event.start if event else False
+
     def _record_data(self):
         data = super()._record_data()
         data["visit_stage"] = self.visit_stage or False
+        # doctors take patients by the booked time: the card header says when (or "bez objednání")
+        booked = self._booked_at()
+        data["booked_time"] = local_time(booked) if booked else None
+        data["walk_in"] = not booked
         # task 26: the visit chip in the card header ("Čeká od 9:05", "V ordinaci od 9:20")
         data["arrived_time"] = local_time(self.arrived_at) if self.arrived_at else None
         data["called_time"] = local_time(self.called_at) if self.called_at else None
@@ -54,6 +67,7 @@ class ClinicalRecordPatientList(models.Model):
                 rec = self.browse()
             item.update(rec._stage_info(now))
             item.update({"key": "r%s" % item["reservation_id"], "walk_in": False,
+                         "reservation_time": item.get("time"),
                          "group": item_group(rec, item.get("state"))})
 
         domain = [("date", "=", clinic_today()), ("state", "!=", "cancelled"),
@@ -74,23 +88,27 @@ class ClinicalRecordPatientList(models.Model):
 
     @api.model
     def _by_arrival(self, records):
-        return records.sorted(lambda r: (r.arrived_at or r.start, r.id))
+        """Booked time first (doctors take patients in the order of their bookings), else arrival."""
+        return records.sorted(lambda r: (r._booked_at() or r.arrived_at or r.start, r.id))
 
     def _walk_in_item(self, now):
         """List item of a record without a reservation."""
         rec = self
         pet = rec.pet_id
         partner = rec.partner_id
-        when = rec.arrived_at or rec.start
+        booked = rec._booked_at()   # a WinVet appointment checked in at the till
+        when = booked or rec.arrived_at or rec.start
         item = {
-            "key": "w%s" % rec.id, "walk_in": True, "reservation_id": None,
+            "key": "w%s" % rec.id, "walk_in": not booked, "reservation_id": None,
+            "reservation_time": local_time(booked) if booked else None,
             "start": when.strftime("%Y-%m-%d %H:%M:%S") if when else None,
             "time": local_time(when) if when else None, "time_end": None,
             "room": None, "room_color": None, "doctor": rec.doctor_id.name or None,
             "pet_id": pet.id, "pet_name": pet.name, "species_label": self._species_label(pet),
             "owner": partner.name or None, "partner_id": partner.id or None,
             "phone": partner.mobile or partner.phone or None,
-            "procedure": None, "problem": None, "state": None, "state_label": "Bez objednání",
+            "procedure": rec.sudo().winvet_event_id.activity_id.name or None if booked else None,
+            "problem": None, "state": None, "state_label": "Objednáno (WinVet)" if booked else "Bez objednání",
             "record_id": rec.id, "record_state": rec.state, "alerts": pet.alert_summary or None,
             "reception_note": rec.reception_note or None,
             "group": item_group(rec),
