@@ -11,6 +11,8 @@
  *   Přiřadit k objednávce (pair_winvet), Zrušit spárování when it is paired already.
  * The dialog runs in the POS and in the backend (screen Ordinace): the POS service is optional and
  * used only by the till modes (order, walk_in cashier).
+ * Task 31: Nový klient has the full pet form (template CardIndexPetFields, the same as + Nové
+ * zvíře, without Uhynulý); the client and the pet are saved in one call (save_owner with pet_vals).
  */
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
@@ -70,6 +72,18 @@ function petFormValues(pet) {
     return values;
 }
 
+/** State of the pet form (Task 22; reused by Nový klient, task 31). */
+function petFormState(pet, { petId = null, alerts = [], deceased = false, showMore = false } = {}) {
+    return { petId, values: petFormValues(pet), alerts, deceased, wasDeceased: deceased, showMore, error: null };
+}
+
+/** True when the pet part of Nový klient has anything besides the preset Druh. */
+function petFormTouched(pf) {
+    return Boolean(
+        pf.alerts.length || PET_FIELDS.some((f) => f !== "species" && f !== "death_date" && String(pf.values[f]).trim())
+    );
+}
+
 /** "12,5 kg" */
 export function weightLabel(weight) {
     return weight ? `${String(Math.round(weight * 100) / 100).replace(".", ",")} kg` : "";
@@ -111,8 +125,8 @@ export class CardIndexDialog extends Component {
             searching: false,
             data: null, // owner_data()
             petId: null,
-            ownerForm: null, // {isNew, values, firstPet: {name, species}}
-            petForm: null, // {petId, values, alerts: [{key, id, kind, note}], deceased, wasDeceased, showMore}
+            ownerForm: null, // {isNew, values, pet (a petForm, new owner only), error}
+            petForm: null, // {petId, values, alerts: [{key, id, kind, note}], deceased, wasDeceased, showMore, error}
             saving: false,
             doctors: [],
             walkInDoctorId: "",
@@ -357,25 +371,20 @@ export class CardIndexDialog extends Component {
         this.state.ownerForm = {
             isNew: true,
             values: formValues({ name }, OWNER_FIELDS),
-            firstPet: { name: res?.pet_name || "", species: "dog" },
+            // task 31: the full pet form of task 22 (Další údaje closed, no Uhynulý)
+            pet: petFormState({ name: res?.pet_name || "", species: "dog" }),
+            error: null,
         };
     }
 
     editOwner() {
         this.state.petForm = null;
-        this.state.ownerForm = { isNew: false, values: formValues(this.owner, OWNER_FIELDS) };
+        this.state.ownerForm = { isNew: false, values: formValues(this.owner, OWNER_FIELDS), error: null };
     }
 
     newPet() {
         this.state.ownerForm = null;
-        this.state.petForm = {
-            petId: null,
-            values: petFormValues({ species: "dog" }),
-            alerts: [],
-            deceased: false,
-            wasDeceased: false,
-            showMore: false, // Další údaje closed on a new pet
-        };
+        this.state.petForm = petFormState({ species: "dog" }); // Další údaje closed on a new pet
     }
 
     editPet() {
@@ -385,9 +394,8 @@ export class CardIndexDialog extends Component {
         const pet = this.pet;
         const values = petFormValues(pet);
         this.state.ownerForm = null;
-        this.state.petForm = {
+        this.state.petForm = petFormState(pet, {
             petId: pet.id,
-            values,
             alerts: (pet.alert_list || []).map((a) => ({
                 key: ++this.alertKey,
                 id: a.id,
@@ -395,17 +403,18 @@ export class CardIndexDialog extends Component {
                 note: a.note || "",
             })),
             deceased: pet.deceased,
-            wasDeceased: pet.deceased,
             showMore: PET_MORE_FIELDS.some((f) => values[f]),
-        };
+        });
     }
 
-    toggleMore() {
-        this.state.petForm.showMore = !this.state.petForm.showMore;
+    // the pet fields (template CardIndexPetFields) work on the form they are given: the pet form
+    // or the pet part of Nový klient
+    toggleMore(pf) {
+        pf.showMore = !pf.showMore;
     }
 
-    addAlert() {
-        this.state.petForm.alerts.push({
+    addAlert(pf) {
+        pf.alerts.push({
             key: ++this.alertKey,
             id: null,
             kind: this.state.alertKinds[0]?.value || "other",
@@ -413,9 +422,37 @@ export class CardIndexDialog extends Component {
         });
     }
 
-    removeAlert(alert) {
-        const alerts = this.state.petForm.alerts;
-        alerts.splice(alerts.indexOf(alert), 1);
+    removeAlert(pf, alert) {
+        pf.alerts.splice(pf.alerts.indexOf(alert), 1);
+    }
+
+    /** Values of save_pet from a pet form; Uhynulý only when editing (never on registration). */
+    petVals(pf) {
+        const vals = {
+            ...pf.values,
+            alerts: pf.alerts.map((a) => ({ id: a.id || false, kind: a.kind, note: a.note })),
+        };
+        if (pf.petId) {
+            vals.deceased = pf.deceased;
+        } else {
+            delete vals.death_date;
+        }
+        return vals;
+    }
+
+    /** Nový klient with a filled pet: the pet goes with the client (one save). */
+    get ownerFormHasPet() {
+        const form = this.state.ownerForm;
+        return Boolean(form?.isNew && form.pet.values.name.trim());
+    }
+
+    /** winvet mode, Nový klient with a pet: the appointment is paired right after the save. */
+    get saveOwnerPairs() {
+        return this.mode === "winvet" && this.ownerFormHasPet;
+    }
+
+    get saveOwnerLabel() {
+        return this.saveOwnerPairs ? "Uložit a přiřadit k objednávce" : "Uložit klienta";
     }
 
     /** Resolves true when the user confirms marking the pet as deceased. */
@@ -441,74 +478,80 @@ export class CardIndexDialog extends Component {
         this.state.petForm = null;
     }
 
+    /** A warning shown in the form (and as a notification). */
+    formError(form, message) {
+        form.error = message;
+        this.notification.add(message, { type: "warning" });
+    }
+
     async saveOwner(ev) {
         ev?.preventDefault();
         const form = this.state.ownerForm;
+        form.error = null;
         if (!form.values.name.trim()) {
-            this.notification.add("Vyplňte jméno majitele.", { type: "warning" });
+            this.formError(form, "Vyplňte jméno majitele.");
             return;
         }
-        if (form.isNew && form.firstPet.name.trim() && !form.firstPet.species) {
-            this.notification.add("Vyberte druh zvířete.", { type: "warning" });
+        const withPet = this.ownerFormHasPet;
+        if (form.isNew && !withPet && petFormTouched(form.pet)) {
+            this.formError(form, "Vyplňte jméno zvířete, nebo údaje zvířete smažte.");
             return;
         }
+        if (withPet && !form.pet.values.species) {
+            this.formError(form, "Vyberte druh zvířete.");
+            return;
+        }
+        const pairs = this.saveOwnerPairs;
         this.state.saving = true;
+        let data;
         try {
-            const args = form.isNew ? [form.values] : [form.values, this.owner.id];
-            let data = await callReception(this.orm, this.notification, "save_owner", args);
-            if (!data) {
-                return;
+            // task 31: a new client with a pet in one call (nothing is created when the pet is refused)
+            const args = form.isNew ? [form.values, false] : [form.values, this.owner.id];
+            if (withPet) {
+                args.push(this.petVals(form.pet));
             }
-            let petId = this.state.petId;
-            if (form.isNew && form.firstPet.name.trim()) {
-                const withPet = await callReception(this.orm, this.notification, "save_pet", [
-                    data.owner.id,
-                    { name: form.firstPet.name, species: form.firstPet.species },
-                ]);
-                if (withPet) {
-                    data = withPet;
-                    petId = withPet.pets.find((p) => p.name === form.firstPet.name.trim())?.id || null;
-                }
-            }
-            this.state.ownerForm = null;
-            this.setData(data, petId);
-            this.notification.add(form.isNew ? "Klient je založený." : "Klient je uložený.", { type: "success" });
+            data = await callReception(this.orm, this.notification, "save_owner", args, { rethrow: true });
+        } catch (error) {
+            form.error = errorMessage(error); // the form stays open with everything typed
+            return;
         } finally {
             this.state.saving = false;
+        }
+        this.state.ownerForm = null;
+        this.setData(data, withPet ? data.new_pet_id : this.state.petId);
+        this.notification.add(form.isNew ? "Klient je založený." : "Klient je uložený.", { type: "success" });
+        if (pairs && this.pet) {
+            await this.pairWinvet(); // one click: save and pair (on failure the new card stays open)
         }
     }
 
     async savePet(ev) {
         ev?.preventDefault();
         const form = this.state.petForm;
+        form.error = null;
         if (!form.values.name.trim()) {
-            this.notification.add("Vyplňte jméno zvířete.", { type: "warning" });
+            this.formError(form, "Vyplňte jméno zvířete.");
             return;
         }
         if (!form.values.species) {
-            this.notification.add("Vyberte druh zvířete.", { type: "warning" });
+            this.formError(form, "Vyberte druh zvířete.");
             return;
         }
         if (form.petId && form.deceased && !form.wasDeceased && !(await this.confirmDeceased(form.values.name.trim()))) {
             return;
         }
-        const vals = {
-            ...form.values,
-            alerts: form.alerts.map((a) => ({ id: a.id || false, kind: a.kind, note: a.note })),
-        };
-        if (form.petId) {
-            vals.deceased = form.deceased; // Uhynulý only when editing (never on registration)
-        } else {
-            delete vals.death_date;
-        }
+        const vals = this.petVals(form);
         this.state.saving = true;
         try {
             const args = [this.owner.id, vals];
             if (form.petId) {
                 args.push(form.petId);
             }
-            const data = await callReception(this.orm, this.notification, "save_pet", args);
-            if (!data) {
+            let data;
+            try {
+                data = await callReception(this.orm, this.notification, "save_pet", args, { rethrow: true });
+            } catch (error) {
+                form.error = errorMessage(error);
                 return;
             }
             const before = new Set(this.pets.map((p) => p.id));

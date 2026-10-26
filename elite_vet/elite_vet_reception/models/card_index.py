@@ -335,22 +335,37 @@ class ReceptionCardIndex(models.AbstractModel):
     # ------------------------------------------------------------------ write API
 
     @api.model
-    def save_owner(self, vals, partner_id=None):
+    def save_owner(self, vals, partner_id=None, pet_vals=None):
         """Create (no partner_id) or edit an owner. Same phone / e-mail as another owner is
-        allowed: nothing is merged."""
+        allowed: nothing is merged.
+
+        Task 31: a new owner can come with their first pet (`pet_vals`, the values of save_pet:
+        every pet field and the alerts, never deceased). Both are created in one go: when the
+        pet fails validation, the owner is not created either. The result then has `new_pet_id`."""
         self._check_reception()
         vals = _clean(vals, OWNER_FIELDS)
+        if pet_vals is not None and (partner_id or not isinstance(pet_vals, dict)):
+            raise UserError(_("Zvíře jde se zakládaným klientem jen u nového klienta."))
         if partner_id:
             partner = self._get_owner(partner_id)
             if "name" in vals and not vals["name"]:
                 raise UserError(_("Vyplňte jméno majitele."))
             if vals:
                 partner.write(vals)
-        else:
-            if not vals.get("name"):
-                raise UserError(_("Vyplňte jméno majitele."))
+            return self.owner_data(partner.id)
+        if not vals.get("name"):
+            raise UserError(_("Vyplňte jméno majitele."))
+        if pet_vals is None:
             partner = self.env["res.partner"].create(dict(vals, is_vet_client=True))
-        return self.owner_data(partner.id)
+            return self.owner_data(partner.id)
+        # owner and pet together: a savepoint, so a refused pet leaves no owner behind even when
+        # the caller's transaction goes on (the RPC itself would roll back as a whole as well)
+        with self.env.cr.savepoint():
+            partner = self.env["res.partner"].create(dict(vals, is_vet_client=True))
+            data = self.save_pet(partner.id, pet_vals)
+        new = [p["id"] for p in data["pets"]]
+        data["new_pet_id"] = new[0] if new else None
+        return data
 
     @api.model
     def save_pet(self, partner_id, vals, pet_id=None):

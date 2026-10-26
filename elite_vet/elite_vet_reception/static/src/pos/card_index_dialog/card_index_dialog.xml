@@ -1,6 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
 
+    <!-- Task 22 pet fields (top fields, collapsible Další údaje, Upozornění) on the pet form `pf`;
+         task 31: also the pet part of Nový klient. `prefix` "" = the pet form (Jméno and Druh
+         required), "pet_" = with a new client (the pet is optional). Uhynulý stays in the pet form. -->
+    <t t-name="elite_vet_reception.CardIndexPetFields">
+        <div class="row g-2">
+            <label class="col-12 col-md-6 o_ev_field"><b><t t-if="prefix">Jméno zvířete</t><t t-else="">Jméno *</t></b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'name'" t-model="pf.values.name"
+                       t-att-required="prefix ? undefined : 'required'"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Druh<t t-if="!prefix"> *</t></b>
+                <select class="form-select form-select-lg" t-att-name="prefix + 'species'" t-model="pf.values.species">
+                    <option t-foreach="state.species" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
+                </select></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Pohlaví</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'sex'" t-model="pf.values.sex" list="o_ev_sex_options"/>
+                <datalist id="o_ev_sex_options">
+                    <option value="pes"/><option value="fena"/><option value="kocour"/><option value="kočka"/>
+                    <option value="samec"/><option value="samice"/>
+                </datalist></label>
+            <label t-if="pf.values.species === 'other'" class="col-12 col-md-6 o_ev_field o_ev_species_other"><b>Jiný druh</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'species_other'" t-model="pf.values.species_other"
+                       placeholder="např. fretka, želva"/></label>
+            <label class="col-12 col-md-6 o_ev_field"><b>Plemeno</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'breed'" t-model="pf.values.breed"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Narození</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'birth_date'" type="date" t-model="pf.values.birth_date"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Čip</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'chip'" t-model="pf.values.chip"/></label>
+        </div>
+
+        <button type="button" class="btn btn-link px-0 mt-2 o_ev_more_toggle" t-att-aria-expanded="pf.showMore ? 'true' : 'false'"
+                t-on-click="() => this.toggleMore(pf)">
+            <i t-att-class="pf.showMore ? 'fa fa-caret-down' : 'fa fa-caret-right'" class="me-1" aria-hidden="true"/>Další údaje
+            <small class="text-muted">(nepovinné)</small>
+        </button>
+        <div t-if="pf.showMore" class="row g-2 o_ev_pet_more">
+            <label class="col-6 col-md-3 o_ev_field"><b>Rok narození</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'birth_year'" inputmode="numeric" maxlength="4"
+                       t-model="pf.values.birth_year" placeholder="např. 2019"/>
+                <small class="text-muted">když datum neznáte</small></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Hmotnost (kg)</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'weight'" inputmode="decimal"
+                       t-model="pf.values.weight" placeholder="např. 12,5"/></label>
+            <label class="col-12 col-md-6 o_ev_field"><b>Barva</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'color'" t-model="pf.values.color"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Tetování</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'tattoo'" t-model="pf.values.tattoo"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Číslo pasu</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'passport'" t-model="pf.values.passport"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Příští vakcinace</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'next_vaccination'" type="date" t-model="pf.values.next_vaccination"/></label>
+            <label class="col-6 col-md-3 o_ev_field"><b>Příští odčervení</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'next_deworming'" type="date" t-model="pf.values.next_deworming"/></label>
+            <label class="col-12 o_ev_field"><b>Důležité</b>
+                <input class="form-control form-control-lg" t-att-name="prefix + 'important_note'" t-model="pf.values.important_note"
+                       placeholder="krátce – ukáže se jako červený štítek u zvířete"/></label>
+            <label class="col-12 o_ev_field"><b>Poznámka</b>
+                <textarea class="form-control" t-att-name="prefix + 'note'" rows="2" t-model="pf.values.note"/></label>
+        </div>
+
+        <div class="mt-3 o_ev_alerts">
+            <div class="o_ev_field"><b>Upozornění</b></div>
+            <div t-foreach="pf.alerts" t-as="alert" t-key="alert.key" class="d-flex flex-wrap gap-2 mt-2 o_ev_alert_row">
+                <select class="form-select form-select-lg o_ev_alert_kind" t-model="alert.kind" aria-label="Druh upozornění">
+                    <option t-foreach="state.alertKinds" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
+                </select>
+                <input class="form-control form-control-lg o_ev_grow o_ev_alert_note" t-model="alert.note"
+                       placeholder="např. náhubek, penicilin" aria-label="Poznámka upozornění"/>
+                <button type="button" class="btn btn-light btn-lg o_ev_alert_remove" t-on-click="() => this.removeAlert(pf, alert)"
+                        title="Odebrat upozornění" aria-label="Odebrat upozornění"><i class="fa fa-trash" aria-hidden="true"/></button>
+            </div>
+            <button type="button" class="btn btn-secondary mt-2 o_ev_alert_add" t-on-click="() => this.addAlert(pf)">+ Upozornění</button>
+        </div>
+    </t>
+
     <t t-name="elite_vet_reception.CardIndexDialog">
         <Dialog title="title" size="'xl'" contentClass="'o_ev_card_index o_ev_card_index_' + mode">
             <p class="text-muted mb-2 o_ev_purpose" t-esc="hint"/>
@@ -38,17 +112,17 @@
                 </div>
                 <t t-if="state.ownerForm.isNew">
                     <h5 class="mt-3">Zvíře <small class="text-muted">(nepovinné, další jde přidat potom)</small></h5>
-                    <div class="row g-2">
-                        <label class="col-12 col-md-6 o_ev_field"><b>Jméno zvířete</b>
-                            <input class="form-control form-control-lg" name="pet_name" t-model="state.ownerForm.firstPet.name"/></label>
-                        <label class="col-12 col-md-6 o_ev_field"><b>Druh</b>
-                            <select class="form-select form-select-lg" name="pet_species" t-model="state.ownerForm.firstPet.species">
-                                <option t-foreach="state.species" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
-                            </select></label>
+                    <div class="o_ev_new_owner_pet">
+                        <t t-call="elite_vet_reception.CardIndexPetFields">
+                            <t t-set="pf" t-value="state.ownerForm.pet"/>
+                            <t t-set="prefix" t-value="'pet_'"/>
+                        </t>
                     </div>
                 </t>
+                <div t-if="state.ownerForm.error" class="alert alert-danger mt-3 mb-0 o_ev_form_error" role="alert" t-esc="state.ownerForm.error"/>
                 <div class="d-flex gap-2 mt-3">
-                    <button type="submit" class="btn btn-primary btn-lg o_ev_save_owner" t-att-disabled="state.saving">Uložit</button>
+                    <button type="submit" class="btn btn-primary btn-lg o_ev_save_owner" t-att-disabled="state.saving">
+                        <t t-if="state.ownerForm.isNew" t-esc="saveOwnerLabel"/><t t-else="">Uložit klienta</t></button>
                     <button type="button" class="btn btn-light btn-lg" t-on-click="cancelForm">Zrušit</button>
                 </div>
             </form>
@@ -57,73 +131,7 @@
             <form t-elif="state.petForm" class="o_ev_form o_ev_pet_form" t-on-submit="savePet">
                 <t t-set="pf" t-value="state.petForm"/>
                 <h4><t t-if="pf.petId">Upravit zvíře</t><t t-else="">Nové zvíře</t> · <t t-esc="owner.name"/></h4>
-                <div class="row g-2">
-                    <label class="col-12 col-md-6 o_ev_field"><b>Jméno *</b>
-                        <input class="form-control form-control-lg" name="name" t-model="pf.values.name" required="required"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Druh *</b>
-                        <select class="form-select form-select-lg" name="species" t-model="pf.values.species">
-                            <option t-foreach="state.species" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
-                        </select></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Pohlaví</b>
-                        <input class="form-control form-control-lg" name="sex" t-model="pf.values.sex" list="o_ev_sex_options"/>
-                        <datalist id="o_ev_sex_options">
-                            <option value="pes"/><option value="fena"/><option value="kocour"/><option value="kočka"/>
-                            <option value="samec"/><option value="samice"/>
-                        </datalist></label>
-                    <label t-if="pf.values.species === 'other'" class="col-12 col-md-6 o_ev_field o_ev_species_other"><b>Jiný druh</b>
-                        <input class="form-control form-control-lg" name="species_other" t-model="pf.values.species_other"
-                               placeholder="např. fretka, želva"/></label>
-                    <label class="col-12 col-md-6 o_ev_field"><b>Plemeno</b>
-                        <input class="form-control form-control-lg" name="breed" t-model="pf.values.breed"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Narození</b>
-                        <input class="form-control form-control-lg" name="birth_date" type="date" t-model="pf.values.birth_date"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Čip</b>
-                        <input class="form-control form-control-lg" name="chip" t-model="pf.values.chip"/></label>
-                </div>
-
-                <button type="button" class="btn btn-link px-0 mt-2 o_ev_more_toggle" t-att-aria-expanded="pf.showMore ? 'true' : 'false'"
-                        t-on-click="toggleMore">
-                    <i t-att-class="pf.showMore ? 'fa fa-caret-down' : 'fa fa-caret-right'" class="me-1" aria-hidden="true"/>Další údaje
-                    <small class="text-muted">(nepovinné)</small>
-                </button>
-                <div t-if="pf.showMore" class="row g-2 o_ev_pet_more">
-                    <label class="col-6 col-md-3 o_ev_field"><b>Rok narození</b>
-                        <input class="form-control form-control-lg" name="birth_year" inputmode="numeric" maxlength="4"
-                               t-model="pf.values.birth_year" placeholder="např. 2019"/>
-                        <small class="text-muted">když datum neznáte</small></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Hmotnost (kg)</b>
-                        <input class="form-control form-control-lg" name="weight" inputmode="decimal"
-                               t-model="pf.values.weight" placeholder="např. 12,5"/></label>
-                    <label class="col-12 col-md-6 o_ev_field"><b>Barva</b>
-                        <input class="form-control form-control-lg" name="color" t-model="pf.values.color"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Tetování</b>
-                        <input class="form-control form-control-lg" name="tattoo" t-model="pf.values.tattoo"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Číslo pasu</b>
-                        <input class="form-control form-control-lg" name="passport" t-model="pf.values.passport"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Příští vakcinace</b>
-                        <input class="form-control form-control-lg" name="next_vaccination" type="date" t-model="pf.values.next_vaccination"/></label>
-                    <label class="col-6 col-md-3 o_ev_field"><b>Příští odčervení</b>
-                        <input class="form-control form-control-lg" name="next_deworming" type="date" t-model="pf.values.next_deworming"/></label>
-                    <label class="col-12 o_ev_field"><b>Důležité</b>
-                        <input class="form-control form-control-lg" name="important_note" t-model="pf.values.important_note"
-                               placeholder="krátce – ukáže se jako červený štítek u zvířete"/></label>
-                    <label class="col-12 o_ev_field"><b>Poznámka</b>
-                        <textarea class="form-control" name="note" rows="2" t-model="pf.values.note"/></label>
-                </div>
-
-                <div class="mt-3 o_ev_alerts">
-                    <div class="o_ev_field"><b>Upozornění</b></div>
-                    <div t-foreach="pf.alerts" t-as="alert" t-key="alert.key" class="d-flex flex-wrap gap-2 mt-2 o_ev_alert_row">
-                        <select class="form-select form-select-lg o_ev_alert_kind" t-model="alert.kind" aria-label="Druh upozornění">
-                            <option t-foreach="state.alertKinds" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-esc="opt.label"/>
-                        </select>
-                        <input class="form-control form-control-lg o_ev_grow o_ev_alert_note" t-model="alert.note"
-                               placeholder="např. náhubek, penicilin" aria-label="Poznámka upozornění"/>
-                        <button type="button" class="btn btn-light btn-lg o_ev_alert_remove" t-on-click="() => this.removeAlert(alert)"
-                                title="Odebrat upozornění" aria-label="Odebrat upozornění"><i class="fa fa-trash" aria-hidden="true"/></button>
-                    </div>
-                    <button type="button" class="btn btn-secondary mt-2 o_ev_alert_add" t-on-click="addAlert">+ Upozornění</button>
-                </div>
+                <t t-call="elite_vet_reception.CardIndexPetFields"><t t-set="prefix" t-value="''"/></t>
 
                 <div t-if="pf.petId" class="mt-3 o_ev_deceased">
                     <label class="d-flex align-items-center gap-2">
@@ -135,6 +143,7 @@
                         <input class="form-control form-control-lg" name="death_date" type="date" t-model="pf.values.death_date"/></label>
                 </div>
 
+                <div t-if="pf.error" class="alert alert-danger mt-3 mb-0 o_ev_form_error" role="alert" t-esc="pf.error"/>
                 <div class="d-flex gap-2 mt-3">
                     <button type="submit" class="btn btn-primary btn-lg o_ev_save_pet" t-att-disabled="state.saving">Uložit</button>
                     <button type="button" class="btn btn-light btn-lg" t-on-click="cancelForm">Zrušit</button>
