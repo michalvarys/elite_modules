@@ -48,8 +48,14 @@ class EliteVetSetting(models.Model):
     booking_max_days_ahead = fields.Integer("Nejdál dopředu (dní)", default=60)
     booking_cancel_hours_before = fields.Integer("Klient může zrušit do (hodin před)", default=12,
                                                  help="0 = klient nemůže rušit odkazem z e-mailu.")
-    booking_notify_email = fields.Char("E-mail pro upozornění", default="info@elite-vet.cz",
-                                       help="Sem chodí zpráva o každé nové rezervaci z webu.")
+    booking_notify_enabled = fields.Boolean(
+        "Posílat klinice upozornění", default=True,
+        help="Zapnuté = klinika dostane e-mail o každé nové rezervaci z webu a o zrušení rezervace "
+             "klientem. Vypnuté = klinice nechodí nic; e-maily klientům (potvrzení, změna, zrušení, "
+             "připomínka) chodí dál.")
+    booking_notify_email = fields.Char("E-mail pro upozornění", default="rezervace@elite-vet.cz",
+                                       help="Sem chodí zpráva o každé nové rezervaci z webu a o zrušení "
+                                            "rezervace klientem.")
     booking_email_from = fields.Char(
         "Odesílatel e-mailů", default="rezervace@elite-vet.cz",
         help="Adresa, ze které chodí klientům e-maily k rezervacím (potvrzení, změna, zrušení, "

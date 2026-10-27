@@ -66,10 +66,15 @@ class VetReservationMailing(models.Model):
             return False
         return self.start - timedelta(hours=hours) > fields.Datetime.now()
 
+    def _clinic_notify_email(self):
+        """Address of the clinic's notifications, or False when Vedení switched them off."""
+        s = self.env["elite.vet.setting"].nastaveni()
+        return s.booking_notify_enabled and (s.booking_notify_email or "").strip() or False
+
     # ---------- hooks into actions ----------
     def _after_web_submit(self):
         self._send_template("mail_web_received")
-        notify = self.env["elite.vet.setting"].nastaveni().booking_notify_email
+        notify = self._clinic_notify_email()
         if notify:
             self._send_template("mail_new_for_clinic", email_to=notify)
         return True
@@ -87,7 +92,7 @@ class VetReservationMailing(models.Model):
         res = super().action_cancel(reason)
         self.filtered(lambda r: r.kind == "reservation")._send_template("mail_cancelled")
         if reason == "client":
-            notify = self.env["elite.vet.setting"].nastaveni().booking_notify_email
+            notify = self._clinic_notify_email()
             if notify:
                 self._send_template("mail_cancelled", email_to=notify)
         return res

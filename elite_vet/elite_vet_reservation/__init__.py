@@ -163,5 +163,5 @@ def _seed_procedures(env):
 def _seed_settings(env):
     env["elite.vet.setting"].nastaveni().write({
         "booking_slot_step": 15, "booking_min_hours_before": 24, "booking_max_days_ahead": 60,
-        "booking_cancel_hours_before": 12, "booking_notify_email": "info@elite-vet.cz",
+        "booking_cancel_hours_before": 12, "booking_notify_email": "rezervace@elite-vet.cz",
     })

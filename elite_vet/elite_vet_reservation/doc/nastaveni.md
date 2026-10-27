@@ -269,7 +269,8 @@ přepnout na týdenní kalendář.
 | **Online jen tam, kde slouží lékař** | vypnuto | Zapnuto: web nabízí termín jen v čase, kdy má ordinace v Rozpisu lékařů zapsanou službu. Vypnuto: úkony bez specializace se nabízejí podle ordinační doby, i když rozpis chybí. |
 | **Víkendy jen ručně (web neobjednává)** | zapnuto | Web v sobotu a v neděli nenabízí žádné termíny. Recepce objednává dál (i ručním časem). |
 | **Státní svátky jen ručně (web neobjednává)** | zapnuto | Web ve státní svátek nenabízí žádné termíny. Svátky (i Velký pátek a Velikonoční pondělí) se počítají samy, nic se nezadává. Recepce objednává dál. |
-| **E-mail pro upozornění** | info@elite-vet.cz | Sem chodí upozornění na každou novou žádost z webu a na zrušení klientem. Prázdné = nic nechodí. |
+| **Posílat klinice upozornění** | zapnuto | Vypnuté = klinice nechodí žádné upozornění (nová žádost z webu, zrušení klientem). E-maily klientům chodí dál. |
+| **E-mail pro upozornění** | rezervace@elite-vet.cz | Sem chodí upozornění na každou novou žádost z webu a na zrušení klientem (jen když je zapnuté „Posílat klinice upozornění“). |
 | **Odesílatel e-mailů** | rezervace@elite-vet.cz | Adresa, ze které klientům chodí e-maily k rezervacím. Musí to být schránka, přes kterou Odoo odesílá (viz *Odesílání e-mailů* níže). Jde zadat i se jménem: `Elite Vet Karlovy Vary <rezervace@elite-vet.cz>`; bez jména se doplní „Elite Vet Karlovy Vary“. |
 | **Odpovědi klientů na** | info@elite-vet.cz | Kam dojde odpověď, když klient na e-mail odpoví. Prázdné = na odesílatele. |
 | **Posílat připomínku** | vypnuto | Zapne připomínkový e-mail klientům. |

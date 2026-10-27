@@ -18,8 +18,21 @@ class TestMail(ReservationCase):
         r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web", room_id=False)
         r._after_web_submit()
         self.assertEqual(len(self.mails_to("klient@example.cz")), 1)
-        self.assertEqual(len(self.mails_to("info@elite-vet.cz")), 1)
+        self.assertEqual(len(self.mails_to("rezervace@elite-vet.cz")), 1)
         self.assertIn("Vaccination", self.mails_to("klient@example.cz").subject)
+
+    def test_clinic_notifications_can_be_switched_off(self):
+        s = self.env["elite.vet.setting"].nastaveni()
+        s.write({"booking_notify_enabled": False})
+        r = self.reservation(start=self.dt(WED, 9, 0), state="web_new", source="web", room_id=False)
+        r._after_web_submit()
+        r.action_cancel(reason="client")
+        self.assertFalse(self.mails_to(s.booking_notify_email))
+        self.assertTrue(self.mails_to("klient@example.cz"), "the client still gets his e-mails")
+        s.write({"booking_notify_enabled": True, "booking_notify_email": "jina@example.cz"})
+        r2 = self.reservation(start=self.dt(WED, 10, 0), state="web_new", source="web", room_id=False)
+        r2._after_web_submit()
+        self.assertEqual(len(self.mails_to("jina@example.cz")), 1)
 
     def test_sender_and_reply_to_from_settings(self):
         s = self.env["elite.vet.setting"].nastaveni()

@@ -112,3 +112,20 @@
    WinVet frame (views/rozpis_page.xml). The button reuses the page's .rs-cta. */
 .rs-rez-online{text-align:center}
 .vet-page .rs-rez-online-text{max-width:520px;margin:0 auto 22px;color:var(--ev-text-secondary,#64748b);font-size:16px;line-height:1.6}
+
+/* Cancel / deposit pages (opened from the client's e-mail): own small top bar (booking_page_bar),
+   content below it; the author credit is styled like on the other pages. */
+.evbk-bar{background:#fff;border-bottom:1px solid #e2e8f0}
+.evbk-bar-inner{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.evbk-bar-logo{display:inline-flex;align-items:center;gap:10px;font-size:20px;font-weight:800;text-decoration:none}
+.evbk-bar-logo img{width:40px;height:40px;object-fit:contain;border-radius:8px}
+.evbk-bar-elite{color:#1a2744}.evbk-bar-vet{color:#2b7870}
+.evbk-bar-call{font-weight:700;color:#2b7870;text-decoration:none;white-space:nowrap}
+.vet-page > .evbk-page{padding:32px 0 56px;min-height:60vh}
+.evbk-page-inner{max-width:560px;margin:0 auto;padding:0 20px}
+.evbk-page-title{font-size:28px;line-height:1.2;margin:0 0 16px}
+.evbk-page .evbk-summary{margin-bottom:16px}
+.evbk-page p{line-height:1.6}
+.vet-page > .evbk-page ~ .ev-footer-credit{padding:18px 24px 20px;text-align:center;font-size:13px;font-weight:700;letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,var(--ev-primary,#1a2744),var(--ev-primary-dark,#111b30));border-top:3px solid var(--ev-accent,#2b7870)}
+.vet-page > .evbk-page ~ .ev-footer-credit a{color:var(--ev-accent,#2b7870);font-weight:800;border-bottom:1.5px solid var(--ev-accent,#2b7870)}
+@media (max-width:600px){.vet-page > .evbk-page{padding-top:24px}.evbk-page-title{font-size:24px}.evbk-bar-logo{font-size:18px}}

@@ -143,16 +143,34 @@
             </section>
         </xpath>
     </template>
+    <!-- Own small top bar of the pages opened from the client's e-mail (cancel, deposit): the site's
+         top bar is styled only by each page's own CSS, so here it would render unstyled. -->
+    <template id="booking_page_bar" name="Elite Vet - lišta stránek z e-mailu">
+        <t t-set="ev_settings" t-value="request.env['elite.vet.setting'].sudo().nastaveni()"/>
+        <t t-set="ev_tel" t-value="(ev_settings.phone or '+420722599699').replace(' ', '')"/>
+        <!-- "+420722599699" -> "+420 722 599 699" for reading -->
+        <t t-set="ev_phone" t-value="' '.join([ev_tel[:4], ev_tel[4:7], ev_tel[7:10], ev_tel[10:]]) if len(ev_tel) == 13 and ev_tel.startswith('+') else ev_tel"/>
+        <header class="evbk-bar">
+            <div class="evbk-bar-inner">
+                <a data-no-post-process="1" t-att-href="('%s' % url_for('/')) or '/'" class="evbk-bar-logo">
+                    <img src="/elite_vet_web/static/src/img/logo.jpeg" alt="Elite Vet" width="40" height="40"/>
+                    <span><span class="evbk-bar-elite">Elite</span><span class="evbk-bar-vet">Vet</span></span>
+                </a>
+                <a t-attf-href="tel:#{ev_tel}" class="evbk-bar-call" t-esc="ev_phone"/>
+            </div>
+        </header>
+    </template>
+
     <template id="cancel_page" name="Elite Vet - Zrušení rezervace">
         <t t-call="website.layout">
             <t t-set="no_header" t-value="true"/>
             <t t-set="no_footer" t-value="true"/>
             <t t-set="additional_title">Cancel appointment | Elite Vet</t>
             <div id="wrap" class="oe_structure vet-page">
-                <t t-call="elite_vet_theme.vet_header"/>
-                <section class="evbk o_colored_level">
-                    <div class="ev-container evbk-inner" style="max-width:560px">
-                        <h1 style="font-size:28px;margin:24px 0 12px">Cancel appointment</h1>
+                <t t-call="elite_vet_reservation.booking_page_bar"/>
+                <section class="evbk evbk-page o_colored_level">
+                    <div class="ev-container evbk-inner evbk-page-inner">
+                        <h1 class="evbk-page-title">Cancel appointment</h1>
                         <div class="evbk-summary">
                             <t t-out="reservation.name"/><br/><t t-out="reservation.start_display"/>
                             <t t-if="reservation.room_id"> · <t t-out="reservation.room_id.name"/></t>
@@ -187,10 +205,10 @@
             <t t-set="no_footer" t-value="true"/>
             <t t-set="additional_title">Deposit | Elite Vet</t>
             <div id="wrap" class="oe_structure vet-page">
-                <t t-call="elite_vet_theme.vet_header"/>
-                <section class="evbk o_colored_level">
-                    <div class="ev-container evbk-inner" style="max-width:560px">
-                        <h1 style="font-size:28px;margin:24px 0 12px">Deposit</h1>
+                <t t-call="elite_vet_reservation.booking_page_bar"/>
+                <section class="evbk evbk-page o_colored_level">
+                    <div class="ev-container evbk-inner evbk-page-inner">
+                        <h1 class="evbk-page-title">Deposit</h1>
                         <div class="evbk-summary"><t t-out="reservation.name"/><br/><t t-out="reservation.start_display"/></div>
                         <p t-if="reservation.deposit_state == 'paid'">The deposit has been paid. Thank you.</p>
                         <p t-elif="reservation.deposit_state == 'pending'">Deposit of <b t-out="reservation.procedure_id.deposit_amount"/> Kč is pending.

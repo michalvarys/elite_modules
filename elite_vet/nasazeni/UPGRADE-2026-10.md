@@ -983,3 +983,11 @@ SELECT count(*) FROM elite_vet_clinical_record
 
 Pak otevřete kartu pacienta s dřívější návštěvou: v historii je text návštěvy v jednom bloku
 s nadpisy. Šablonu v ostré databázi nevkládejte (zapsala by se do záznamu).
+
+## Doplnění: upozornění pro kliniku na rezervace@ (27. 10.)
+
+`-u elite_vet_reservation`. Upozornění klinice (nová žádost z webu, zrušení klientem) chodí na
+`rezervace@elite-vet.cz`: upgrade přepíše jen původní výchozí `info@elite-vet.cz`, ručně nastavenou
+jinou adresu nechá. Nový vypínač **Posílat klinice upozornění** (Rezervace › Konfigurace ›
+Nastavení rezervace) – vypnuté = klinice nechodí nic, klientům e-maily chodí dál.
+Kontrola: `SELECT booking_notify_enabled, booking_notify_email FROM elite_vet_setting;`

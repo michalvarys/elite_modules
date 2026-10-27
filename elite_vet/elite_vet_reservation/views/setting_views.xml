@@ -17,7 +17,9 @@
                         <field name="booking_block_holidays"/>
                     </group>
                     <group>
-                        <field name="booking_notify_email"/>
+                        <field name="booking_notify_enabled"/>
+                        <field name="booking_notify_email" invisible="not booking_notify_enabled"
+                               required="booking_notify_enabled" placeholder="rezervace@elite-vet.cz"/>
                         <field name="booking_email_from" placeholder="Elite Vet Karlovy Vary &lt;rezervace@elite-vet.cz&gt;"/>
                         <field name="booking_email_reply_to"/>
                         <field name="booking_reminder_enabled"/>
