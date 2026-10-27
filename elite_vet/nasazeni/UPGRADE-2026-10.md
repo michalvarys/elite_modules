@@ -1008,3 +1008,11 @@ a Odoo je zobrazí i vytiskne jako tabulku. Větev `feature/elite-vet-winvet-tab
 Kontrola: karta pacienta s krevním vyšetřením z WinVetu → v historii rozbalit návštěvu – tabulka
 Metoda / Výsledek / Jednotka / Dolní mez / Horní mez; tisk zprávy totéž.
 
+## Doplnění: forma úhrady v tržbách WinVetu (27. 10.)
+
+V **WinVet data → Tržby** (položky) a **Doklady** jde seskupit i filtrovat podle **Formy úhrady**
+(Hotově / Kartou / Převodem / Kombinovaně / Bez úhrady); sloupec je i v seznamech. Účet majitele
+(UM) a jeho položky přebírají formu z platby navázaného příjmového dokladu (PODP); platba 0 Kč =
+bez úhrady. Upgrade: `-u elite_vet_winvet` (18.0.1.5.0) – nová uložená pole se dopočítají při
+upgradu, most se nemění.
+
