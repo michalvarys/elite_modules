@@ -85,6 +85,12 @@ def shift_bands(shifts):
     return shifts, len(lane_ends), overlaps
 
 
+
+class DoctorRuleError(UserError):
+    """The board's doctor / room rule refused a move (nobody on duty who does the procedure, the
+    procedure is not done in that room). Unlike a collision it can be overridden: the move dialog
+    offers "Přesto přesunout" and calls again with force=True."""
+
 class VetReservation(models.Model):
     """Reservations and blocks in one table so the board reads a single source.
 
@@ -130,6 +136,11 @@ class VetReservation(models.Model):
         help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
              "Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí.")
     repeat_weekly_until = fields.Date(string="Opakovat týdně do", help="Jen u blokace: založí kopie na stejný den v týdnu až do tohoto data.")
+    # New block only (the form shows it instead of room_id): one block per checked room, all rooms
+    # checked = one clinic-wide block (room_id empty). Not stored, create() turns it into room_id.
+    block_room_ids = fields.Many2many(
+        "elite.vet.room", string="Ordinace", store=False, default=lambda self: self._default_block_room_ids(),
+        help="Blokace se založí v každé zaškrtnuté ordinaci. Všechny zaškrtnuté = blokace celé kliniky.")
     cancel_token = fields.Char(default=lambda self: uuid.uuid4().hex, index=True, copy=False)
     cancel_reason = fields.Selection([("client", "Klient"), ("clinic", "Klinika"), ("no_show", "Nedorazil")], string="Důvod zrušení")
     deposit_state = fields.Selection([("none", "Bez zálohy"), ("pending", "Čeká na zálohu"), ("paid", "Zaplaceno"), ("refunded", "Vráceno")], default="none", string="Záloha")
@@ -167,6 +178,13 @@ class VetReservation(models.Model):
             parts = [rec.partner_id.name or rec.contact_name or loc.env._("Bez jména"),
                      rec.pet_id.name or rec.pet_name or "", loc.procedure_id.name or ""]
             rec.name = " / ".join(p for p in parts if p)
+
+    @api.model
+    def _default_block_room_ids(self):
+        if self.env.context.get("default_kind") != "block":
+            return self.env["elite.vet.room"]
+        room = self.env["elite.vet.room"].browse(self.env.context.get("default_room_id")).exists()
+        return room or self.env["elite.vet.room"].search([])
 
     @api.depends("create_uid")
     def _compute_created_by_id(self):
@@ -323,6 +341,7 @@ class VetReservation(models.Model):
         default_kind = self.env.context.get("default_kind")
         for vals in vals_list:
             self._check_block_rights({"kind": vals.get("kind", default_kind)})
+        other_rooms = self._expand_block_rooms(vals_list, default_kind)
         for vals in vals_list:
             if vals.get("start") and not vals.get("stop"):
                 proc = self.env["elite.vet.procedure"].browse(vals.get("procedure_id"))
@@ -335,7 +354,53 @@ class VetReservation(models.Model):
         records._repeat_weekly_blocks()
         records._split_all_rooms_block()
         records._check_overlap()
+        if other_rooms:
+            # the other checked rooms: created on their own, create() returns one record per vals
+            self.create(other_rooms)
         return records
+
+    @api.model
+    def _expand_block_rooms(self, vals_list, default_kind=None):
+        """block_room_ids of a new block (in place): all rooms -> one block without a room, otherwise
+        the vals get the first room and the vals of the other rooms' blocks are returned."""
+        all_rooms = None
+        out = []
+        for vals in vals_list:
+            if "block_room_ids" not in vals:
+                continue
+            room_ids = self._command_ids(vals.pop("block_room_ids"))
+            if vals.get("kind", default_kind) != "block":
+                continue
+            if not room_ids:
+                raise ValidationError(self.env._("Zaškrtněte aspoň jednu ordinaci."))
+            if all_rooms is None:
+                all_rooms = self.env["elite.vet.room"].search([])
+            if set(all_rooms.ids) <= set(room_ids):
+                vals["room_id"] = False
+                continue
+            rooms = all_rooms.filtered(lambda r: r.id in room_ids)
+            vals["room_id"] = rooms[0].id
+            # the form sends its default cancel_token; the other rooms' blocks get their own
+            copy = {k: v for k, v in vals.items() if k != "cancel_token"}
+            out.extend(dict(copy, kind="block", room_id=room.id) for room in rooms[1:])
+        return out
+
+    @staticmethod
+    def _command_ids(commands):
+        """Record ids out of x2many commands (as the web client sends them) or a plain id list."""
+        ids = []
+        for cmd in commands or []:
+            if isinstance(cmd, int):
+                ids.append(cmd)
+            elif cmd[0] == 6:
+                ids = list(cmd[2])
+            elif cmd[0] == 4:
+                ids.append(cmd[1])
+            elif cmd[0] in (2, 3):
+                ids = [i for i in ids if i != cmd[1]]
+            elif cmd[0] == 5:
+                ids = []
+        return list(dict.fromkeys(ids))
 
     def _split_all_rooms_block(self):
         """A full "all rooms" block over time that is already blocked.
@@ -623,13 +688,13 @@ class VetReservation(models.Model):
         room = self.env["elite.vet.room"].browse(room_id)
         proc_name = proc.with_context(lang=self._clinic_lang()).name
         if room not in proc.rooms_for_reception():
-            raise UserError(_("Úkon %s se v %s nedělá.") % (proc_name, room.name))
+            raise DoctorRuleError(_("Úkon %s se v %s nedělá.") % (proc_name, room.name))
         wanted = doctor if strict else None
         doc_ids = A.serving_doctors(proc, day, room.id, minute, wanted or None, duration=duration)
         if not doc_ids and A.need_doctor(proc, wanted or None):
             if wanted:
-                raise UserError(_("V %s v %s neslouží %s.") % (minutes_label(minute), room.name, wanted.name))
-            raise UserError(_("V %s v %s neslouží lékařka, která dělá %s.")
+                raise DoctorRuleError(_("V %s v %s neslouží %s.") % (minutes_label(minute), room.name, wanted.name))
+            raise DoctorRuleError(_("V %s v %s neslouží lékařka, která dělá %s.")
                             % (minutes_label(minute), room.name, proc_name))
         if doctor and doctor.id in doc_ids:
             return None
@@ -637,6 +702,17 @@ class VetReservation(models.Model):
             return doc_ids[0]
         # The original doctor is not on duty at the new time/room: do not leave a wrong name.
         return False if doctor else None
+
+    def _board_doctor_check_or_force(self, day_str, minute, room_id, force=False, **kwargs):
+        """_board_doctor_check; with `force` (the user chose "Přesto přesunout") a refused rule only
+        leaves the doctor as she is and the reservation's history says what was overridden."""
+        try:
+            return self._board_doctor_check(day_str, minute, room_id, **kwargs)
+        except DoctorRuleError as error:
+            if not force:
+                raise
+            self.message_post(body=_("Přesunuto i přes upozornění: %s") % error.args[0])
+            return None
 
     @api.model
     def _board_interval(self, day_str, minute, end_minute):
@@ -655,18 +731,19 @@ class VetReservation(models.Model):
                 end_minute - minute)
 
     @api.model
-    def board_move(self, res_id, day_str, minute, room_id, notify=True, end_minute=None):
+    def board_move(self, res_id, day_str, minute, room_id, notify=True, end_minute=None, force=False):
         """Move on the board. A reservation only where a doctor who does the procedure is on duty
         (if the current doctor has no shift at the new place, she is replaced); a block anywhere.
         notify=False (task 25, the dialog's e-mail checkbox unticked): no e-mail about the new time,
         a chatter note instead. end_minute (task 28): the new end on that day; without it the
-        duration is kept. The collision and on-duty rules apply to the whole new interval."""
+        duration is kept. The collision and on-duty rules apply to the whole new interval.
+        force=True: the on-duty / room rule (DoctorRuleError) is overridden, collisions are not."""
         rec = self.browse(res_id)
         if not notify:
             rec = rec.with_context(ev_no_reschedule_mail=True)
         start, stop, duration = self._board_interval(day_str, minute, end_minute)
-        doctor_id = rec._board_doctor_check(day_str, minute, room_id or rec.room_id.id,
-                                            doctor=rec.doctor_id, strict=False, duration=duration)
+        doctor_id = rec._board_doctor_check_or_force(day_str, minute, room_id or rec.room_id.id, force=force,
+                                                     doctor=rec.doctor_id, strict=False, duration=duration)
         rec.action_reschedule(start, room_id=room_id or None, doctor_id=doctor_id, stop=stop)
         return True
 
@@ -680,18 +757,21 @@ class VetReservation(models.Model):
         return main.contact_email or False
 
     @api.model
-    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None, notify=True, end_minute=None):
+    def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None, notify=True, end_minute=None,
+                      force=False):
         """doctor_id=None keeps the doctor; a number sets it (suggestion from the Waiting panel).
         Checks that a doctor who does the procedure (or the one the client chose) is on
         duty at that time and room; if only one is on duty, she is set.
         notify=False (task 25): no confirmation e-mail, a chatter note instead.
-        end_minute (task 28): the end chosen in the dialog (otherwise the duration is kept)."""
+        end_minute (task 28): the end chosen in the dialog (otherwise the duration is kept).
+        force=True: as in board_move, the on-duty / room rule is overridden."""
         rec = self.browse(res_id)
         if not notify:
             rec = rec.with_context(ev_no_mail=True, ev_no_confirm_mail_note=True)
         doctor = self.env["elite.vet.doctor"].browse(doctor_id) if doctor_id else rec.doctor_id
         start, stop, duration = self._board_interval(day_str, minute, end_minute)
-        found = rec._board_doctor_check(day_str, minute, room_id, doctor=doctor, duration=duration)
+        found = rec._board_doctor_check_or_force(day_str, minute, room_id, force=force,
+                                                 doctor=doctor, duration=duration)
         if doctor_id:
             found = doctor_id
         rec.action_reschedule(start, room_id=room_id, doctor_id=found, stop=stop)

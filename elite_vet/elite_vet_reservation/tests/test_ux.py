@@ -2,10 +2,10 @@
 event labels, copying the schedule, opening hours summary, "Who performs it"."""
 from datetime import date, timedelta
 
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import tagged
 
-from odoo.addons.elite_vet_reservation.models.reservation import name_initials
+from odoo.addons.elite_vet_reservation.models.reservation import DoctorRuleError, name_initials
 from odoo.addons.elite_vet_reservation.models.room import format_hours_summary
 
 from .common import ReservationCase
@@ -170,6 +170,25 @@ class TestBoardSuggestions(ReservationCase):
         v = self.reservation(start=self.dt(self.day, 10, 0), doctor_id=self.dr_a.id)
         self.R.board_move(v.id, self.day.isoformat(), 600, self.room2.id)
         self.assertEqual((v.room_id, v.doctor_id), (self.room2, self.dr_b))
+
+    def test_move_and_confirm_forced_over_the_doctor_rule(self):
+        """Request 27. 10.: "Přesto přesunout" - the doctor / room rule is overridden, a collision is not."""
+        self.assign(self.dr_b, self.room2, self.day, 8.0, 12.0)   # ophthalmologist, does not do dental
+        r = self.reservation(start=self.dt(self.day, 9, 0), procedure_id=self.dental.id, doctor_id=self.dr_a.id)
+        with self.assertRaises(DoctorRuleError):
+            self.R.board_move(r.id, self.day.isoformat(), 600, self.room2.id)
+        self.R.board_move(r.id, self.day.isoformat(), 600, self.room2.id, True, None, True)
+        self.assertEqual((r.room_id, r.start, r.doctor_id), (self.room2, self.dt(self.day, 10, 0), self.dr_a))
+        self.assertTrue(any("Přesunuto i přes upozornění" in m.body for m in r.message_ids))
+        w = self.waiting(self.dental)
+        self.R.board_confirm(w.id, self.day.isoformat(), 540, self.room2.id, force=True)
+        self.assertEqual((w.state, w.room_id), ("confirmed", self.room2))
+        # a collision stays a plain error, force does not help
+        other = self.reservation(start=self.dt(self.day, 11, 0), procedure_id=self.dental.id, room_id=self.room1.id)
+        with self.assertRaises(ValidationError) as caught:
+            self.R.board_move(other.id, self.day.isoformat(), 600, self.room2.id, force=True)
+        self.assertNotIsInstance(caught.exception, DoctorRuleError)
+        self.assertEqual(other.room_id, self.room1)
 
     def test_move_block_is_free(self):
         blk = self.env["elite.vet.reservation"].create({

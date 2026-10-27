@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 
 from odoo import fields
 from odoo.exceptions import UserError, ValidationError
-from odoo.tests import tagged
+from odoo.tests import Form, tagged
 
 from ..models.reservation import doctor_color, shift_bands
 from ..models.holidays import czech_holidays, holiday_name, easter_sunday
@@ -163,6 +163,60 @@ class TestBlockScope(ReservationCase):
         # Weeks 1 and 3: one clinic-wide block; week 2: per room (O1 two pieces, O2, Sál).
         self.assertEqual(len(blocks), 2 + 4)
         self.assertEqual(len(blocks.filtered(lambda b: not b.room_id)), 2)
+
+    def test_block_in_several_rooms(self):
+        rooms = self.room1 | self.room2
+        created = self.R.create({"kind": "block", "block_reason": "Dvě ordinace", "block_scope": "full",
+                                 "block_room_ids": [(6, 0, rooms.ids)],
+                                 "start": self.dt(WED, 9), "stop": self.dt(WED, 10)})
+        self.assertEqual(created.room_id, self.room1)   # one record per vals, the other room on its own
+        self.assertEqual(self._blocks_by_reason("Dvě ordinace"), {
+            (self.room1, self.dt(WED, 9), self.dt(WED, 10)),
+            (self.room2, self.dt(WED, 9), self.dt(WED, 10))})
+
+    def test_block_in_several_rooms_from_the_form(self):
+        with Form(self.R.with_context(default_kind="block", default_state="confirmed")) as form:
+            self.assertEqual(len(form.block_room_ids), len(self.env["elite.vet.room"].search([])))
+            form.block_room_ids.remove(id=self.surgery.id)
+            form.block_reason = "Formulář O1+O2"
+            form.start = self.dt(WED, 9)
+            form.stop = self.dt(WED, 10)
+        blocks = self.R.search([("block_reason", "=", "Formulář O1+O2")])
+        self.assertEqual(blocks.room_id, self.room1 | self.room2)
+        self.assertEqual(len(set(blocks.mapped("cancel_token"))), 2)
+
+    def test_block_in_all_rooms_is_one_clinic_wide_block(self):
+        all_rooms = self.env["elite.vet.room"].search([])
+        created = self.R.create({"kind": "block", "block_reason": "Celá klinika",
+                                 "block_room_ids": [(4, r.id) for r in all_rooms],
+                                 "start": self.dt(WED, 9), "stop": self.dt(WED, 10)})
+        self.assertEqual(len(created), 1)
+        self.assertFalse(created.room_id)
+
+    def test_block_rooms_repeat_weekly_per_room(self):
+        self.R.create({"kind": "block", "block_reason": "Porada O1+Sál",
+                       "block_room_ids": [(6, 0, (self.room1 | self.surgery).ids)],
+                       "start": self.dt(WED, 7), "stop": self.dt(WED, 8),
+                       "repeat_weekly_until": WED + timedelta(days=7)})
+        blocks = self.R.search([("block_reason", "=", "Porada O1+Sál")])
+        self.assertEqual(len(blocks), 4)
+        self.assertEqual(blocks.room_id, self.room1 | self.surgery)
+
+    def test_block_without_room_checked_refused(self):
+        with self.assertRaises(ValidationError):
+            self.R.create({"kind": "block", "block_reason": "Nic", "block_room_ids": [(6, 0, [])],
+                           "start": self.dt(WED, 9), "stop": self.dt(WED, 10)})
+
+    def test_block_room_default_from_context(self):
+        def default_rooms(model):
+            return self.R._command_ids(model.default_get(["block_room_ids"]).get("block_room_ids"))
+        R = self.R.with_context(default_kind="block")
+        self.assertEqual(default_rooms(R), self.env["elite.vet.room"].search([]).ids)
+        self.assertEqual(default_rooms(R.with_context(default_room_id=self.room2.id)), self.room2.ids)
+        self.assertEqual(default_rooms(self.R), [])
+        # ignored on a reservation
+        res = self.reservation(start=self.dt(WED, 15, 0), block_room_ids=[(6, 0, self.room2.ids)])
+        self.assertEqual(res.room_id, self.room1)
 
     def test_repeat_weekly_keeps_scope(self):
         self.block(WED, 7, 8, "web", repeat_weekly_until=WED + timedelta(days=14))

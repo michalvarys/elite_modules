@@ -538,7 +538,7 @@ export class BoardDialog extends Component {
     }
 
     /** move_reservation -> success toast; an error is thrown back to the dialog (stays open). */
-    async move(reservationId, { date, minute, endMinute, roomId, notify }) {
+    async move(reservationId, { date, minute, endMinute, roomId, notify, force }) {
         this.state.moving = true;
         let result;
         try {
@@ -549,6 +549,7 @@ export class BoardDialog extends Component {
                 roomId,
                 notify,
                 endMinute,
+                force,
             ]);
         } finally {
             this.state.moving = false;
