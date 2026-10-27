@@ -217,7 +217,7 @@ msgid "Modern equipment"
 msgstr "Moderne Ausstattung"
 
 #. module: elite_vet_web
-#: model_terms:ir.ui.view,arch_db:elite_vet_web.sekce_o_klinice
+#: model_terms:ir.ui.view,arch_db:elite_vet_web.s_vet_galerie
 #: model_terms:ir.ui.view,arch_db:elite_vet_web.homepage
 msgid "Next photos"
 msgstr "Weitere Fotos"
@@ -268,7 +268,7 @@ msgid "Please select your language"
 msgstr "Bitte wählen Sie Ihre Sprache"
 
 #. module: elite_vet_web
-#: model_terms:ir.ui.view,arch_db:elite_vet_web.sekce_o_klinice
+#: model_terms:ir.ui.view,arch_db:elite_vet_web.s_vet_galerie
 #: model_terms:ir.ui.view,arch_db:elite_vet_web.homepage
 msgid "Previous photos"
 msgstr "Vorherige Fotos"
@@ -305,7 +305,7 @@ msgid "Select a free appointment with our doctors online, whenever it suits you.
 msgstr "Wählen Sie online einen freien Termin bei unseren Ärzten, wann immer es Ihnen passt. Wenn Sie sich unsicher sind, rufen Sie an der Rezeption an und wir buchen Sie selbst."
 
 #. module: elite_vet_web
-#: model_terms:ir.ui.view,arch_db:elite_vet_web.sekce_o_klinice
+#: model_terms:ir.ui.view,arch_db:elite_vet_web.s_vet_galerie
 #: model_terms:ir.ui.view,arch_db:elite_vet_web.homepage
 msgid "Swipe sideways to browse the photos"
 msgstr "Fotos zum Blättern zur Seite wischen"

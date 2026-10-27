@@ -1,0 +1,36 @@
+/* Vzhled stranky, ktery jinde neplati. Spolecne styly jsou v
+   elite_vet_theme/static/src/css/zaklad.css. */
+
+/* zapnuta pohotovost: ze sedeho neklikaciho tlacitka je zeleny odkaz */
+.ev-coach-call.ev-coach-call--zive { background: var(--ev-accent); color: #fff !important; border-color: var(--ev-accent); cursor: pointer; text-decoration: none; transition: background-color .2s; }
+.ev-coach-call.ev-coach-call--zive:hover { background: var(--ev-accent-dark); }
+.ev-coach-call.ev-coach-call--zive svg { opacity: 1; }
+@media (max-width: 768px) {
+    .ev-call-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+/* ============ PO DOBĚHNUTÍ ODPOČTU — „Máme otevřeno" ============ */
+/* Skript přidá .ev-cd-open na sekci; do té doby je hláška schovaná. */
+.ev-cd-openmsg { display: none; position: relative; align-items: center; justify-content: center; margin-top: 30px; padding: 0 8px 22px; color: var(--ev-accent-dark); font-size: clamp(34px, 6.6vw, 76px); line-height: 1.02; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; text-align: center; }
+/* přechodová výplň písma s pomalým přelivem; barva výš zůstává jako záloha pro prohlížeče bez background-clip */
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+    .ev-cd-openmsg { background-image: linear-gradient(115deg, #2b7870 0%, #1a2744 45%, #2b7870 100%); background-size: 240% 100%; background-position: 0% 50%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: evOpenShine 7s ease-in-out infinite; }
+}
+@keyframes evOpenShine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+/* jemná linka pod nápisem, vyskočí zleva doprava */
+.ev-cd-openmsg::after { content: ""; position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); width: min(240px, 46%); height: 5px; border-radius: 9999px; background: linear-gradient(90deg, rgba(43,120,112,0), var(--ev-accent) 50%, rgba(43,120,112,0)); }
+.ev-cd-open .ev-cd-count-label, .ev-cd-open .ev-cd-clock { display: none; }
+.ev-cd-open .ev-cd-openmsg { display: inline-flex; }
+/* v editoru ať je hláška vidět, jinak by se nedala přeložit ani upravit */
+body.editor_enable .ev-cd-openmsg,
+body.editor_has_snippets .ev-cd-openmsg,
+body.o_translate_mode .ev-cd-openmsg { display: inline-flex !important; }
+@media (max-width: 768px) {
+    .ev-cd-openmsg { margin-top: 18px; margin-bottom: 58px; padding-bottom: 15px; font-size: 32px; }
+    .ev-cd-openmsg::after { width: 150px; height: 4px; bottom: 2px; }
+}
+/* jemne houpani tahu stetcem; text nad nim stoji, takze to pusobi jako by se pozadi lehce nadechovalo */
+@keyframes evBrushSway {
+    0%, 100% { transform: rotate(-0.45deg) scale(1); }
+    50%      { transform: rotate(0.45deg) scale(1.018); }
+}
+@keyframes evGalIn { from { opacity: 0; } to { opacity: 1; } }

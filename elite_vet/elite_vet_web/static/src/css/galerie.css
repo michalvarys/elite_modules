@@ -1,0 +1,50 @@
+/* Blok Galerie — pas fotek z Web kliniky -> Galerie kliniky.
+   Fotky do pasu vklada galerie.js. Fotky maji pevny pomer 3:4 a
+   object-fit: cover, takze mrizka drzi, i kdyby nektera fotka mela trochu
+   jiny rozmer. Na mobilu se posouva prstem, na PC sipkami. */
+
+.ev-gal-sekce { background: var(--ev-muted); padding: 0 0 100px; }
+.ev-gal-box { position: relative; }
+.ev-gal-track { display: flex; gap: 18px; overflow-x: auto; padding: 4px 0 16px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+.ev-gal-track::-webkit-scrollbar { display: none; }
+.ev-gal-item { flex: 0 0 calc((100% - 36px) / 3); scroll-snap-align: start; border-radius: 18px; overflow: hidden; background: #e8eef3; border: 1px solid var(--ev-border); box-shadow: 0 14px 34px -18px rgba(17,27,48,.35); }
+/* clamp() na obrazku rozbije v Odoo nahrazovani fotek, proto width: 100% */
+.ev-gal-item img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; }
+.ev-gal-hint { margin-top: 2px; text-align: center; font-size: 13px; color: var(--ev-text-secondary); display: none; }
+.ev-gal-nav { display: none; }
+
+@media (max-width: 768px) {
+    .ev-gal-sekce { padding: 8px 0 56px; }
+    .ev-gal-sekce .ev-container { padding: 0 20px; }
+    .ev-gal-track { gap: 12px; padding-bottom: 12px; }
+    /* 82 % sirky = vedle se ukaze kousek dalsi fotky, takze je videt, ze jde svihnout */
+    .ev-gal-item { flex: 0 0 82%; border-radius: 15px; }
+    .ev-gal-hint { display: block; }
+}
+
+@media (min-width: 769px) {
+    /* Galerie byla driv soucasti sekce O klinice, 56 px pod kartou. Kdyz blok
+       stoji hned za ni, drzi se stejny rozestup: sekce O klinice se pak
+       nevystreduje na vysku okna a nekonci vlastnim spodnim odsazenim. */
+    .ev-about:has(+ .s_vet_galerie) { min-height: 0; padding-bottom: 56px; }
+    .ev-gal-nav { display: block; position: absolute; left: 0; right: 0; top: 4px; bottom: 16px; pointer-events: none; }
+    .ev-gal-arr { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; padding: 0; border-radius: 50%; background: #fff; color: var(--ev-primary); border: 1px solid var(--ev-border); box-shadow: 0 12px 28px -12px rgba(17,27,48,.55); cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; transition: background-color .2s, color .2s, border-color .2s; }
+    .ev-gal-arr[hidden] { display: none; }
+    .ev-gal-arr:hover { background: var(--ev-accent); color: #fff; border-color: var(--ev-accent); }
+    .ev-gal-arr:focus-visible { outline: 2px solid var(--ev-accent); outline-offset: 2px; }
+    .ev-gal-arr svg { flex-shrink: 0; }
+    .ev-gal-arr--prev { left: 14px; }
+    .ev-gal-arr--next { right: 14px; }
+}
+
+/* V editoru widget nebezi a pas je prazdny. Aby blok nezmizel a bylo
+   jasne, odkud fotky jsou, ukaze se misto nich poznamka. */
+body.editor_enable .s_vet_galerie .ev-gal-track:empty::before,
+body.editor_has_snippets .s_vet_galerie .ev-gal-track:empty::before,
+body.o_translate_mode .s_vet_galerie .ev-gal-track:empty::before {
+    content: "Galerie kliniky — fotky se načtou z Web kliniky → Galerie kliniky";
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 220px;
+    border: 2px dashed var(--ev-border); border-radius: 18px; color: var(--ev-text-secondary); font-size: 15px;
+}
+body.editor_enable .s_vet_galerie .ev-gal-nav,
+body.editor_has_snippets .s_vet_galerie .ev-gal-nav { display: none; }

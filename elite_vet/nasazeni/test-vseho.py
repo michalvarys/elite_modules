@@ -11,6 +11,7 @@ Pousti se v kontejneru s Odoo:
         --no-http < nasazeni/test-vseho.py
 """
 
+import json
 import urllib.request
 import re
 
@@ -111,25 +112,36 @@ env.cr.commit()
 krok("po smazani zustal puvodni pocet", Sluzba.search_count([]) == pred)
 
 print("\n===== 4. GALERIE =====")
+# Fotky do bloku Galerie dosazuje galerie.js z /elite_vet/galerie. Stranka
+# sama zadnou fotku nenese, takze se do ni pri ulozeni v editoru nezmrazi
+# a pridana nebo smazana fotka se projevi hned.
+
+
+def galerie_api():
+    zadost = urllib.request.Request(
+        ZAKLAD + "/elite_vet/galerie", headers={"Content-Type": "application/json"},
+        data=json.dumps({"jsonrpc": "2.0", "method": "call", "params": {}}).encode())
+    with urllib.request.urlopen(zadost, timeout=30) as odpoved:
+        return json.loads(odpoved.read())["result"]
+
+
 Foto = env["elite.vet.gallery.photo"]
 pocet_fotek = Foto.search_count([])
+html = telo(stahni("/"))
+krok("stranka ma blok Galerie", "s_vet_galerie" in html)
+krok("ve strance nejsou fotky natvrdo", 'class="ev-gal-item"' not in html
+     and "elite.vet.gallery.photo/" not in html)
+krok("API vraci vsech %s fotek" % pocet_fotek, len(galerie_api()) == pocet_fotek)
 vzor = Foto.search([], limit=1)
-strany_pred = (pocet_fotek + 2) // 3
 nova_fotka = Foto.create({"name": "ZKOUSKA fotka", "image": vzor.image, "sequence": 999})
 env.cr.commit()
-html = stahni("/")
-strany_po = (pocet_fotek + 1 + 2) // 3
-krok("staticka stranka se pridanim fotky nezmenila", "ZKOUSKA fotka" not in html,
-     "v pasu %s" % html.count('class="ev-gal-item"'))
-krok("pocet stran se prepocital na %s" % strany_po,
-     ('id="ev-gal-s%s"' % strany_po) in html)
+fotky = galerie_api()
+krok("nova fotka je hned v galerii", len(fotky) == pocet_fotek + 1
+     and fotky[-1]["alt"] == "ZKOUSKA fotka", "fotek %s" % len(fotky))
 nova_fotka.unlink()
 env.cr.commit()
-html = stahni("/")
-krok("po smazani je pas zpatky na %s fotkach" % pocet_fotek,
-     html.count('class="ev-gal-item"') == pocet_fotek)
-krok("a stran je zase %s" % strany_pred,
-     ('id="ev-gal-s%s"' % (strany_pred + 1)) not in html)
+krok("po smazani je galerie zpatky na %s fotkach" % pocet_fotek,
+     len(galerie_api()) == pocet_fotek)
 
 print("\n===== 5. KOHO PRIJIMAME =====")
 Druh = env["elite.vet.species"]

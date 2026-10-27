@@ -2,6 +2,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+from . import controllers
 from . import models
 
 
