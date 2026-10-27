@@ -381,7 +381,9 @@ class OnlyCalendarRunTest(unittest.TestCase):
         self.assertEqual(resolve_only(["calendar_events", "users"]), ["users", "calendar_events"])
         with self.assertRaises(ValueError):
             resolve_only(["owners"])  # journaled entities cannot run on their own
-        self.assertEqual(ENTITY_ORDER[-3:], CALENDAR_ENTITIES)
+        start = ENTITY_ORDER.index("calendar_resources")
+        self.assertEqual(ENTITY_ORDER[start:start + 3], CALENDAR_ENTITIES)
+        self.assertEqual(ENTITY_ORDER[start - 1], "stock_totals")
 
 
 if __name__ == "__main__":

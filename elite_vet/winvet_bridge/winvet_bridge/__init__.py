@@ -4,9 +4,9 @@ Reads the WinVet veterinary database (Firebird) strictly read-only and pushes th
 Odoo module ``elite_vet_winvet`` as described in ``CONTRACT.md``.
 """
 
-__version__ = "4.0.1"
+__version__ = "5.0.0"
 
-#: Push order required by the contract v4 (dependencies first).
+#: Push order required by the contract v5 (dependencies first; v5 appends the deposits).
 ENTITY_ORDER = (
     "users",
     "items",
@@ -27,7 +27,12 @@ ENTITY_ORDER = (
     "calendar_resources",
     "calendar_activities",
     "calendar_events",
+    "deposits",
+    "deposit_uses",
 )
 
 #: Contract v4: the WinVet calendar (window read, may run on its own faster schedule).
 CALENDAR_ENTITIES = ("calendar_resources", "calendar_activities", "calendar_events")
+
+#: Contract v5: client deposits (PARTNER_ZALOHA) and their use in documents (PARTNER_ZALOHA_CERPANI).
+DEPOSIT_ENTITIES = ("deposits", "deposit_uses")

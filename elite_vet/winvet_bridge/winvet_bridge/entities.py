@@ -28,6 +28,8 @@ stock_lots      stock     DOKLAD_POLOZKA_SK (receipt lines, minus issues), DOKLA
 stock_totals    stock     VARIANTA_SKLAD_STAV
 calendar_*      calendar  KALENDAR_NEW_KALENDAR, ORD_CINNOST, KALENDAR_NEW (window read, see
                           :mod:`winvet_bridge.scheduler`)
+deposits        deposits  PARTNER_ZALOHA (contract v5)
+deposit_uses    deposits  PARTNER_ZALOHA_CERPANI (contract v5)
 =============== ========= ==========================================
 
 Foreign keys (``*_id``, ``entered_by``) with WinVet's "no reference" values 0 / negative are sent as
@@ -240,6 +242,7 @@ def _sale_documents(r: dict) -> dict:
         "from_deposit": to_float(r["ZE_ZALOHY"]),
         "state": norm_value(r["TABLE_STATUS"]),
         "entered_by": to_ref(r["ID_ZALOZIL"]),
+        "method": map_payment_method(r["FORMA_UHRADY"]),
     }
 
 
@@ -349,6 +352,36 @@ def _calendar_activities(r: dict) -> dict:
         "color": delphi_color(r["BARVA"]),
         "symbol": norm_value(r["SYMBOL"]),
         "web": flag_equals(r["USE_WEB"], "A"),
+    }
+
+
+def _deposits(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_PARTNER_ZALOHA"]),
+        "owner_id": to_ref(r["ID_PARTNER"]),
+        "date": norm_value(r["DATUM"]),
+        "amount": to_float(r["CASTKA"]),
+        "sign": to_int(r["ZNAMENKO"]),
+        "method": map_payment_method(r["FORMA_UHRADY"]),
+        "document_id": to_ref(r["ID_DOKLAD"]),
+        "used": to_float(r["CERPANO"]),
+        "refunded": to_float(r["VRACENO"]),
+        "refunded_date": norm_value(r["VRACENO_DATUM"]),
+        "balance": to_float(r["ZUSTATEK"]),
+        "note": norm_value(r["POZNAMKA"]),
+        "state": norm_value(r["ST"]),
+    }
+
+
+def _deposit_uses(r: dict) -> dict:
+    return {
+        "id": to_int(r["ID_PARTNER_ZALOHA_CERPANI"]),
+        "deposit_id": to_ref(r["ID_PARTNER_ZALOHA"]),
+        "document_id": to_ref(r["ID_DOKLAD"]),
+        "document_number": norm_value(r["DOKLAD"]),
+        "date": norm_value(r["DATUM"]),
+        "amount": to_float(r["CASTKA"]),
+        "state": norm_value(r["ST"]),
     }
 
 
@@ -505,14 +538,14 @@ _spec(
     tables=("DOKLAD",),
     sql=(
         "select d.ID_DOKLAD, d.TYP_DOKLADU, d.DOKLAD, d.ID_PREDEK, d.ID_PARTNER, d.DATUM_DOKLADU, d.CENA, "
-        "d.ZAPLACENO, d.ZE_ZALOHY, d.TABLE_STATUS, d.ID_ZALOZIL from DOKLAD d"
+        "d.ZAPLACENO, d.ZE_ZALOHY, d.TABLE_STATUS, d.ID_ZALOZIL, d.FORMA_UHRADY from DOKLAD d"
     ),
     where=f"trim(d.TYP_DOKLADU) in ({_TYPES_IN})",
     id_expr="d.ID_DOKLAD",
     mapper=_sale_documents,
     keys=(
         "id", "type", "number", "parent_id", "owner_id", "date", "total", "paid", "from_deposit", "state",
-        "entered_by",
+        "entered_by", "method",
     ),
 )
 _spec(
@@ -661,6 +694,38 @@ _spec(
         "key", "id", "pattern_id", "recurring", "occurrence_date", "start", "end", "all_day", "resource_ids",
         "activity_id", "owner_id", "patient_id", "title", "busy_status", "done", "modified",
     ),
+)
+
+# contract v5: deposits of clients and their use in documents (both tables in the group "deposits")
+_spec(
+    name="deposits",
+    group="deposits",
+    tables=("PARTNER_ZALOHA",),
+    # a received deposit is not a PLATBA row; its refund has no method column (WinVet pays it out in
+    # cash - the cash handover view VIEW_PREDANI_PENEZ_DOKLAD lists refunded deposits as cash)
+    sql=(
+        "select z.ID_PARTNER_ZALOHA, z.ID_PARTNER, z.DATUM, z.CASTKA, z.ZNAMENKO, z.FORMA_UHRADY, z.ID_DOKLAD, "
+        "z.CERPANO, z.VRACENO, z.VRACENO_DATUM, z.ZUSTATEK, z.POZNAMKA, z.ST from PARTNER_ZALOHA z"
+    ),
+    where="z.ID_PARTNER_ZALOHA > 0",
+    id_expr="z.ID_PARTNER_ZALOHA",
+    mapper=_deposits,
+    keys=(
+        "id", "owner_id", "date", "amount", "sign", "method", "document_id", "used", "refunded",
+        "refunded_date", "balance", "note", "state",
+    ),
+)
+_spec(
+    name="deposit_uses",
+    group="deposits",
+    tables=("PARTNER_ZALOHA_CERPANI",),
+    sql=(
+        "select c.ID_PARTNER_ZALOHA_CERPANI, c.ID_PARTNER_ZALOHA, c.ID_DOKLAD, c.DOKLAD, c.DATUM, c.CASTKA, c.ST "
+        "from PARTNER_ZALOHA_CERPANI c"
+    ),
+    id_expr="c.ID_PARTNER_ZALOHA_CERPANI",
+    mapper=_deposit_uses,
+    keys=("id", "deposit_id", "document_id", "document_number", "date", "amount", "state"),
 )
 
 assert tuple(SPECS) == ENTITY_ORDER

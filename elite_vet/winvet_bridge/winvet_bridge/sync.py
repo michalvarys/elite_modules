@@ -19,7 +19,8 @@ from .schema_watch import SchemaReport, compare, read_snapshot
 log = logging.getLogger(__name__)
 
 #: Entities that are not in the change journal (or are small) and are pushed in full every run.
-ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines", "stock_lots", "stock_totals") + CALENDAR_ENTITIES
+ALWAYS_FULL = ("users", "contacts", "bundles", "bundle_lines", "stock_lots", "stock_totals") + CALENDAR_ENTITIES + (
+    "deposit_uses",)
 
 #: ``sync --only <name>``: groups of entities that can be synchronised on their own.
 ONLY_GROUPS = {"calendar": CALENDAR_ENTITIES}

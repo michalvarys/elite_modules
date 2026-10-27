@@ -27,6 +27,8 @@ JOURNAL_TABLES: Dict[str, str] = {
     "VARIANTA": "items",
     "VARIANTA_CENIK": "items",
     "FRAZE": "phrases",
+    # contract v5 (PARTNER_ZALOHA_CERPANI is not journaled: deposit_uses are always pushed in full)
+    "PARTNER_ZALOHA": "deposits",
 }
 
 #: Journaled child tables whose change re-reads the *parent* record of the entity: the entity id is
