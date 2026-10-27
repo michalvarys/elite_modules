@@ -17,3 +17,5 @@ from . import sync
 from . import expense
 from . import dashboard
 from . import winvet_calendar
+from . import deposit
+from . import cash_closure

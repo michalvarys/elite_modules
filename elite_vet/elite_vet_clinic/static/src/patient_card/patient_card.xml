@@ -182,6 +182,10 @@
                                         <a t-if="ownerPhone" class="evpc-num evpc-phone" t-att-href="'tel:' + ownerPhone" t-esc="ownerPhone"/>
                                     </dd>
                                 </div>
+                                <div t-if="owner.deposit_text" class="evpc-deposit" title="Zůstatek zálohy klienta podle WinVetu">
+                                    <dt>Záloha</dt>
+                                    <dd class="evpc-num" t-esc="owner.deposit_text"/>
+                                </div>
                                 <div t-if="weightText" t-att-title="weightTitle">
                                     <dt>Váha</dt>
                                     <dd class="evpc-num"><t t-esc="weightText"/>

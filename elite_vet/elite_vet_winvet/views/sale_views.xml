@@ -6,6 +6,10 @@
         <field name="model">elite.vet.sale.line</field>
         <field name="arch" type="xml">
             <list string="Tržby podle položek" create="0" delete="0" edit="0">
+                <header>
+                    <button name="%(elite_vet_winvet.action_cash_closure_wizard)d" type="action" string="Uzávěrka (PDF)"
+                            display="always" groups="elite_vet_reservation.group_reservation_manager"/>
+                </header>
                 <field name="date"/>
                 <field name="document_id" optional="show"/>
                 <field name="partner_id" optional="show"/>
@@ -144,6 +148,10 @@
         <field name="model">elite.vet.sale.document</field>
         <field name="arch" type="xml">
             <list string="Doklady" create="0" delete="0" edit="0">
+                <header>
+                    <button name="%(elite_vet_winvet.action_cash_closure_wizard)d" type="action" string="Uzávěrka (PDF)"
+                            display="always" groups="elite_vet_reservation.group_reservation_manager"/>
+                </header>
                 <field name="date"/>
                 <field name="number"/>
                 <field name="doc_type_name"/>
@@ -152,6 +160,7 @@
                 <field name="total" sum="Celkem"/>
                 <field name="paid" sum="Celkem"/>
                 <field name="payment_method" optional="show"/>
+                <field name="recorded_method" optional="hide"/>
                 <field name="from_deposit" optional="hide" sum="Celkem"/>
                 <field name="state" optional="hide"/>
                 <field name="entered_by_id" optional="show"/>
@@ -178,6 +187,8 @@
                             <field name="total"/>
                             <field name="paid"/>
                             <field name="from_deposit"/>
+                            <field name="payment_method"/>
+                            <field name="recorded_method"/>
                             <field name="state"/>
                             <field name="winvet_ref"/>
                         </group>

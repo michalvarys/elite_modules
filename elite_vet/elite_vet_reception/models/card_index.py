@@ -319,6 +319,8 @@ class ReceptionCardIndex(models.AbstractModel):
                 "id": partner.id, "name": partner.name, "phone": partner.phone or None,
                 "mobile": partner.mobile or None, "email": partner.email or None,
                 "street": partner.street or None, "city": partner.city or None, "zip": partner.zip or None,
+                # task 33: balance of the client's WinVet deposits ("2 000 Kč"), None when there is none
+                "deposit_text": partner.winvet_deposit_balance_text or None,
             },
             "pets": [self._pet_dict(pet) for pet in pets],
             "open_bills": self._to_pay(partner=partner),

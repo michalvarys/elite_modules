@@ -1,0 +1,90 @@
+// Task 33: "Uzávěrka" (report/cash_closure_report.xml). Print typography like the visit report of
+// elite_vet_clinic: A4 portrait, black on white, wkhtmltopdf (old WebKit) – tables, no flex / grid.
+$evc-ink: #1d1d1b;
+$evc-muted: #5f6368;
+$evc-rule: #bfc3c9;
+$evc-soft: #f3f4f6;
+
+.evc, .evc-footer {
+    font-family: "Roboto", "DejaVu Sans", Arial, sans-serif;
+    color: $evc-ink;
+}
+
+.evc {
+    font-size: 9pt;
+    line-height: 1.35;
+    padding: 0 14mm;
+
+    table { width: 100%; border-collapse: collapse; margin: 0; border: 0 none; }
+    table > tbody, table > thead, table > tbody > tr, table > thead > tr, table > tr { border: 0 none; }
+    table > tbody > tr > td, table > tbody > tr > th, table > thead > tr > th, table > tr > td, table > tr > th {
+        border: 0 none;
+        vertical-align: top;
+        text-align: left;
+        background: transparent;
+    }
+
+    .evc-letterhead {
+        border-bottom: 2px solid $evc-ink;
+        margin-bottom: 4mm;
+        td { padding-bottom: 2.5mm; }
+        .evc-clinic-name { font-size: 13pt; font-weight: bold; line-height: 1.2; margin-bottom: 1mm; }
+        > tbody > tr > td.evc-head-right, > tr > td.evc-head-right { text-align: right; width: 80mm; }
+        .evc-title { font-size: 15pt; font-weight: bold; margin-bottom: 1mm; }
+    }
+    .evc-muted { color: $evc-muted; }
+
+    .evc-section {
+        margin-bottom: 4mm;
+        h2 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin: 0 0 1.5mm;
+            padding-bottom: 0.8mm;
+            border-bottom: 1px solid $evc-rule;
+            page-break-after: avoid;
+        }
+        h3 { font-size: 9.5pt; font-weight: bold; margin: 2.5mm 0 1mm; page-break-after: avoid; }
+    }
+
+    .evc-table {
+        margin: 0 0 1.5mm;
+        > thead > tr > th {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: $evc-muted;
+            border-bottom: 1px solid $evc-ink;
+            padding: 0.8mm 1.5mm 0.8mm 0;
+            vertical-align: bottom;
+        }
+        > tbody > tr > td { border-bottom: 1px solid $evc-rule; padding: 0.7mm 1.5mm 0.7mm 0; }
+        > thead > tr > th.evc-num, > tbody > tr > td.evc-num { text-align: right; white-space: nowrap; }
+        tr { page-break-inside: avoid; }
+        > tbody > tr.evc-total > td { font-weight: bold; border-top: 1px solid $evc-ink; background: $evc-soft; }
+        > tbody > tr.evc-kind > td { font-weight: bold; }
+        > tbody > tr.evc-spacer > td { border-bottom: 0 none; padding: 0.8mm 0; }
+    }
+    // thead repeats on every page of a long item table
+    thead { display: table-header-group; }
+    .evc-item-table { font-size: 8pt; }
+
+    .evc-note { font-size: 7.8pt; color: $evc-muted; margin: 0.8mm 0 1.5mm; }
+    .evc-summary { margin: 1mm 0; }
+
+    .evc-sign {
+        margin-top: 8mm;
+        page-break-inside: avoid;
+        > tbody > tr > td, > tr > td { width: 50%; padding-top: 2mm; }
+    }
+}
+
+.evc-footer {
+    font-size: 7.5pt;
+    color: $evc-muted;
+    margin: 0 14mm;
+    padding-top: 1.5mm;
+    border-top: 1px solid $evc-rule;
+    .evc-footer-table { width: 100%; border-collapse: collapse; }
+    .evc-footer-table td { padding: 0; border: 0 none; vertical-align: top; }
+    .evc-footer-table td.evc-footer-right { text-align: right; white-space: nowrap; width: 30mm; }
+}

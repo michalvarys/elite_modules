@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 33: client deposits from WinVet (read only, managers). -->
+    <record id="view_deposit_list" model="ir.ui.view">
+        <field name="name">elite.vet.deposit.list</field>
+        <field name="model">elite.vet.deposit</field>
+        <field name="arch" type="xml">
+            <list string="Zálohy" create="0" delete="0" edit="0">
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="method"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="amount" sum="Celkem"/>
+                <field name="used" sum="Celkem"/>
+                <field name="refunded" sum="Celkem"/>
+                <field name="refunded_date" optional="show"/>
+                <field name="refund_method" optional="hide"/>
+                <field name="balance" sum="Celkem"/>
+                <field name="use_count" optional="show"/>
+                <field name="note" optional="hide"/>
+                <field name="state" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_deposit_form" model="ir.ui.view">
+        <field name="name">elite.vet.deposit.form</field>
+        <field name="model">elite.vet.deposit</field>
+        <field name="arch" type="xml">
+            <form string="Záloha" create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="method"/>
+                            <field name="method_code" invisible="method != 'other'"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount"/>
+                            <field name="note"/>
+                        </group>
+                        <group>
+                            <field name="used"/>
+                            <field name="refunded"/>
+                            <field name="refunded_date" invisible="not refunded"/>
+                            <field name="refund_method" invisible="not refunded"/>
+                            <field name="balance"/>
+                            <field name="state"/>
+                            <field name="winvet_ref"/>
+                        </group>
+                    </group>
+                    <field name="use_ids">
+                        <list>
+                            <field name="date"/>
+                            <field name="document_id"/>
+                            <field name="document_number" optional="hide"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="amount" sum="Celkem"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_deposit_search" model="ir.ui.view">
+        <field name="name">elite.vet.deposit.search</field>
+        <field name="model">elite.vet.deposit</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id"/>
+                <filter name="with_balance" string="S zůstatkem" domain="[('balance', '>', 0)]"/>
+                <filter name="refunded" string="Vrácené" domain="[('refunded', '!=', 0)]"/>
+                <separator/>
+                <filter name="cash" string="Přijato hotově" domain="[('method', '=', 'cash')]"/>
+                <filter name="card" string="Přijato kartou" domain="[('method', '=', 'card')]"/>
+                <separator/>
+                <filter name="date" string="Přijato" date="date"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_partner" string="Klient" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
+                    <filter name="group_method" string="Forma přijetí" context="{'group_by': 'method'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_deposit_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.deposit.pivot</field>
+        <field name="model">elite.vet.deposit</field>
+        <field name="arch" type="xml">
+            <pivot string="Zálohy" sample="1">
+                <field name="date" interval="month" type="row"/>
+                <field name="amount" type="measure"/>
+                <field name="used" type="measure"/>
+                <field name="refunded" type="measure"/>
+                <field name="balance" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="action_deposit" model="ir.actions.act_window">
+        <field name="name">Zálohy</field>
+        <field name="res_model">elite.vet.deposit</field>
+        <field name="view_mode">list,pivot,form</field>
+        <field name="context">{'search_default_with_balance': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Žádné zálohy</p>
+            <p>Zálohy klientů posílá most z WinVetu (verze 5.0 a novější).</p>
+        </field>
+    </record>
+
+    <record id="view_deposit_use_list" model="ir.ui.view">
+        <field name="name">elite.vet.deposit.use.list</field>
+        <field name="model">elite.vet.deposit.use</field>
+        <field name="arch" type="xml">
+            <list string="Čerpání záloh" create="0" delete="0" edit="0">
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="deposit_id"/>
+                <field name="document_id"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="amount" sum="Celkem"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- partner: smart button with the balance and a tab with the deposits -->
+    <record id="view_partner_form_winvet_deposit" model="ir.ui.view">
+        <field name="name">res.partner.form.winvet.deposit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_winvet_deposits" type="object" class="oe_stat_button" icon="fa-money"
+                        invisible="not winvet_deposit_count"
+                        groups="elite_vet_reservation.group_reservation_manager">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="winvet_deposit_balance" widget="float" digits="[16, 0]"/> Kč</span>
+                        <span class="o_stat_text">Zálohy</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Zálohy" name="winvet_deposits" invisible="not winvet_deposit_count"
+                      groups="elite_vet_reservation.group_reservation_manager">
+                    <field name="winvet_deposit_ids">
+                        <list>
+                            <field name="date"/>
+                            <field name="method"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="amount" sum="Celkem"/>
+                            <field name="used" sum="Celkem"/>
+                            <field name="refunded" sum="Celkem"/>
+                            <field name="refunded_date" optional="show"/>
+                            <field name="balance" sum="Celkem"/>
+                            <field name="use_count"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
