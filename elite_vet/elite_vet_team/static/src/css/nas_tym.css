@@ -1,0 +1,164 @@
+/* Vzhled stranky, ktery jinde neplati. Spolecne styly jsou v
+   elite_vet_theme/static/src/css/zaklad.css. */
+
+.ev-call--outro > summary { background: var(--ev-accent); color: #fff; padding: 14px 26px; border-radius: 9999px; font-size: 15px; }
+.ev-call--outro > summary:hover { background: var(--ev-accent-dark); }
+a.ev-call--outro { background: var(--ev-accent); color: #fff !important; padding: 14px 26px; border-radius: 9999px; font-size: 15px; }
+a.ev-call--outro:hover { background: var(--ev-accent-dark); color: #fff !important; }
+/* ============ HERO (kompaktní — je to podstránka, ne landing) ============ */
+.tm-hero { position: relative; padding: 132px 0 64px; overflow: hidden;
+    background:
+        radial-gradient(circle at 12% 10%, rgba(91,168,160,.26) 0%, transparent 46%),
+        radial-gradient(circle at 88% 90%, rgba(91,168,160,.20) 0%, transparent 48%),
+        linear-gradient(135deg, var(--ev-primary), var(--ev-primary-dark));
+}
+.tm-hero-inner { position: relative; z-index: 2; text-align: center; }
+.tm-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(91,168,160,.18); border: 1px solid rgba(91,168,160,.45); color: #a7dcd6; padding: 7px 18px; border-radius: 9999px; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.tm-badge svg { flex-shrink: 0; }
+.vet-page .tm-hero h1 { margin-top: 18px; font-size: clamp(28px, 4.4vw, 50px); line-height: 1.1; font-weight: 800; color: #fff; }
+.tm-hero-sub { margin-top: 12px; display: inline-flex; align-items: center; gap: 10px; color: #fff; font-size: clamp(14px, 1.5vw, 17px); font-weight: 600; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); padding: 8px 18px; border-radius: 9999px; }
+.tm-hero-sub svg { color: var(--ev-accent); flex-shrink: 0; }
+/* .vet-page prefix je nutny: .vet-page p { margin: 0 } jinak prebije auto okraje i margin-top */
+.vet-page .tm-lead { margin: 24px auto 0; max-width: 860px; text-align: center; color: rgba(255,255,255,.78); font-size: clamp(14.5px, 1.3vw, 16.5px); line-height: 1.75; }
+/* callout — externí specialisté + hlavní odpovědný tým */
+.tm-note { margin: 22px auto 0; max-width: 780px; display: flex; align-items: flex-start; gap: 13px; text-align: left; background: rgba(91,168,160,.14); border: 1px solid rgba(91,168,160,.34); border-radius: 16px; padding: 16px 20px; }
+.tm-note svg { color: var(--ev-accent); flex-shrink: 0; margin-top: 2px; }
+.vet-page .tm-note p { color: rgba(255,255,255,.9); font-size: clamp(13.5px, 1.2vw, 15px); line-height: 1.62; }
+.tm-note strong { color: #fff; font-weight: 800; }
+.tm-jump { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.tm-jump a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 9999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.88) !important; font-size: 13.5px; font-weight: 600; transition: background-color .2s, border-color .2s, color .2s; }
+.tm-jump a:hover { background: rgba(91,168,160,.22); border-color: var(--ev-accent); color: #fff !important; }
+.tm-jump b { color: var(--ev-accent); font-weight: 800; }
+/* ============ SEKCE ============ */
+.tm-sec { padding: 74px 0; scroll-margin-top: 88px; }
+.tm-sec--alt { background: var(--ev-muted); }
+.tm-sec-head { display: flex; align-items: center; gap: 16px; margin-bottom: 34px; }
+.tm-sec-head h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.15; white-space: nowrap; }
+.tm-sec-count { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 30px; padding: 0 10px; border-radius: 9999px; background: var(--ev-accent-light); color: var(--ev-accent-dark); font-size: 13px; font-weight: 800; flex-shrink: 0; }
+.tm-sec-line { flex: 1 1 auto; height: 1px; background: var(--ev-border); }
+/* ============ KARTA ČLENA (rozbalovací — hlava vidět, detail na klik) ============ */
+.tm-list { display: flex; flex-direction: column; gap: 16px; }
+.tm-card { display: block; background: #fff; border: 1px solid var(--ev-border); border-radius: 22px; padding: 24px 30px; box-shadow: 0 12px 34px -22px rgba(17,27,48,.28); transition: border-color .25s, box-shadow .25s; }
+.tm-card:hover { border-color: rgba(91,168,160,.4); box-shadow: 0 18px 44px -22px rgba(91,168,160,.4); }
+.tm-card--lead { border-color: rgba(91,168,160,.45); background: linear-gradient(180deg, rgba(224,242,240,.5) 0%, #fff 150px); }
+.tm-card > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+.tm-card > summary::-webkit-details-marker { display: none; }
+.tm-card > summary > .tm-head { flex: 1 1 auto; min-width: 0; }
+.tm-card-toggle { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; color: var(--ev-accent-dark); font-size: 12.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.tm-card-toggle svg { transition: transform .25s ease; }
+.tm-card[open] .tm-card-toggle svg { transform: rotate(180deg); }
+.tm-card-open { margin-top: 20px; padding-top: 22px; border-top: 1px solid var(--ev-border); }
+/* rozbalovací detail (vzdělání, praxe, specializace…) */
+.tm-more { margin-top: 16px; }
+.tm-more > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 9999px; background: var(--ev-accent-light); color: var(--ev-accent-dark); font-size: 12.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; transition: background-color .2s; }
+.tm-more > summary::-webkit-details-marker { display: none; }
+.tm-more > summary:hover { background: rgba(91,168,160,.25); }
+.tm-more-chevron { transition: transform .25s ease; }
+.tm-more[open] > summary .tm-more-chevron { transform: rotate(180deg); }
+.tm-more > .tm-facts { margin-top: 18px; }
+.tm-head { display: flex; align-items: center; gap: 16px; }
+.tm-avatar { width: 64px; height: 64px; border-radius: 9999px; background: linear-gradient(135deg, var(--ev-accent), var(--ev-accent-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; flex-shrink: 0; box-shadow: 0 10px 22px -12px rgba(91,168,160,.9); }
+.tm-avatar--photo { padding: 0; background: none; object-fit: cover; object-position: center; }
+/* ====== ZVĚTŠENÍ FOTKY PO KLIKNUTÍ ======
+   Bez JavaScriptu: skrytý checkbox, klik na fotku ho zaškrtne a tím
+   se ukáže překryv. Překryv je zároveň label pro ten samý checkbox,
+   takže klik kamkoliv na něj zvětšení zavře. Nepoužíváme :target,
+   ten Odoo rozbíjí. */
+.tm-zoom-toggle { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; margin: 0; }
+.tm-zoom-open { display: block; flex-shrink: 0; cursor: zoom-in; border-radius: 9999px; line-height: 0; }
+.tm-zoom-open:focus-visible { outline: 3px solid var(--ev-accent); outline-offset: 3px; }
+.tm-zoom-overlay { display: none; }
+.tm-zoom-toggle:checked ~ .tm-zoom-overlay {
+    display: flex; position: fixed; inset: 0; z-index: 10000;
+    align-items: center; justify-content: center; padding: 24px;
+    background: rgba(9, 15, 28, .88); cursor: zoom-out;
+    overflow: auto; overscroll-behavior: contain;
+    animation: evZoomIn .18s ease-out;
+}
+.tm-zoom-img { max-width: min(720px, 94vw); max-height: 82vh; width: auto; height: auto; object-fit: contain; }
+.tm-zoom-name { position: absolute; bottom: 26px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,.8); font-size: 14px; font-weight: 600; letter-spacing: .02em; padding: 0 20px; }
+@keyframes evZoomIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    .tm-zoom-toggle:checked ~ .tm-zoom-overlay { animation: none; }
+}
+/* v editoru a v režimu překladu překryv nesmí plavat přes obsah */
+body.editor_enable .tm-zoom-toggle:checked ~ .tm-zoom-overlay,
+body.editor_has_snippets .tm-zoom-toggle:checked ~ .tm-zoom-overlay,
+body.o_translate_mode .tm-zoom-toggle:checked ~ .tm-zoom-overlay { display: none !important; }
+.tm-card--lead .tm-avatar { background: linear-gradient(135deg, var(--ev-primary), var(--ev-primary-dark)); box-shadow: 0 10px 22px -12px rgba(17,27,48,.7); }
+.vet-page .tm-name { font-size: 19px; line-height: 1.25; }
+.vet-page .tm-role { margin-top: 6px; color: var(--ev-accent-dark); font-size: 13.5px; font-weight: 600; line-height: 1.45; }
+.tm-tag .ev-spec-ico { flex-shrink: 0; display: block; object-fit: contain; }
+.tm-tag { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 5px 12px; border-radius: 9999px; background: var(--ev-primary); color: #fff; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+/* Specializace — stitky s ikonou. Svetlejsi nez .tm-tag, aby zustal
+   hlavni stitek (Vedouci lekarka) tim vyraznejsim prvkem. */
+.tm-specs { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.tm-spec { display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 9px; border-radius: 9999px; background: var(--ev-accent-light); border: 1px solid rgba(43,120,112,.28); color: var(--ev-accent-dark); font-size: 12px; font-weight: 600; line-height: 1.2; }
+.tm-spec .ev-spec-ico { flex-shrink: 0; display: block; object-fit: contain; }
+.vet-page .tm-perex { margin-top: 14px; color: var(--ev-text-secondary); font-size: 14.5px; line-height: 1.7; }
+.tm-facts { display: flex; flex-direction: column; }
+.tm-fact { display: grid; grid-template-columns: 152px 1fr; gap: 16px; padding: 13px 0; border-top: 1px solid var(--ev-border); }
+.tm-fact:first-child { border-top: 0; padding-top: 0; }
+.tm-fact:last-child { padding-bottom: 0; }
+.tm-fact-k { font-size: 11.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--ev-accent); padding-top: 3px; }
+.tm-fact-v { font-size: 14.5px; line-height: 1.65; color: var(--ev-text-secondary); }
+/* ============ ZÁVĚR ============ */
+.tm-outro { padding: 70px 0 84px; background: radial-gradient(circle at 100% 0%, rgba(91,168,160,.18) 0%, transparent 30%), radial-gradient(circle at 0% 100%, rgba(91,168,160,.12) 0%, transparent 26%), linear-gradient(135deg, var(--ev-primary), var(--ev-primary-dark)); text-align: center; }
+.tm-outro-icon { width: 62px; height: 62px; margin: 0 auto 22px; border-radius: 18px; background: rgba(255,255,255,.1); color: #fff; display: flex; align-items: center; justify-content: center; }
+.vet-page .tm-outro h2 { color: #fff; font-size: clamp(22px, 2.8vw, 28px); text-align: center; }
+/* centrovani drzime explicitne i na containeru — jinak ho Odoo edicni styly prebijou */
+.vet-page .tm-outro .ev-container { text-align: center; }
+.vet-page .tm-outro p { margin: 14px auto 0; max-width: 640px; color: rgba(255,255,255,.75); font-size: 15.5px; line-height: 1.7; text-align: center; }
+.tm-outro-cta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; }
+.tm-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 26px; border-radius: 9999px; font-size: 15px; font-weight: 700; background: transparent; color: #fff !important; border: 1.5px solid rgba(255,255,255,.28); transition: border-color .2s, color .2s; }
+.tm-btn-ghost:hover { border-color: var(--ev-accent); color: var(--ev-accent) !important; }
+/* ============ RESPONZIVITA ============ */
+@media (max-width: 1100px) {
+    .tm-card { grid-template-columns: 260px 1fr; gap: 28px; }
+    .tm-fact { grid-template-columns: 140px 1fr; }
+}
+@media (max-width: 900px) {
+    .tm-card { grid-template-columns: 1fr; gap: 22px; padding: 26px; }
+    .tm-card--lead { background: linear-gradient(180deg, rgba(224,242,240,.5) 0%, #fff 150px); }
+}
+@media (max-width: 768px) {
+    .tm-hero { padding: 96px 0 46px; }
+    .vet-page .tm-hero h1 { margin-top: 14px; font-size: 27px; }
+    .tm-badge { font-size: 11px; padding: 6px 14px; }
+    .tm-hero-sub { margin-top: 10px; font-size: 13.5px; padding: 7px 15px; }
+    .vet-page .tm-lead { margin-top: 18px; font-size: 14px; line-height: 1.65; }
+    .tm-jump { margin-top: 22px; gap: 8px; }
+    .tm-jump a { padding: 8px 14px; font-size: 12.5px; }
+    .tm-sec { padding: 48px 0; scroll-margin-top: 70px; }
+    .tm-sec-head { gap: 12px; margin-bottom: 22px; }
+    .tm-sec-head h2 { font-size: 22px; white-space: normal; }
+    .tm-sec-line { display: none; }
+    .tm-list { gap: 16px; }
+    .tm-card { padding: 22px; border-radius: 18px; }
+    .tm-head { gap: 13px; }
+    .tm-avatar { width: 54px; height: 54px; font-size: 18px; }
+    .vet-page .tm-name { font-size: 17.5px; }
+    .vet-page .tm-role { font-size: 13px; margin-top: 5px; }
+    .vet-page .tm-perex { font-size: 14px; line-height: 1.65; }
+    .tm-fact { grid-template-columns: 1fr; gap: 4px; padding: 11px 0; }
+    .tm-fact-k { padding-top: 0; font-size: 11px; }
+    .tm-fact-v { font-size: 14px; }
+    .tm-outro { padding: 52px 0 60px; text-align: center; }
+    .tm-outro-icon { width: 56px; height: 56px; margin-bottom: 18px; }
+    .vet-page .tm-outro .ev-container { text-align: center; }
+    .vet-page .tm-outro h2 { text-align: center; }
+    .vet-page .tm-outro p { font-size: 14.5px; max-width: 100%; margin-left: auto; margin-right: auto; text-align: center; text-wrap: balance; }
+    .tm-outro-cta { flex-direction: column; width: 100%; max-width: 330px; margin-left: auto; margin-right: auto; }
+    .tm-outro-cta > .tm-btn-ghost { width: 100%; }
+    .tm-outro-cta > .ev-call { width: 100%; }
+    .tm-outro-cta > .ev-call > summary, .tm-outro-cta > a.ev-call { width: 100%; }
+    .tm-outro-cta > .ev-call > .ev-call-panel { top: auto; bottom: calc(100% + 10px); left: 0 !important; right: 0 !important; transform: none !important; width: 100%; min-width: 0; max-width: none; }
+}
+@media (max-width: 480px) {
+    .tm-card { padding: 20px; }
+    .vet-page .tm-hero h1 { font-size: 24px; }
+}
+/* ============ KONTAKTNÍ EMAIL U JMÉNA ============ */
+.tm-mail { margin-top: 11px; display: inline-flex; align-items: center; gap: 7px; background: var(--ev-accent-light); color: var(--ev-accent-dark) !important; padding: 7px 14px; border-radius: 9999px; font-size: 12.5px; font-weight: 600; letter-spacing: .01em; transition: background-color .2s, color .2s, box-shadow .2s; }
+.tm-mail:hover { background: var(--ev-accent); color: #fff !important; box-shadow: 0 8px 18px -8px rgba(91,168,160,.7); }
+.tm-mail svg { flex-shrink: 0; }

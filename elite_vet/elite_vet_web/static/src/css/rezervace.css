@@ -1,0 +1,150 @@
+/* Vzhled stranky, ktery jinde neplati. Spolecne styly jsou v
+   elite_vet_theme/static/src/css/zaklad.css. */
+
+@media (max-width: 768px) {
+    .ev-call-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+/* ============ REZERVACE (vlozeny rezervacni system) ============ */
+.ev-rez { background: var(--ev-muted); padding: 88px 0; }
+.ev-rez-head { text-align: center; max-width: 640px; margin: 0 auto 36px auto; }
+.ev-rez-badge { display: inline-flex; align-items: center; background: rgba(43,120,112,.12); color: var(--ev-accent-dark); padding: 6px 16px; border-radius: 9999px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 16px; }
+.vet-page .ev-rez-head h2 { font-size: clamp(24px, 3.4vw, 34px); line-height: 1.15; color: var(--ev-primary); margin: 0 0 12px 0; }
+.ev-rez-sub { color: var(--ev-text-secondary); font-size: 16px; margin: 0; }
+.ev-rez-frame { position: relative; background: #fff; border: 1px solid var(--ev-border); border-radius: 20px; overflow: hidden; box-shadow: 0 18px 48px rgba(26,39,68,.10); }
+.ev-rez-frame iframe { display: block; width: 100%; height: 900px; border: 0; }
+.ev-rez-fallback { text-align: center; margin-top: 20px; }
+.ev-rez-fallback a { display: inline-flex; align-items: center; gap: 8px; color: var(--ev-accent-dark); font-weight: 600; font-size: 15px; }
+@media (max-width: 767px) {
+    .ev-rez { padding: 56px 0; }
+    .ev-rez-frame iframe { height: 700px; }
+}
+/* ============ REZERVACNI STRANKA — HERO ============ */
+.ev-rezhero { padding: 128px 0 48px; background: linear-gradient(180deg, #ffffff 0%, var(--ev-muted) 100%); text-align: center; }
+.ev-rezhero .ev-container { max-width: 780px; }
+.ev-rezhero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--ev-accent-light); color: var(--ev-accent-dark); padding: 7px 18px; border-radius: 9999px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.ev-rezhero-badge svg { flex-shrink: 0; }
+.vet-page .ev-rezhero h1 { margin-top: 18px; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.1; color: var(--ev-primary); }
+.ev-rezhero-lead { margin-top: 14px; color: var(--ev-text-secondary); font-size: 17px; line-height: 1.6; }
+.ev-rezhero-meta { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.ev-rezhero-chip { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--ev-border); border-radius: 9999px; padding: 9px 16px; font-size: 14px; font-weight: 600; color: var(--ev-primary); }
+.ev-rezhero-chip:hover { color: var(--ev-primary); border-color: rgba(43,120,112,.4); }
+.ev-rezhero-chip svg { color: var(--ev-accent); flex-shrink: 0; }
+/* misto, kam se v editoru vlozi blok s rezervacnim systemem */
+.ev-rezslot { background: var(--ev-muted); min-height: 8px; }
+/* ============ FAQ ============ */
+.ev-faq { background: #fff; padding: 80px 0 96px; }
+.ev-faq .ev-container { max-width: 860px; }
+.ev-faq-head { text-align: center; margin-bottom: 36px; }
+.vet-page .ev-faq-head h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; }
+.ev-faq-head p { margin-top: 12px; color: var(--ev-text-secondary); font-size: 16px; }
+.ev-faq-list { display: flex; flex-direction: column; gap: 10px; }
+.ev-faq-item { border: 1px solid var(--ev-border); border-radius: 14px; background: #fff; overflow: hidden; }
+.ev-faq-item[open] { border-color: rgba(43,120,112,.35); box-shadow: 0 6px 18px -8px rgba(43,120,112,.22); }
+.ev-faq-item > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 16px 18px; font-size: 16px; font-weight: 600; color: var(--ev-primary); text-align: left; }
+.ev-faq-item > summary::-webkit-details-marker { display: none; }
+.ev-faq-item > summary::marker { content: ""; }
+.ev-faq-item > summary:hover { background: var(--ev-muted); }
+.ev-faq-q { flex: 1; }
+.ev-faq-arrow { flex-shrink: 0; color: var(--ev-text-secondary); transition: transform .2s; }
+.ev-faq-item[open] .ev-faq-arrow { transform: rotate(180deg); color: var(--ev-accent); }
+.ev-faq-a { padding: 0 18px 18px 18px; color: var(--ev-text-secondary); font-size: 15px; line-height: 1.65; text-align: left; }
+.ev-faq-a a { color: var(--ev-accent-dark); font-weight: 600; }
+.ev-faq-a strong { color: var(--ev-primary); font-weight: 700; }
+@media (max-width: 768px) {
+    .ev-rezhero { padding: 104px 0 36px; }
+    .ev-rezhero-lead { font-size: 15.5px; }
+    .ev-faq { padding: 56px 0 72px; }
+    .ev-faq-head { margin-bottom: 26px; }
+    .ev-faq-item > summary { padding: 14px 16px; font-size: 15px; gap: 12px; }
+    .ev-faq-a { padding: 0 16px 16px 16px; font-size: 14.5px; }
+}
+/* ============ VLOZENY REZERVACNI SYSTEM (WinVet) ============ */
+.evrez{background:#f7f9fb;padding:0 0 44px 0;text-align:center;container-type:inline-size}
+.evrez .evrez-frame{display:inline-block;max-width:100%;width:1150px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden;box-shadow:0 18px 48px rgba(26,39,68,.10)}
+.evrez .evrez-inner{width:100%}
+.evrez .evrez-inner iframe{display:block;width:100%;height:780px;border:0}
+@container (max-width:900px) {
+    .evrez .evrez-frame{border-radius:14px;box-shadow:none}
+    .evrez .evrez-inner{width:450px;transform-origin:top left}
+    .evrez .evrez-inner iframe{width:450px;height:820px}
+}
+@container (max-width:290px) {
+    .evrez .evrez-inner{transform:scale(.62)}
+    .evrez .evrez-frame{width:279px;height:508px}
+}
+@container (min-width:291px) and (max-width:320px) {
+    .evrez .evrez-inner{transform:scale(.64)}
+    .evrez .evrez-frame{width:288px;height:525px}
+}
+@container (min-width:321px) and (max-width:350px) {
+    .evrez .evrez-inner{transform:scale(.71)}
+    .evrez .evrez-frame{width:320px;height:582px}
+}
+@container (min-width:351px) and (max-width:380px) {
+    .evrez .evrez-inner{transform:scale(.78)}
+    .evrez .evrez-frame{width:351px;height:640px}
+}
+@container (min-width:381px) and (max-width:410px) {
+    .evrez .evrez-inner{transform:scale(.84)}
+    .evrez .evrez-frame{width:378px;height:689px}
+}
+@container (min-width:411px) and (max-width:440px) {
+    .evrez .evrez-inner{transform:scale(.91)}
+    .evrez .evrez-frame{width:410px;height:746px}
+}
+@container (min-width:441px) and (max-width:470px) {
+    .evrez .evrez-inner{transform:scale(.97)}
+    .evrez .evrez-frame{width:437px;height:795px}
+}
+@container (min-width:471px) and (max-width:900px) {
+    .evrez .evrez-inner{transform:scale(1)}
+    .evrez .evrez-frame{width:450px;height:820px}
+}
+/* ====== NACITANI REZERVACE ======
+   Kolecko lezi POD iframem, ne pres nej. Dokud se WinVet nenacte,
+   je iframe pruhledny a kolecko je skrz nej videt; jakmile se
+   vykresli, prekryje ho vlastnim pozadim a kolecko zmizi samo.
+   Zadny skript, zadne hlidani udalosti.
+   Nahore, ne uprostred: ramecek je vysoky pres 780 px, takze
+   vycentrovane kolecko by skoncilo hluboko pod ohybem. */
+.evrez .evrez-inner{position:relative}
+.evrez .evrez-nacitani{position:absolute;inset:0;z-index:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:90px;gap:22px;color:#1a2744;font-size:19px;font-weight:700;letter-spacing:.01em;text-align:center}
+.evrez .evrez-inner iframe{position:relative;z-index:1;background:transparent}
+.evrez-spinner{width:58px;height:58px;border-radius:50%;border:5px solid #e2e8f0;border-top-color:#2b7870;animation:evrezToci .85s linear infinite}
+.evrez-nacitani-podtext{font-size:14px;font-weight:500;color:#64748b;margin-top:-10px}
+/* Treti hlaska zabere zbytek vysky ramecku a vycentruje se v nem. */
+/* Text pod rezervaci — zustava videt i po nacteni WinVetu. */
+/* Behem nacitani sedi uprostred prazdneho ramecku, pak klesne pod nej. */
+.evrez-zprava--nacitani{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;max-width:520px;margin:0;padding:0 24px 56px;font-size:15px;color:#64748b}
+.evrez-zprava{max-width:680px;margin:26px auto 0;padding:0 24px;text-align:center;font-size:15.5px;line-height:1.7;color:#64748b;white-space:pre-line}
+/* Pod rameckem (po nacteni) vycentrovat: ".vet-page p{margin:0}" je silnejsi nez auto
+   okraje vyse. Jen v .evrez-zprava-misto, behem nacitani text sedi v hlasce. */
+.vet-page .evrez-zprava-misto > .evrez-zprava{margin:26px auto 0}
+@keyframes evrezToci{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce) {
+    .evrez-spinner{animation:none}
+}
+@media (max-width:900px) {
+    .evrez .evrez-nacitani{padding-top:64px;gap:18px;font-size:17px}
+    .evrez-spinner{width:50px;height:50px;border-width:4px}
+    .evrez-nacitani-podtext{font-size:13px}
+    .evrez-zprava{margin-top:20px;font-size:14.5px;padding:0 18px}
+}
+/* ====== ODKAZ NA ROZPIS SLUZEB pod rezervaci ====== */
+.evrez-rozpis{background:#f7f9fb;padding:0 20px 62px;text-align:center}
+.evrez-rozpis-lead{margin:0 0 16px;color:#64748b;font-size:16px;line-height:1.55}
+.evrez-rozpis-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:260px;padding:15px 30px;border-radius:9999px;background:#fff;color:#2b7870 !important;border:1.5px solid #2b7870;font-size:15.5px;font-weight:700;text-decoration:none;transition:background-color .2s,color .2s,transform .1s}
+.evrez-rozpis-btn:hover{background:#2b7870;color:#fff !important}
+.evrez-rozpis-btn:active{transform:scale(.985)}
+.evrez-rozpis-btn svg{flex-shrink:0}
+@media (max-width:768px) {
+    .evrez-rozpis{padding:0 20px 46px}
+    .evrez-rozpis-lead{font-size:15px}
+    .evrez-rozpis-btn{width:100%;max-width:340px;font-size:15px}
+}
+
+/* Rezervacni widget ma v booking.css sirku 860 px. Na teto strance ji puvodne
+   prebijel inline styl kontejneru a widget se roztahl na celou sirku (ctyri
+   sloupce terminu). Teprve presunem stylu do bundlu by zacalo platit 860 px,
+   proto se tu sirka drzi vyslovne. */
+.evbk-inner { max-width: 1200px; }

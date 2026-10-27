@@ -185,54 +185,9 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Galerie z adminu (Web kliniky -> Galerie kliniky). Pas listuje po
-                         trech fotkach, takze stran je tolik, kolik vyjde po trech. Posledni
-                         strana se zarovnava na konec, aby v ni nezustalo prazdne misto. -->
-                    <t t-set="ev_pocet_fotek" t-value="len(ev_fotky)"/>
-                    <t t-set="ev_stran" t-value="(ev_pocet_fotek + 2) // 3"/>
-                    <div t-if="ev_pocet_fotek" id="galerie" class="ev-gal-inline">
-                        <style>
-                            @media (min-width: 769px) {
-                                <t t-foreach="range(2, ev_stran + 1)" t-as="ev_k">
-                                    <t t-if="ev_k &lt; ev_stran">#ev-gal-s<t t-out="ev_k"/>:checked ~ .ev-gal-view .ev-gal-track { transform: translateX(calc(-<t t-out="(ev_k - 1) * 100"/>% - <t t-out="(ev_k - 1) * 18"/>px)); }</t>
-                                    <t t-else="">#ev-gal-s<t t-out="ev_k"/>:checked ~ .ev-gal-view .ev-gal-track { transform: translateX(calc(-<t t-out="round((ev_pocet_fotek - 3) * 100.0 / 3, 3)"/>% - <t t-out="6 * (ev_pocet_fotek - 3)"/>px)); }</t>
-                                </t>
-                                <t t-foreach="range(1, ev_stran)" t-as="ev_k">#ev-gal-s<t t-out="ev_k"/>:checked ~ .ev-gal-nav .ev-gal-next-<t t-out="ev_k + 1"/> { display: flex; }</t>
-                                <t t-foreach="range(2, ev_stran + 1)" t-as="ev_k">#ev-gal-s<t t-out="ev_k"/>:checked ~ .ev-gal-nav .ev-gal-prev-<t t-out="ev_k - 1"/> { display: flex; }</t>
-                            }
-                        </style>
-                        <div class="ev-gal-box">
-                            <t t-foreach="range(1, ev_stran + 1)" t-as="ev_k">
-                                <input class="ev-gal-radio" type="radio" name="ev-gal-strana"
-                                       t-attf-id="ev-gal-s#{ev_k}" t-att-checked="'checked' if ev_k == 1 else None"/>
-                            </t>
-                            <div class="ev-gal-view">
-                                <div class="ev-gal-track">
-                                    <t t-foreach="ev_fotky" t-as="ev_f">
-                                        <div class="ev-gal-item">
-                                            <img t-attf-src="/web/image/elite.vet.gallery.photo/#{ev_f.id}/image/500x667"
-                                                 t-att-alt="ev_f.name or 'Elite Vet'"
-                                                 loading="lazy" decoding="async" fetchpriority="low"
-                                                 width="500" height="667"/>
-                                        </div>
-                                    </t>
-                                </div>
-                            </div>
-                            <div t-if="ev_stran &gt; 1" class="ev-gal-nav">
-                                <t t-foreach="range(1, ev_stran)" t-as="ev_k">
-                                    <label class="ev-gal-arr ev-gal-arr--prev" t-attf-class="ev-gal-arr ev-gal-arr--prev ev-gal-prev-#{ev_k}"
-                                           t-attf-for="ev-gal-s#{ev_k}" aria-label="Previous photos"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></label>
-                                </t>
-                                <t t-foreach="range(2, ev_stran + 1)" t-as="ev_k">
-                                    <label t-attf-class="ev-gal-arr ev-gal-arr--next ev-gal-next-#{ev_k}"
-                                           t-attf-for="ev-gal-s#{ev_k}" aria-label="Next photos"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></label>
-                                </t>
-                            </div>
-                        </div>
-                        <p class="ev-gal-hint">Swipe sideways to browse the photos</p>
-                    </div>
                 </div>
             </section>
+            <t t-call="elite_vet_web.s_vet_galerie"/>
     </template>
 
     <template id="sekce_sluzby" name="Blok: Služby">

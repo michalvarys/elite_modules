@@ -1,8 +1,4 @@
-/* Nadpis sekce — stitek a nadpis pod nim.
- *
- * Ma vlastni soubor zamerne: bloky.css se generuje z vykreslene stranky
- * a bere jen pravidla, jejichz tridy jsou v blocich. Styl odsud by pri
- * takove regeneraci zmizel. */
+/* Nadpis sekce — stitek a nadpis pod nim. */
 
 .ev-nadpis { padding: 56px 0 0; }
 .ev-nadpis .ev-nadpis-in { max-width: 780px; margin: 0 auto; text-align: center; }

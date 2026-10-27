@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Web",
-    "version": "18.0.1.21.0",
+    "version": "18.0.1.22.0",
     "category": "Website",
     "summary": "Domovska stranka a stranka rezervace kliniky Elite Vet.",
     "description": """
@@ -30,12 +30,26 @@ lisi. Vymena fotky = vymena souboru v modulu.
         "views/service_views.xml",
         "views/service_icon.xml",
         "views/obsah_views.xml",
+        "views/galerie.xml",
         "views/sekce.xml",
         "views/homepage.xml",
         "views/rezervace.xml",
         "views/cenik.xml",
         "views/o_nas.xml",
     ],
+    # Styly jedne stranky. Kazda sablona si svuj bundle nacte do <head>,
+    # takze se na jine strance neuplatni; spolecne styly jsou v elite_vet_theme.
+    "assets": {
+        # Blok Galerie jde pretahnout na kteroukoliv stranku, proto globalne.
+        "web.assets_frontend": [
+            "elite_vet_web/static/src/css/galerie.css",
+            "elite_vet_web/static/src/js/galerie.js",
+        ],
+        "elite_vet_web.stranka_homepage": ["elite_vet_web/static/src/css/homepage.css"],
+        "elite_vet_web.stranka_rezervace": ["elite_vet_web/static/src/css/rezervace.css"],
+        "elite_vet_web.stranka_cenik": ["elite_vet_web/static/src/css/cenik.css"],
+        "elite_vet_web.stranka_o_nas": ["elite_vet_web/static/src/css/o_nas.css"],
+    },
     "post_init_hook": "_pri_instalaci",
     "installable": True,
     "application": True,

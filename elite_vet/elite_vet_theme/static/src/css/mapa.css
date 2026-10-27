@@ -1,6 +1,4 @@
-/* Skutecna mapa v kartce s adresou.
-   Vlastni soubor ma proto, ze bloky.css se generuje ze stranky a pri
-   pristim generovani by se rucne dopsana pravidla ztratila. */
+/* Skutecna mapa v kartce s adresou. */
 
 /* Cela kartka zustava odkazem na Google Maps, takze mapa nesmi brat
    kliknuti -- jinak by iframe pohltil klik a odkaz by neslo zmacknout. */

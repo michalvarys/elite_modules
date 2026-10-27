@@ -1,0 +1,46 @@
+/* Rozbalovaci nabidka a burger menu horni listy, ramecek s poznamkou
+   a schovani jazykove brany v editoru. Driv inline v elite_vet_theme.vet_header. */
+
+/* Rozbalovaci nabidka v horni liste. Atribut name="ev-nav" zaridi,
+   ze je otevrena vzdy jen jedna — resi to prohlizec, ne skript. */
+.ev-nav-drop { position: relative; }
+.ev-nav-drop > summary { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; list-style: none; }
+.ev-nav-drop > summary::-webkit-details-marker { display: none; }
+.ev-nav-caret { transition: transform .2s ease; }
+.ev-nav-drop[open] .ev-nav-caret { transform: rotate(180deg); }
+.ev-nav-panel { position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); min-width: 220px; padding: 8px; background: #fff; border-radius: 12px; box-shadow: 0 12px 32px rgba(26, 39, 68, .14); display: flex; flex-direction: column; z-index: 1050; }
+.ev-nav-opt { padding: 10px 14px; border-radius: 8px; white-space: nowrap; color: #1a2744; }
+.ev-nav-opt:hover, .ev-nav-opt.is-active { background: rgba(43, 120, 112, .1); color: #2b7870; }
+
+/* Skupiny v burger menu — harmonika odsazena svislou linkou. */
+.ev-burger-group > summary { cursor: pointer; list-style: none; }
+.ev-burger-group > summary::-webkit-details-marker { display: none; }
+.ev-burger-caret { transition: transform .2s ease; }
+.ev-burger-group[open] .ev-burger-caret { transform: rotate(90deg); }
+.ev-burger-sub { display: flex; flex-direction: column; margin: 2px 0 8px 26px; padding-left: 12px; border-left: 2px solid rgba(43, 120, 112, .25); }
+.ev-burger-sublink { padding: 8px 0; font-size: .95em; color: #1a2744; opacity: .85; }
+.ev-burger-sublink:hover { color: #2b7870; opacity: 1; }
+
+/* Ramecek s poznamkou. Je tady, a ne u domovske stranky, protoze
+   stejny blok jde pretahnout na kteroukoliv stranku. */
+.ev-hero-note { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+.ev-hero-note-in { background: #fff; border: 1px solid var(--ev-border, #e2e8f0); border-left: 4px solid var(--ev-accent, #2b7870); border-radius: 16px; padding: 20px 24px; font-size: 15px; line-height: 1.7; color: var(--ev-text-secondary, #64748b); }
+.ev-hero-note-in p:last-child { margin-bottom: 0; }
+.ev-hero-note-in a { color: var(--ev-accent, #2b7870); font-weight: 700; }
+
+/* Jazykova brana prekryva celou obrazovku, takze by v editoru
+   nebylo videt, co se upravuje. V editoru se proto schova. */
+body.editor_enable .ev-langgate,
+body.editor_has_snippets .ev-langgate,
+body.o_translate_mode .ev-langgate { display: none !important; }
+
+@media (max-width: 560px) {
+    .ev-hero-note { padding: 0 16px; }
+    .ev-hero-note-in { padding: 16px 18px; font-size: 14.5px; }
+}
+
+/* Na mobilu se cela horni lista schova do burgeru. Rozbalovaci
+   polozka neni odkaz, takze ji pravidlo pro a:not(...) minulo. */
+@media (max-width: 768px) {
+    .ev-topbar-nav > .ev-nav-drop { display: none; }
+}

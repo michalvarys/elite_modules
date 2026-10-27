@@ -1,9 +1,5 @@
 /* Banner — pruh pres celou sirku, do ktereho klinika pise, ze se neco deje.
  *
- * Ma vlastni soubor zamerne: bloky.css se generuje z vykreslene stranky
- * a pri prvni takove regeneraci styl banneru zmizel, protoze jeho tridy
- * v blocich nejsou. Tady uz ho nic nepretrida.
- *
  * Barvy stoji na dvou promennych, aby stacilo v bocnim panelu vybrat jednu
  * barvu a prebarvila se tecka i linky zaroven. Pripravene varianty promenne
  * prepisuji tridou, vlastni vyber je zapise primo do stylu prvku — a ten

@@ -1,0 +1,28 @@
+/* Vzhled stranky, ktery jinde neplati. Spolecne styly jsou v
+   elite_vet_theme/static/src/css/zaklad.css. */
+
+/* Kratka stranka nesmi nechat paticku uprostred obrazovky: obsah
+   se roztahne a paticka klesne na spodni hranu. */
+.vet-page { display: flex; flex-direction: column; min-height: 100vh; min-height: 100svh; }
+.vet-page > .ev-onas { flex: 1 0 auto; }
+.vet-page > .ev-footer-credit { flex-shrink: 0; }
+/* ============ O NAS ============ */
+.ev-onas { background: linear-gradient(180deg, #ffffff 0%, var(--ev-muted) 260px); padding: 128px 0 88px; }
+.ev-onas-head { max-width: 780px; margin: 0 auto 26px; text-align: center; }
+.vet-page .ev-onas-head h1 { margin-top: 18px; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.1; color: var(--ev-primary); }
+.ev-onas-head .ev-cenhero-badge { margin-bottom: 0; }
+.ev-onas-text { max-width: 780px; margin: 0 auto; color: var(--ev-text-secondary); font-size: 17px; line-height: 1.75; }
+.ev-onas-text p + p { margin-top: 14px; }
+.ev-onas-text strong { color: var(--ev-primary); font-weight: 700; }
+.ev-onas-text a { color: var(--ev-accent-dark); font-weight: 600; border-bottom: 1px solid var(--ev-accent); }
+.ev-onas-text ul { margin-top: 12px; padding-left: 22px; list-style: disc; }
+.ev-onas-text li + li { margin-top: 6px; }
+.ev-onas-foto { display: block; width: 100%; height: auto; max-width: 100%; border-radius: 20px; margin-top: 32px; box-shadow: 0 18px 48px rgba(26,39,68,.10); }
+/* Prehravac je blok Odoo — pomer stran i vzhled si resi sam. */
+.ev-onas .media_iframe_video { margin-top: 32px; }
+@media (max-width: 768px) {
+    .ev-onas { padding: 104px 0 64px; }
+    .ev-onas-head { margin-bottom: 20px; }
+    .ev-onas-text { font-size: 15.5px; line-height: 1.7; }
+    .ev-onas-foto { border-radius: 16px; margin-top: 24px; }
+}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Elite Vet - vzhled webu",
-    "version": "18.0.1.3.0",
+    "version": "18.0.1.4.0",
     "post_init_hook": "_pri_instalaci",
     "summary": "Spolecna hlavicka a paticka webu kliniky",
     # Hlavicka a paticka byly drive v sesti kopiich, na kazde strance jedna.
@@ -24,16 +24,18 @@
         "views/text.xml",
         "views/snippets.xml",
     ],
-    # Styl bloku se nacita na vsech strankach. Inline <style> uvnitr
-    # domovske stranky by se na blok pretazeny jinam nevztahoval.
+    # Styl bloku se nacita na vsech strankach, aby blok vypadal stejne i po
+    # pretazeni na jinou stranku. Styly jedne stranky ma jeji vlastni bundle.
     "assets": {
         "web.assets_frontend": [
-            "elite_vet_theme/static/src/css/bloky.css",
             "elite_vet_theme/static/src/css/banner.css",
             "elite_vet_theme/static/src/css/nadpis.css",
             "elite_vet_theme/static/src/css/text.css",
             "elite_vet_theme/static/src/css/mapa.css",
             "elite_vet_theme/static/src/css/kotvy.css",
+            # Spolecny vzhled stranek, bloku a hlavicky, driv inline v kazde sablone.
+            "elite_vet_theme/static/src/css/zaklad.css",
+            "elite_vet_theme/static/src/css/hlavicka.css",
         ],
     },
     "installable": True,

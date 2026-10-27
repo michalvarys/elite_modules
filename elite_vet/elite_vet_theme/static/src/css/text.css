@@ -1,7 +1,4 @@
-/* Blok Text — odstavce v ctecí sirce.
- *
- * Vlastni soubor zamerne: bloky.css se generuje z vykreslene stranky a bere
- * jen pravidla, jejichz tridy jsou v blocich, takze by styl odsud zmizel. */
+/* Blok Text — odstavce v ctecí sirce. */
 
 .ev-text { padding: 20px 0; }
 .ev-text .ev-text-in {

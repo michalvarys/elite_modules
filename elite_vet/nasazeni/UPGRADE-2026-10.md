@@ -1088,3 +1088,40 @@ neexistují (zkouška před spuštěním), a převod 1 713 z 21. 9. je úhrada n
 
 Upgrade: `-u elite_vet_reservation,elite_vet_reception` (18.0.2.12.0, 18.0.1.18.0), žádná změna dat ani
 mostu. V pokladně a v Ordinacích obnovit stránku natvrdo (Ctrl+Shift+R).
+
+## Doplnění: styly ze šablon do CSS, galerie jako blok, jazyková brána (27. 10.)
+
+Větev `feature/elite-vet-styly-galerie`. Upgrade jedním během:
+
+```bash
+<odoo> -d <db> -u elite_vet_theme,elite_vet_team,elite_vet_calendar,elite_vet_web --stop-after-init
+```
+
+* **Styly:** v QWeb šablonách už není žádný `<style>`. Společné styly (hlavička, patička, bloky) jsou
+  v `elite_vet_theme/static/src/css/zaklad.css` (`web.assets_frontend`), styly jen pro jednu stránku
+  v jejím bundlu `elite_vet_*.stranka_*`, který si šablona načte do `<head>`. `bloky.css` zrušen –
+  byl kopií stylů homepage. Vzhled ověřen porovnáním vypočtených stylů všech prvků před a po
+  (6 stránek, desktop + mobil). Záměrné rozdíly: hlavička na Náš tým a Rozpis je stejná jako
+  jinde (tlačítko Zavolat tam dřív nemělo styl), na telefonech ≤ 480 px má Ceník a O nás okraj
+  16 px jako ostatní stránky.
+* **Galerie** je samostatný blok *Galerie kliniky* (panel bloků → Elite Vet). Fotky dosazuje
+  `galerie.js` z `/elite_vet/galerie`, do uložené stránky se nezapisují – přidaná či smazaná fotka
+  v Web kliniky → Galerie kliniky je na webu hned. Migrace 18.0.1.22.0 nahradí zamrzlou galerii
+  (natvrdo ID fotek + inline `<style>`) v pohledech uložených z editoru blokem a převezme texty
+  v každém jazyce. V logu: `Zamrzla galerie nahrazena blokem Galerie v: …` (nebo nic, když kopie není).
+* **Jazyková brána** se ukáže jen při první návštěvě: volbu drží `localStorage` + cookie
+  `ev_lang_chosen` (rok); server bránu při cookie nevykreslí.
+* **Tlačítko Kontakt** v hlavičce (PC) vede na `/#kontakt` (sekce kontaktů na domovské stránce,
+  s jazykovou předponou) místo `tel:`. Na mobilu je dál schované. `galerie.js` po doplnění fotek
+  znovu dorovná stránku na kotvu, jinak by `#kontakt` z jiné stránky dojel o výšku galerie výš.
+
+Kontrola – domovská stránka nesmí mít vlastní kopii z editoru, jinak se na ni změny šablony
+neprojeví (`stary_skript` musí být `f`):
+
+```sql
+SELECT id, website_id, arch_db::text LIKE '%sessionStorage.getItem("evSplashSeen"%' AS stary_skript
+FROM ir_ui_view WHERE key = 'elite_vet_web.homepage';
+```
+
+V prohlížeči Ctrl+Shift+R. `nasazeni/test-vseho.py`, oddíl 4 (galerie) testuje nové chování.
+

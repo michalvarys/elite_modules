@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Blok Galerie: pas fotek z Web kliniky -> Galerie kliniky.
+
+         V ulozene strance je jen prazdny pas. Fotky do nej vklada az
+         galerie.js pri zobrazeni stranky, takze se do stranky nikdy
+         nezapisou natvrdo a kazda zmena v adminu se na webu projevi hned.
+         Driv editor pri ulozeni zony zmrazil vykreslene fotky i s jejich ID
+         a pocet stranek do inline stylu. -->
+    <template id="s_vet_galerie" name="Elite Vet: galerie">
+        <section class="s_vet_galerie ev-gal-sekce">
+            <div class="ev-container">
+                <div class="ev-gal-box">
+                    <div class="ev-gal-view">
+                        <div class="ev-gal-track o_not_editable"></div>
+                    </div>
+                    <div class="ev-gal-nav">
+                        <button type="button" class="ev-gal-arr ev-gal-arr--prev" aria-label="Previous photos"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                        <button type="button" class="ev-gal-arr ev-gal-arr--next" aria-label="Next photos"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                    </div>
+                </div>
+                <p class="ev-gal-hint">Swipe sideways to browse the photos</p>
+            </div>
+        </section>
+    </template>
+
+    <template id="ev_snippets_galerie" name="Elite Vet Snippets: galerie" inherit_id="elite_vet_theme.ev_snippets_registry">
+        <xpath expr="//snippets[@id='ev_snippets']" position="inside">
+            <t t-snippet="elite_vet_web.s_vet_galerie" string="Galerie kliniky"
+               t-thumbnail="/elite_vet_web/static/src/img/snippets/s_vet_galerie.svg"/>
+        </xpath>
+    </template>
+
+</odoo>

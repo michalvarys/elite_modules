@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rozpis sluzeb",
-    "version": "18.0.5.7.0",
+    "version": "18.0.5.8.0",
     "category": "Website",
     "summary": "Rozpis sluzeb lekaru: jednoducha aplikace v Odoo a mesicni kalendar na webu.",
     "description": """
@@ -40,6 +40,10 @@ Navigace stranky se bere z menu webu, takze odkazy jdou menit v Odoo
     "assets": {
         "web.assets_backend": [
             "elite_vet_calendar/static/src/holiday_calendar/*",
+        ],
+        # Styly stranky Rozpis lekaru, nacita si je sablona do <head>.
+        "elite_vet_calendar.stranka_rozpis_lekaru": [
+            "elite_vet_calendar/static/src/css/rozpis_lekaru.css",
         ],
     },
     "post_init_hook": "_seed_defaults",

@@ -16,7 +16,7 @@ Aplikace **Web kliniky** v Odoo. Co tam neni, na webu nebude:
 | nabidka | co ridi |
 |---|---|
 | Sluzby | mrizka sluzeb na PC i rozbalovaci seznam na mobilu |
-| Galerie kliniky | pas fotek v sekci O klinice |
+| Galerie kliniky | blok Galerie (fotky dosazuje `galerie.js` az pri zobrazeni, blok jde pretahnout na libovolnou stranku) |
 | Ordinacni hodiny | tabulka hodin v sekci Kontakt |
 | Kontaktni karty | adresa, telefon, e-mail |
 | Caste dotazy | seznam na strance rezervace |

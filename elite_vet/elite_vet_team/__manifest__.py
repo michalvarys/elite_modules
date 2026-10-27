@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Nas tym",
-    "version": "18.0.2.5.0",
+    "version": "18.0.2.6.0",
     "category": "Website",
     "summary": "Stranka /nas-tym se spravuje v Odoo: lide, fotky, sekce a podrobnosti.",
     "description": """
@@ -37,6 +37,10 @@ rezim Odoo, takze nemecka, anglicka a ruska verze stranky se resi na miste.
         "data/icons.xml",
         "data/specializations.xml",
     ],
+    # Styly stranky Nas tym, nacita si je sablona do <head>.
+    "assets": {
+        "elite_vet_team.stranka_nas_tym": ["elite_vet_team/static/src/css/nas_tym.css"],
+    },
     "post_init_hook": "_seed_team",
     "installable": True,
     "application": True,
