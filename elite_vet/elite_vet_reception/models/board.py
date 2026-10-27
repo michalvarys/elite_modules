@@ -112,11 +112,13 @@ class ReceptionBoard(models.AbstractModel):
         }
 
     @api.model
-    def move_reservation(self, reservation_id, day, minute, room_id=False, notify=True, end_minute=None):
+    def move_reservation(self, reservation_id, day, minute, room_id=False, notify=True, end_minute=None,
+                         force=False):
         """Move a reservation to `day` ("YYYY-MM-DD"), `minute` (from midnight) and `room_id`
         with the board's `board_move` -> board_reservation(). notify=False: the client gets no
         e-mail about the new time (the move dialog's checkbox, task 25). end_minute (task 28):
-        the new end on that day; without it the duration is kept."""
+        the new end on that day; without it the duration is kept. force=True: "Přesto přesunout"
+        after the doctor / room rule refused the move."""
         self._check_reception()
         reservation = self._board_reservation(reservation_id)
         if reservation.state not in MOVABLE_STATES:
@@ -136,7 +138,8 @@ class ReceptionBoard(models.AbstractModel):
         if room_id and not self.env["elite.vet.room"].browse(room_id).exists():
             raise UserError(_("Ordinace nebyla nalezena."))
         self.env["elite.vet.reservation"].board_move(reservation.id, date_str(day), minute, room_id,
-                                                     notify=bool(notify), end_minute=end_minute)
+                                                     notify=bool(notify), end_minute=end_minute,
+                                                     force=bool(force))
         return self.board_reservation(reservation.id)
 
     @api.model

@@ -137,4 +137,4 @@ class TestMoveEndTime(ReservationCase):
         self.assertIn(">Do<", xml)
         self.assertIn("endMinute", js)
         self.assertIn("Konec musí být po začátku.", js)
-        self.assertIn("notify, endMinute]", board)
+        self.assertIn("notify, endMinute, force]", board)

@@ -397,9 +397,9 @@ export class ReservationBoard extends Component {
             origRoomId: event.room_id || false,
             mailText: "Klient dostane e-mail o změně termínu (" + (event.mail_on_move || "") + ").",
             mailLabel: "Poslat klientovi e-mail o změně",
-            onConfirm: async ({ date, minute, endMinute, roomId, notify }) => {
+            onConfirm: async ({ date, minute, endMinute, roomId, notify, force }) => {
                 await this.orm.call("elite.vet.reservation", "board_move",
-                    [event.id, date, minute, roomId, notify, endMinute]);
+                    [event.id, date, minute, roomId, notify, endMinute, force]);
                 await this.afterChange(date);
             },
         });
@@ -422,10 +422,10 @@ export class ReservationBoard extends Component {
             mailTo: w.email || false,
             mailText: "Klient dostane potvrzovací e-mail (" + (w.email || "") + ").",
             mailLabel: "Poslat klientovi potvrzení",
-            onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify }) => {
+            onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify, force }) => {
                 const doctor = doctorId && chosen === roomId ? doctorId : null;
                 await this.orm.call("elite.vet.reservation", "board_confirm",
-                    [w.id, date, minute, chosen, doctor, notify, endMinute]);
+                    [w.id, date, minute, chosen, doctor, notify, endMinute, force]);
                 const room = this.roomChoices.find((r) => r.id === chosen)?.name || "";
                 this.notification.add("Potvrzeno: " + shortDayLabel(date) + " · " + room, { type: "success" });
                 await this.afterChange(date);

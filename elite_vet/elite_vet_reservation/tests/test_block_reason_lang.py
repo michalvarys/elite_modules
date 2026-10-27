@@ -32,10 +32,12 @@ class TestBlockReasonLanguage(ReservationCase):
             lang="de_DE", default_kind="block", default_state="confirmed")
         with Form(Model) as form:
             form.block_reason = "Mittagspause T22"
-            form.room_id = self.room1
+            form.block_room_ids.clear()
+            form.block_room_ids.add(self.room1)
             form.start = self.dt(THU, 12)
             form.stop = self.dt(THU, 13)
         block = form.record
+        self.assertEqual(block.room_id, self.room1)
         for lang in ("cs_CZ", "en_US", "de_DE"):
             self.assertEqual(block.with_context(lang=lang).block_reason, "Mittagspause T22", lang)
         self.assertEqual(block.name, "Mittagspause T22")

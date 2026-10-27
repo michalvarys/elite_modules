@@ -1073,3 +1073,18 @@ z 2235. Září 2026 sedí s ruční uzávěrkou: nové úhrady hotově / kartou
 vysvětlení: tři platby z 2. 9. (262 hotově, 120 + 250 kartou) patří k dokladům, které ve WinVetu už
 neexistují (zkouška před spuštěním), a převod 1 713 z 21. 9. je úhrada nového dokladu s řádkem
 „Převod nedoplatku“ k neuhrazenému dokladu z 18. 9. – ruční uzávěrka ten nový doklad nemá.
+
+## Doplnění: blokace ve více ordinacích a „Přesto přesunout“ (27. 10.)
+
+- **Nová blokace** má místo jedné ordinace zaškrtávátka **Ordinace** (předvyplněné všechny). Blokace
+  se založí v každé zaškrtnuté ordinaci; zaškrtnuté všechny = jedna blokace celé kliniky (jako dřív
+  prázdná ordinace). Týdenní opakování platí pro každou ordinaci zvlášť. Hotová blokace se dál upravuje
+  po jednotlivých ordinacích.
+- **Přesun / potvrzení na tabuli** (Ordinace i Tabule v pokladně): když v cílové ordinaci a čase
+  neslouží lékařka, která úkon dělá, nebo se úkon v té ordinaci nedělá, dialog chybu ukáže a nabídne
+  tlačítko **Přesto přesunout** (u žádosti **Přesto potvrdit**). Lékařka u rezervace zůstane, do historie
+  rezervace se zapíše „Přesunuto i přes upozornění: …“. Kolize s jinou rezervací nebo úplnou blokací se
+  obejít nedá.
+
+Upgrade: `-u elite_vet_reservation,elite_vet_reception` (18.0.2.12.0, 18.0.1.18.0), žádná změna dat ani
+mostu. V pokladně a v Ordinacích obnovit stránku natvrdo (Ctrl+Shift+R).

@@ -38,10 +38,15 @@
                 </label>
                 <div t-if="!state.notify" class="o_ev_move_mail_off">Klient e-mail nedostane – v historii rezervace zůstane poznámka.</div>
             </div>
-            <div t-if="state.error" class="alert alert-danger o_ev_move_error mb-0" role="alert" t-esc="state.error"/>
+            <div t-if="state.error" class="alert alert-danger o_ev_move_error mb-0" role="alert">
+                <span t-esc="state.error"/>
+                <div t-if="state.canForce" class="o_ev_move_force_text">Můžete to přesto udělat – v historii rezervace zůstane poznámka.</div>
+            </div>
             <t t-set-slot="footer">
                 <button class="btn btn-primary o_ev_move_confirm" t-att-disabled="state.busy or unchanged"
-                        t-on-click="confirm" t-esc="props.confirmLabel"/>
+                        t-on-click="() => this.confirm()" t-esc="props.confirmLabel"/>
+                <button t-if="state.canForce" class="btn btn-warning o_ev_move_force" t-att-disabled="state.busy"
+                        t-on-click="() => this.confirm(true)" t-esc="forceLabel"/>
                 <button class="btn btn-secondary" t-att-disabled="state.busy" t-on-click="props.close">Zrušit</button>
             </t>
         </Dialog>
