@@ -1096,6 +1096,9 @@ Větev `feature/elite-vet-styly-galerie`. Upgrade jedním během:
   v každém jazyce. V logu: `Zamrzla galerie nahrazena blokem Galerie v: …` (nebo nic, když kopie není).
 * **Jazyková brána** se ukáže jen při první návštěvě: volbu drží `localStorage` + cookie
   `ev_lang_chosen` (rok); server bránu při cookie nevykreslí.
+* **Tlačítko Kontakt** v hlavičce (PC) vede na `/#kontakt` (sekce kontaktů na domovské stránce,
+  s jazykovou předponou) místo `tel:`. Na mobilu je dál schované. `galerie.js` po doplnění fotek
+  znovu dorovná stránku na kotvu, jinak by `#kontakt` z jiné stránky dojel o výšku galerie výš.
 
 Kontrola – domovská stránka nesmí mít vlastní kopii z editoru, jinak se na ni změny šablony
 neprojeví (`stary_skript` musí být `f`):

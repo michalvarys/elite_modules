@@ -41,6 +41,7 @@ publicWidget.registry.EliteVetGalerie = publicWidget.Widget.extend({
             item.append(img);
             this.track.append(item);
         }
+        this._keepAnchor();
         this._updateArrows = this._updateArrows.bind(this);
         this.track.addEventListener("scroll", this._updateArrows, { passive: true });
         window.addEventListener("resize", this._updateArrows);
@@ -77,6 +78,18 @@ publicWidget.registry.EliteVetGalerie = publicWidget.Widget.extend({
 
     _onNext() {
         this._scroll(1);
+    },
+
+    /**
+     * Prohlizec skoci na kotvu (/#kontakt) driv, nez sem prijdou fotky.
+     * Pas pak naroste a cil odjede dolu, takze se na nej dorovna znovu.
+     */
+    _keepAnchor() {
+        const id = decodeURIComponent(location.hash.slice(1));
+        const cil = id && document.getElementById(id);
+        if (cil && this.el.compareDocumentPosition(cil) & Node.DOCUMENT_POSITION_FOLLOWING) {
+            cil.scrollIntoView();
+        }
     },
 
     _updateArrows() {

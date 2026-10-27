@@ -513,7 +513,7 @@ transition: filter .2s, box-shadow .2s, transform .2s; }
     /* o polozku v menu vic (Nas tym) — stahnout mezery, at se to do listy vejde */
     .ev-topbar-nav { gap: 13px; }
     /* textovy odkaz Kontakt duplikuje zeleny Kontakt button vedle — na uzkem PC ho schovame, jinak nav dosedne na logo */
-    .ev-topbar-nav > a[href$="#kontakt"] { display: none; }
+    .ev-topbar-nav > a[href$="#kontakt"]:not(.ev-call--topbar) { display: none; }
     .ev-topbar-nav a { font-size: 13.5px; white-space: nowrap; }
     .ev-call--topbar > summary { padding: 9px 14px; }
     .ev-services-grid { grid-template-columns: repeat(2, 1fr); }
