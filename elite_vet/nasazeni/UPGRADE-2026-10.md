@@ -991,3 +991,20 @@ s nadpisy. Šablonu v ostré databázi nevkládejte (zapsala by se do záznamu).
 jinou adresu nechá. Nový vypínač **Posílat klinice upozornění** (Rezervace › Konfigurace ›
 Nastavení rezervace) – vypnuté = klinice nechodí nic, klientům e-maily chodí dál.
 Kontrola: `SELECT booking_notify_enabled, booking_notify_email FROM elite_vet_setting;`
+
+## Doplnění: laboratorní výsledky z WinVetu jako tabulka (27. 10.)
+
+Výsledky krve z WinVetu (ProCyte apod.) se v historii karty i ve zprávě z vyšetření rozpadaly na
+jednu hodnotu na řádek. Most je teď skládá zpět po řádcích (parametr, výsledek, jednotka, meze)
+a Odoo je zobrazí i vytiskne jako tabulku. Větev `feature/elite-vet-winvet-tables`.
+
+1. **Odoo:** `-u elite_vet_clinic` (bez migrace, jen zobrazení), pak v prohlížeči Ctrl+Shift+R.
+2. **Most na PC s WinVetem:** nahradit složku mostu obsahem `modules/elite_vet/winvet_bridge`
+   (`config.ini`, stav a `verified.json` beze změny). `check` ukáže `bridge_version : 4.0.1`.
+3. **Jednou plný běh** `py -m winvet_bridge --config config.ini sync --full` – přepíše texty
+   už přenesených návštěv (jinak se opraví až při další změně návštěvy ve WinVetu). Na lokální
+   kopii z 26. 10.: 1265 návštěv, z toho 526 s tabulkou.
+
+Kontrola: karta pacienta s krevním vyšetřením z WinVetu → v historii rozbalit návštěvu – tabulka
+Metoda / Výsledek / Jednotka / Dolní mez / Horní mez; tisk zprávy totéž.
+

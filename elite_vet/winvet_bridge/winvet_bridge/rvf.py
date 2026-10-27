@@ -13,6 +13,11 @@ starts with a header line of 6 or 7 space separated fields::
   binary ``TPF0`` component streams that may include line breaks, so their line counts are not
   trusted: everything is skipped until the next line that is (or ends with) a record header. Table
   cells are nested RVF documents; their text items are extracted like any other text item.
+* Tables (``TRVTableItem``): the component stream holds the size (``C <rows> <cols>`` as Delphi
+  integers) and every cell starts with ``<colspan> <rowspan> "TD"``. The cells of a table with two
+  or more columns are put back on their rows: one line per row, cells separated by a tab (lab
+  results). Single column tables (frames around text) stay ordinary paragraphs. A table whose
+  structure does not add up is flattened (one paragraph per cell) as before.
 
 A header may be glued to the end of a binary line (``<binary>0 27 0 0 0 0``) - such trailing
 headers are detected too. The converter never raises; it returns ``None`` when nothing readable
@@ -43,6 +48,11 @@ _HEX_RE = re.compile(r"(?:[0-9A-Fa-f]{4})+")
 _BINARY_RE = re.compile("TPF0|TRV[A-Z][a-z]|TRichView")
 #: Control characters and U+FFFD (bytes undefined in WIN1250).
 _BAD_CHAR_RE = re.compile("[\\x00-\\x08\\x0a-\\x1f\\x7f-\\x9f\\ufffd]")
+#: Delphi binary integers: ``\x02`` + 1 byte (Int8) or ``\x03`` + 2 bytes little endian (Int16).
+_INT = "(?:\x02(.)|\x03(..))"
+_TABLE_SIZE_RE = re.compile(f"\x01C{_INT}{_INT}\x01", re.S)
+_TABLE_CELL_RE = re.compile(f"{_INT}{_INT}\x02TD\x00", re.S)
+CELL_SEPARATOR = "\t"
 #: Upper bound for the line count of one text item (protects against garbage headers).
 MAX_ITEM_LINES = 100000
 
@@ -95,14 +105,84 @@ def _clean_line(line: str) -> Optional[str]:
     return _BAD_CHAR_RE.sub("", line.replace("\t", " ")).rstrip()
 
 
+def _int(short: Optional[str], long: Optional[str]) -> Optional[int]:
+    """Value of a Delphi Int8 / Int16 decoded from WIN1250 (``None`` when a byte got lost)."""
+    try:
+        raw = (short if short is not None else long).encode("cp1250")
+    except (UnicodeEncodeError, AttributeError):
+        return None
+    return int.from_bytes(raw, "little", signed=True)
+
+
+class _Table:
+    """Cells of one table, collected while its component stream and nested documents are read."""
+
+    def __init__(self, rows: int, cols: int):
+        self.rows, self.cols = rows, cols
+        self.cells: List[tuple] = []  # (colspan, rowspan, paragraphs)
+        self.area = 0
+
+    @property
+    def complete(self) -> bool:
+        return self.area >= self.rows * self.cols
+
+    def add_cell(self, colspan: Optional[int], rowspan: Optional[int]) -> bool:
+        if not colspan or not rowspan or colspan < 1 or rowspan < 1 or self.complete:
+            return False
+        self.cells.append((colspan, rowspan, []))
+        self.area += colspan * rowspan
+        return True
+
+    def paragraphs(self) -> List[str]:
+        if self.cols < 2 or self.area != self.rows * self.cols:
+            return [p for _c, _r, cell in self.cells for p in cell]
+        grid = [[None] * self.cols for _ in range(self.rows)]
+        cursor = 0
+        for colspan, rowspan, cell in self.cells:
+            while cursor < self.rows * self.cols and grid[cursor // self.cols][cursor % self.cols] is not None:
+                cursor += 1
+            if cursor >= self.rows * self.cols:
+                return [p for _c, _r, c in self.cells for p in c]
+            row, col = divmod(cursor, self.cols)
+            for r in range(row, min(row + rowspan, self.rows)):
+                for c in range(col, min(col + colspan, self.cols)):
+                    grid[r][c] = ""
+            grid[row][col] = " ".join(p.strip() for p in cell if p.strip())
+        out = []
+        for row in grid:
+            cells = [c or "" for c in row]
+            while cells and not cells[-1]:
+                cells.pop()
+            if cells:
+                out.append(CELL_SEPARATOR.join(cells))
+        return out
+
+
 def _extract(text: str) -> List[str]:
     lines = text.split("\r\n")
     paragraphs: List[str] = []
+    target = paragraphs  # where text items go: the document or the open table cell
+    table: Optional[_Table] = None
     index, total = 0, len(lines)
     while index < total:
         line = lines[index]
         index += 1
         header = _parse_header(line, allow_trailing=True)
+        if header is None or _HEADER_RE.fullmatch(line) is None:
+            # component stream (possibly with a header glued to its end): table structure
+            size = _TABLE_SIZE_RE.search(line)
+            if table is not None and (table.complete or size):
+                paragraphs.extend(table.paragraphs())
+                table, target = None, paragraphs
+            start = 0
+            if size:
+                rows, cols = _int(size.group(1), size.group(2)), _int(size.group(3), size.group(4))
+                if rows and cols and rows > 0 and cols > 0:
+                    table, start = _Table(rows, cols), size.end()
+            if table is not None:
+                for cell in _TABLE_CELL_RE.finditer(line, start):
+                    if table.add_cell(_int(cell.group(1), cell.group(2)), _int(cell.group(3), cell.group(4))):
+                        target = table.cells[-1][2]
         if header is None:
             continue  # content of a skipped (non-text) record
         style, count, para, options, save_type = header
@@ -115,11 +195,13 @@ def _extract(text: str) -> List[str]:
             cleaned = _clean_line(raw)
             if cleaned is None:
                 continue
-            if offset == 0 and continuation and paragraphs:
-                paragraphs[-1] = (paragraphs[-1] + cleaned).rstrip()
+            if offset == 0 and continuation and target:
+                target[-1] = (target[-1] + cleaned).rstrip()
             else:
-                paragraphs.append(cleaned)
+                target.append(cleaned)
         index += count
+    if table is not None:
+        paragraphs.extend(table.paragraphs())
     return paragraphs
 
 

@@ -28,6 +28,31 @@ def czech_date(value):
     return value.strftime("%-d. %-m. %Y") if value else ""
 
 
+def text_blocks(text):
+    """Record text -> blocks for printing: {"text": ...} paragraphs and {"rows": [[cell, ...]]} tables.
+    A table is a run of lines with tab separated cells (WinVet lab results, see winvet_bridge.rvf;
+    a full width title row arrives as an ordinary line above it). The first row of a table is its
+    header when none of its cells holds a digit."""
+    blocks = []
+    for line in (text or "").split("\n"):
+        if "\t" in line:
+            if not blocks or "rows" not in blocks[-1]:
+                blocks.append({"rows": [], "cols": 0, "header": False})
+            blocks[-1]["rows"].append(line.split("\t"))
+        elif blocks and "text" in blocks[-1]:
+            blocks[-1]["text"] += "\n" + line
+        else:
+            blocks.append({"text": line})
+    for block in blocks:
+        if "rows" in block:
+            block["cols"] = max(len(row) for row in block["rows"])
+            first = block["rows"][0]
+            block["header"] = len(first) > 1 and not any(ch.isdigit() for cell in first for ch in cell)
+        else:
+            block["text"] = block["text"].strip("\n")
+    return [b for b in blocks if b.get("rows") or b.get("text")]
+
+
 def czech_number(value, digits):
     """12.50 -> '12,5'; 3.0 -> '3'."""
     return ("%.*f" % (digits, value)).rstrip("0").rstrip(".").replace(".", ",")
@@ -212,6 +237,7 @@ class ClinicalRecordVisitReport(models.Model):
             # (the deprecated anamnesis / examination / diagnosis are never printed)
             "vitals_rows": [" · ".join(vitals)] if vitals else [],
             "record_text": (rec.record_text or "").strip(),
+            "record_blocks": text_blocks((rec.record_text or "").strip()),
             "case": "",
             "diagnosis": "",
             "lines": lines,
@@ -298,6 +324,7 @@ class WinvetVisitReport(models.Model):
             "visit_time": short_time(visit.time) or "",
             "vitals_rows": self._visit_report_vitals(),
             "record_text": notes,
+            "record_blocks": text_blocks(notes),
             "case": case,
             "diagnosis": diagnosis,
             "lines": lines,

@@ -126,7 +126,16 @@
                     <div t-if="r['vitals_rows'] or r['record_text']" class="evr-section evr-record-text">
                         <h2>Záznam z vyšetření</h2>
                         <div t-foreach="r['vitals_rows']" t-as="row" class="evr-vitals" t-out="row"/>
-                        <div t-if="r['record_text']" class="evr-text" t-out="r['record_text']" t-options="{'widget': 'text'}"/>
+                        <!-- lab results from WinVet (tab separated rows) print as a table -->
+                        <t t-foreach="r.get('record_blocks') or []" t-as="block">
+                            <div t-if="block.get('text')" class="evr-text" t-out="block['text']" t-options="{'widget': 'text'}"/>
+                            <table t-else="" class="evr-data">
+                                <tr t-foreach="block['rows']" t-as="row" t-att-class="'evr-data-head' if block['header'] and row_first else None">
+                                    <td t-foreach="row" t-as="cell" t-out="cell"
+                                        t-att-colspan="block['cols'] - len(row) + 1 if cell_last and len(row) &lt; block['cols'] else None"/>
+                                </tr>
+                            </table>
+                        </t>
                     </div>
                     <!-- WinVet visit only: the diagnosis / case of the visit -->
                     <div t-if="r['diagnosis']" class="evr-section evr-diagnosis">

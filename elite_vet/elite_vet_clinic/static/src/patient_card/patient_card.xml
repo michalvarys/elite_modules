@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
+    <!-- A record text: paragraphs (line breaks kept) and tables (WinVet lab results, tab separated). -->
+    <t t-name="elite_vet_clinic.TextBlocks">
+        <t t-foreach="textBlocks(text)" t-as="block" t-key="block_index">
+            <div t-if="block.text" class="evpc-notes-text" t-esc="block.text"/>
+            <div t-else="" class="evpc-data-wrap">
+                <table class="evpc-data">
+                    <tr t-foreach="block.rows" t-as="row" t-key="row_index" t-att-class="{'evpc-data-head': block.header and row_first}">
+                        <td t-foreach="row" t-as="cell" t-key="cell_index" t-esc="cell"
+                            t-att-colspan="cell_last and row.length &lt; block.cols ? block.cols - row.length + 1 : undefined"/>
+                    </tr>
+                </table>
+            </div>
+        </t>
+    </t>
+
     <!-- Popover list with a search field (templates, bundles, price list items). -->
     <t t-name="elite_vet_clinic.Picker">
         <div class="evpc-pop" t-att-class="props.align === 'right' ? 'evpc-pop-right' : ''" t-ref="root">
@@ -246,7 +261,9 @@
                                                 <div t-if="e.case_name and e.case_name !== e.diagnosis" class="evpc-tl-sub">Případ: <t t-esc="e.case_name"/></div>
                                                 <div t-if="e.vitals_summary" class="evpc-tl-vitals evpc-num" t-esc="e.vitals_summary"/>
                                                 <t t-if="e.notes">
-                                                    <div class="evpc-notes" t-att-class="{'evpc-notes-clip': isLongNotes(e.notes) and !state.showAll[entryKey(e)]}" t-esc="e.notes"/>
+                                                    <div class="evpc-notes" t-att-class="{'evpc-notes-clip': isLongNotes(e.notes) and !state.showAll[entryKey(e)]}">
+                                                        <t t-call="elite_vet_clinic.TextBlocks"><t t-set="text" t-value="e.notes"/></t>
+                                                    </div>
                                                     <button t-if="isLongNotes(e.notes)" type="button" class="evpc-link small" t-on-click="() => this.toggleShowAll(e)">
                                                         <t t-if="state.showAll[entryKey(e)]">Zobrazit méně</t><t t-else="">Zobrazit vše</t>
                                                     </button>
@@ -256,7 +273,9 @@
                                             <t t-if="e.type === 'record'">
                                                 <div t-if="e.vitals_summary" class="evpc-tl-vitals evpc-num" t-esc="e.vitals_summary"/>
                                                 <t t-if="e.record_text">
-                                                    <div class="evpc-notes" t-att-class="{'evpc-notes-clip': isLongNotes(e.record_text) and !state.showAll[entryKey(e)]}" t-esc="e.record_text"/>
+                                                    <div class="evpc-notes" t-att-class="{'evpc-notes-clip': isLongNotes(e.record_text) and !state.showAll[entryKey(e)]}">
+                                                        <t t-call="elite_vet_clinic.TextBlocks"><t t-set="text" t-value="e.record_text"/></t>
+                                                    </div>
                                                     <button t-if="isLongNotes(e.record_text)" type="button" class="evpc-link small" t-on-click="() => this.toggleShowAll(e)">
                                                         <t t-if="state.showAll[entryKey(e)]">Zobrazit méně</t><t t-else="">Zobrazit vše</t>
                                                     </button>
