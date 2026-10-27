@@ -14,6 +14,7 @@
                 <field name="item_code" optional="show"/>
                 <field name="item_name"/>
                 <field name="kind"/>
+                <field name="payment_method" optional="show"/>
                 <field name="quantity" sum="Celkem"/>
                 <field name="unit" optional="show"/>
                 <field name="currency_id" column_invisible="1"/>
@@ -82,6 +83,7 @@
                     <filter name="group_week" string="Týden" context="{'group_by': 'date:week'}"/>
                     <filter name="group_day" string="Den" context="{'group_by': 'date:day'}"/>
                     <filter name="group_kind" string="Druh položky" context="{'group_by': 'kind'}"/>
+                    <filter name="group_payment_method" string="Forma úhrady" context="{'group_by': 'payment_method'}"/>
                     <filter name="group_item" string="Položka" context="{'group_by': 'item_name'}"/>
                     <filter name="group_user" string="Zapsal(a)" context="{'group_by': 'entered_by_id'}"/>
                     <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
@@ -149,6 +151,7 @@
                 <field name="currency_id" column_invisible="1"/>
                 <field name="total" sum="Celkem"/>
                 <field name="paid" sum="Celkem"/>
+                <field name="payment_method" optional="show"/>
                 <field name="from_deposit" optional="hide" sum="Celkem"/>
                 <field name="state" optional="hide"/>
                 <field name="entered_by_id" optional="show"/>
@@ -225,6 +228,7 @@
                 <group expand="0" string="Seskupit">
                     <filter name="group_month" string="Měsíc" context="{'group_by': 'date:month'}"/>
                     <filter name="group_type" string="Typ" context="{'group_by': 'doc_type_name'}"/>
+                    <filter name="group_payment_method" string="Forma úhrady" context="{'group_by': 'payment_method'}"/>
                     <filter name="group_user" string="Založil(a)" context="{'group_by': 'entered_by_id'}"/>
                     <filter name="group_partner" string="Majitel" context="{'group_by': 'partner_id'}"/>
                 </group>

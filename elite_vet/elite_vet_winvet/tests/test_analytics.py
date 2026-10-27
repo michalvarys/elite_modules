@@ -66,6 +66,38 @@ class TestAnalytics(WinvetCase):
         self.assertEqual(self.find("elite.vet.payment", 72).method_code, "dob")
         self.assertEqual(self.find("elite.vet.sale.document", 50).payment_ids.mapped("amount"), [60, 30, 10])
 
+    def test_payment_method_of_account_and_lines(self):
+        """The owner account (UM) gets the payment method of its receipt (PODP); lines follow."""
+        doc = {"owner_id": self.ref(1), "date": "2026-09-10", "from_deposit": 0, "state": "U", "entered_by": None}
+        self.push("sale_documents", [
+            dict(doc, id=self.ref(50), type="UM", number="UM-50", parent_id=None, total=850, paid=850),
+            dict(doc, id=self.ref(51), type="UM", number="UM-51", parent_id=None, total=99, paid=0),
+        ])
+        self.push("sale_lines", [self.line(60, 20, 600), self.line(61, 21, 250),
+                                 self.line(62, 20, 99, document_id=self.ref(51))])
+        account, unpaid = self.find("elite.vet.sale.document", 50), self.find("elite.vet.sale.document", 51)
+        self.assertEqual((account.payment_method, unpaid.payment_method), ("unpaid", "unpaid"))
+        self.push("sale_documents", [
+            dict(doc, id=self.ref(52), type="PODP", number="P-52", parent_id=self.ref(50), total=850, paid=850),
+            dict(doc, id=self.ref(53), type="PODP", number="P-53", parent_id=self.ref(51), total=99, paid=0),
+        ])
+        pay = {"owner_id": self.ref(1), "date": "2026-09-10", "time": "09:30:00", "from_deposit": 0, "state": "U",
+               "refunded_date": None}
+        self.push("payments", [dict(pay, id=self.ref(70), document_id=self.ref(52), method="PLATK", amount=850),
+                               # a zero payment = recorded method but nothing paid (WinVet "bez úhrady")
+                               dict(pay, id=self.ref(71), document_id=self.ref(53), method="HOT", amount=0)])
+        self.assertEqual(account.payment_method, "card")
+        self.assertEqual(self.find("elite.vet.sale.document", 52).payment_method, "card")
+        self.assertEqual(unpaid.payment_method, "unpaid")
+        self.assertEqual(self.find("elite.vet.sale.line", 60).payment_method, "card")
+        self.assertEqual(self.find("elite.vet.sale.line", 62).payment_method, "unpaid")
+        self.push("payments", [dict(pay, id=self.ref(72), document_id=self.ref(52), method="HOT", amount=1)])
+        self.assertEqual(account.payment_method, "mixed")
+        groups = self.env["elite.vet.sale.line"].read_group(
+            [("id", "in", [self.find("elite.vet.sale.line", n).id for n in (60, 61, 62)])],
+            ["amount:sum"], ["payment_method"], lazy=False)
+        self.assertEqual({g["payment_method"]: g["amount"] for g in groups}, {"mixed": 850, "unpaid": 99})
+
     def test_analytics_views_load(self):
         actions = ["action_sale_line", "action_sale_line_services", "action_sale_line_products",
                    "action_sale_document", "action_payment", "action_visit", "action_vaccination",

@@ -1,6 +1,11 @@
 from odoo import api, fields, models
 
 from .item import KINDS
+from .payment import METHODS
+
+#: How a document was paid (grouping in the analytics). An owner account (UM) is paid through its
+#: receipt (PODP, parent_id = the account); documents without a non-zero payment are "unpaid".
+PAYMENT_METHODS = METHODS + [("mixed", "Kombinovaně"), ("unpaid", "Bez úhrady")]
 
 DOC_TYPES = {"UM": "Účet majitele", "PODP": "Doklad PODP", "FAV": "Faktura vydaná", "VRAT": "Vratka"}
 
@@ -34,10 +39,23 @@ class VetSaleDocument(models.Model):
     entered_by_winvet_ref = fields.Integer(string="ID uživatele ve WinVetu", readonly=True)
     line_ids = fields.One2many("elite.vet.sale.line", "document_id", string="Položky", readonly=True)
     payment_ids = fields.One2many("elite.vet.payment", "document_id", string="Platby", readonly=True)
+    child_ids = fields.One2many("elite.vet.sale.document", "parent_id", string="Navazující doklady", readonly=True)
+    payment_method = fields.Selection(
+        PAYMENT_METHODS, string="Forma úhrady", compute="_compute_payment_method", store=True, index=True,
+        help="Podle plateb dokladu; účet majitele podle plateb jeho příjmového dokladu (PODP). "
+             "Bez úhrady = žádná platba s nenulovou částkou.")
 
     _sql_constraints = [
         ("winvet_ref_uniq", "unique(winvet_ref)", "Doklad s tímto ID z WinVetu už existuje."),
     ]
+
+    @api.depends("payment_ids.method", "payment_ids.amount", "child_ids.payment_ids.method",
+                 "child_ids.payment_ids.amount")
+    def _compute_payment_method(self):
+        for rec in self:
+            payments = rec.payment_ids | rec.child_ids.filtered(lambda d: d.doc_type == "PODP").payment_ids
+            methods = set(payments.filtered(lambda p: p.amount and p.method).mapped("method"))
+            rec.payment_method = methods.pop() if len(methods) == 1 else ("mixed" if methods else "unpaid")
 
     @api.depends("doc_type")
     def _compute_doc_type_name(self):
@@ -80,6 +98,8 @@ class VetSaleLine(models.Model):
                                     readonly=True)
     entered_by_winvet_ref = fields.Integer(string="ID uživatele ve WinVetu", readonly=True)
     doctor_id = fields.Many2one(related="entered_by_id.doctor_id", string="Lékařka", store=True, index=True)
+    payment_method = fields.Selection(related="document_id.payment_method", string="Forma úhrady", store=True,
+                                      index=True)
 
     _sql_constraints = [
         ("winvet_ref_uniq", "unique(winvet_ref)", "Položka dokladu s tímto ID z WinVetu už existuje."),
