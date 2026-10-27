@@ -293,3 +293,10 @@ smaže. Pro kalendář na tabuli proto používejte most na PC s WinVetem (`sync
 může v Odoo vypnout (WinVet data → Kalendář z WinVetu → Zapnout / vypnout), pak se neukládá.
 Do `/opt/winvet-import/` zkopírujte i nový `verified.json` (skupina otisků `calendar`), jinak zůstane
 kalendář blokovaný.
+
+## Zálohy klientů (most 5.0.0)
+
+Plná synchronizace ze zálohy posílá i zálohy klientů (`deposits`, `deposit_uses`) a formu úhrady
+dokladů. Most 5.0.0 čte nový sloupec `DOKLAD.FORMA_UHRADY` a triggery žurnálu u `PARTNER_ZALOHA`, takže
+se změnily otisky `sales` a `journal` a přibyla skupina `deposits`: do `/opt/winvet-import/`
+zkopírujte spolu s mostem **nový `verified.json`**, jinak budou tržby a zálohy blokované.

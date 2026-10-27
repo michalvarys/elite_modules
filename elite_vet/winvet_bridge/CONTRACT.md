@@ -1,4 +1,4 @@
-# WinVet bridge ⇄ Odoo contract (v1 + v2 + v3 + v4, see the sections below)
+# WinVet bridge ⇄ Odoo contract (v1 + v2 + v3 + v4 + v5, see the sections below)
 
 The bridge (`elite_vet/winvet_bridge`, standalone Python) reads WinVet (Firebird, read-only) and
 pushes JSON to the Odoo module `elite_vet_winvet`. This file is the single source of truth for the
@@ -396,3 +396,65 @@ blocks the calendar until `approve` (verified for 2603 on the analysis copy: `df
 Sizes v4 (analysis copy, data until 16. 11. 2026): calendar_resources 4, calendar_activities 44,
 calendar_events 203 in the default window from 24. 10. (1091 for 26. 8. – 24. 11.; KALENDAR_NEW has
 1005 rows: 964 plain, 12 patterns, 14 changed, 15 deleted occurrences).
+
+
+## Contract v5 additions (client deposits, 2026-10-27)
+
+Bridge version 5.0.0. Two new entities appended to the push order (v5): `…, calendar_resources,
+calendar_activities, calendar_events, deposits, deposit_uses`, and one new key on `sale_documents`.
+**v4 receivers answer `{"ok": false, "error": "unknown entity"}` for the deposits → the bridge skips
+them** (v2 forward compatibility) and ignore the new document key; nothing else changes. A v5 receiver
+with an older bridge simply gets no deposits and keeps the stored `recorded_method` of documents.
+
+### How WinVet keeps deposits (analysis copy, 26. 10. 2026; sums and counts only)
+
+- A received deposit is a `PARTNER_ZALOHA` row (`CASTKA`, `DATUM`, `FORMA_UHRADY` of the receipt,
+  `ZNAMENKO` = 1 on every row, `ID_DOKLAD` = -1 = no document). It is **not** a `PLATBA` row
+  (`PLATBA.ID_PARTNER_ZALOHA` is -1 on all 1121 rows).
+- Using it in a document is a `PARTNER_ZALOHA_CERPANI` row (`ID_DOKLAD`, `DOKLAD` = document number,
+  `DATUM`, `CASTKA`); the payment of that document carries the same amount in `ZE_ZALOHY`
+  (`payments.from_deposit`) – the deposit use is not new money.
+- A refund only fills `VRACENO` / `VRACENO_DATUM` (and `ST = 'E'`, `ID_VRATIL`). There is no refund
+  method column; the cash handover view `VIEW_PREDANI_PENEZ_DOKLAD` lists refunded deposits as cash
+  movements. `PLATBA.DATUM_VRACENO` / `FORMA_UHRADY_VRACENO` / `CAS_VRACENO` are empty on every row
+  (refunds of documents are `VRAT` documents), so `payments` get no refund keys in v5.
+- `CASTKA = CERPANO + VRACENO + ZUSTATEK` holds on every row; `CERPANO` = sum of the uses of the
+  deposit. `CERPANO` / `VRACENO` / `ZUSTATEK` are the **current** state, not the state at a date.
+
+### deposits  [PARTNER_ZALOHA where ID_PARTNER_ZALOHA > 0] – journaled (ZURNAL.TABULKA = PARTNER_ZALOHA)
+`id` (ID_PARTNER_ZALOHA), `owner_id` (ID_PARTNER), `date` (DATUM), `amount` (CASTKA), `sign`
+(ZNAMENKO, raw int), `method` (FORMA_UHRADY mapped like payments: HOT cash, PLATK card, PREV transfer,
+other codes lower-cased), `document_id` (ID_DOKLAD, 0/negative → `null`), `used` (CERPANO),
+`refunded` (VRACENO), `refunded_date` (VRACENO_DATUM), `balance` (ZUSTATEK), `note` (POZNAMKA, short
+text, may be personal), `state` (ST, raw).
+
+### deposit_uses  [PARTNER_ZALOHA_CERPANI] – not journaled → always `mode=full`
+`id` (ID_PARTNER_ZALOHA_CERPANI), `deposit_id` (ID_PARTNER_ZALOHA), `document_id` (ID_DOKLAD → a
+`sale_documents` id, 0/negative → `null`), `document_number` (DOKLAD), `date` (DATUM), `amount`
+(CASTKA), `state` (ST, raw).
+
+### sale_documents (+1 key)
+`method` (DOKLAD.FORMA_UHRADY, mapped like payments, may be `null`): the method written on the
+document. For a `VRAT` it says how the refund was paid out (VRAT documents have no `PLATBA` rows; the
+amount paid out is `paid`); for a document without payment it is only the chosen method.
+
+### Journal
+`PARTNER_ZALOHA → deposits` (`ZURNAL.ID_ZAZNAM` = ID_PARTNER_ZALOHA, verified: every I/U row matches
+an existing deposit or a later deleted one). `deposit_uses` joins the always-full set.
+
+### Guard
+New fingerprint group `deposits` (PARTNER_ZALOHA, PARTNER_ZALOHA_CERPANI); a change blocks only the
+two deposit entities. Re-approved for 2603 on the analysis copy (both copies give the same values):
+`deposits` `332c71f2ff192fe8`, `sales` `8c0a07549f67767a` (DOKLAD.FORMA_UHRADY is now read),
+`journal` `bd584dd4978d39b4` (the PARTNER_ZALOHA triggers writing ZURNAL are now covered). A bridge
+5.0.0 with the `verified.json` of 4.x therefore blocks the sales entities and the deposits and runs
+the journal as a full sync – **replace `verified.json` together with the bridge**.
+
+### Odoo side
+- `elite.vet.deposit` (upsert by id, deleted ids and journal `D` delete the row – analytic data,
+  not master data), `elite.vet.deposit.use` (full reconciliation); owner, deposit and document
+  links resolved by the usual fixups. `refund_method` is stored as `cash` when `refunded` ≠ 0.
+- `elite.vet.sale.document.recorded_method` from `method`; written only when the key is present.
+
+Sizes v5 (analysis copy, data until 26. 10. 2026): deposits 38 (19 000 Kč received in September),
+deposit_uses 34.

@@ -47,11 +47,12 @@ Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje
    `check` vypíše verzi WinVetu, otisky schématu a blokované entity (Odoo nekontaktuje).
    `--dry-run` data jen načte a spočítá dávky, nic neodesílá a neukládá stav.
 
-## Co se přenáší (kontrakt v2, most 2.0.0; v3 sklad, v4 kalendář)
+## Co se přenáší (kontrakt v2, most 2.0.0; v3 sklad, v4 kalendář, v5 zálohy)
 
 Pořadí entit: `users, items, owners, contacts, patients, vaccinations, visits, vitals,
 sale_documents, sale_lines, payments, bundles, bundle_lines, phrases, stock_lots, stock_totals,
-calendar_resources, calendar_activities, calendar_events` (podrobně v `CONTRACT.md`).
+calendar_resources, calendar_activities, calendar_events, deposits, deposit_uses` (podrobně
+v `CONTRACT.md`).
 
 Novinky v2:
 
@@ -145,6 +146,23 @@ nssm start WinVetBridge
 Režim `run` si sám hlídá interval i denní plný běh (po výpadku PC plný běh doběhne hned po startu)
 a mezi běhy posílá kalendář každých `calendar_interval_minutes` (výchozí 5) – třetí úloha tu není potřeba.
 
+## Zálohy klientů (kontrakt v5, most 5.0.0)
+
+- `deposits` – zálohy (`PARTNER_ZALOHA`): klient, datum, částka, forma přijetí, čerpáno, vráceno
+  (+ datum), zůstatek, krátká poznámka. Tabulka je v žurnálu změn → přírůstkově jako ostatní.
+- `deposit_uses` – čerpání záloh do dokladů (`PARTNER_ZALOHA_CERPANI`), není v žurnálu → při každém
+  běhu celé.
+- `sale_documents` + `method` – forma úhrady zapsaná na dokladu (`DOKLAD.FORMA_UHRADY`); u vratky
+  (VRAT) říká, jak se peníze vracely.
+- Přijatá záloha ve WinVetu **není platba** (`PLATBA`), čerpání se v platbě dokladu objeví jako „ze
+  zálohy“. Vrácení zálohy nemá ve WinVetu formu úhrady – vede se jako hotovostní pohyb.
+- **Kontrola verze:** nová skupina otisků `deposits`; zároveň se změnily otisky `sales` (čte se
+  `DOKLAD.FORMA_UHRADY`) a `journal` (triggery žurnálu u `PARTNER_ZALOHA`). Most 5.0.0 se starým
+  `verified.json` by zablokoval tržby a zálohy – **`verified.json` vždy nahradit spolu s mostem**
+  (v repozitáři ověřený pro WinVet 2603).
+- **Starší Odoo** (bez záloh) odpoví `unknown entity` – most zálohy přeskočí a pokračuje; nový klíč
+  dokladu staré Odoo ignoruje.
+
 ## Kontrola verze WinVetu (guard)
 
 Program si u každého běhu přečte číslo verze WinVetu (`VERZE.VERZE`, nyní `2603`) a spočítá
@@ -163,6 +181,7 @@ neblokuje. Žádná data v otisku nejsou.
 | templates | SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA, FRAZE | bundles, bundle_lines, phrases |
 | stock | DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV | stock_lots (také DOKLAD ze skupiny sales), stock_totals |
 | calendar | KALENDAR_NEW, KALENDAR_NEW_KALENDAR, ORD_CINNOST | calendar_resources, calendar_activities, calendar_events |
+| deposits | PARTNER_ZALOHA, PARTNER_ZALOHA_CERPANI | deposits, deposit_uses |
 | journal | ZURNAL, VERZE | přírůstková synchronizace |
 
 Ověřené verze a jejich otisky jsou v `verified.json`.

@@ -4,15 +4,17 @@
     "2603": {
       "approved": "2026-10-22 09:57:54",
       "calendar_approved": "2026-10-25 (contract v4, analysis copy)",
+      "deposits_approved": "2026-10-27 (contract v5: deposits group, sales + DOKLAD.FORMA_UHRADY, journal + PARTNER_ZALOHA triggers; analysis copy)",
       "engine": "5.0.1",
       "fingerprints": {
         "calendar": "df31de3832520240",
         "catalog": "cac72032339edbfa",
         "clinical": "15d972323c953af3",
-        "journal": "fbbdb23189da0d91",
+        "deposits": "332c71f2ff192fe8",
+        "journal": "bd584dd4978d39b4",
         "owners": "2f9a2363f1b5e868",
         "patients": "0cb68af2ba80384d",
-        "sales": "c2bd7e0a2544b521",
+        "sales": "8c0a07549f67767a",
         "stock": "f2192ca5a59bc5b2",
         "templates": "e0b7163e7162f167"
       },

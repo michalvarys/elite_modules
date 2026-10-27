@@ -128,6 +128,11 @@ class WinvetSync(models.AbstractModel):
     def _winvet_fixups(self):
         return list(FIXUPS)
 
+    @api.model
+    def _winvet_date_keys(self):
+        """Date/datetime keys per entity (bad dates are stored empty and reported)."""
+        return dict(DATE_KEYS)
+
     def _after_full_run(self, entity, stats, errors):
         """Called after the last batch of a complete full run of `entity` was reconciled and
         linked; messages appended to `errors` show in the sync status."""
@@ -172,7 +177,7 @@ class WinvetSync(models.AbstractModel):
             # PostgreSQL rejects NUL characters; an old bridge or odd data must not lose the record.
             records[ref] = {k: v.replace("\x00", "") if isinstance(v, str) else v for k, v in rec.items()}
         bad = ["%s.%s=%s" % (ref, key, rec[key]) for ref, rec in records.items()
-               for key in DATE_KEYS.get(entity, ()) if bad_date(rec.get(key))]
+               for key in self._winvet_date_keys().get(entity, ()) if bad_date(rec.get(key))]
         if bad:
             errors.append("neplatná data uložena jako prázdná: %s%s" % (", ".join(bad[:10]),
                                                                        " …" if len(bad) > 10 else ""))
@@ -543,6 +548,10 @@ class WinvetSync(models.AbstractModel):
                 "state": to_str(r.get("state")),
                 "entered_by_id": users.get(user, False), "entered_by_winvet_ref": user or False,
             }
+            if "method" in r:
+                # contract v5 (DOKLAD.FORMA_UHRADY); an older bridge does not send it - kept as it is
+                code = (to_str(r.get("method")) or "").lower()
+                vals[ref]["recorded_method"] = METHOD_CODES.get(code, "other") if code else False
         self._upsert("elite.vet.sale.document", vals, stats, errors)
 
     def _push_sale_lines(self, records, stats, errors, batch, batches):
@@ -636,7 +645,7 @@ class WinvetSync(models.AbstractModel):
         owner.flush_recordset()
         client.write(vals)
         for model_name in ("elite.vet.pet", "elite.vet.winvet.contact", "elite.vet.sale.document",
-                           "elite.vet.payment"):
+                           "elite.vet.payment", "elite.vet.deposit"):
             self.env[model_name].search([("partner_id", "=", owner.id)]).write({"partner_id": client.id})
         try:
             with self.env.cr.savepoint():

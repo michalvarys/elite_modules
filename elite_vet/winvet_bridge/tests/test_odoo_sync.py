@@ -196,6 +196,22 @@ class SyncRunnerTest(unittest.TestCase):
         self.assertEqual(state.journal_cursor, 100)
         self.assertEqual(state.pending_full, [])
 
+    def test_old_odoo_without_deposits(self):
+        """Contract v5 against an Odoo of v4: both deposit entities are refused and skipped, the run
+        succeeds and the cursor advances; journal changes of PARTNER_ZALOHA are not replayed."""
+        source = FakeSource(journal=[(100, "PARTNER", 1, "U"), (101, "PARTNER_ZALOHA", 2, "U")])
+        self.store.save(BridgeState(journal_cursor=50, last_full_date="2999-01-01"))
+        with FakeOdoo() as odoo:
+            odoo.unknown_entities = {"deposits", "deposit_uses"}
+            report = self.runner(source, odoo).run()
+            entities = [p["entity"] for p in odoo.pushes()]
+        self.assertEqual(entities[-2:], ["deposits", "deposit_uses"])
+        self.assertEqual([e.entity for e in report.entities if e.unsupported], ["deposits", "deposit_uses"])
+        modes = {e.entity: e.mode for e in report.entities}
+        self.assertEqual((modes["deposits"], modes["deposit_uses"]), ("incremental", "full"))
+        state = self.store.load()
+        self.assertEqual((state.journal_cursor, state.pending_full), (101, []))
+
     def test_other_ok_false_still_stops_the_run(self):
         with FakeOdoo() as odoo:
             client = OdooClient(odoo.url, odoo.api_key, timeout=5, retries=0)

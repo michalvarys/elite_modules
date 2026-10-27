@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 33: "Uzávěrka" – cash closure of a period from the WinVet data. Prints only
+         elite.vet.cash.closure.closure_data() (models/cash_closure.py). Managers only.
+         wkhtmltopdf: tables only, no flex / grid (see elite_vet_clinic visit report). -->
+    <record id="paperformat_cash_closure" model="report.paperformat">
+        <field name="name">A4 – uzávěrka</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">18</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+        <field name="css_margins" eval="False"/>
+    </record>
+
+    <record id="report_cash_closure" model="ir.actions.report">
+        <field name="name">Uzávěrka (PDF)</field>
+        <field name="model">elite.vet.cash.closure.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">elite_vet_winvet.report_cash_closure_document</field>
+        <field name="report_file">elite_vet_winvet.report_cash_closure_document</field>
+        <field name="print_report_name">object._closure_filename()</field>
+        <field name="paperformat_id" ref="paperformat_cash_closure"/>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+    </record>
+
+    <template id="report_cash_closure_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="elite_vet_winvet.report_cash_closure_body"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_cash_closure_body">
+        <t t-set="r" t-value="o._closure_data()"/>
+        <t t-set="clinic" t-value="r['clinic']"/>
+        <div class="article evc" data-oe-lang="cs_CZ">
+            <table class="evc-letterhead">
+                <tr>
+                    <td>
+                        <div class="evc-clinic-name" t-out="clinic['name']"/>
+                        <div t-if="clinic['address']" t-out="clinic['address']"/>
+                        <div t-if="clinic['ico'] or clinic['dic']">
+                            <t t-if="clinic['ico']">IČO <t t-out="clinic['ico']"/></t>
+                            <t t-if="clinic['ico'] and clinic['dic']"> · </t>
+                            <t t-if="clinic['dic']">DIČ <t t-out="clinic['dic']"/></t>
+                        </div>
+                    </td>
+                    <td class="evc-head-right">
+                        <div class="evc-title">Pokladní uzávěrka</div>
+                        <div>Období <b t-out="r['period']"/></div>
+                        <div class="evc-muted">Veškeré částky v Kč · data z WinVetu</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- 1. sales by documents -->
+            <div class="evc-section">
+                <h2>1. Tržby podle dokladů</h2>
+                <table class="evc-table">
+                    <thead><tr><th>Doklady</th><th class="evc-num">Počet</th><th class="evc-num">Částka</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="r['doc_rows']" t-as="row">
+                            <td t-out="row['label']"/>
+                            <td class="evc-num" t-out="row['count']"/>
+                            <td class="evc-num" t-out="money(row['amount'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td>Tržby podle dokladů</td>
+                            <td class="evc-num" t-out="r['doc_count']"/>
+                            <td class="evc-num" t-out="money(r['sales_total'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="evc-note">Podle data dokladu a pole Celkem; vratky (VRAT) se odečítají. Součet zahrnuje také doklady
+                    bez evidované úhrady – jde o tržby podle dokladů, nikoli o přijaté peníze.
+                    <t t-if="r['vrat_no_payout_count']">Z vratek je <t t-out="r['vrat_no_payout_count']"/> bez vyplacení
+                        (Zaplaceno 0, celkem <t t-out="money_short(r['vrat_no_payout'])"/> Kč) – v tržbách odečteny jsou,
+                        ve vrácených platbách ne.</t></p>
+            </div>
+
+            <!-- 2. payments and refunds by method -->
+            <div class="evc-section">
+                <h2>2. Přijaté platby a vratky</h2>
+                <table class="evc-table">
+                    <thead>
+                        <tr>
+                            <th>Forma</th>
+                            <th class="evc-num">Nové úhrady dokladů</th>
+                            <th class="evc-num">Přijaté zálohy</th>
+                            <th class="evc-num">Příjmy celkem</th>
+                            <th class="evc-num">Vrácené platby</th>
+                            <th class="evc-num">Po vrácení</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="r['method_rows']" t-as="row">
+                            <td t-out="row['label']"/>
+                            <td class="evc-num" t-out="money(row['new'])"/>
+                            <td class="evc-num" t-out="money(row['deposits'])"/>
+                            <td class="evc-num" t-out="money(row['income'])"/>
+                            <td class="evc-num" t-out="money(row['refunds'])"/>
+                            <td class="evc-num" t-out="money(row['after'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td>CELKEM</td>
+                            <td class="evc-num" t-out="money(r['totals']['new'])"/>
+                            <td class="evc-num" t-out="money(r['totals']['deposits'])"/>
+                            <td class="evc-num" t-out="money(r['totals']['income'])"/>
+                            <td class="evc-num" t-out="money(r['totals']['refunds'])"/>
+                            <td class="evc-num" t-out="money(r['totals']['after'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="evc-summary" t-out="r['summary']"/>
+                <p class="evc-note">Platby podle data platby. Nové úhrady dokladů nezahrnují čerpání záloh
+                    <t t-out="money_short(r['from_deposit'])"/> Kč – čerpání zálohy není nový příjem. Zálohy
+                    <t t-out="money_short(r['totals']['deposits'])"/> Kč jsou přičteny jen při přijetí.
+                    Vrácené platby <t t-out="money_short(r['totals']['refunds'])"/> Kč tvoří vratky dokladů
+                    <t t-out="money_short(r['refund_docs'])"/> Kč a vrácené zálohy
+                    <t t-out="money_short(r['refund_deposits'])"/> Kč, každá podle vlastního data a formy
+                    (WinVet vrací zálohy hotově).</p>
+            </div>
+
+            <!-- 3. daily table (only for more than one day) -->
+            <div t-if="r['multi_day']" class="evc-section">
+                <h2>3. Denní rozpis</h2>
+                <table t-if="r['days']" class="evc-table evc-daily">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th class="evc-num">Tržby dle dokladů</th>
+                            <th class="evc-num">Příjmy hotově</th>
+                            <th class="evc-num">Příjmy kartou</th>
+                            <th class="evc-num">Příjmy převodem</th>
+                            <th t-if="r['show_other_day']" class="evc-num">Příjmy jinak</th>
+                            <th class="evc-num">Vráceno</th>
+                            <th class="evc-num">Příjmy po vrácení</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="r['days']" t-as="row">
+                            <td t-out="row['label']"/>
+                            <td class="evc-num" t-out="money(row['sales'])"/>
+                            <td class="evc-num" t-out="money(row['cash'])"/>
+                            <td class="evc-num" t-out="money(row['card'])"/>
+                            <td class="evc-num" t-out="money(row['transfer'])"/>
+                            <td t-if="r['show_other_day']" class="evc-num" t-out="money(row['other'])"/>
+                            <td class="evc-num" t-out="money(row['refunded'])"/>
+                            <td class="evc-num" t-out="money(row['after'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td>CELKEM</td>
+                            <td class="evc-num" t-out="money(r['day_totals']['sales'])"/>
+                            <td class="evc-num" t-out="money(r['day_totals']['cash'])"/>
+                            <td class="evc-num" t-out="money(r['day_totals']['card'])"/>
+                            <td class="evc-num" t-out="money(r['day_totals']['transfer'])"/>
+                            <td t-if="r['show_other_day']" class="evc-num" t-out="money(r['day_totals']['other'])"/>
+                            <td class="evc-num" t-out="money(r['day_totals']['refunded'])"/>
+                            <td class="evc-num" t-out="money(r['day_totals']['after'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-note">V období nejsou žádné doklady ani platby.</p>
+                <p class="evc-note">Uvedeny jsou jen dny s doklady, platbami nebo zálohami; ostatní dny nemají v datech
+                    WinVetu žádný záznam. Tržby podle data dokladu, příjmy podle data platby, zálohy podle data přijetí
+                    a vrácení. Příjmy hotově a kartou zahrnují nové zálohy.</p>
+            </div>
+
+            <!-- 4. invoices and documents without payment -->
+            <div class="evc-section">
+                <h2><t t-out="'4.' if r['multi_day'] else '3.'"/> Faktury a doklady bez úhrady</h2>
+                <h3>Vystavené faktury</h3>
+                <table t-if="r['invoices']" class="evc-table">
+                    <thead><tr><th>Datum</th><th>Číslo faktury</th><th>Odběratel</th><th class="evc-num">Uhrazeno</th><th class="evc-num">Částka</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="r['invoices']" t-as="row">
+                            <td t-out="row['date']"/><td t-out="row['number']"/><td t-out="row['partner']"/>
+                            <td class="evc-num" t-out="money(row['paid'])"/>
+                            <td class="evc-num" t-out="money(row['amount'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td/><td>CELKEM</td><td><t t-out="len(r['invoices'])"/> faktur</td><td/>
+                            <td class="evc-num" t-out="money(r['invoice_total'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-note">V období nebyla vystavena žádná faktura.</p>
+                <h3>Další doklady bez evidované úhrady</h3>
+                <table t-if="r['unpaid_docs']" class="evc-table">
+                    <thead><tr><th>Datum</th><th>Doklad</th><th>Klient</th><th>Forma</th><th class="evc-num">Částka</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="r['unpaid_docs']" t-as="row">
+                            <td t-out="row['date']"/><td t-out="row['number']"/><td t-out="row['partner']"/>
+                            <td t-out="row['method']"/>
+                            <td class="evc-num" t-out="money(row['amount'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td/><td>CELKEM</td><td/><td/><td class="evc-num" t-out="money(r['unpaid_total'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-note">Žádný příjmový doklad bez úhrady.</p>
+                <p class="evc-summary">Součet bez evidované úhrady: faktury <t t-out="money_short(r['invoice_unpaid'])"/> Kč
+                    + příjmové doklady <t t-out="money_short(r['unpaid_total'])"/> Kč
+                    = <t t-out="money_short(r['invoice_unpaid'] + r['unpaid_total'])"/> Kč.</p>
+                <p class="evc-note">Faktury jsou v tržbách podle dokladů, do příjmů jen to, co bylo zaplaceno. Forma na
+                    dokladu bez úhrady je jen zvolená forma, nepotvrzuje přijetí peněz. Stav podle dat WinVetu, nikoli
+                    potvrzené aktuální pohledávky.</p>
+            </div>
+
+            <!-- 5. deposits -->
+            <div class="evc-section">
+                <h2><t t-out="'5.' if r['multi_day'] else '4.'"/> Zálohy</h2>
+                <t t-set="d" t-value="r['deposits']"/>
+                <p t-if="not d" class="evc-note">Most zatím zálohy neposílá.</p>
+                <t t-else="">
+                    <h3>Přijaté zálohy</h3>
+                    <table t-if="d['rows']" class="evc-table">
+                        <thead><tr><th>Přijato</th><th>Klient</th><th>Forma</th><th class="evc-num">Přijato</th>
+                            <th class="evc-num">Čerpáno</th><th class="evc-num">Vráceno</th><th class="evc-num">Zůstatek</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="d['rows']" t-as="row">
+                                <td t-out="row['date']"/><td t-out="row['partner']"/><td t-out="row['method']"/>
+                                <td class="evc-num" t-out="money(row['amount'])"/>
+                                <td class="evc-num" t-out="money(row['used'])"/>
+                                <td class="evc-num" t-out="money(row['refunded'])"/>
+                                <td class="evc-num" t-out="money(row['balance'])"/>
+                            </tr>
+                            <tr class="evc-total">
+                                <td/><td>CELKEM</td><td/>
+                                <td class="evc-num" t-out="money(d['total']['amount'])"/>
+                                <td class="evc-num" t-out="money(d['total']['used'])"/>
+                                <td class="evc-num" t-out="money(d['total']['refunded'])"/>
+                                <td class="evc-num" t-out="money(d['total']['balance'])"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-else="" class="evc-note">V období nebyla přijata žádná záloha.</p>
+                    <p t-if="d['rows']" class="evc-summary">Kontrola: <t t-out="money_short(d['total']['amount'])"/> Kč přijato
+                        = <t t-out="money_short(d['total']['used'])"/> Kč čerpáno
+                        + <t t-out="money_short(d['total']['refunded'])"/> Kč vráceno
+                        + <t t-out="money_short(d['total']['balance'])"/> Kč zůstatek.
+                        <t t-if="d['winvet_ok']">Rovnice WinVetu (přijato = čerpáno + vráceno + zůstatek) souhlasí u každé zálohy.</t>
+                        <t t-else="">U některé zálohy rovnice WinVetu nesouhlasí – ověřit ve WinVetu.</t></p>
+                    <p t-if="d['rows']" class="evc-note">Čerpání a vrácení do <t t-out="d['as_of']"/>, zůstatek k tomuto dni.</p>
+
+                    <h3>Vracení záloh</h3>
+                    <table t-if="d['refunds']" class="evc-table">
+                        <thead><tr><th>Vráceno dne</th><th>Klient</th><th>Přijato</th><th>Způsob vrácení</th><th class="evc-num">Částka</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="d['refunds']" t-as="row">
+                                <td t-out="row['date']"/><td t-out="row['partner']"/><td t-out="row['received_method']"/>
+                                <td t-out="row['method']"/><td class="evc-num" t-out="money(row['amount'])"/>
+                            </tr>
+                            <tr class="evc-total"><td/><td>CELKEM</td><td/><td/><td class="evc-num" t-out="money(d['refund_total'])"/></tr>
+                        </tbody>
+                    </table>
+                    <p t-else="" class="evc-note">V období nebyla vrácena žádná záloha.</p>
+                    <p t-if="d['refunds']" class="evc-note">WinVet u vrácení zálohy formu nevede; vrácení je pokladní pohyb
+                        (hotově), i když byla záloha přijata kartou.</p>
+
+                    <h3>Čerpání do dokladů</h3>
+                    <table t-if="d['uses']" class="evc-table">
+                        <thead><tr><th>Datum</th><th>Klient</th><th>Doklad</th><th class="evc-num">Částka</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="d['uses']" t-as="row">
+                                <td t-out="row['date']"/><td t-out="row['partner']"/><td t-out="row['document']"/>
+                                <td class="evc-num" t-out="money(row['amount'])"/>
+                            </tr>
+                            <tr class="evc-total"><td/><td>CELKEM</td><td/><td class="evc-num" t-out="money(d['use_total'])"/></tr>
+                        </tbody>
+                    </table>
+                    <p t-else="" class="evc-note">V období nebyla čerpána žádná záloha.</p>
+                    <p t-if="d['uses']" class="evc-note">Čerpání není nový peněžní příjem: doklad je zaplacený ze zálohy
+                        přijaté dříve.</p>
+                </t>
+            </div>
+
+            <!-- 6. items by payment method -->
+            <t t-set="it" t-value="r['items']"/>
+            <div class="evc-section evc-items">
+                <h2><t t-out="'6.' if r['multi_day'] else '5.'"/> Tržby podle položek a formy úhrady</h2>
+                <table t-if="it['rows']" class="evc-table evc-item-table">
+                    <thead>
+                        <tr>
+                            <th>Položka</th>
+                            <th class="evc-num">Množ.</th>
+                            <th t-foreach="it['columns']" t-as="col" class="evc-num" t-out="col[1]"/>
+                            <th class="evc-num">Celkem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="it['kinds']" t-as="kind" class="evc-kind">
+                            <td t-out="kind['label']"/>
+                            <td/>
+                            <td t-foreach="it['columns']" t-as="col" class="evc-num" t-out="money(kind['values'][col[0]])"/>
+                            <td class="evc-num" t-out="money(kind['total'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td>CELKEM</td>
+                            <td/>
+                            <td t-foreach="it['columns']" t-as="col" class="evc-num" t-out="money(it['totals']['values'][col[0]])"/>
+                            <td class="evc-num" t-out="money(it['totals']['total'])"/>
+                        </tr>
+                        <tr class="evc-spacer"><td t-att-colspan="len(it['columns']) + 3"/></tr>
+                        <tr t-foreach="it['rows']" t-as="row">
+                            <td t-out="row['label']"/>
+                            <td class="evc-num" t-out="row['quantity_text']"/>
+                            <td t-foreach="it['columns']" t-as="col" class="evc-num" t-out="money(row['values'][col[0]]) if row['values'][col[0]] else ''"/>
+                            <td class="evc-num" t-out="money(row['total'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-note">V období nejsou žádné položky.</p>
+                <t t-if="it['money_rows']">
+                    <h3>Peněžní řádky mimo položky</h3>
+                    <table class="evc-table">
+                        <thead><tr><th>Datum</th><th>Řádek</th><th>Doklad</th><th class="evc-num">Částka</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="it['money_rows']" t-as="row">
+                                <td t-out="row['date']"/><td t-out="row['label']"/><td t-out="row['document']"/>
+                                <td class="evc-num" t-out="money(row['amount'])"/>
+                            </tr>
+                            <tr class="evc-total"><td/><td>CELKEM</td><td/><td class="evc-num" t-out="money(it['money_total'])"/></tr>
+                        </tbody>
+                    </table>
+                </t>
+                <p class="evc-note">Položky účtů majitele podle data řádku (data návštěvy), forma úhrady podle dokladu. Řádky
+                    v jednotce „měna“ (převod nedoplatku z dřívějšího dokladu) nejsou prodej položky – jsou uvedeny zvlášť
+                    a do součtu položek nepatří. Položky s nulovou částkou nejsou uvedeny. Přímé prodeje bez účtu majitele
+                    položky nemají, proto se součet může lišit od tržeb podle dokladů.</p>
+            </div>
+
+            <table class="evc-sign">
+                <tr>
+                    <td>Předal/a: ........................................<br/><br/>Datum / podpis: ................................</td>
+                    <td>Převzal/a: ........................................<br/><br/>Datum / podpis: ................................</td>
+                </tr>
+            </table>
+        </div>
+        <div class="footer evc-footer">
+            <table class="evc-footer-table">
+                <tr>
+                    <td><t t-out="clinic['name']"/> · Uzávěrka <t t-out="r['period']"/> · vytvořeno <t t-out="r['generated']"/></td>
+                    <td class="evc-footer-right">Strana <span class="page"/> z <span class="topage"/></td>
+                </tr>
+            </table>
+        </div>
+    </template>
+</odoo>

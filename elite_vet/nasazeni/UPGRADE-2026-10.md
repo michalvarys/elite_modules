@@ -1016,3 +1016,60 @@ V **WinVet data → Tržby** (položky) a **Doklady** jde seskupit i filtrovat p
 bez úhrady. Upgrade: `-u elite_vet_winvet` (18.0.1.5.0) – nová uložená pole se dopočítají při
 upgradu, most se nemění.
 
+## Doplnění: uzávěrka z WinVetu
+
+**WinVet data → Tržby → Uzávěrka** vytiskne pokladní uzávěrku za období (Tento měsíc / Minulý měsíc /
+Dnes / Včera / jiné od–do) jako PDF: tržby podle dokladů, přijaté platby a vratky podle formy úhrady,
+denní rozpis, faktury a doklady bez úhrady, zálohy a tržby podle položek × forma úhrady, podpisy
+Předal/a – Převzal/a. Nově se z WinVetu přenášejí **zálohy klientů** (WinVet data → Zálohy, na kontaktu
+tlačítko a záložka Zálohy, na kartě pacienta a v Kartotéce řádek „Záloha: 2 000 Kč“). Jen vedení.
+Větev `feature/elite-vet-cash-closure`. Cílový kód: most **5.0.0** (kontrakt v5),
+`elite_vet_winvet` 18.0.1.6.0, `elite_vet_clinic` 18.0.1.8.0, `elite_vet_reception` 18.0.1.17.0.
+
+### Odoo
+
+Pravidla a záloha jako v krocích 2–3. Pak jeden běh:
+
+```bash
+<odoo> -d <db> -u elite_vet_winvet,elite_vet_clinic,elite_vet_reception --stop-after-init 2>&1 | tee upgrade-uzaverka-$(date +%F-%H%M).log
+grep -nE " (ERROR|CRITICAL) |Traceback" upgrade-uzaverka-*.log      # nesmí nic najít
+```
+
+Co upgrade udělá s daty: nové tabulky `elite_vet_deposit`, `elite_vet_deposit_use` (prázdné, dokud
+most 5.0.0 nepošle data), nový sloupec `elite_vet_sale_document.recorded_method` (prázdný). Nic
+existujícího se nemění. V pokladně a v Ordinacích obnovit stránku natvrdo (Ctrl+Shift+R).
+
+### Most na PC s WinVetem (dělá správce PC, ne agent)
+
+1. Zastavit úlohy / službu mostu, nahradit složku mostu (`C:\WinVetBridge\`) obsahem
+   `modules/elite_vet/winvet_bridge` z větve – **včetně `verified.json`**: přibyla skupina otisků
+   `deposits` a změnily se otisky `sales` (most čte `DOKLAD.FORMA_UHRADY`) a `journal` (triggery žurnálu
+   u `PARTNER_ZALOHA`), vše ověřené pro WinVet 2603. Se starým `verified.json` by most zablokoval tržby
+   i zálohy. `config.ini` a stavový soubor ponechat.
+2. `py -m winvet_bridge --config config.ini check` – `bridge_version : 5.0.0`, u `deposits`, `sales`
+   a `journal` „ok“, `blocked : -`. Jinak předat správci integrace (README mostu).
+3. **Jednou plný běh** `py -m winvet_bridge --config config.ini sync --full` – pošle všechny zálohy,
+   čerpání a formu úhrady na všech dokladech (bez něj by forma přibývala jen u měněných dokladů).
+4. Plán úloh beze změny. Starý most (4.x) zálohy neposílá (Odoo je jen nemá); nový most se starým
+   Odoo zálohy přeskočí („unknown entity“) – pořadí upgradu nevadí. Jde-li data ze SFTP zálohy na
+   serveru, zkopírovat nový most i `verified.json` i do `/opt/winvet-import/` (README `deploy/sftp`).
+
+### Kontrola (vedení, Odoo)
+
+1. **WinVet data → Stav synchronizace:** řádky Zálohy a Čerpání záloh bez chyby.
+2. **WinVet data → Zálohy** (filtr S zůstatkem): součty Přijato / Čerpáno / Vráceno / Zůstatek.
+3. **WinVet data → Tržby → Uzávěrka → Minulý měsíc → Vytisknout PDF.**
+
+```sql
+SELECT count(*), sum(amount), sum(used), sum(refunded), sum(balance) FROM elite_vet_deposit;
+SELECT count(*), sum(amount) FROM elite_vet_deposit_use;
+SELECT recorded_method, count(*) FROM elite_vet_sale_document GROUP BY 1;
+```
+
+Lokální ověření (analytická kopie z 26. 10., ev_test): zálohy 38, čerpání 34, doklady s formou 1134
+z 2235. Září 2026 sedí s ruční uzávěrkou: nové úhrady hotově / kartou / převodem, zálohy 4 000 hotově
++ 15 000 kartou, vrácené 3 500 (vratka 500 + zálohy 3 000, hotově), faktury 7 × 9 087, bez úhrady
+884 + 1 713 + 449, zálohy 19 000 = 10 000 + 3 000 + 6 000. Rozdíly proti ruční uzávěrce mají
+vysvětlení: tři platby z 2. 9. (262 hotově, 120 + 250 kartou) patří k dokladům, které ve WinVetu už
+neexistují (zkouška před spuštěním), a převod 1 713 z 21. 9. je úhrada nového dokladu s řádkem
+„Převod nedoplatku“ k neuhrazenému dokladu z 18. 9. – ruční uzávěrka ten nový doklad nemá.

@@ -40,6 +40,10 @@ class VetSaleDocument(models.Model):
     line_ids = fields.One2many("elite.vet.sale.line", "document_id", string="Položky", readonly=True)
     payment_ids = fields.One2many("elite.vet.payment", "document_id", string="Platby", readonly=True)
     child_ids = fields.One2many("elite.vet.sale.document", "parent_id", string="Navazující doklady", readonly=True)
+    recorded_method = fields.Selection(
+        METHODS, string="Forma na dokladu", readonly=True,
+        help="Forma úhrady zapsaná na dokladu ve WinVetu (most 5.0+). U vratky říká, jak se vracelo; "
+             "u dokladu bez platby jen to, co bylo zvoleno – samo o sobě nepotvrzuje přijetí peněz.")
     payment_method = fields.Selection(
         PAYMENT_METHODS, string="Forma úhrady", compute="_compute_payment_method", store=True, index=True,
         help="Podle plateb dokladu; účet majitele podle plateb jeho příjmového dokladu (PODP). "

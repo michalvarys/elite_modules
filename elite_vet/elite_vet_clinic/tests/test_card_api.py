@@ -165,6 +165,11 @@ class TestCardApi(ClinicCase):
                          (15.0, 0.8, str(clinic_today())), "today 15.0 vs 14.2 measured in WinVet")
         self.assertEqual(data["header"]["owner"]["partner_id"], self.owner.id)
         self.assertEqual(data["header"]["owner"]["phone"], "+420 602 111 987")
+        self.assertIsNone(data["header"]["owner"]["deposit_text"], "no WinVet deposit -> no line")
+        # task 33: a deposit balance shows as a quiet line on the card
+        self.env["elite.vet.deposit"].sudo().create({"winvet_ref": 9_330_001, "partner_id": self.owner.id,
+                                                     "amount": 2000, "balance": 2000, "method": "card"})
+        self.assertEqual(self.Card.card_data(self.pet.id)["header"]["owner"]["deposit_text"], "2\u00a0000,00\u00a0Kč")
         self.assertEqual([a["label"] for a in data["header"]["alerts"]], ["Alergie: penicilin"])
         self.assertEqual(data["today_record"]["id"], rec["id"])
         types = [(i["type"], i["date"]) for i in data["timeline"]]

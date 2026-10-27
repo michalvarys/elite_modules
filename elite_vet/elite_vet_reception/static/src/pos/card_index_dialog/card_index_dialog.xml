@@ -175,6 +175,8 @@
                         <span class="o_ev_owner_email" t-esc="owner.email or 'bez e-mailu'"/></div>
                     <div class="o_ev_field"><b>Adresa</b>
                         <t t-esc="ownerAddress"/></div>
+                    <div t-if="owner.deposit_text" class="o_ev_field o_ev_owner_deposit text-muted"
+                         title="Zůstatek zálohy klienta podle WinVetu">Záloha: <t t-esc="owner.deposit_text"/></div>
                     <div class="o_ev_field">
                         <b>Otevřené účty: <t t-esc="state.data.open_bills.length"/></b>
                         <div t-foreach="state.data.open_bills" t-as="bill" t-key="bill.record_id">

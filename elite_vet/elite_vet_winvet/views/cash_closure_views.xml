@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Task 33: "Uzávěrka (PDF)" wizard (managers). -->
+    <record id="view_cash_closure_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.cash.closure.wizard.form</field>
+        <field name="model">elite.vet.cash.closure.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Uzávěrka (PDF)">
+                <group>
+                    <field name="preset" widget="radio" options="{'horizontal': true}"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <p class="text-muted">
+                    Tržby podle dokladů, přijaté platby a vratky podle formy úhrady, denní rozpis, faktury a doklady
+                    bez úhrady, zálohy a tržby podle položek – z dat, která poslal most z WinVetu.
+                </p>
+                <footer>
+                    <button name="action_print" type="object" string="Vytisknout PDF" class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Zrušit" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_cash_closure_wizard" model="ir.actions.act_window">
+        <field name="name">Uzávěrka (PDF)</field>
+        <field name="res_model">elite.vet.cash.closure.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+    </record>
+</odoo>

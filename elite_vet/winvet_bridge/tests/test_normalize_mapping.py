@@ -31,7 +31,7 @@ CONTRACT_KEYS = {
     "vitals": {"id", "visit_id", "time", "temperature", "heart_rate", "respiratory_rate", "weight", "bp_systolic",
                "bp_diastolic"},
     "sale_documents": {"id", "type", "number", "parent_id", "owner_id", "date", "total", "paid", "from_deposit",
-                       "state", "entered_by"},
+                       "state", "entered_by", "method"},
     "sale_lines": {"id", "document_id", "visit_id", "item_id", "item_code", "item_name", "quantity", "unit",
                    "unit_price", "amount", "vat_rate", "date", "entered_by"},
     "payments": {"id", "document_id", "owner_id", "date", "time", "method", "amount", "from_deposit", "state",
@@ -48,6 +48,10 @@ CONTRACT_KEYS = {
     "calendar_events": {"key", "id", "pattern_id", "recurring", "occurrence_date", "start", "end", "all_day",
                         "resource_ids", "activity_id", "owner_id", "patient_id", "title", "busy_status", "done",
                         "modified"},
+    # contract v5
+    "deposits": {"id", "owner_id", "date", "amount", "sign", "method", "document_id", "used", "refunded",
+                 "refunded_date", "balance", "note", "state"},
+    "deposit_uses": {"id", "deposit_id", "document_id", "document_number", "date", "amount", "state"},
 }
 
 
@@ -261,6 +265,45 @@ class MappingTest(unittest.TestCase):
             self.assertIn(name, ALWAYS_FULL)
             self.assertEqual(SPECS[name].group, "stock")
         self.assertEqual(tuple(GROUP_TABLES["stock"]), ("DOKLAD_POLOZKA_SK", "VARIANTA_SKLAD_STAV"))
+
+    def test_deposit_mapping(self):
+        row = {col: None for col in select_columns(SPECS["deposits"].sql)}
+        row.update(ID_PARTNER_ZALOHA=4, ID_PARTNER=12, DATUM=dt.date(2026, 9, 21), CASTKA=Decimal("2000"),
+                   ZNAMENKO=1, FORMA_UHRADY="HOT ", ID_DOKLAD=-1, CERPANO=0.0, VRACENO=2000.0,
+                   VRACENO_DATUM=dt.date(2026, 9, 29), ZUSTATEK=0.0, POZNAMKA="  ", ST="E")
+        rec = SPECS["deposits"].mapper(row)
+        self.assertEqual(list(rec), list(SPECS["deposits"].keys))
+        self.assertEqual(rec, {"id": 4, "owner_id": 12, "date": "2026-09-21", "amount": 2000.0, "sign": 1,
+                               "method": "cash", "document_id": None, "used": 0.0, "refunded": 2000.0,
+                               "refunded_date": "2026-09-29", "balance": 0.0, "note": None, "state": "E"})
+        self.assertIn("z.ID_PARTNER_ZALOHA > 0", build_sql(SPECS["deposits"]))
+        row = {col: None for col in select_columns(SPECS["deposit_uses"].sql)}
+        row.update(ID_PARTNER_ZALOHA_CERPANI=7, ID_PARTNER_ZALOHA=4, ID_DOKLAD=513, DOKLAD=" 2026000159",
+                   DATUM=dt.date(2026, 9, 19), CASTKA=2000.0, ST="I")
+        rec = SPECS["deposit_uses"].mapper(row)
+        self.assertEqual(rec, {"id": 7, "deposit_id": 4, "document_id": 513, "document_number": "2026000159",
+                               "date": "2026-09-19", "amount": 2000.0, "state": "I"})
+
+    def test_sale_document_method(self):
+        row = {col: None for col in select_columns(SPECS["sale_documents"].sql)}
+        row.update(ID_DOKLAD=467, TYP_DOKLADU="VRAT", FORMA_UHRADY="HOT")
+        self.assertEqual(SPECS["sale_documents"].mapper(row)["method"], "cash")
+        row.update(FORMA_UHRADY=None)
+        self.assertIsNone(SPECS["sale_documents"].mapper(row)["method"])
+
+    def test_deposit_entities_group_and_journal(self):
+        from winvet_bridge import DEPOSIT_ENTITIES
+        from winvet_bridge.guard import GROUP_TABLES
+        from winvet_bridge.journal import JOURNAL_TABLES
+        from winvet_bridge.sync import ALWAYS_FULL
+        self.assertEqual(ENTITY_ORDER[-2:], DEPOSIT_ENTITIES)
+        self.assertEqual(tuple(GROUP_TABLES["deposits"]), ("PARTNER_ZALOHA", "PARTNER_ZALOHA_CERPANI"))
+        for name in DEPOSIT_ENTITIES:
+            self.assertEqual(SPECS[name].group, "deposits")
+        self.assertEqual(JOURNAL_TABLES["PARTNER_ZALOHA"], "deposits")
+        self.assertNotIn("PARTNER_ZALOHA_CERPANI", JOURNAL_TABLES)
+        self.assertIn("deposit_uses", ALWAYS_FULL)
+        self.assertNotIn("deposits", ALWAYS_FULL)
 
     def test_build_sql(self):
         sql = build_sql(SPECS["sale_documents"], 3)

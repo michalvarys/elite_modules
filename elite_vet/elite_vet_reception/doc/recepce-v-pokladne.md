@@ -270,6 +270,8 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
   červený štítek **Nedorazil 2×** (najetím myší podrobnosti) a pod ním seznam: datum, úkon,
   zvíře. U zvířete je štítek **nedorazil 1×**. Počítá se to samo z rezervací ve stavu
   Nedorazil, nic se nezapisuje ručně.
+- Když má klient ve WinVetu **zálohu** se zůstatkem, je pod adresou nenápadný řádek
+  **Záloha: 2 000 Kč** (zůstatek podle WinVetu; zálohy se dál přijímají a čerpají ve WinVetu).
 - Vpravo **zvířata**: druh, plemeno, pohlaví, narození (nebo jen rok), čip, hmotnost, příští
   očkování a odčervení, upozornění a **Důležité** (červené štítky). Uhynulá zvířata jsou na konci, vybledlá; s nimi nejde nic dělat.
 - Kliknutím vyberete zvíře (rámeček) – pod ním je **Upravit <jméno>** (při Přijmout bez

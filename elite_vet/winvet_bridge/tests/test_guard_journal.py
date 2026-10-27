@@ -69,6 +69,12 @@ class GuardTest(unittest.TestCase):
         result = evaluate(schema(catalog="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
         self.assertEqual(result.blocked_entities, ["users", "items"])
 
+    def test_deposits_change_blocks_only_deposit_entities(self):
+        result = evaluate(schema(deposits="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
+        self.assertEqual(result.mismatched_groups, ["deposits"])
+        self.assertEqual(result.blocked_entities, ["deposits", "deposit_uses"])
+        self.assertFalse(result.journal_blocked)
+
     def test_journal_change_blocks_only_journal(self):
         result = evaluate(schema(journal="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
         self.assertEqual(result.blocked_entities, [])

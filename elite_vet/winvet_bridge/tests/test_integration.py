@@ -163,6 +163,26 @@ class EntityIntegrationTest(IntegrationBase):
         resources = {r["id"] for r in self.records["calendar_resources"]}
         self.assertTrue(all(set(e["resource_ids"]) <= resources for e in events))
 
+    def test_deposits_balance_and_uses(self):
+        """Contract v5 (sums and counts only): every deposit = used + refunded + balance, the uses of a
+        deposit add up to its "used" amount and point to existing deposits."""
+        deposits = {r["id"]: r for r in self.records["deposits"]}
+        self.assertGreater(len(deposits), 0)
+        for rec in deposits.values():
+            self.assertEqual(rec["sign"], 1, rec["id"])
+            total = (rec["used"] or 0) + (rec["refunded"] or 0) + (rec["balance"] or 0)
+            self.assertAlmostEqual(rec["amount"], total, 2, rec["id"])
+            self.assertEqual(bool(rec["refunded"]), bool(rec["refunded_date"]), rec["id"])
+            self.assertIn(rec["method"], ("cash", "card", "transfer"), rec["id"])
+        used = {}
+        for use in self.records["deposit_uses"]:
+            self.assertIn(use["deposit_id"], deposits)
+            used[use["deposit_id"]] = used.get(use["deposit_id"], 0.0) + use["amount"]
+        for ref, rec in deposits.items():
+            self.assertAlmostEqual(used.get(ref, 0.0), rec["used"] or 0.0, 2, ref)
+        methods = {r["method"] for r in self.records["sale_documents"]}
+        self.assertTrue({"cash", "card"} <= methods, methods)
+
     def test_sale_documents_types(self):
         types = {r["type"] for r in self.records["sale_documents"]}
         self.assertTrue(types <= {"UM", "PODP", "FAV", "VRAT"}, types)

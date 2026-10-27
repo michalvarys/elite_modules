@@ -197,8 +197,8 @@ a kolik řádků se přeskočilo a proč.
 - **Záhlaví** má dva řádky: nahoře jméno zvířete, druh, plemeno, pohlaví a věk, stav dnešní
   návštěvy („**V ordinaci od 9:25**“, „Čeká od 9:05“, „Hotovo, čeká u pokladny“),
   **Ošetřuje MVDr. …** a vpravo **Upozornění** a **Upravit pacienta**; pod tím majitel
-  s telefonem, váha, čip, očkování a červené štítky upozornění (kouše, alergie…) – klikem se
-  upraví. Důležitá poznámka u pacienta je oranžový štítek (celý text v bublině).
+  s telefonem, váha, čip, očkování (a **Záloha: 2 000 Kč**, když má majitel ve WinVetu zálohu se
+  zůstatkem) a červené štítky upozornění (kouše, alergie…) – klikem se upraví. Důležitá poznámka u pacienta je oranžový štítek (celý text v bublině).
 - **Dnešní záznam** je uprostřed: čtyři velká pole vitálních hodnot s jednotkami a pod nimi jedno
   velké pole **Záznam z vyšetření**: anamnéza, nález, diagnóza, léčba i doporučení v jednom textu.
   Pole se zvětšuje s textem. Psát můžete po svém; nadpisy jako „Anamnéza:“ jsou na vás.

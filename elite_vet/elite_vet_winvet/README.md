@@ -13,10 +13,11 @@ Odoo 18 modul. Přijímá data, která z WinVetu posílá most `elite_vet/winvet
 
 ## Menu (WinVet data)
 
-Tržby (Tržby podle položek, Úkony, Léky a zboží) · Doklady · Platby · Návštěvy · Očkování ·
+Tržby (Uzávěrka, Tržby podle položek, Úkony, Léky a zboží) · Doklady · Platby · Zálohy · Návštěvy ·
+Očkování ·
 Kalendář z WinVetu (Záznamy; Kalendáře → ordinace, Činnosti → úkony, Zapnout / vypnout jen
 Vedení) · Ceník · Uživatelé WinVet · Stav synchronizace · Konfigurace → API klíč.
-Tržby, doklady, platby, ceník, uživatelé a stav vidí **Správce rezervací**; návštěvy
+Tržby, uzávěrku, doklady, platby, zálohy, ceník, uživatelé a stav vidí **Správce rezervací**; návštěvy
 a očkování (i na kartě mazlíčka) vidí i **Recepce**.
 
 ## Pravidla importu
@@ -99,11 +100,53 @@ záznamy rozložené na výskyty). Jen jedním směrem – Odoo do WinVetu nikdy
   `effective_pet_id` / `effective_partner_id` (uložené, počítané): zvíře z WinVetu, když ho WinVet
   pošle (to vyhraje), jinak spárované v Odoo. Spárování zůstane jako záloha.
 
+## Zálohy (kontrakt v5, most 5.0.0)
+
+- `elite.vet.deposit` (záloha: klient, přijato dne, částka, forma přijetí, čerpáno, vráceno + datum
+  a forma, zůstatek, poznámka, stav) a `elite.vet.deposit.use` (čerpání: záloha, doklad, datum,
+  částka). Jen ke čtení, vidí je jen **Správce rezervací** (stejně jako platby).
+- **WinVet data → Zálohy:** výchozí filtr *S zůstatkem*, seskupení podle klienta / měsíce, součty
+  přijato / čerpáno / vráceno / zůstatek, kontingenční tabulka; ve formuláři čerpání do dokladů.
+- **Kontakt:** tlačítko *Zálohy* se zůstatkem a záložka *Zálohy* (jen vedení). Karta pacienta
+  a Kartotéka v pokladně ukážou nenápadný řádek **Záloha: 2 000 Kč**, když má klient zůstatek
+  (`res.partner.winvet_deposit_balance_text`, počítá se přes sudo – recepce vidí jen součet).
+- Čerpáno / vráceno / zůstatek jsou **aktuální stav z WinVetu**. Přijatá záloha není platba,
+  čerpání má platba dokladu v poli *Ze zálohy*. WinVet u vrácení zálohy formu nevede → *Hotově*.
+- Doklady mají nové pole **Forma na dokladu** (`recorded_method`, `DOKLAD.FORMA_UHRADY`): u vratky
+  říká, jak se vracelo. Starší most ho neposílá – pole zůstane, jak bylo.
+
+## Uzávěrka (PDF)
+
+**WinVet data → Tržby → Uzávěrka** (nebo tlačítko *Uzávěrka (PDF)* v seznamech Tržby podle
+položek, Doklady, Platby): období od–do s volbami Tento měsíc / Minulý měsíc / Dnes / Včera,
+**Vytisknout PDF**. Jen vedení. Výpočet: `elite.vet.cash.closure.closure_data(od, do)`
+(`models/cash_closure.py`), šablona `report/cash_closure_report.xml`. Oddíly:
+
+1. **Tržby podle dokladů** – PODP, FAV, VRAT (počet, součet pole Celkem podle data dokladu; VRAT
+   záporně); zahrnuje i doklady bez úhrady.
+2. **Přijaté platby a vratky** podle formy (Hotovost, Platební karty, Převod; Jinak jen když je
+   nenulová): nové úhrady dokladů = platba − část ze zálohy, podle data platby (i platby přímých
+   prodejů, jejichž doklad most neposílá); přijaté zálohy podle data přijetí; vrácené = vratky
+   dokladů (VRAT s Zaplaceno, forma z dokladu, jinak z původního dokladu, jinak hotově; záporné
+   platby) + vrácené zálohy podle data vrácení (hotově); CELKEM a souhrnná věta.
+3. **Denní rozpis** (jen pro víc než jeden den; jen dny s daty).
+4. **Faktury a doklady bez úhrady** – všechny FAV; PODP bez úhrady (forma *Bez úhrady*, Celkem > 0,
+   Zaplaceno i Ze zálohy 0) s formou z dokladu nebo z nulové platby; součtová věta.
+5. **Zálohy** – přijaté v období s čerpáním a vrácením **do konce období** (zůstatek k tomu dni,
+   z řádků čerpání), kontrola přijato = čerpáno + vráceno + zůstatek, vrácení, čerpání do dokladů.
+   Bez jakýchkoli dat záloh jen věta „Most zatím zálohy neposílá“.
+6. **Tržby podle položek a formy úhrady** – Úkony / Léky a zboží / Ostatní a každá položka
+   (Hotově / Kartou / Převodem / Bez úhrady, Kombinovaně a Jinak jen když jsou), řazeno podle Celkem.
+   Řádky podle data řádku, forma podle dokladu. Řádky v jednotce „měna“ (převod nedoplatku
+   z dřívějšího dokladu) **nejsou položky** – jsou vypsané zvlášť pod tabulkou, protože by jinak
+   tutéž částku započítaly podruhé (je už v původním dokladu). Řádky s nulovou částkou se vynechají.
+7. Patička s obdobím, časem vytvoření a stranou x / y; podpisové řádky Předal/a – Převzal/a.
+
 ## Rozšíření o další entity
 
 Seznam přijímaných entit a jejich modely, popisky, kmenová data a dodatečné propojení jsou
 metody `elite.vet.winvet.sync` (`_winvet_entities`, `_winvet_entity_models`,
-`_winvet_entity_labels`, `_winvet_master_entities`, `_winvet_fixups`); jiný modul je rozšíří
+`_winvet_entity_labels`, `_winvet_master_entities`, `_winvet_fixups`, `_winvet_date_keys`); jiný modul je rozšíří
 a doplní `_push_<entita>` (takto `elite_vet_clinic` přidává `bundles`, `bundle_lines`,
 `phrases`). Zápisy mostu mají v kontextu `winvet_sync=True`.
 
