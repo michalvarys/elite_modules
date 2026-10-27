@@ -58,8 +58,10 @@ Novinky v2:
 - `items` + `price`, `price_untaxed`, `vat_rate` – cena z ceníku 1 „Ordinace“ (`VARIANTA_CENIK`,
   při více řádcích první podle `ID_VARIANTA_CENIK`), sazba DPH z `VARIANTA.DPH_PRODEJ`.
 - `visits` + `notes` – text dekurzu. WinVet ho ukládá jako dokument TRichView (RVF); most z něj
-  vytáhne jen textové odstavce (tabulky, obrázky a binární části zahodí), viz
-  `winvet_bridge/rvf.py`. Nečitelný dekurz → `null`, běh se nikdy nezastaví.
+  vytáhne jen textové odstavce (obrázky a binární části zahodí), viz `winvet_bridge/rvf.py`.
+  Tabulky s víc sloupci (laboratorní výsledky) zůstanou po řádcích – jeden řádek tabulky = jeden
+  řádek textu, buňky oddělené tabulátorem (od 4.0.1); Odoo je v kartě i ve zprávě ukáže jako
+  tabulku. Jednosloupcové tabulky (rámečky kolem textu) jsou obyčejné odstavce. Nečitelný dekurz → `null`, běh se nikdy nezastaví.
 - `vitals` – měření během návštěvy (`DENNI_ZAZNAM_HODNOTA`: teplota, tep, dech, hmotnost, tlak).
 - `bundles`, `bundle_lines` – šablony výkonů (`SABLONA_VYKONU`, `SABLONA_VYKONU_POLOZKA`), nejsou
   v žurnálu → posílají se při každém běhu celé (jako `users` a `contacts`).

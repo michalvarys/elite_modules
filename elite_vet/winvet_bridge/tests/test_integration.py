@@ -114,7 +114,8 @@ class EntityIntegrationTest(IntegrationBase):
         visits = self.records["visits"]
         notes = [r for r in visits if r["notes"]]
         self.assertGreater(len(notes), len(visits) * 0.8)
-        bad = re.compile("[\\x00-\\x09\\x0b-\\x1f\\x7f-\\x9f\\ufffd]|TPF0|TRV[A-Z][a-z]|TableTrias|unremovable=")
+        # a tab is the cell separator of table rows (rvf: lab results), any other control character is a leftover
+        bad = re.compile("[\\x00-\\x08\\x0b-\\x1f\\x7f-\\x9f\\ufffd]|TPF0|TRV[A-Z][a-z]|TableTrias|unremovable=")
         texts = [("visits", r["id"], r["notes"]) for r in notes]
         texts += [("phrases", r["id"], r["text"]) for r in self.records["phrases"] if r["text"]]
         for entity, record_id, text in texts:  # never print the text itself

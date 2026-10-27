@@ -84,6 +84,40 @@ class RvfToTextTest(unittest.TestCase):
             "Hmotnost: 60, Teplota: 38,2\nAnamnéza:\n\nzvrací od rána\nMVDr. Test, 17.09.2026 11:56:25",
         )
 
+    def test_table_rows_keep_their_cells_together(self):
+        # 3 rows x 3 columns, the first cell spans the whole first row (a lab result title)
+        def cell(colspan):
+            return f"\x00\x00\x02{chr(colspan)}\x02\x01\x02TD\x00\x0bc.BestWidth\x02K\x06c.Data\n!\x00-8 1 3 1"
+        text = doc(
+            "0 1 0 0 0 0",
+            "Odebrána krev.",
+            "-60 1 0 0 2 0",
+            "\x01\x00TPF0\x0cTRVTableItem\x01C\x02\x03\x02\x03\x01" + cell(3)[2:],
+            "0 1 0 0 0 0", "ProCyte, 15.10.2026",
+            cell(1), "0 1 0 0 0 0", "Metoda",
+            cell(1), "0 1 1 0 0 0", "Výsledek",
+            cell(1), "0 1 1 0 0 0", "Jednotka",
+            cell(1), "0 1 0 0 0 0", "RBC",
+            cell(1), "0 1 1 0 0 0", "7,59",
+            cell(1),  # empty cell: no text item
+            "\x05\x00\x00\x07\x00\x00" + "0 1 0 0 0 0",
+            "Závěr: v normě",
+        )
+        self.assertEqual(
+            rvf_to_text(text),
+            "Odebrána krev.\nProCyte, 15.10.2026\nMetoda\tVýsledek\tJednotka\nRBC\t7,59\nZávěr: v normě",
+        )
+
+    def test_single_column_table_stays_paragraphs(self):
+        text = doc(
+            "-60 1 0 0 2 0",
+            "\x01\x00TPF0\x0cTRVTableItem\x01C\x02\x01\x02\x01\x01\x02\x01\x02\x01\x02TD\x00\x06c.Data-8 1 3 1",
+            "0 2 0 0 0 0", "Hmotnost: 12 kg", "Teplota: 38,5",
+            "\x05\x00\x00" + "0 1 0 0 0 0",
+            "Anamnéza: bez potíží",
+        )
+        self.assertEqual(rvf_to_text(text), "Hmotnost: 12 kg\nTeplota: 38,5\nAnamnéza: bez potíží")
+
     def test_empty_lines_collapsed_and_trimmed(self):
         text = doc("0 8 0 0 0 0", "", "  ", "první  ", "", "", "", "druhá\t", "")
         self.assertEqual(rvf_to_text(text), "první\n\ndruhá")

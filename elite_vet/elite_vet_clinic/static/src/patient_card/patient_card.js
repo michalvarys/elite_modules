@@ -27,6 +27,35 @@ const SPLIT = {
 const SPLIT_WIDTH = 10;          // the splitter itself (CSS .evpc-split)
 const RECORD_MIN = 440;          // today's record never gets narrower
 const SPLIT_STEP = 16;           // arrow key; Shift + arrow = 4 steps
+// Record text -> paragraphs and tables (tab separated rows = WinVet lab results); the same rule
+// as text_blocks() of models/visit_report.py.
+export function textBlocks(text) {
+    const blocks = [];
+    for (const line of (text || "").split("\n")) {
+        const last = blocks[blocks.length - 1];
+        if (line.includes("\t")) {
+            if (last && last.rows) {
+                last.rows.push(line.split("\t"));
+            } else {
+                blocks.push({ rows: [line.split("\t")] });
+            }
+        } else if (last && last.text !== undefined) {
+            last.text += "\n" + line;
+        } else {
+            blocks.push({ text: line });
+        }
+    }
+    return blocks.filter((b) => {
+        if (b.rows) {
+            b.cols = Math.max(...b.rows.map((r) => r.length));
+            b.header = b.rows[0].length > 1 && !/\d/.test(b.rows[0].join(""));
+            return true;
+        }
+        b.text = b.text.replace(/^\n+|\n+$/g, "");
+        return Boolean(b.text);
+    });
+}
+
 function loadColumns() {
     try {
         const saved = JSON.parse(window.localStorage.getItem(COLUMNS_KEY) || "{}");
@@ -673,6 +702,7 @@ export class PatientCard extends Component {
         const k = this.entryKey(e);
         this.state.expanded[k] = !this.state.expanded[k];
     }
+    textBlocks(text) { return textBlocks(text); }
     isLongNotes(text) { return (text || "").length > 700 || (text || "").split("\n").length > 12; }
     toggleShowAll(e) {
         const k = this.entryKey(e);

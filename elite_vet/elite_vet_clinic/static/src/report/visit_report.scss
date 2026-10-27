@@ -87,6 +87,17 @@ $evr-soft: #f3f4f6;
     }
 
     .evr-text { orphans: 3; widows: 3; }
+    // WinVet lab results: one row per parameter, the first column left, values right aligned
+    .evr-data {
+        width: auto;
+        border-collapse: collapse;
+        margin: 1mm 0 2.5mm;
+        font-size: 9.5pt;
+        td { padding: 0.5mm 4mm 0.5mm 0; border-bottom: 0.5px solid $evr-rule; vertical-align: top; }
+        td + td { text-align: right; min-width: 16mm; }
+        tr { page-break-inside: avoid; }
+        .evr-data-head td { font-weight: bold; }
+    }
     .evr-vitals { font-weight: bold; margin-bottom: 1.5mm; }
     .evr-case { margin-bottom: 1.5mm; }
 

@@ -110,3 +110,28 @@ class TestWinvetVisitReport(ClinicCase):
         with file_open("elite_vet_clinic/static/src/patient_card/patient_card.js") as f:
             js = f.read()
         self.assertIn("report_winvet_visit_document", js)
+
+    def test_lab_results_print_as_a_table(self):
+        """WinVet lab results arrive as tab separated rows (winvet_bridge.rvf) and print as a table."""
+        lab = self.env["elite.vet.visit"].create({
+            "winvet_ref": BASE + 813, "pet_id": self.pet.id, "date": date(2026, 10, 15),
+            "entered_by_id": self.wv_doctor.id,
+            "notes": "Odebrána krev.\n\nProCyte, 15.10.2026\nMetoda\tVýsledek\tJednotka\nRBC\t7,59\tx10^12/L\n"
+                     "HCT\t49,6\nZávěr: v normě",
+        })
+        html = self.render(lab)
+        self.assertRegex(html, r'<tr class="evr-data-head">\s*<td>Metoda</td>\s*<td>Výsledek</td>\s*<td>Jednotka</td>')
+        self.assertRegex(html, r"<td>RBC</td>\s*<td>7,59</td>\s*<td>x10\^12/L</td>")
+        self.assertRegex(html, r'<td>HCT</td>\s*<td colspan="2">49,6</td>')
+        self.assertIn("Závěr: v normě", html)
+        self.assertNotIn("\t", html.split("Záznam z vyšetření", 1)[1].split("Diagnóza", 1)[0])
+
+    def test_text_blocks(self):
+        from odoo.addons.elite_vet_clinic.models.visit_report import text_blocks
+        self.assertEqual(text_blocks(""), [])
+        self.assertEqual(text_blocks("a\n\nb"), [{"text": "a\n\nb"}])
+        blocks = text_blocks("Úvod\nA\tB\n1\t2\t3\n\nKonec")
+        self.assertEqual(blocks[0], {"text": "Úvod"})
+        self.assertEqual(blocks[1], {"rows": [["A", "B"], ["1", "2", "3"]], "cols": 3, "header": True})
+        self.assertEqual(blocks[2], {"text": "Konec"})
+        self.assertFalse(text_blocks("RBC\t7,59")[0]["header"])

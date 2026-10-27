@@ -281,9 +281,21 @@
 .evpc-tl-today .evpc-tl-body { background: var(--evpc-accent-soft); }
 .evpc-tl-today .evpc-tl-head:hover:not(:disabled) { background: transparent; }
 .evpc-tl-today .evpc-tl-when b { color: var(--evpc-accent-dark); }
-.evpc-tl-detail { padding: 0 10px 10px; display: grid; gap: 8px; }
+.evpc-tl-detail { padding: 0 10px 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .evpc-tl-vitals { font-size: var(--ev-fs-meta); background: var(--evpc-chip); border-radius: 4px; padding: 2px 8px; justify-self: start; }
-.evpc-notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.55; }
+.evpc-notes { overflow-wrap: anywhere; font-size: 15px; line-height: 1.55; }
+.evpc-notes-text { white-space: pre-wrap; }
+.evpc-notes-text + .evpc-data-wrap, .evpc-data-wrap + .evpc-notes-text { margin-top: 6px; }
+// WinVet lab results in the history: compact rows, values right aligned, scrolls when too wide
+.evpc-data-wrap { max-width: 100%; overflow-x: auto; }
+.evpc-data {
+    border-collapse: collapse; font-size: 12.5px; line-height: 1.35; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    td { padding: 2px 8px 2px 0; border-bottom: 1px solid var(--ev-line); }
+    td:last-child { padding-right: 0; }
+    td + td { text-align: right; }
+    .evpc-data-head td { font-weight: 600; }
+}
 .evpc-notes-clip {
     max-height: 16em; overflow: hidden;
     mask-image: linear-gradient(to bottom, #000 75%, transparent);
