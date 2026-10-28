@@ -1086,7 +1086,12 @@ neexistují (zkouška před spuštěním), a převod 1 713 z 21. 9. je úhrada n
   rezervace se zapíše „Přesunuto i přes upozornění: …“. Kolize s jinou rezervací nebo úplnou blokací se
   obejít nedá.
 
-Upgrade: `-u elite_vet_reservation,elite_vet_reception` (18.0.2.12.0, 18.0.1.18.0), žádná změna dat ani
+- **Úprava blokace** (28. 10.): formulář ukáže zaškrtnuté ordinace celé skupiny – blokací, které vznikly
+  spolu (stejný důvod, druh a čas). Přidaná ordinace dostane kopii, odškrtnutá se smaže, všechny
+  zaškrtnuté = jedna blokace celé kliniky. Změna času, důvodu nebo poznámky a „Zrušit blokaci“
+  ve formuláři platí pro celou skupinu; přetažení na tabuli dál mění jen jednu blokaci.
+
+Upgrade: `-u elite_vet_reservation,elite_vet_reception` (18.0.2.13.0, 18.0.1.18.0), žádná změna dat ani
 mostu. V pokladně a v Ordinacích obnovit stránku natvrdo (Ctrl+Shift+R).
 
 ## Doplnění: styly ze šablon do CSS, galerie jako blok, jazyková brána (27. 10.)

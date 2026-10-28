@@ -3,6 +3,7 @@ import re
 from lxml import etree
 
 from odoo.tests import HttpCase, tagged
+from odoo.tools import file_open
 
 WINVET_URL = "https://reservation.winvet.cz/booking/t24-test"
 TEXT = "T24 text pod rezervací"
@@ -30,10 +31,13 @@ class TestWebBookingSwitchFollowups(HttpCase):
     def test_text_under_the_booking_centered_in_both_modes(self):
         for lang in ["en_US"] + list(self.installed):
             self.setting.with_context(lang=lang).booking_loading_middle = TEXT
+        # the rule of elite_vet_web that wins over ".vet-page p{margin:0}": since the styles left the
+        # templates (27. 10.) it is in rezervace.css, the page's own bundle
+        with file_open("elite_vet_web/static/src/css/rezervace.css") as f:
+            self.assertIn(CENTER_RULE, f.read())
         for mode in ("winvet", "elite"):
             html = self.page("/rezervacni-system", mode)
-            # the rule of elite_vet_web that wins over ".vet-page p{margin:0}" is on the page
-            self.assertIn(CENTER_RULE, html, mode)
+            self.assertIn("elite_vet_web.stranka_rezervace", html, mode)
             place, text = html.index('class="evrez-zprava-misto"'), html.index(TEXT)
             self.assertLess(place, text, mode)
         # WinVet keeps its loading behaviour: the script still moves the text into the notice

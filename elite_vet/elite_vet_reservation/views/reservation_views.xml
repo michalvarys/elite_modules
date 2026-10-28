@@ -41,6 +41,7 @@
                             invisible="kind == 'block' or contact_email or state in ('cancelled','done','no_show')"
                             confirm="Opravdu zrušit tuto rezervaci?"/>
                     <button name="action_cancel" type="object" string="Zrušit blokaci"
+                            context="{'ev_block_group': True}"
                             invisible="kind != 'block' or not id or state in ('cancelled','done','no_show')"/>
                     <button name="action_add_second_room" type="object" string="Přidat druhou ordinaci"
                             invisible="kind == 'block' or state != 'confirmed' or linked_reservation_id or is_second_room"/>
@@ -59,9 +60,9 @@
                             <field name="block_reason" invisible="kind == 'reservation'" required="kind == 'block'"/>
                             <field name="block_scope" widget="radio" invisible="kind != 'block'" required="kind == 'block'"/>
                             <field name="room_id" required="kind == 'reservation' and state in ('confirmed', 'done')"
-                                   invisible="kind == 'block' and not id"/>
+                                   invisible="kind == 'block'"/>
                             <field name="block_room_ids" widget="many2many_checkboxes"
-                                   invisible="kind != 'block' or id" required="kind == 'block' and not id"/>
+                                   invisible="kind != 'block'" required="kind == 'block'"/>
                             <field name="doctor_id" invisible="kind == 'block'"/>
                             <field name="linked_reservation_id" invisible="not linked_reservation_id"/>
                             <field name="is_second_room" invisible="not is_second_room"/>

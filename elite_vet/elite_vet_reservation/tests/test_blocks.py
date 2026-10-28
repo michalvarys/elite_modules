@@ -207,13 +207,73 @@ class TestBlockScope(ReservationCase):
             self.R.create({"kind": "block", "block_reason": "Nic", "block_room_ids": [(6, 0, [])],
                            "start": self.dt(WED, 9), "stop": self.dt(WED, 10)})
 
+    def _group_block(self, rooms, reason):
+        self.R.create({"kind": "block", "block_reason": reason, "block_scope": "full",
+                       "block_room_ids": [(6, 0, rooms.ids)],
+                       "start": self.dt(WED, 9), "stop": self.dt(WED, 10)})
+        return self.R.search([("block_reason", "=", reason)], order="id")
+
+    def test_edit_block_shows_and_changes_its_rooms(self):
+        """Request 27. 10.: editing a block offers the rooms of the blocks created with it."""
+        blocks = self._group_block(self.room1 | self.room2, "Skupina")
+        first = blocks[0]
+        with Form(first) as form:
+            self.assertEqual(set(form.block_room_ids.ids), set((self.room1 | self.room2).ids))
+            form.block_room_ids.remove(id=self.room2.id)
+            form.block_room_ids.add(self.surgery)
+            form.stop = self.dt(WED, 11)
+        self.assertEqual(self._blocks_by_reason("Skupina"), {
+            (self.room1, self.dt(WED, 9), self.dt(WED, 11)),
+            (self.surgery, self.dt(WED, 9), self.dt(WED, 11))})
+
+    def test_edit_block_time_moves_the_whole_group(self):
+        blocks = self._group_block(self.room1 | self.room2, "Posun")
+        with Form(blocks[1]) as form:
+            form.block_reason = "Posun 2"
+            form.start = self.dt(WED, 8)
+        self.assertEqual(self._blocks_by_reason("Posun 2"), {
+            (self.room1, self.dt(WED, 8), self.dt(WED, 10)),
+            (self.room2, self.dt(WED, 8), self.dt(WED, 10))})
+        # the board moves only the dragged block
+        dragged = self.R.search([("block_reason", "=", "Posun 2"), ("room_id", "=", self.room1.id)])
+        dragged.action_reschedule(self.dt(WED, 14))
+        self.assertEqual(self.R.search([("block_reason", "=", "Posun 2"), ("room_id", "=", self.room2.id)]).start,
+                         self.dt(WED, 8))
+
+    def test_edit_block_all_rooms_and_back(self):
+        blocks = self._group_block(self.room1 | self.room2, "Celá")
+        keep = blocks[0]
+        with Form(keep) as form:
+            form.block_room_ids.add(self.surgery)
+        self.assertEqual(self.R.search([("block_reason", "=", "Celá")]), keep)
+        self.assertFalse(keep.room_id)
+        with Form(keep) as form:
+            self.assertEqual(len(form.block_room_ids), 3)
+            form.block_room_ids.remove(id=self.room1.id)
+        self.assertEqual(self._blocks_by_reason("Celá"), {
+            (self.room2, self.dt(WED, 9), self.dt(WED, 10)),
+            (self.surgery, self.dt(WED, 9), self.dt(WED, 10))})
+        self.assertTrue(keep.exists())
+
+    def test_cancel_block_from_the_form_cancels_the_group(self):
+        blocks = self._group_block(self.room1 | self.room2, "Zrušit")
+        other = self.block(WED, 9, 10, "full", room=self.surgery, block_reason="Jiná")
+        blocks[0].with_context(ev_block_group=True).action_cancel()
+        self.assertEqual(set(blocks.mapped("state")), {"cancelled"})
+        self.assertEqual(other.state, "confirmed")
+
     def test_block_room_default_from_context(self):
-        def default_rooms(model):
-            return self.R._command_ids(model.default_get(["block_room_ids"]).get("block_room_ids"))
-        R = self.R.with_context(default_kind="block")
-        self.assertEqual(default_rooms(R), self.env["elite.vet.room"].search([]).ids)
-        self.assertEqual(default_rooms(R.with_context(default_room_id=self.room2.id)), self.room2.ids)
-        self.assertEqual(default_rooms(self.R), [])
+        with Form(self.R.with_context(default_kind="block")) as form:
+            self.assertEqual(form.block_room_ids.ids, self.env["elite.vet.room"].search([]).ids)
+            form.block_reason = "Výchozí"
+            form.start = self.dt(WED, 9)
+            form.stop = self.dt(WED, 10)
+        with Form(self.R.with_context(default_kind="block", default_room_id=self.room2.id)) as form:
+            self.assertEqual(form.block_room_ids.ids, self.room2.ids)
+            form.block_reason = "Výchozí O2"
+            form.start = self.dt(WED, 11)
+            form.stop = self.dt(WED, 12)
+        self.assertEqual(self.R.search([("block_reason", "=", "Výchozí O2")]).room_id, self.room2)
         # ignored on a reservation
         res = self.reservation(start=self.dt(WED, 15, 0), block_room_ids=[(6, 0, self.room2.ids)])
         self.assertEqual(res.room_id, self.room1)
