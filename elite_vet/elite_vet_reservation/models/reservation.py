@@ -136,11 +136,13 @@ class VetReservation(models.Model):
         help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
              "Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí.")
     repeat_weekly_until = fields.Date(string="Opakovat týdně do", help="Jen u blokace: založí kopie na stejný den v týdnu až do tohoto data.")
-    # New block only (the form shows it instead of room_id): one block per checked room, all rooms
-    # checked = one clinic-wide block (room_id empty). Not stored, create() turns it into room_id.
+    # The block form shows it instead of room_id: one block per checked room, all rooms checked =
+    # one clinic-wide block (room_id empty). Not stored: create() and write() turn it into room_id;
+    # an existing block shows the rooms of its group (_block_group: the blocks created together).
     block_room_ids = fields.Many2many(
-        "elite.vet.room", string="Ordinace", store=False, default=lambda self: self._default_block_room_ids(),
-        help="Blokace se založí v každé zaškrtnuté ordinaci. Všechny zaškrtnuté = blokace celé kliniky.")
+        "elite.vet.room", string="Ordinace", store=False, readonly=False,
+        compute="_compute_block_room_ids",
+        help="Blokace platí v každé zaškrtnuté ordinaci. Všechny zaškrtnuté = blokace celé kliniky.")
     cancel_token = fields.Char(default=lambda self: uuid.uuid4().hex, index=True, copy=False)
     cancel_reason = fields.Selection([("client", "Klient"), ("clinic", "Klinika"), ("no_show", "Nedorazil")], string="Důvod zrušení")
     deposit_state = fields.Selection([("none", "Bez zálohy"), ("pending", "Čeká na zálohu"), ("paid", "Zaplaceno"), ("refunded", "Vráceno")], default="none", string="Záloha")
@@ -179,12 +181,34 @@ class VetReservation(models.Model):
                      rec.pet_id.name or rec.pet_name or "", loc.procedure_id.name or ""]
             rec.name = " / ".join(p for p in parts if p)
 
-    @api.model
-    def _default_block_room_ids(self):
-        if self.env.context.get("default_kind") != "block":
-            return self.env["elite.vet.room"]
-        room = self.env["elite.vet.room"].browse(self.env.context.get("default_room_id")).exists()
-        return room or self.env["elite.vet.room"].search([])
+    @api.depends("kind", "room_id")
+    def _compute_block_room_ids(self):
+        all_rooms = self.env["elite.vet.room"].search([])
+        for rec in self:
+            if rec.kind != "block":
+                rec.block_room_ids = False
+            elif not rec.room_id:
+                rec.block_room_ids = all_rooms   # also a new block: all rooms checked
+            else:
+                origin = rec._origin
+                rec.block_room_ids = origin._block_group().room_id if origin else rec.room_id
+
+    def _block_group(self):
+        """The block and the blocks created together with it in other rooms: same reason, kind and
+        time. A clinic-wide block (no room) has no group."""
+        self.ensure_one()
+        if self.kind != "block" or not self.room_id:
+            return self
+        return self | self.search([
+            ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES), ("id", "!=", self.id),
+            ("room_id", "!=", False), ("room_id", "!=", self.room_id.id),
+            ("block_reason", "=", self.block_reason), ("block_scope", "=", self.block_scope),
+            ("start", "=", self.start), ("stop", "=", self.stop)])
+
+    def web_save(self, vals, specification, next_id=None):
+        # Saved from the form: a block is edited with its group (see write()).
+        return super(VetReservation, self.with_context(ev_block_group=True)).web_save(
+            vals, specification, next_id=next_id)
 
     @api.depends("create_uid")
     def _compute_created_by_id(self):
@@ -337,6 +361,10 @@ class VetReservation(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         # Before super(): its record rule check would answer first, with the generic message.
+        # The group flag of the form (web_save) is for editing; the writes of a new block's
+        # splitting and repetition below concern only the new blocks.
+        if self.env.context.get("ev_block_group"):
+            self = self.with_context(ev_block_group=False)
         # "Nová blokace" passes the kind as a context default (default_kind).
         default_kind = self.env.context.get("default_kind")
         for vals in vals_list:
@@ -386,9 +414,10 @@ class VetReservation(models.Model):
         return out
 
     @staticmethod
-    def _command_ids(commands):
-        """Record ids out of x2many commands (as the web client sends them) or a plain id list."""
-        ids = []
+    def _command_ids(commands, current=()):
+        """Record ids out of x2many commands (as the web client sends them, relative to `current`)
+        or a plain id list."""
+        ids = list(current)
         for cmd in commands or []:
             if isinstance(cmd, int):
                 ids.append(cmd)
@@ -442,10 +471,60 @@ class VetReservation(models.Model):
 
     def write(self, vals):
         self._check_block_rights(vals)
+        vals = dict(vals)
+        room_cmds = vals.pop("block_room_ids", None)
+        # From the block form (web_save, the form's Zrušit blokaci): the change applies to the
+        # whole group; the board (dragging one block) changes only that block.
+        siblings = {}
+        if self.env.context.get("ev_block_group") or room_cmds is not None:
+            siblings = {rec: rec._block_group() - rec for rec in self if rec.kind == "block"}
         res = super().write(vals)
         if {"start", "stop", "room_id", "state", "kind", "block_scope"} & set(vals):
             self._check_overlap()
+        shared = {k: v for k, v in vals.items() if k != "room_id"}
+        for rec, others in siblings.items():
+            others = others.with_context(ev_block_group=False)
+            if shared and others:
+                others.write(shared)
+            if room_cmds is not None:
+                # the web client sends add / remove relative to the rooms the form showed
+                current = (rec | others).room_id.ids if rec.room_id else self.env["elite.vet.room"].search([]).ids
+                rec.with_context(ev_block_group=False)._set_block_rooms(
+                    self._command_ids(room_cmds, current), others)
         return res
+
+    def _set_block_rooms(self, room_ids, siblings):
+        """Checked rooms of an edited block: the block keeps its room (or takes the first checked one),
+        the group's blocks in unchecked rooms are deleted, checked rooms without one get a copy.
+        All rooms checked = this block clinic-wide, the rest of the group deleted."""
+        self.ensure_one()
+        if not room_ids:
+            raise ValidationError(self.env._("Zaškrtněte aspoň jednu ordinaci."))
+        all_rooms = self.env["elite.vet.room"].search([])
+        if set(all_rooms.ids) <= set(room_ids):
+            siblings.unlink()
+            if self.room_id:
+                self.write({"room_id": False})
+            return
+        wanted = all_rooms.filtered(lambda r: r.id in room_ids)
+        by_room = {}
+        for b in siblings:
+            by_room.setdefault(b.room_id, b)
+        if self.room_id in wanted:
+            my_room = self.room_id
+        else:
+            my_room = wanted.filtered(lambda r: r not in by_room)[:1] or wanted[:1]
+        stale = siblings.filtered(lambda b: b.room_id not in wanted or b.room_id == my_room
+                                  or by_room[b.room_id] != b)
+        stale.unlink()
+        if self.room_id != my_room:
+            self.write({"room_id": my_room.id})
+        missing = wanted - my_room - (siblings - stale).room_id
+        if missing:
+            self.create([{
+                "kind": "block", "state": self.state, "block_reason": self.block_reason,
+                "block_scope": self.block_scope, "note": self.note,
+                "room_id": room.id, "start": self.start, "stop": self.stop} for room in missing])
 
     def unlink(self):
         self._check_block_rights()

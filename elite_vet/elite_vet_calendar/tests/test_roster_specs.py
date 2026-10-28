@@ -4,6 +4,7 @@ from datetime import date
 from lxml import html as lxml_html
 
 from odoo.tests import HttpCase, tagged
+from odoo.tools import file_open
 
 PNG_1PX = ("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
 
@@ -65,6 +66,9 @@ class TestRosterSpecsInBubble(HttpCase):
         legend = tree.xpath('//div[@class="rs-month-legend"]')
         self.assertTrue(legend)
         self.assertIn("Služba T22", legend[0].text_content())
-        css = "".join(tree.xpath("//style/text()"))
+        # since the styles left the templates (27. 10.): rozpis_lekaru.css, the page's own bundle
+        self.assertIn(b"elite_vet_calendar.stranka_rozpis_lekaru", resp.content)
+        with file_open("elite_vet_calendar/static/src/css/rozpis_lekaru.css") as f:
+            css = f.read()
         self.assertIn(".rs-tip .rs-tip-type { display: none; }", css)
         self.assertIn(".rs-month-legend { display: flex; }", css)
