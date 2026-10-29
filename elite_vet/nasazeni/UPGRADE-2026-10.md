@@ -1130,3 +1130,24 @@ FROM ir_ui_view WHERE key = 'elite_vet_web.homepage';
 
 V prohlížeči Ctrl+Shift+R. `nasazeni/test-vseho.py`, oddíl 4 (galerie) testuje nové chování.
 
+
+## Doplnění: rozpis DPH v uzávěrce a v pivotu tržeb (29. 10.)
+
+`-u elite_vet_winvet` (18.0.1.7.0). Most ani data se nemění; nová uložená pole se při upgradu
+dopočítají ze stávajících řádků (sazba a částka už v Odoo jsou).
+
+* **Uzávěrka (PDF)** má na konci oddíl *Rozpis DPH* (7., u jednoho dne 6.): po sazbách základ daně,
+  DPH a celkem s DPH, u každé sazby rozpad na úkony / léky a zboží / ostatní. Stejné řádky jako
+  oddíl *Tržby podle položek* (bez peněžních řádků „měna“ a nulových řádků).
+* **Tržby podle položek** (`elite.vet.sale.line`): nová pole *Sazba DPH* (seskupení, filtr
+  Seskupit → Sazba DPH), *Základ DPH* a *DPH*. Pivot je má mezi měrami, seznam jako volitelné
+  sloupce. Původní číselné pole se jmenuje *Sazba DPH (%)*.
+* Výpočet: částka řádku je s DPH, základ = částka / (1 + sazba) zaokrouhlený na haléře po
+  řádcích, DPH = částka − základ. Sazba je ta z řádku dokladu ve WinVetu (`SAZBA_DPH`), ne
+  z ceníku.
+
+Pozor na data: ve WinVetu mají k 29. 10. skoro všechny řádky dokladů sazbu 0 % (5 348 řádků účtů
+majitele, DPH 0), 21 % jen 2 řádky; ceník přitom vede 12 % a 21 %. Rozpis to ukáže tak, jak je
+na dokladech – u období jen s 0 % napíše „doklady jsou vystavené bez DPH“.
+
+Kontrola: Tržby podle položek → pivot, řádky Sazba DPH; součet *Základ DPH* + *DPH* = *Částka*.

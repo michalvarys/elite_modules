@@ -13,7 +13,7 @@
                 </group>
                 <p class="text-muted">
                     Tržby podle dokladů, přijaté platby a vratky podle formy úhrady, denní rozpis, faktury a doklady
-                    bez úhrady, zálohy a tržby podle položek – z dat, která poslal most z WinVetu.
+                    bez úhrady, zálohy, tržby podle položek a rozpis DPH – z dat, která poslal most z WinVetu.
                 </p>
                 <footer>
                     <button name="action_print" type="object" string="Vytisknout PDF" class="btn-primary"
