@@ -11,7 +11,9 @@ Bases (printed as notes in the report):
   the document (`recorded_method`, bridge 5.0+), else the method of the original document, else cash;
 * items by the line date (= visit date) with the payment method of their owner account; lines in the
   money unit ("měna", transfers of an unpaid balance into a new account) are not items and are listed
-  apart, lines with a zero amount are left out.
+  apart, lines with a zero amount are left out;
+* VAT by the rate written on each of those item lines; the line amount includes VAT, base = amount / (1 + rate),
+  rounded per line (the same numbers as "Základ DPH" / "DPH" in the sale line pivot).
 """
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -23,6 +25,7 @@ from odoo.exceptions import AccessError, UserError
 
 from .deposit import format_czk
 from .payment import METHODS
+from .sale import vat_rate_label
 from .winvet_tools import PRAGUE
 
 MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
@@ -261,8 +264,10 @@ class CashClosure(models.AbstractModel):
         # 5. deposits
         deposit_section = self._deposit_section(deposits, refunded_deposits, uses, date_to) if deposits_any else None
 
-        # 6. items by payment method
-        items = self._item_section(date_from, date_to)
+        # 6. items by payment method, 7. VAT
+        lines, money_lines = self._item_lines(date_from, date_to)
+        items = self._item_section(lines, money_lines)
+        vat = self._vat_section(lines)
 
         multi_day = date_from != date_to
         return {
@@ -292,6 +297,7 @@ class CashClosure(models.AbstractModel):
             "unpaid_total": unpaid_total,
             "deposits": deposit_section,
             "items": items,
+            "vat": vat,
         }
 
     # ------------------------------------------------------------------ sections
@@ -344,11 +350,34 @@ class CashClosure(models.AbstractModel):
         }
 
     @api.model
-    def _item_section(self, date_from, date_to):
+    def _item_lines(self, date_from, date_to):
+        """(item lines, money lines) of the period; zero lines left out."""
         lines = self.env["elite.vet.sale.line"].search(
             [("date", ">=", date_from), ("date", "<=", date_to), ("amount", "!=", 0)])
         money_lines = lines.filtered(lambda l: (l.unit or "").strip().lower() in MONEY_UNITS)
-        lines -= money_lines
+        return lines - money_lines, money_lines
+
+    @api.model
+    def _vat_section(self, lines):
+        """VAT breakdown by rate (highest first), each rate split by item kind."""
+        rates = {}
+        for line in lines:
+            rate = round(line.vat_rate or 0.0, 2)
+            row = rates.setdefault(rate, {"label": line.vat_rate_label or vat_rate_label(rate), "base": 0.0,
+                                          "vat": 0.0, "total": 0.0, "kinds": defaultdict(float)})
+            row["base"] += line.amount_untaxed
+            row["vat"] += line.amount_vat
+            row["total"] += line.amount
+            row["kinds"][line.kind or "other"] += line.amount
+        rows = [rates[rate] for rate in sorted(rates, reverse=True)]
+        for row in rows:
+            row["kind_text"] = ", ".join("%s %s Kč" % (label.lower(), money_short(row["kinds"][key]))
+                                         for key, label in KIND_ROWS if abs(row["kinds"].get(key, 0.0)) > EPS)
+        total = {k: sum(r[k] for r in rows) for k in ("base", "vat", "total")}
+        return {"rows": rows, "total": total, "without_vat": all(r["label"] == vat_rate_label(0) for r in rows)}
+
+    @api.model
+    def _item_section(self, lines, money_lines):
         items = {}
         kinds = {key: {"label": label, "values": defaultdict(float), "quantity": 0.0, "total": 0.0}
                  for key, label in KIND_ROWS}

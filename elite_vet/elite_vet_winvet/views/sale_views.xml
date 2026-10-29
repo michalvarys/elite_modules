@@ -24,7 +24,9 @@
                 <field name="currency_id" column_invisible="1"/>
                 <field name="unit_price" optional="hide"/>
                 <field name="amount" sum="Celkem"/>
-                <field name="vat_rate" optional="hide"/>
+                <field name="vat_rate_label" optional="hide"/>
+                <field name="amount_untaxed" sum="Celkem" optional="hide"/>
+                <field name="amount_vat" sum="Celkem" optional="hide"/>
                 <field name="entered_by_id" optional="show"/>
                 <field name="doctor_id" optional="hide"/>
             </list>
@@ -47,7 +49,9 @@
                             <field name="currency_id" invisible="1"/>
                             <field name="unit_price"/>
                             <field name="amount"/>
-                            <field name="vat_rate"/>
+                            <field name="vat_rate_label"/>
+                            <field name="amount_untaxed"/>
+                            <field name="amount_vat"/>
                         </group>
                         <group>
                             <field name="date"/>
@@ -88,6 +92,7 @@
                     <filter name="group_day" string="Den" context="{'group_by': 'date:day'}"/>
                     <filter name="group_kind" string="Druh položky" context="{'group_by': 'kind'}"/>
                     <filter name="group_payment_method" string="Forma úhrady" context="{'group_by': 'payment_method'}"/>
+                    <filter name="group_vat_rate" string="Sazba DPH" context="{'group_by': 'vat_rate_label'}"/>
                     <filter name="group_item" string="Položka" context="{'group_by': 'item_name'}"/>
                     <filter name="group_user" string="Zapsal(a)" context="{'group_by': 'entered_by_id'}"/>
                     <filter name="group_doctor" string="Lékařka" context="{'group_by': 'doctor_id'}"/>
@@ -105,6 +110,8 @@
                 <field name="date" interval="month" type="row"/>
                 <field name="kind" type="col"/>
                 <field name="amount" type="measure"/>
+                <field name="amount_untaxed" type="measure"/>
+                <field name="amount_vat" type="measure"/>
             </pivot>
         </field>
     </record>

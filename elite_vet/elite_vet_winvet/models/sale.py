@@ -14,6 +14,18 @@ def _czk(model):
     return model.env.ref("base.CZK")
 
 
+def vat_rate_label(rate):
+    """21.0 -> '21 %', 10.5 -> '10,5 %'; no rate -> '0 %' (a WinVet line without VAT)."""
+    return ("%g %%" % (rate or 0.0)).replace(".", ",")
+
+
+def vat_split(amount, rate):
+    """(base, VAT) of an amount including VAT, rounded to hellers; VAT = amount - base."""
+    amount = amount or 0.0
+    base = round(amount / (1 + (rate or 0.0) / 100.0), 2)
+    return base, round(amount - base, 2)
+
+
 class VetSaleDocument(models.Model):
     _name = "elite.vet.sale.document"
     _description = "Doklad (WinVet)"
@@ -96,7 +108,13 @@ class VetSaleLine(models.Model):
     currency_id = fields.Many2one("res.currency", default=_czk, readonly=True)
     unit_price = fields.Monetary(string="Cena za jednotku", readonly=True, aggregator="avg")
     amount = fields.Monetary(string="Částka", readonly=True)
-    vat_rate = fields.Float(string="Sazba DPH", readonly=True, aggregator=False)
+    vat_rate = fields.Float(string="Sazba DPH (%)", readonly=True, aggregator=False)
+    vat_rate_label = fields.Char(string="Sazba DPH", compute="_compute_vat", store=True, index=True,
+                                 help="Sazba DPH zapsaná na řádku dokladu ve WinVetu.")
+    amount_untaxed = fields.Monetary(string="Základ DPH", compute="_compute_vat", store=True,
+                                     help="Částka bez DPH: částka / (1 + sazba).")
+    amount_vat = fields.Monetary(string="DPH", compute="_compute_vat", store=True,
+                                 help="Daň v částce řádku: částka − základ.")
     date = fields.Date(string="Datum", index=True, readonly=True)
     entered_by_id = fields.Many2one("elite.vet.winvet.user", string="Zapsal(a)", index=True, ondelete="set null",
                                     readonly=True)
@@ -108,6 +126,12 @@ class VetSaleLine(models.Model):
     _sql_constraints = [
         ("winvet_ref_uniq", "unique(winvet_ref)", "Položka dokladu s tímto ID z WinVetu už existuje."),
     ]
+
+    @api.depends("amount", "vat_rate")
+    def _compute_vat(self):
+        for rec in self:
+            rec.vat_rate_label = vat_rate_label(rec.vat_rate)
+            rec.amount_untaxed, rec.amount_vat = vat_split(rec.amount, rec.vat_rate)
 
     @api.depends("item_id.kind")
     def _compute_kind(self):

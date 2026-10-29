@@ -338,6 +338,46 @@
                     položky nemají, proto se součet může lišit od tržeb podle dokladů.</p>
             </div>
 
+            <!-- 7. VAT -->
+            <t t-set="vat" t-value="r['vat']"/>
+            <div class="evc-section">
+                <h2><t t-out="'7.' if r['multi_day'] else '6.'"/> Rozpis DPH</h2>
+                <table t-if="vat['rows']" class="evc-table">
+                    <thead>
+                        <tr>
+                            <th>Sazba DPH</th>
+                            <th>Z toho</th>
+                            <th class="evc-num">Základ daně</th>
+                            <th class="evc-num">DPH</th>
+                            <th class="evc-num">Celkem s DPH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="vat['rows']" t-as="row">
+                            <td t-out="row['label']"/>
+                            <td t-out="row['kind_text']"/>
+                            <td class="evc-num" t-out="money(row['base'])"/>
+                            <td class="evc-num" t-out="money(row['vat'])"/>
+                            <td class="evc-num" t-out="money(row['total'])"/>
+                        </tr>
+                        <tr class="evc-total">
+                            <td>CELKEM</td>
+                            <td/>
+                            <td class="evc-num" t-out="money(vat['total']['base'])"/>
+                            <td class="evc-num" t-out="money(vat['total']['vat'])"/>
+                            <td class="evc-num" t-out="money(vat['total']['total'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-note">V období nejsou žádné položky.</p>
+                <p t-if="vat['rows'] and vat['without_vat']" class="evc-summary">Všechny položky mají na dokladech
+                    WinVetu sazbu 0 % – doklady jsou vystavené bez DPH.</p>
+                <p class="evc-note">Stejné položky jako v tržbách podle položek (podle data řádku, bez peněžních řádků
+                    a nulových řádků), sazba podle řádku dokladu ve WinVetu. Částky jsou s DPH; základ = částka / (1 +
+                    sazba) zaokrouhlený na haléře po řádcích, DPH = částka − základ. Stejná čísla ukazuje pivot Tržby
+                    podle položek (Základ DPH, DPH, seskupení Sazba DPH).</p>
+            </div>
+
             <table class="evc-sign">
                 <tr>
                     <td>Předal/a: ........................................<br/><br/>Datum / podpis: ................................</td>

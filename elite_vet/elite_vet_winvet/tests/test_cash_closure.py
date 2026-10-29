@@ -201,9 +201,9 @@ class TestCashClosure(WinvetCase):
                 "item_code": None}
         push("sale_lines", [
             dict(line, id=ref(50), document_id=ref(10), item_id=ref(1), item_name="Vyšetření", unit_price=600,
-                 amount=600, date=d(2)),
+                 amount=600, date=d(2), vat_rate=21),
             dict(line, id=ref(51), document_id=ref(10), item_id=ref(2), item_name="Amoxiclav", unit_price=400,
-                 amount=400, date=d(2), quantity=2, unit="tbl"),
+                 amount=400, date=d(2), quantity=2, unit="tbl", vat_rate=12),
             dict(line, id=ref(52), document_id=ref(12), item_id=ref(1), item_name="Vyšetření", unit_price=2500,
                  amount=2500, date=d(3)),
             dict(line, id=ref(53), document_id=ref(14), item_id=ref(2), item_name="Amoxiclav", unit_price=300,
@@ -308,6 +308,24 @@ class TestCashClosure(WinvetCase):
         self.assertEqual([(r["label"], r["amount"]) for r in items["money_rows"]], [("Převod nedoplatku z X", 100)])
         self.assertNotIn("Poskytnutá sleva", rows)
 
+    def test_vat_section(self):
+        vat = self.data["vat"]
+        self.assertEqual([(r["label"], r["base"], r["vat"], r["total"]) for r in vat["rows"]],
+                         [("21 %", 495.87, 104.13, 600), ("12 %", 357.14, 42.86, 400), ("0 %", 3684, 0, 3684)])
+        self.assertEqual(vat["rows"][2]["kind_text"], "úkony 3\xa0384 Kč, léky a zboží 300 Kč")
+        self.assertEqual(vat["total"]["total"], self.data["items"]["totals"]["total"])
+        self.assertAlmostEqual(vat["total"]["base"] + vat["total"]["vat"], vat["total"]["total"])
+        self.assertFalse(vat["without_vat"])
+        # the same numbers in the sale line pivot, grouped by the rate
+        Line = self.env["elite.vet.sale.line"]
+        groups = Line._read_group(
+            [("date", ">=", date(Y, 3, 1)), ("date", "<=", date(Y, 3, 31)), ("amount", "!=", 0),
+             ("unit", "!=", "měna")], ["vat_rate_label"], ["amount_untaxed:sum", "amount_vat:sum"])
+        self.assertEqual(sorted(groups), [("0 %", 3684, 0), ("12 %", 357.14, 42.86), ("21 %", 495.87, 104.13)])
+        line = self.find("elite.vet.sale.line", 50)
+        line.vat_rate = 10.5
+        self.assertEqual((line.vat_rate_label, line.amount_untaxed, line.amount_vat), ("10,5 %", 542.99, 57.01))
+
     def test_report_renders_all_sections(self):
         wizard = self.env["elite.vet.cash.closure.wizard"].create({"preset": "custom", "date_from": date(Y, 3, 1),
                                                                     "date_to": date(Y, 3, 31)})
@@ -320,12 +338,15 @@ class TestCashClosure(WinvetCase):
                      "1. 3. – 31. 3. %d" % Y):
             self.assertIn(text, html, text)
         self.assertNotIn("Most zatím zálohy neposílá", html)
+        self.assertNotIn("doklady jsou vystavené bez DPH", html)
         # one day: no daily table, sections renumbered
         wizard.write({"date_from": date(Y, 3, 4), "date_to": date(Y, 3, 4)})
         html = self.env["ir.actions.report"]._render_qweb_html(
             "elite_vet_winvet.report_cash_closure_document", wizard.ids)[0].decode()
         self.assertNotIn("Denní rozpis", html)
         self.assertIn("3. Faktury a doklady bez úhrady", html)
+        self.assertIn("6. Rozpis DPH", html)
+        self.assertIn("doklady jsou vystavené bez DPH", html, "4. 3. has only lines at 0 %")
         self.assertIn("4. 3. %d" % Y, html)
 
     def test_without_deposit_data(self):
