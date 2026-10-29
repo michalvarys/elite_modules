@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ggleap_visit_list" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.visit.list</field>
+        <field name="model">elite.arena.ggleap.visit</field>
+        <field name="arch" type="xml">
+            <list string="Herní sezení" create="0" delete="0" edit="0">
+                <field name="start"/>
+                <field name="end"/>
+                <field name="duration_hours" widget="float_time" sum="Celkem"/>
+                <field name="end_source" optional="hide"/>
+                <field name="player_id"/>
+                <field name="is_guest" optional="hide"/>
+                <field name="place"/>
+                <field name="partner_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ggleap_visit_form" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.visit.form</field>
+        <field name="model">elite.arena.ggleap.visit</field>
+        <field name="arch" type="xml">
+            <form string="Herní sezení" create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="player_id"/>
+                            <field name="is_guest"/>
+                            <field name="machine_id"/>
+                            <field name="device_name" invisible="not device_name"/>
+                        </group>
+                        <group>
+                            <field name="start"/>
+                            <field name="end"/>
+                            <field name="duration_hours" widget="float_time"/>
+                            <field name="end_source"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_ggleap_visit_search" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.visit.search</field>
+        <field name="model">elite.arena.ggleap.visit</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="player_id"/>
+                <field name="place"/>
+                <filter name="players" string="Hráči s účtem" domain="[('is_guest', '=', False)]"/>
+                <filter name="guests" string="Hosté" domain="[('is_guest', '=', True)]"/>
+                <filter name="open" string="Právě hrají / konec neznámý" domain="[('end', '=', False)]"/>
+                <separator/>
+                <filter name="start" string="Datum" date="start"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_day" string="Den" context="{'group_by': 'start:day'}"/>
+                    <filter name="group_month" string="Měsíc" context="{'group_by': 'start:month'}"/>
+                    <filter name="group_place" string="Počítač / konzole" context="{'group_by': 'place'}"/>
+                    <filter name="group_player" string="Hráč" context="{'group_by': 'player_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_ggleap_visit_pivot" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.visit.pivot</field>
+        <field name="model">elite.arena.ggleap.visit</field>
+        <field name="arch" type="xml">
+            <pivot string="Herní sezení">
+                <field name="start" interval="month" type="row"/>
+                <field name="count" type="measure"/>
+                <field name="duration_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_ggleap_visit_graph" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.visit.graph</field>
+        <field name="model">elite.arena.ggleap.visit</field>
+        <field name="arch" type="xml">
+            <graph string="Herní sezení" type="bar">
+                <field name="start" interval="day"/>
+                <field name="count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="view_ggleap_visit_calendar" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.visit.calendar</field>
+        <field name="model">elite.arena.ggleap.visit</field>
+        <field name="arch" type="xml">
+            <calendar string="Herní sezení" date_start="start" date_stop="end" color="place" mode="week"
+                      create="0" quick_create="0" event_open_popup="1">
+                <field name="player_id"/>
+                <field name="place"/>
+            </calendar>
+        </field>
+    </record>
+    <record id="action_ggleap_visit" model="ir.actions.act_window">
+        <field name="name">Herní sezení</field>
+        <field name="res_model">elite.arena.ggleap.visit</field>
+        <field name="view_mode">list,calendar,pivot,graph,form</field>
+    </record>
+</odoo>

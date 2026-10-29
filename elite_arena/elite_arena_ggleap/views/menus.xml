@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_ggleap_root" name="Herna" sequence="61"
+              web_icon="elite_arena_ggleap,static/description/icon.png"
+              groups="elite_arena_ggleap.group_ggleap_user"/>
+
+    <menuitem id="menu_ggleap_dashboard" name="Přehled" parent="menu_ggleap_root" sequence="5"
+              action="action_ggleap_dashboard"/>
+    <menuitem id="menu_ggleap_players" name="Hráči" parent="menu_ggleap_root" sequence="10"/>
+    <menuitem id="menu_ggleap_player" name="Hráči" parent="menu_ggleap_players" sequence="10"
+              action="action_ggleap_player"/>
+    <menuitem id="menu_ggleap_partners" name="Kontakty hráčů" parent="menu_ggleap_players" sequence="20"
+              action="action_ggleap_partners"/>
+    <menuitem id="menu_ggleap_visit" name="Herní sezení" parent="menu_ggleap_root" sequence="20"
+              action="action_ggleap_visit"/>
+    <menuitem id="menu_ggleap_sales" name="Tržby" parent="menu_ggleap_root" sequence="30"/>
+    <menuitem id="menu_ggleap_line" name="Tržby podle položek" parent="menu_ggleap_sales" sequence="10"
+              action="action_ggleap_line"/>
+    <menuitem id="menu_ggleap_transaction" name="Prodeje" parent="menu_ggleap_sales" sequence="20"
+              action="action_ggleap_transaction"/>
+    <menuitem id="menu_ggleap_booking" name="Rezervace" parent="menu_ggleap_root" sequence="40"
+              action="action_ggleap_booking"/>
+
+    <menuitem id="menu_ggleap_config" name="Konfigurace" parent="menu_ggleap_root" sequence="90"/>
+    <menuitem id="menu_ggleap_settings" name="Nastavení" parent="menu_ggleap_config" sequence="10"
+              action="action_ggleap_config" groups="elite_arena_ggleap.group_ggleap_manager"/>
+    <menuitem id="menu_ggleap_status" name="Stav synchronizace" parent="menu_ggleap_config" sequence="20"
+              action="action_ggleap_status"/>
+    <menuitem id="menu_ggleap_product" name="Produkty" parent="menu_ggleap_config" sequence="30"
+              action="action_ggleap_product"/>
+    <menuitem id="menu_ggleap_machine" name="Počítače" parent="menu_ggleap_config" sequence="40"
+              action="action_ggleap_machine"/>
+</odoo>

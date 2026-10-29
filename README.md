@@ -10,10 +10,12 @@ po projektech.
 elite_modules/
 ├── docker-compose.yml     Odoo 18 + PostgreSQL
 ├── config/odoo.conf       addons_path, připojení k databázi
-└── elite_vet/             klinika Elite Vet
-    ├── elite_vet_calendar/   Rozpis služeb lékařů
-    ├── elite_vet_reservation/   Rezervační kalendář (nahrazuje WinVet)
-    └── elite_vet_team/       Stránka Náš tým
+├── elite_vet/             klinika Elite Vet
+│   ├── elite_vet_calendar/   Rozpis služeb lékařů
+│   ├── elite_vet_reservation/   Rezervační kalendář (nahrazuje WinVet)
+│   └── elite_vet_team/       Stránka Náš tým
+└── elite_arena/           herna Elite Arena
+    └── elite_arena_ggleap/   Data z ggLeapu a přehled herny
 ```
 
 Celý repozitář je v kontejneru namountovaný do `/mnt/modules`.
@@ -105,6 +107,23 @@ průvodce místo iframu. Recepce pracuje s Tabulí (sloupec na ordinaci) a front
 za všechny klienty dohromady.
 
 Detaily v [elite_vet/elite_vet_reservation/README.md](elite_vet/elite_vet_reservation/README.md).
+
+
+## elite_arena — herna Elite Arena
+
+### `elite_arena_ggleap` — Herna (data z ggLeapu)
+
+Odoo si každých 15 minut samo stáhne z ggLeapu hráče, návštěvy, prodeje,
+produkty, počítače a rezervace (jen čtení, do ggLeapu nic nezapisuje). Hráči
+s e‑mailem se propojí s kontakty a ty dostanou skupinu podle toho, jak chodí
+(chodí pravidelně, přestává chodit, ztracený, přišel jen jednou…), takže jdou
+rovnou filtrovat pro e‑mailing. Aplikace **Herna → Přehled** ukazuje tržby,
+návštěvy, kdy se chodí a kdo odchází.
+
+**Nastavení:** Herna → Konfigurace → Nastavení → vložit AuthToken z ggLeap
+adminu (Settings → API → Public API) → *Uložit a otestovat spojení*.
+
+Detaily v [elite_arena/elite_arena_ggleap/README.md](elite_arena/elite_arena_ggleap/README.md).
 
 
 dokumentace: 

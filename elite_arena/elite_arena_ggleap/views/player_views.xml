@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ggleap_player_list" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.player.list</field>
+        <field name="model">elite.arena.ggleap.player</field>
+        <field name="arch" type="xml">
+            <list string="Hráči" create="0" delete="0" decoration-muted="deleted"
+                  decoration-danger="segment == 'ztraceni'" decoration-warning="segment == 'ohrozeni'">
+                <field name="display_label"/>
+                <field name="email"/>
+                <field name="phone" optional="show"/>
+                <field name="segment" widget="badge" decoration-success="segment == 'aktivni_stali'"
+                       decoration-info="segment == 'jednou_nedavno'" decoration-warning="segment == 'ohrozeni'"
+                       decoration-danger="segment == 'ztraceni'"/>
+                <field name="visit_count" sum="Celkem"/>
+                <field name="last_visit"/>
+                <field name="days_since_visit"/>
+                <field name="hours_played" optional="show" sum="Celkem"/>
+                <field name="total_spent" sum="Celkem"/>
+                <field name="balance" optional="hide"/>
+                <field name="registered_at" optional="hide"/>
+                <field name="age" optional="hide"/>
+                <field name="partner_id" optional="show"/>
+                <field name="deleted" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ggleap_player_form" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.player.form</field>
+        <field name="model">elite.arena.ggleap.player</field>
+        <field name="arch" type="xml">
+            <form string="Hráč" create="0" delete="0" edit="0">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_visits" type="object" class="oe_stat_button" icon="fa-desktop">
+                            <field name="visit_count" widget="statinfo" string="Návštěv"/>
+                        </button>
+                        <button name="action_open_transactions" type="object" class="oe_stat_button" icon="fa-money">
+                            <field name="total_spent" widget="statinfo" string="Utratil (Kč)"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="display_label"/></h1>
+                        <field name="segment" widget="badge"/>
+                        <div class="text-muted"><field name="segment_help"/></div>
+                    </div>
+                    <div class="alert alert-secondary" role="alert" invisible="not deleted">
+                        Účet je v ggLeapu smazaný.
+                    </div>
+                    <group>
+                        <group string="Kontakt">
+                            <field name="first_name"/>
+                            <field name="last_name"/>
+                            <field name="username"/>
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="birthdate"/>
+                            <field name="age" invisible="not birthdate"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group string="Jak chodí">
+                            <field name="first_visit"/>
+                            <field name="last_visit"/>
+                            <field name="days_since_visit"/>
+                            <field name="hours_played"/>
+                            <field name="registered_at"/>
+                            <field name="last_seen_ggleap"/>
+                        </group>
+                        <group string="Účet v ggLeap">
+                            <field name="balance"/>
+                            <field name="time_remaining_hours"/>
+                            <field name="locked"/>
+                            <field name="deleted"/>
+                            <field name="uuid" groups="base.group_no_one"/>
+                            <field name="details_synced_at" groups="base.group_no_one"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Herní sezení" name="visits">
+                            <field name="visit_ids">
+                                <list limit="20">
+                                    <field name="start"/>
+                                    <field name="end"/>
+                                    <field name="duration_hours" widget="float_time"/>
+                                    <field name="place"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Prodeje" name="transactions">
+                            <field name="transaction_ids">
+                                <list limit="20">
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="amount"/>
+                                    <field name="status"/>
+                                    <field name="employee"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Rezervace" name="bookings">
+                            <field name="booking_ids">
+                                <list limit="20">
+                                    <field name="start"/>
+                                    <field name="duration_minutes"/>
+                                    <field name="machine_count"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_ggleap_player_search" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.player.search</field>
+        <field name="model">elite.arena.ggleap.player</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="display_label" string="Hráč"
+                       filter_domain="['|', '|', '|', ('display_label', 'ilike', self), ('username', 'ilike', self), ('email', 'ilike', self), ('phone', 'ilike', self)]"/>
+                <field name="email"/>
+                <filter name="aktivni" string="Chodí pravidelně" domain="[('segment', '=', 'aktivni_stali')]"/>
+                <filter name="novy" string="Nový, zatím jednou" domain="[('segment', '=', 'jednou_nedavno')]"/>
+                <filter name="ohrozeni" string="Přestává chodit" domain="[('segment', '=', 'ohrozeni')]"/>
+                <filter name="ztraceni" string="Ztracený" domain="[('segment', '=', 'ztraceni')]"/>
+                <filter name="jednou" string="Přišel jen jednou" domain="[('segment', '=', 'jednou_davno')]"/>
+                <filter name="nikdy" string="Ještě nehrál" domain="[('segment', '=', 'nikdy')]"/>
+                <separator/>
+                <filter name="with_email" string="Má e-mail" domain="[('email', '!=', False)]"/>
+                <filter name="with_phone" string="Má telefon" domain="[('phone', '!=', False)]"/>
+                <filter name="no_partner" string="Bez kontaktu" domain="[('partner_id', '=', False)]"/>
+                <filter name="balance" string="Má kredit nebo čas" domain="['|', ('balance', '>', 0), ('time_remaining_hours', '>', 0)]"/>
+                <separator/>
+                <filter name="current" string="Existující účty" domain="[('deleted', '=', False)]"/>
+                <filter name="deleted" string="Smazané v ggLeap" domain="[('deleted', '=', True)]"/>
+                <separator/>
+                <filter name="last_visit" string="Poslední návštěva" date="last_visit"/>
+                <filter name="first_visit" string="První návštěva" date="first_visit"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_segment" string="Skupina" context="{'group_by': 'segment'}"/>
+                    <filter name="group_first" string="Měsíc první návštěvy" context="{'group_by': 'first_visit:month'}"/>
+                    <filter name="group_last" string="Měsíc poslední návštěvy" context="{'group_by': 'last_visit:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_ggleap_player_pivot" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.player.pivot</field>
+        <field name="model">elite.arena.ggleap.player</field>
+        <field name="arch" type="xml">
+            <pivot string="Hráči">
+                <field name="segment" type="row"/>
+                <field name="total_spent" type="measure"/>
+                <field name="visit_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_ggleap_player_graph" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.player.graph</field>
+        <field name="model">elite.arena.ggleap.player</field>
+        <field name="arch" type="xml">
+            <graph string="Hráči" type="bar">
+                <field name="segment"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_ggleap_player" model="ir.actions.act_window">
+        <field name="name">Hráči</field>
+        <field name="res_model">elite.arena.ggleap.player</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="context">{'search_default_current': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Zatím žádní hráči</p>
+            <p>Hráči se stáhnou z ggLeapu při první synchronizaci (Konfigurace → Nastavení).</p>
+        </field>
+    </record>
+</odoo>

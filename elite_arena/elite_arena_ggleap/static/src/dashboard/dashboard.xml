@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="elite_arena_ggleap.Dashboard">
+        <div class="o_action egd">
+          <div class="o_content egd-body">
+            <div class="egd-toolbar">
+                <h3 class="egd-title">Přehled herny</h3>
+                <div class="btn-group egd-presets" role="group" aria-label="Období">
+                    <button t-foreach="presetList" t-as="p" t-key="p.key" type="button" class="btn btn-sm"
+                            t-att-class="state.preset === p.key ? 'btn-primary' : 'btn-light'"
+                            t-on-click="() => this.setPreset(p.key)" t-esc="p.label"/>
+                </div>
+                <div class="egd-range">
+                    <input type="date" class="form-control form-control-sm" t-att-value="state.from"
+                           t-on-change="(ev) => this.onDateChange('from', ev)" aria-label="Od"/>
+                    <span>–</span>
+                    <input type="date" class="form-control form-control-sm" t-att-value="state.to"
+                           t-on-change="(ev) => this.onDateChange('to', ev)" aria-label="Do"/>
+                </div>
+            </div>
+
+            <t t-if="state.data">
+                <t t-set="d" t-value="state.data"/>
+                <div class="egd-subtitle text-muted">
+                    <t t-esc="periodLabel(d.period)"/>
+                    <span t-if="d.kpi_previous" class="ms-2">· srovnání s <t t-esc="periodLabel(d.previous)"/></span>
+                    <span class="ms-2">· <t t-esc="syncLabel()"/></span>
+                    <span t-if="state.loading" class="ms-2"><i class="fa fa-spinner fa-spin"/></span>
+                </div>
+                <div t-if="d.sync.alert" class="alert alert-danger py-2" role="alert" t-esc="d.sync.alert"/>
+                <div t-elif="!d.sync.backfill_done" class="alert alert-info py-2" role="alert">
+                    Historie z ggLeapu se ještě stahuje, starší čísla se během několika běhů synchronizace doplní.
+                </div>
+
+                <p class="egd-headline" t-esc="headline"/>
+
+                <div class="egd-cards">
+                    <button t-foreach="cards" t-as="c" t-key="c.key" type="button" class="egd-card" t-on-click="c.open"
+                            title="Otevřít detail">
+                        <div class="egd-card-label" t-esc="c.label"/>
+                        <div class="egd-card-value" t-esc="c.value"/>
+                        <div class="egd-card-hint text-muted" t-esc="c.hint"/>
+                        <t t-set="dl" t-value="delta(c.key, c.plain)"/>
+                        <div class="egd-card-delta" t-att-class="dl.cls">
+                            <t t-esc="dl.text"/><span t-if="dl.text" class="text-muted"> oproti srovnání</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="egd-grid">
+                    <section class="egd-panel egd-wide">
+                        <h5>Tržby a návštěvy v čase</h5>
+                        <p class="egd-explain">Sloupce jsou tržby (rozdělené na hraní a občerstvení), čára je počet návštěv.</p>
+                        <div class="egd-chart"><canvas t-ref="daily"/></div>
+                    </section>
+
+                    <section class="egd-panel egd-wide">
+                        <h5>Kdo k nám chodí a kdo odchází</h5>
+                        <p class="egd-explain">
+                            Stav ke dnešku podle poslední návštěvy. <t t-esc="segmentSentence"/>
+                            Kliknutím otevřete seznam hráčů, v Kontaktech jsou stejné skupiny jako filtr pro e‑mailing.
+                        </p>
+                        <div class="egd-segments">
+                            <button t-foreach="segments" t-as="s" t-key="s.key" type="button" class="egd-segment"
+                                    t-on-click="() => this.openSegment(s)">
+                                <div class="egd-segment-head">
+                                    <span class="egd-dot" t-att-style="'background:' + s.color"/>
+                                    <strong t-esc="s.label"/>
+                                    <span class="ms-auto egd-segment-count" t-esc="whole(s.count)"/>
+                                </div>
+                                <div class="egd-bar"><span t-att-style="'width:' + s.pct + '%;background:' + s.color"/></div>
+                                <div class="small text-muted" t-esc="s.help"/>
+                                <div class="small text-muted" t-if="s.count">
+                                    <t t-esc="whole(s.with_email)"/> má e‑mail · průměrně utratil <t t-esc="money(s.avg_spent)"/>
+                                </div>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="egd-panel egd-wide">
+                        <h5>Kdy se chodí</h5>
+                        <t t-set="hm" t-value="heat"/>
+                        <p class="egd-explain">
+                            Kolik hráčů v daný den a hodinu přišlo (čím tmavší, tím víc lidí).
+                            <t t-esc="hm.sentence"/>
+                        </p>
+                        <div class="egd-heat-wrap">
+                            <table class="egd-heat">
+                                <thead>
+                                    <tr><th/><th t-foreach="hm.hours" t-as="h" t-key="h" t-esc="h"/></tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="hm.rows" t-as="row" t-key="row.d">
+                                        <th t-esc="row.day"/>
+                                        <td t-foreach="row.cells" t-as="cell" t-key="cell.h" t-att-style="cell.style"
+                                            t-att-title="row.day + ' ' + cell.h + ':00 – ' + cell.v + ' návštěv'" t-esc="cell.v"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="egd-panel">
+                        <h5>Co se prodává</h5>
+                        <t t-set="maxAmount" t-value="d.top_products.length ? d.top_products[0].amount : 0"/>
+                        <table class="table table-sm egd-top">
+                            <tbody>
+                                <tr t-foreach="d.top_products" t-as="row" t-key="row_index" t-on-click="() => this.openProduct(row)">
+                                    <td class="egd-top-name">
+                                        <div t-esc="row.name"/>
+                                        <div class="small text-muted" t-esc="row.kind_label"/>
+                                        <div class="egd-bar"><span t-att-style="'width:' + sharePct(row.amount, maxAmount) + '%;background:' + (row.kind === 'food' ? '#ea580c' : '#4f46e5')"/></div>
+                                    </td>
+                                    <td class="text-end text-muted"><t t-esc="number(row.quantity)"/>×</td>
+                                    <td class="text-end fw-bold" t-esc="money(row.amount)"/>
+                                </tr>
+                                <tr t-if="!d.top_products.length"><td class="text-muted">V tomto období nic.</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="egd-panel">
+                        <h5>Nejlepší hráči v tomto období</h5>
+                        <t t-set="maxPlayer" t-value="d.top_players.length ? d.top_players[0].amount : 0"/>
+                        <table class="table table-sm egd-top">
+                            <tbody>
+                                <tr t-foreach="d.top_players" t-as="row" t-key="row.id" t-on-click="() => this.openPlayer(row)">
+                                    <td class="egd-top-name">
+                                        <div t-esc="row.name"/>
+                                        <div class="small text-muted">návštěv: <t t-esc="row.visits"/> · <t t-esc="row.segment_label"/></div>
+                                        <div class="egd-bar"><span t-att-style="'width:' + sharePct(row.amount, maxPlayer) + '%;background:#0891b2'"/></div>
+                                    </td>
+                                    <td class="text-end fw-bold" t-esc="money(row.amount)"/>
+                                </tr>
+                                <tr t-if="!d.top_players.length"><td class="text-muted">V tomto období nic.</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="egd-panel">
+                        <h5>Jak platí</h5>
+                        <div t-if="d.payment_methods.length" class="egd-chart egd-chart-sm"><canvas t-ref="payments"/></div>
+                        <div t-else="" class="egd-empty text-muted">V tomto období žádné platby.</div>
+                        <p class="egd-explain mt-2" t-if="d.kpi.discount">
+                            Na slevách a kuponech se odpustilo <t t-esc="money(d.kpi.discount)"/>.
+                        </p>
+                    </section>
+
+                    <section class="egd-panel">
+                        <h5>Vytížení počítačů a konzolí</h5>
+                        <p class="egd-explain">Kolik hodin se na kterém počítači nebo konzoli hrálo.</p>
+                        <div t-if="d.machines.length" class="egd-chart" t-att-style="'height:' + machinesHeight + 'px'"><canvas t-ref="machines"/></div>
+                        <div t-else="" class="egd-empty text-muted">V tomto období žádné návštěvy.</div>
+                    </section>
+                </div>
+            </t>
+            <div t-else="" class="p-4 text-muted">Načítám…</div>
+          </div>
+        </div>
+    </t>
+</templates>
