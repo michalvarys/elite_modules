@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ggleap_config_manager,elite.arena.ggleap.config.manager,model_elite_arena_ggleap_config,group_ggleap_manager,1,1,1,1
+access_ggleap_status_user,elite.arena.ggleap.status.user,model_elite_arena_ggleap_status,group_ggleap_user,1,0,0,0
+access_ggleap_status_manager,elite.arena.ggleap.status.manager,model_elite_arena_ggleap_status,group_ggleap_manager,1,1,0,0
+access_ggleap_status_entity_user,elite.arena.ggleap.status.entity.user,model_elite_arena_ggleap_status_entity,group_ggleap_user,1,0,0,0
+access_ggleap_player_user,elite.arena.ggleap.player.user,model_elite_arena_ggleap_player,group_ggleap_user,1,0,0,0
+access_ggleap_player_manager,elite.arena.ggleap.player.manager,model_elite_arena_ggleap_player,group_ggleap_manager,1,1,0,0
+access_ggleap_visit_user,elite.arena.ggleap.visit.user,model_elite_arena_ggleap_visit,group_ggleap_user,1,0,0,0
+access_ggleap_transaction_user,elite.arena.ggleap.transaction.user,model_elite_arena_ggleap_transaction,group_ggleap_user,1,0,0,0
+access_ggleap_transaction_line_user,elite.arena.ggleap.transaction.line.user,model_elite_arena_ggleap_transaction_line,group_ggleap_user,1,0,0,0
+access_ggleap_product_user,elite.arena.ggleap.product.user,model_elite_arena_ggleap_product,group_ggleap_user,1,0,0,0
+access_ggleap_product_manager,elite.arena.ggleap.product.manager,model_elite_arena_ggleap_product,group_ggleap_manager,1,1,0,0
+access_ggleap_machine_user,elite.arena.ggleap.machine.user,model_elite_arena_ggleap_machine,group_ggleap_user,1,0,0,0
+access_ggleap_booking_user,elite.arena.ggleap.booking.user,model_elite_arena_ggleap_booking,group_ggleap_user,1,0,0,0

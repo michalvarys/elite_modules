@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ggleap_booking_list" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.booking.list</field>
+        <field name="model">elite.arena.ggleap.booking</field>
+        <field name="arch" type="xml">
+            <list string="Rezervace" create="0" delete="0" edit="0"
+                  decoration-danger="state == 'noshow'" decoration-muted="state == 'canceled'">
+                <field name="start"/>
+                <field name="duration_minutes"/>
+                <field name="name"/>
+                <field name="player_id"/>
+                <field name="guest_name" optional="show"/>
+                <field name="machine_count"/>
+                <field name="paid"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ggleap_booking_search" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.booking.search</field>
+        <field name="model">elite.arena.ggleap.booking</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="player_id"/>
+                <field name="name"/>
+                <filter name="planned" string="Naplánované" domain="[('state', '=', 'planned')]"/>
+                <filter name="noshow" string="Nedorazil" domain="[('state', '=', 'noshow')]"/>
+                <separator/>
+                <filter name="start" string="Datum" date="start"/>
+            </search>
+        </field>
+    </record>
+    <record id="view_ggleap_booking_calendar" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.booking.calendar</field>
+        <field name="model">elite.arena.ggleap.booking</field>
+        <field name="arch" type="xml">
+            <calendar string="Rezervace" date_start="start" date_delay="duration_hours" color="state" mode="week"
+                      create="0" quick_create="0" event_open_popup="1">
+                <field name="player_id"/>
+                <field name="machine_count"/>
+            </calendar>
+        </field>
+    </record>
+    <record id="action_ggleap_booking" model="ir.actions.act_window">
+        <field name="name">Rezervace</field>
+        <field name="res_model">elite.arena.ggleap.booking</field>
+        <field name="view_mode">list,calendar</field>
+    </record>
+</odoo>

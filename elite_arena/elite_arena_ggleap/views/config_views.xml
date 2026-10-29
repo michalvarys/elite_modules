@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ggleap_config_form" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.config.form</field>
+        <field name="model">elite.arena.ggleap.config</field>
+        <field name="arch" type="xml">
+            <form string="Nastavení ggLeap">
+                <header>
+                    <button name="action_save" type="object" string="Uložit" class="btn-primary"/>
+                    <button name="action_test" type="object" string="Uložit a otestovat spojení"/>
+                    <button name="action_sync_now" type="object" string="Uložit a synchronizovat teď"/>
+                    <button name="action_forget_token" type="object" string="Smazat AuthToken" invisible="not token_set"
+                            confirm="Synchronizace se zastaví, dokud nevložíte nový token. Pokračovat?"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1>Propojení s ggLeapem</h1></div>
+                    <div class="alert alert-info" role="alert">
+                        Odoo si každých 15 minut samo stáhne z ggLeapu hráče, návštěvy, prodeje, produkty,
+                        počítače a rezervace. Do ggLeapu nic nezapisuje. AuthToken najdete v administraci ggLeapu
+                        v <strong>Settings → API → Public API</strong>.
+                    </div>
+                    <group>
+                        <group string="Přístup">
+                            <field name="token_set"/>
+                            <field name="auth_token" password="True" placeholder="vložte jen při změně"/>
+                            <field name="base"/>
+                        </group>
+                        <group string="Skupiny hráčů">
+                            <field name="risk_days"/>
+                            <field name="lost_days"/>
+                            <field name="create_partners"/>
+                        </group>
+                        <group string="Limity (sdílené s ostatními nástroji na stejném tokenu)">
+                            <field name="rpm"/>
+                            <field name="daily_limit"/>
+                            <field name="run_seconds"/>
+                        </group>
+                        <group string="Rozsah dat">
+                            <field name="history_days"/>
+                            <field name="details_per_run"/>
+                            <field name="sessions_per_run"/>
+                            <field name="bookings_ahead"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_ggleap_config" model="ir.actions.act_window">
+        <field name="name">Nastavení ggLeap</field>
+        <field name="res_model">elite.arena.ggleap.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+</odoo>

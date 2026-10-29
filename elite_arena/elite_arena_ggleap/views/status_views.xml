@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ggleap_status_form" model="ir.ui.view">
+        <field name="name">elite.arena.ggleap.status.form</field>
+        <field name="model">elite.arena.ggleap.status</field>
+        <field name="arch" type="xml">
+            <form string="Stav synchronizace" create="0" delete="0" edit="0">
+                <header>
+                    <button name="action_sync_now" type="object" string="Synchronizovat teď" class="btn-primary"
+                            groups="elite_arena_ggleap.group_ggleap_manager"/>
+                    <button name="action_relink_partners" type="object" string="Znovu spárovat kontakty"
+                            groups="elite_arena_ggleap.group_ggleap_manager"/>
+                    <button name="action_restart_history" type="object" string="Stáhnout historii znovu"
+                            groups="elite_arena_ggleap.group_ggleap_manager"
+                            confirm="Návštěvy a prodeje se znovu projdou od začátku historie (nic se nesmaže, jen doplní). Pokračovat?"/>
+                </header>
+                <div class="alert alert-danger mb-0" role="alert" invisible="not alert">
+                    <strong>Pozor: </strong><field name="alert" class="d-inline"/>
+                </div>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group string="Běhy">
+                            <field name="last_run_at"/>
+                            <field name="last_success_at"/>
+                            <field name="message"/>
+                            <field name="last_run_seconds"/>
+                            <field name="last_run_calls"/>
+                            <field name="calls_today"/>
+                        </group>
+                        <group string="Kam jsme došli">
+                            <field name="history_from"/>
+                            <field name="activity_cursor"/>
+                            <field name="transaction_cursor"/>
+                            <field name="backfill_done"/>
+                            <field name="last_error" decoration-danger="last_error"/>
+                            <field name="last_error_at" invisible="not last_error"/>
+                        </group>
+                    </group>
+                    <field name="entity_ids">
+                        <list decoration-danger="last_error">
+                            <field name="entity"/>
+                            <field name="last_run_at"/>
+                            <field name="created"/>
+                            <field name="updated"/>
+                            <field name="total"/>
+                            <field name="note"/>
+                            <field name="last_error"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_ggleap_status" model="ir.actions.act_window">
+        <field name="name">Stav synchronizace</field>
+        <field name="res_model">elite.arena.ggleap.status</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" ref="ggleap_status"/>
+    </record>
+</odoo>
