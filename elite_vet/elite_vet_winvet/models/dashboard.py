@@ -23,7 +23,8 @@ class WinvetDashboard(models.AbstractModel):
 
     @api.model
     def _check_access(self):
-        if not self.env.user.has_group("elite_vet_reservation.group_reservation_manager"):
+        if not (self.env.user.has_group("elite_vet_reservation.group_reservation_manager")
+                or self.env.user.has_group("elite_vet_winvet.group_winvet_readonly")):
             raise AccessError("Přehled tržeb je jen pro správce rezervací.")
 
     @api.model

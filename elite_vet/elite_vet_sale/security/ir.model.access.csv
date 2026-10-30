@@ -3,3 +3,5 @@ access_winvet_stock_layer_manager,elite.vet.winvet.stock.layer.manager,model_eli
 access_winvet_stock_total_manager,elite.vet.winvet.stock.total.manager,model_elite_vet_winvet_stock_total,elite_vet_reservation.group_reservation_manager,1,0,0,0
 access_product_code_till,elite.vet.product.code.till,model_elite_vet_product_code,group_till_stock,1,0,0,0
 access_product_code_manager,elite.vet.product.code.manager,model_elite_vet_product_code,stock.group_stock_manager,1,1,1,1
+access_winvet_stock_layer_readonly,elite.vet.winvet.stock.layer.readonly,model_elite_vet_winvet_stock_layer,elite_vet_winvet.group_winvet_readonly,1,0,0,0
+access_winvet_stock_total_readonly,elite.vet.winvet.stock.total.readonly,model_elite_vet_winvet_stock_total,elite_vet_winvet.group_winvet_readonly,1,0,0,0
