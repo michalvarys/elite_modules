@@ -8,6 +8,7 @@ the refund; its cash handover view lists refunded deposits as cash, so Odoo stor
 from odoo import _, api, fields, models
 
 from .payment import METHOD_CODES, METHODS
+from .visit import WINVET_READERS
 from .winvet_tools import to_date, to_float, to_int, to_str
 
 
@@ -90,7 +91,7 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
     winvet_deposit_ids = fields.One2many("elite.vet.deposit", "partner_id", string="Zálohy z WinVetu",
-                                         readonly=True, groups="elite_vet_reservation.group_reservation_manager")
+                                         readonly=True, groups=WINVET_READERS)
     winvet_deposit_count = fields.Integer(string="Počet záloh", compute="_compute_winvet_deposit")
     winvet_deposit_balance = fields.Float(string="Zůstatek záloh", compute="_compute_winvet_deposit",
                                           help="Součet zůstatků záloh klienta podle WinVetu.")

@@ -17,3 +17,6 @@ access_bundle_line_reception,elite.vet.procedure.bundle.line.reception,model_eli
 access_bundle_line_doctor,elite.vet.procedure.bundle.line.doctor,model_elite_vet_procedure_bundle_line,group_clinic_doctor,1,1,1,1
 access_partner_merge_wizard_manager,base.partner.merge.automatic.wizard.manager,base.model_base_partner_merge_automatic_wizard,elite_vet_reservation.group_reservation_manager,1,1,1,0
 access_partner_merge_line_manager,base.partner.merge.line.manager,base.model_base_partner_merge_line,elite_vet_reservation.group_reservation_manager,1,1,1,1
+access_procedure_bundle_winvet_readonly,elite.vet.procedure.bundle.winvet.readonly,model_elite_vet_procedure_bundle,elite_vet_winvet.group_winvet_readonly,1,0,0,0
+access_procedure_bundle_line_winvet_readonly,elite.vet.procedure.bundle.line.winvet.readonly,model_elite_vet_procedure_bundle_line,elite_vet_winvet.group_winvet_readonly,1,0,0,0
+access_text_template_winvet_readonly,elite.vet.text.template.winvet.readonly,model_elite_vet_text_template,elite_vet_winvet.group_winvet_readonly,1,0,0,0

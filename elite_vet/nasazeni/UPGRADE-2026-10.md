@@ -1151,3 +1151,29 @@ majitele, DPH 0), 21 % jen 2 řádky; ceník přitom vede 12 % a 21 %. Rozpis to
 na dokladech – u období jen s 0 % napíše „doklady jsou vystavené bez DPH“.
 
 Kontrola: Tržby podle položek → pivot, řádky Sazba DPH; součet *Základ DPH* + *DPH* = *Částka*.
+
+## Doplnění: účet jen pro čtení dat z WinVetu (API pro agenta) (30. 10.)
+
+`-u elite_vet_winvet,elite_vet_sale,elite_vet_clinic` (18.0.1.8.0, 18.0.1.2.0, 18.0.1.9.0). Data
+se nemění.
+
+Nová role **WinVet data → Jen čtení (API)** (`elite_vet_winvet.group_winvet_readonly`): čtení
+všeho, co posílá most – majitelé (`res.partner`), pacienti, návštěvy a vitální hodnoty, očkování,
+doklady, položky tržeb, platby, zálohy a jejich čerpání, výdaje, ceník, sklad (`elite_vet_sale`),
+balíčky úkonů a fráze (`elite_vet_clinic`), kalendář z WinVetu, uživatelé WinVetu, stav
+synchronizace a změny struktury. Navíc `elite.vet.winvet.dashboard.get_data` a
+`elite.vet.cash.closure.closure_data` (uzávěrka jako data). Žádné právo zápisu, vytvoření ani
+mazání na datech kliniky – přes API nic nezmění (hlídá test `test_readonly_account`). API klíč
+mostu a log běhů nevidí.
+
+Nastavení účtu (např. `slavek`):
+
+1. Nastavení → Uživatelé → účet: typ *Interní uživatel*; v rolích Elite Vet **nic** (ne Recepce,
+   ne Vedení – ty mohou zapisovat); *WinVet data* = **Jen čtení (API)**. Ostatní aplikace prázdné.
+2. Přihlásit se jako ten účet → Předvolby → Zabezpečení účtu → *Nový API klíč* (heslo se tím
+   do agenta nedává; klíč jde kdykoli zrušit).
+3. Agent volá JSON-RPC / XML-RPC (`/jsonrpc`, `/xmlrpc/2/object`) s loginem a API klíčem místo
+   hesla.
+
+Pro agenta: u `res.partner` vždy uvádět seznam polí (`search_read(domain, ["name", ...])`) –
+partner má i účetní pole a ta účet číst nesmí, `search_read` bez polí skončí chybou přístupu.

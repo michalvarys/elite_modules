@@ -8,3 +8,4 @@ from . import test_expense
 from . import test_v2
 from . import test_calendar
 from . import test_cash_closure
+from . import test_readonly_account

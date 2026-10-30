@@ -1,5 +1,8 @@
 from odoo import fields, models
 
+#: managers and the read-only API account (security/groups.xml)
+WINVET_READERS = "elite_vet_reservation.group_reservation_manager,elite_vet_winvet.group_winvet_readonly"
+
 
 class VetVisit(models.Model):
     _name = "elite.vet.visit"
@@ -23,12 +26,12 @@ class VetVisit(models.Model):
     entered_by_winvet_ref = fields.Integer(string="ID uživatele ve WinVetu", readonly=True)
     doctor_id = fields.Many2one(related="entered_by_id.doctor_id", string="Lékařka", store=True)
     document_id = fields.Many2one("elite.vet.sale.document", string="Doklad", ondelete="set null", readonly=True,
-                                  groups="elite_vet_reservation.group_reservation_manager")
+                                  groups=WINVET_READERS)
     document_winvet_ref = fields.Integer(string="ID dokladu ve WinVetu", index=True, readonly=True)
     line_ids = fields.One2many("elite.vet.sale.line", "visit_id", string="Položky", readonly=True,
-                               groups="elite_vet_reservation.group_reservation_manager")
+                               groups=WINVET_READERS)
     amount = fields.Monetary(string="Částka", compute="_compute_amount", currency_field="currency_id",
-                             groups="elite_vet_reservation.group_reservation_manager")
+                             groups=WINVET_READERS)
     currency_id = fields.Many2one("res.currency", compute="_compute_amount")
     display_label = fields.Char(compute="_compute_display_label")
 

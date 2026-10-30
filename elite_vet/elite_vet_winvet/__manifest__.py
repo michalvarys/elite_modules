@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - WinVet data",
-    "version": "18.0.1.7.0",
+    "version": "18.0.1.8.0",
     "category": "Services",
     "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby, zálohy a jejich analýzy; uzávěrka (PDF); ruční výdaje a zisk; kalendář WinVetu na tabuli.",
     "description": """
@@ -18,6 +18,7 @@ Rozhraní je popsané v elite_vet/winvet_bridge/CONTRACT.md.
     "license": "LGPL-3",
     "depends": ["mail", "elite_vet_calendar", "elite_vet_reservation"],
     "data": [
+        "security/groups.xml",
         "security/ir.model.access.csv",
         "data/data.xml",
         "data/expense_data.xml",
