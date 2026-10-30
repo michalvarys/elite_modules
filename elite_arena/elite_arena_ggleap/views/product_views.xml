@@ -11,6 +11,8 @@
                 <field name="price"/>
                 <field name="hours" widget="float_time"/>
                 <field name="product_type" optional="hide"/>
+                <field name="offer_type" optional="hide"/>
+                <field name="eligible_days" optional="hide"/>
                 <field name="in_catalog"/>
             </list>
         </field>

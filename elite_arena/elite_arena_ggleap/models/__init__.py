@@ -4,6 +4,7 @@ from . import status
 from . import product
 from . import machine
 from . import player
+from . import gamepass
 from . import partner
 from . import visit
 from . import transaction

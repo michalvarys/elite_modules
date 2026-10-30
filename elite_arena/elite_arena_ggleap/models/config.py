@@ -21,6 +21,8 @@ DEFAULTS = {
     "daily_limit": 5000,
     "details_per_run": 30,
     "sessions_per_run": 20,
+    "gamepasses_per_run": 10,
+    "gamepass_days": 14,
     "bookings_ahead": 14,
 }
 
@@ -73,6 +75,11 @@ class GgleapConfig(models.TransientModel):
     sessions_per_run = fields.Integer(string="Doplnění délky sezení za běh",
                                       help="Když ggLeap nezapíše odhlášení (došel čas), délka sezení se doplní "
                                            "z přehledu sezení hráče. Stojí 1 dotaz na hráče.")
+    gamepasses_per_run = fields.Integer(string="Načtení passů hráčů za běh",
+                                        help="Passy hráče stojí 1 dotaz. Načtou se jednou pro každého hráče "
+                                             "a pak znovu po každé jeho návštěvě (passy se při hraní odečítají).")
+    gamepass_days = fields.Integer(string="Přidaný pass platí (dní)",
+                                   help="Výchozí platnost passu přidaného z Odoo. Jde změnit u každého passu.")
     bookings_ahead = fields.Integer(string="Rezervace dopředu (dní)")
     risk_days = fields.Integer(string="„Přestává chodit“ po (dnech)",
                                help="Pravidelný hráč, který nepřišel tolik dní, je ve skupině Přestává chodit.")
@@ -99,6 +106,8 @@ class GgleapConfig(models.TransientModel):
         self.ensure_one()
         if self.lost_days <= self.risk_days:
             raise UserError("„Ztracený“ musí být víc dní než „Přestává chodit“.")
+        if self.gamepass_days < 1:
+            raise UserError("Přidaný pass musí platit aspoň 1 den.")
         if self.rpm < 1 or self.daily_limit < 1 or self.run_seconds < 20:
             raise UserError("Limity musí být kladné a běh aspoň 20 sekund.")
         params = self.env["ir.config_parameter"].sudo()

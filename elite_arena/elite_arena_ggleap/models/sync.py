@@ -6,7 +6,8 @@ next run continues where this one ended. The first run walks the history window
 (``history_days``) in chunks. Every area runs in its own savepoint: an error in one area
 is recorded on the status and does not undo the others.
 
-Odoo never writes to ggLeap.
+The sync only reads. The one thing Odoo writes to ggLeap is a game pass that a user adds
+on purpose (``grant_gamepass``).
 """
 import hashlib
 import json
@@ -20,10 +21,12 @@ from datetime import date, datetime, timedelta, timezone
 import requests
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 from .config import get_settings
 from .ggleap_client import BASES, GgleapAuthError, GgleapBudgetError, GgleapClient, GgleapError
-from .product import guess_kind
+from .gamepass import pass_state
+from .product import DAY_NAMES, guess_kind
 
 _logger = logging.getLogger(__name__)
 
@@ -33,6 +36,8 @@ ACTIVITY_OVERLAP = timedelta(minutes=15)
 TRANSACTION_WINDOW = timedelta(days=14)
 TRANSACTION_OVERLAP = timedelta(days=3)   # refunds change older transactions
 LOGOUT_SLACK = timedelta(minutes=10)
+GAMEPASS_AFTER_VISIT = timedelta(hours=6)   # passes are reloaded until this long after a visit
+GAMEPASS_MIN_GAP = timedelta(hours=1)
 MAX_SESSION = timedelta(hours=36)   # a logout without duration closes only a visit this recent
 # Logins at the PC and remote logins (phone / QR) are both visits.
 LOGIN_ACTIONS = ("LoggedIn", "RemoteLoggedIn")
@@ -97,6 +102,18 @@ def clean(value):
     if isinstance(value, str):
         value = value.strip()
     return value or False
+
+
+def day_names(days):
+    """ggLeap days of the week (0 = Sunday, or names) → "Monday,Tuesday"; every day → False."""
+    names = []
+    for d in days or []:
+        name = DAY_NAMES[d] if isinstance(d, int) and 0 <= d < 7 else d
+        if name in DAY_NAMES and name not in names:
+            names.append(name)
+    if not names or len(names) == 7:
+        return False
+    return ",".join(sorted(names, key=DAY_NAMES.index))
 
 
 def segment(visits, last, now, risk_days, lost_days):
@@ -193,6 +210,8 @@ class GgleapSync(models.AbstractModel):
             ("activity", self._sync_activity, True),
             ("transactions", self._sync_transactions, True),
             ("bookings", self._sync_bookings, True),
+            # passes before the one-off backfills: they change with every visit
+            ("gamepasses", self._sync_gamepasses, True),
             ("details", self._sync_details, True),
             ("sessions", self._sync_sessions, True),
             ("stats", self._sync_stats, False),
@@ -355,7 +374,12 @@ class GgleapSync(models.AbstractModel):
                 rows[uuid] = {"name": clean(o.get("Name")) or uuid[:8], "product_type": "Offers",
                               "category_uuid": clean(o.get("CategoryUuid")), "price": float(o.get("Price") or 0),
                               "seconds": int(o.get("Seconds") or 0), "in_catalog": True, "active": True,
-                              "kind": guess_kind(o.get("Name"), "Offers", o.get("Price"))}
+                              "kind": guess_kind(o.get("Name"), "Offers", o.get("Price")),
+                              "offer_type": self._sel("elite.arena.ggleap.product", "offer_type", o.get("OfferType")),
+                              "offer_priority": clean(o.get("Priority")),
+                              "eligible_days": day_names(o.get("EligibleDays")),
+                              "eligible_pc_groups": json.dumps(sorted(o.get("EligiblePcGroups") or []))
+                              if o.get("EligiblePcGroups") else False}
         Product = self.env["elite.arena.ggleap.product"]
         manual = set(Product.search([("uuid", "in", list(rows)), ("kind_manual", "=", True)]).mapped("uuid"))
         for uuid in manual:
@@ -682,6 +706,149 @@ class GgleapSync(models.AbstractModel):
         return {"updated": closed, "total": Visit.search_count([("end_source", "=", "session")]),
                 "note": "; ".join(filter(None, [("bez konce: %d" % unknown) if unknown else "",
                                                 ("zbývá %d hráčů" % left) if left else ""])) or False}
+
+    # ------------------------------------------------------------------ game passes
+    def _gamepass_vals(self, dto, now):
+        seconds, used = int(dto.get("Seconds") or 0), int(dto.get("SecondsUsed") or 0)
+        consumed, removed, expires = (parse_dt(dto.get("ConsumedAt")), parse_dt(dto.get("RemovedAt")),
+                                      parse_dt(dto.get("ExpiresAt")))
+        state, left = pass_state(seconds, used, consumed, removed, expires, now)
+        return {"name": clean(dto.get("Name")), "offer_uuid": clean(dto.get("OfferUuid")),
+                "seconds": seconds, "seconds_used": used, "hours_left": left, "state": state,
+                "pass_type": self._sel("elite.arena.ggleap.gamepass", "pass_type", dto.get("Type")),
+                "priority": clean(dto.get("Priority")), "added_at": parse_dt(dto.get("AddedAt")),
+                "started_at": parse_dt(dto.get("StartedAt")), "consumed_at": consumed, "removed_at": removed,
+                "expires_at": expires}
+
+    def _apply_gamepasses(self, player, offers, now, complete=True):
+        """offers: UserOfferDto list of one player. ``complete`` = the whole list from ggLeap
+        (passes missing from it were removed there)."""
+        Pass = self.env["elite.arena.ggleap.gamepass"].sudo()
+        offers = [o for o in offers if o.get("Uuid")]
+        products = {p.uuid: p.id for p in self.env["elite.arena.ggleap.product"].with_context(active_test=False)
+                    .search([("uuid", "in", [o.get("OfferUuid") for o in offers if o.get("OfferUuid")])])}
+        rows = {}
+        for o in offers:
+            vals = self._gamepass_vals(o, now)
+            vals.update(player_id=player.id, product_id=products.get(o.get("OfferUuid")) or False)
+            rows[o["Uuid"]] = vals
+        found, created, updated = self.sudo()._upsert("elite.arena.ggleap.gamepass", "uuid", rows)
+        if complete:
+            gone = Pass.search([("player_id", "=", player.id), ("uuid", "not in", list(rows)),
+                                ("state", "!=", "removed")])
+            gone.write({"state": "removed", "hours_left": 0.0, "removed_at": now})
+            player.sudo().write({"gamepasses_synced_at": now})
+        return found, created, updated
+
+    def _fetch_gamepasses(self, client, player, now):
+        data = client.get("/users/gamepasses/list", {"UserUuid": player.uuid, "IncludeInactive": True})
+        return self._apply_gamepasses(player, data.get("Offers") or [], now)
+
+    def _gamepass_todo(self, now, limit):
+        """Players whose passes should be (re)loaded: right after a visit (time is being used
+        up), then everybody never loaded, the most recent visitors first."""
+        Player = self.env["elite.arena.ggleap.player"]
+        recent = Player.search([("deleted", "=", False), ("last_visit", ">=", now - timedelta(days=2))],
+                               order="last_visit desc")
+        todo = recent.filtered(lambda p: not p.gamepasses_synced_at or (
+            p.gamepasses_synced_at < p.last_visit + GAMEPASS_AFTER_VISIT
+            and p.gamepasses_synced_at < now - GAMEPASS_MIN_GAP))
+        if len(todo) < limit:
+            todo |= Player.search([("deleted", "=", False), ("gamepasses_synced_at", "=", False),
+                                   ("id", "not in", todo.ids)],
+                                  order="last_visit desc nulls last, id", limit=limit - len(todo))
+        return todo[:limit]
+
+    def _sync_gamepasses(self, client, settings, now, deadline, status):
+        Pass = self.env["elite.arena.ggleap.gamepass"]
+        expired = Pass.search([("state", "=", "active"), ("expires_at", "<", now)])
+        expired.write({"state": "expired", "hours_left": 0.0})
+        limit = max(settings["gamepasses_per_run"], 0)
+        if not limit:
+            return {"note": "vypnuto", "total": Pass.search_count([])}
+        created = updated = 0
+        for player in self._gamepass_todo(now, limit):
+            if time.time() > deadline:
+                break
+            try:
+                _found, c, u = self._fetch_gamepasses(client, player, now)
+            except GgleapError as err:
+                if isinstance(err, (GgleapAuthError, GgleapBudgetError)):
+                    raise
+                _logger.info("ggLeap: passy hráče %s: %s", player.uuid, err)
+                player.write({"gamepasses_synced_at": now})
+                continue
+            created += c
+            updated += u
+        left = self.env["elite.arena.ggleap.player"].search_count(
+            [("deleted", "=", False), ("gamepasses_synced_at", "=", False)])
+        return {"created": created, "updated": updated + len(expired), "total": Pass.search_count([]),
+                "note": ("zbývá %d hráčů" % left) if left else False}
+
+    def _ui_client(self, calls):
+        """Client for a button click (not the cron); counts the calls into today's limit."""
+        settings = get_settings(self.env)
+        if not settings["auth_token"]:
+            raise UserError("Chybí AuthToken ggLeapu (Herna → Konfigurace → Nastavení).")
+        status = self.env["elite.arena.ggleap.status"].sudo().get_status()
+        if status.calls_left_today(settings["daily_limit"]) < calls:
+            raise UserError("Dnešní limit dotazů na ggLeap je vyčerpaný. Zkuste to zítra nebo ho zvyšte v Nastavení.")
+        return self._make_client(settings, max_calls=calls + 1), status, settings
+
+    @api.model
+    def refresh_gamepasses(self, players):
+        """Loads the passes of the given players from ggLeap now (1 call each)."""
+        players = players.filtered(lambda p: not p.deleted)
+        if not players:
+            return 0
+        if len(players) > 20:
+            raise UserError("Najednou jde načíst passy nejvýš 20 hráčů.")
+        client, status, _settings = self._ui_client(len(players))
+        now = datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+        count = 0
+        try:
+            for player in players:
+                found, _c, _u = self._fetch_gamepasses(client, player, now)
+                count += len(found)
+        except GgleapError as err:
+            raise UserError("ggLeap odpověděl chybou: %s" % err) from err
+        finally:
+            status.count_calls(client.calls)
+        return count
+
+    @api.model
+    def grant_gamepass(self, player, product, seconds, name, expires_at, start_type, note=False, key=None):
+        """Adds a game pass to the player's ggLeap account (POST /users/gamepasses/add) and
+        stores it. ``key`` makes the call idempotent (a double click adds one pass)."""
+        if player.deleted:
+            raise UserError("Účet hráče je v ggLeapu smazaný.")
+        if seconds <= 0:
+            raise UserError("Pass musí mít kladný čas.")
+        payload = {
+            "UserUuid": player.uuid,
+            "OfferUuid": product.uuid,
+            "Name": name or product.name,
+            "Seconds": int(seconds),
+            "Type": start_type or product.offer_type or "StartOnFirstUse",
+            "Priority": product.offer_priority or "Normal",
+            "ExpiresAt": api_ts(expires_at),
+            "EligibleDays": (product.eligible_days or ",".join(DAY_NAMES)).split(","),
+            "EligiblePcGroups": json.loads(product.eligible_pc_groups or "[]"),
+        }
+        client, status, _settings = self._ui_client(2)
+        try:
+            dto = (client.post("/users/gamepasses/add", payload, correlation_id=key) or {}).get("Offer") or {}
+        except GgleapError as err:
+            raise UserError("ggLeap pass nepřidal: %s" % err) from err
+        finally:
+            status.count_calls(client.calls)
+        if not dto.get("Uuid"):
+            raise UserError("ggLeap pass přijal, ale nevrátil ho. Načtěte passy hráče znovu.")
+        now = datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+        found, _c, _u = self._apply_gamepasses(player, [dto], now, complete=False)
+        gamepass = found[dto["Uuid"]]
+        gamepass.write({"granted_in_odoo": True, "granted_by_id": self.env.user.id, "grant_note": note or False})
+        return gamepass
 
     def _sync_stats(self, client, settings, now, deadline, status):
         """Visit count, first/last visit, hours, spend and segment of every player (local only)."""

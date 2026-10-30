@@ -7,6 +7,7 @@ ENTITIES = [
     ("activity", "Návštěvy (přihlášení)"),
     ("transactions", "Prodeje"),
     ("bookings", "Rezervace"),
+    ("gamepasses", "Herní passy"),
     ("details", "Detaily hráčů"),
     ("sessions", "Délka sezení"),
     ("partners", "Kontakty"),

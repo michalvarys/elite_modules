@@ -13,10 +13,26 @@
                         <span class="o_stat_text">Návštěv herny</span>
                     </div>
                 </button>
+                <button name="action_open_ggleap_gamepasses" type="object" class="oe_stat_button" icon="fa-ticket"
+                        invisible="not ggleap_player_ids" groups="elite_arena_ggleap.group_ggleap_user">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="ggleap_pass_hours_left" widget="float_time"/></span>
+                        <span class="o_stat_text">Zbývá v passech</span>
+                    </div>
+                </button>
             </div>
             <notebook position="inside">
                 <page string="Herna" name="ggleap" invisible="not ggleap_player_ids"
                       groups="elite_arena_ggleap.group_ggleap_user">
+                    <div class="d-flex gap-2 mb-3">
+                        <button name="action_grant_ggleap_gamepass" type="object" string="Přidat pass"
+                                icon="fa-plus" class="btn-primary"
+                                groups="elite_arena_ggleap.group_ggleap_passes"/>
+                        <button name="action_refresh_ggleap_gamepasses" type="object" string="Načíst passy z ggLeapu"
+                                icon="fa-refresh" class="btn-secondary"/>
+                        <button name="action_open_ggleap_gamepasses" type="object" string="Všechny passy"
+                                icon="fa-list" class="btn-link"/>
+                    </div>
                     <group>
                         <group>
                             <field name="ggleap_segment"/>
@@ -26,9 +42,22 @@
                         <group>
                             <field name="ggleap_visit_count"/>
                             <field name="ggleap_total_spent"/>
+                            <field name="ggleap_pass_hours_left" widget="float_time"/>
                             <field name="ggleap_uuid" groups="base.group_no_one"/>
                         </group>
                     </group>
+                    <separator string="Platné herní passy"/>
+                    <field name="ggleap_active_gamepass_ids" readonly="1" nolabel="1">
+                        <list no_open="0">
+                            <field name="name"/>
+                            <field name="hours" widget="float_time"/>
+                            <field name="hours_left" widget="float_time"/>
+                            <field name="expires_at"/>
+                            <field name="added_at"/>
+                            <field name="grant_note" optional="show"/>
+                        </list>
+                    </field>
+                    <separator string="Účty v ggLeapu"/>
                     <field name="ggleap_player_ids" readonly="1">
                         <list>
                             <field name="display_label"/>
@@ -53,6 +82,7 @@
                 <filter name="ggleap_ohrozeni" string="Herna: přestává chodit" domain="[('ggleap_segment', '=', 'ohrozeni')]"/>
                 <filter name="ggleap_ztraceni" string="Herna: ztracený" domain="[('ggleap_segment', '=', 'ztraceni')]"/>
                 <filter name="ggleap_jednou" string="Herna: přišel jen jednou" domain="[('ggleap_segment', '=', 'jednou_davno')]"/>
+                <filter name="ggleap_pass" string="Herna: má nevyčerpaný pass" domain="[('ggleap_pass_hours_left', '>', 0)]"/>
                 <separator/>
             </filter>
             <group position="inside">

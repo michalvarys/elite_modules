@@ -9,10 +9,16 @@
         <field name="category_id" ref="module_category_ggleap"/>
         <field name="comment">Vidí přehled herny, hráče, návštěvy, prodeje a rezervace z ggLeapu.</field>
     </record>
+    <record id="group_ggleap_passes" model="res.groups">
+        <field name="name">Přidělovat passy</field>
+        <field name="category_id" ref="module_category_ggleap"/>
+        <field name="implied_ids" eval="[(4, ref('group_ggleap_user'))]"/>
+        <field name="comment">Navíc přidává hráčům herní passy (např. hodinu zdarma) přímo do účtu v ggLeapu.</field>
+    </record>
     <record id="group_ggleap_manager" model="res.groups">
         <field name="name">Správce</field>
         <field name="category_id" ref="module_category_ggleap"/>
-        <field name="implied_ids" eval="[(4, ref('group_ggleap_user'))]"/>
+        <field name="implied_ids" eval="[(4, ref('group_ggleap_passes'))]"/>
         <field name="comment">Navíc nastavuje propojení s ggLeapem a spouští synchronizaci.</field>
         <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
     </record>

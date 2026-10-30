@@ -2,7 +2,8 @@
 
 Odoo 18 modul. Odoo si samo stahuje data z ggLeap Public API a plní z nich tabulky
 a přehled herny. ggLeap nemá webhooky, takže stahování běží cronem každých 15 minut.
-Data tečou jen jedním směrem: Odoo do ggLeapu nic nezapisuje.
+Synchronizace jen čte. Do ggLeapu Odoo zapíše jedině herní pass, který někdo přidá
+hráči ručně (viz [Herní passy](#herní-passy)).
 
 ## Nastavení
 
@@ -19,6 +20,7 @@ Data tečou jen jedním směrem: Odoo do ggLeapu nic nezapisuje.
 Přístup řídí skupiny v kategorii **Herna (ggLeap)**:
 
 - **Data a přehled** vidí všechno, ale nic nemění.
+- **Přidělovat passy** navíc přidává hráčům herní passy do účtu v ggLeapu.
 - **Správce** navíc nastavuje propojení, spouští synchronizaci a opravuje druh produktu.
 
 ## Limity a běh
@@ -45,6 +47,7 @@ Přístup řídí skupiny v kategorii **Herna (ggLeap)**:
 | Prodeje | `/transactions/search` | `elite.arena.ggleap.transaction` + `.line` | od kurzoru po 14 dnech, překryv 3 dny kvůli vratkám |
 | Rezervace | `/bookings/get-bookings` | `elite.arena.ggleap.booking` | okno od předevčírka na `bookings_ahead` dní |
 | Detail hráče | `/users/user-details` | `elite.arena.ggleap.player` | jednou pro každého nového hráče |
+| Herní passy | `/users/gamepasses/list` | `elite.arena.ggleap.gamepass` | jednou pro každého hráče, pak znovu po každé návštěvě (`gamepasses_per_run`, výchozí 10) |
 
 Pravidla párování a výpočtu:
 
@@ -69,6 +72,30 @@ Pravidla párování a výpočtu:
   - Hodnoty položek z ggLeapu jsou ceníkové, proto se přepočtou tak, aby dávaly dohromady cenu prodeje.
   - Hodina zdarma „koupená“ za coiny má v ggLeapu hodnotu 1 000, ale stojí 0 Kč.
   - Ceníková hodnota zůstává v poli *Hodnota podle ceníku*.
+
+## Herní passy
+
+Pass je předplacený herní čas na účtu hráče. Vzniká koupí u pokladny (1 Hodina, 3 Hodiny…),
+jako výhra za coiny, nebo ho přidá někdo z Odoo.
+
+- **Kde je vidět:**
+  - Kontakt → záložka **Herna**: platné passy, zbývající čas a tlačítko *Zbývá v passech*.
+  - Formulář hráče: záložka *Herní passy*.
+  - **Herna → Hráči → Herní passy**: všechny passy s filtry *Platné*, *Přidané z Odoo* a *Nezačaté*.
+  - Kontakt má uložené pole *Herna: zbývá v passech (h)* a filtr *Herna: má nevyčerpaný pass*.
+- **Stav:** *Platný*, *Vyčerpaný*, *Propadlý* (po datu platnosti) nebo *Odebraný* (v ggLeapu smazaný).
+- **Načítání:**
+  - Passy hráče stojí 1 dotaz. Cron je načte jednou pro každého hráče, nejdřív nedávné návštěvníky.
+  - Po každé návštěvě je načte znovu, a to až 6 hodin od příchodu a nejvýš jednou za hodinu, protože se během hraní odečítá čas.
+  - Krok běží před detaily hráčů, aby ho jejich první stahování nezdrželo.
+  - Tlačítko **Načíst passy z ggLeapu** je načte hned.
+- **Přidat pass** (kontakt → Herna, nebo formulář hráče):
+  - **Produkt:** pass vychází z produktu typu herní pass. Výchozí je hodina zdarma za 0 Kč („1 HODINA FREE“).
+  - **Omezení:** pass převezme omezení produktu, tedy skupiny PC a dny. Například PS5 pass platí jen na PS5.
+  - **Čas a platnost:** čas, platnost (výchozí 14 dní, nastavení *Přidaný pass platí*) a kdy začne běžet jdou změnit.
+  - **Zápis:** Odoo zavolá `POST /users/gamepasses/add` s `X-Correlation-Id`. Dvojklik tedy pass nepřidá dvakrát.
+  - Pass se hned uloží s příznakem *Přidán z Odoo*, kdo ho přidal a proč. Ke kontaktu se zapíše poznámka.
+- Odebrat pass jde zatím jen v administraci ggLeapu. Po dalším načtení bude v Odoo *Odebraný*.
 
 ## Skupiny hráčů
 
@@ -132,7 +159,7 @@ Dny se počítají v časovém pásmu uživatele, výchozí je Europe/Prague.
 ## Menu
 
 - **Přehled**
-- **Hráči:** Hráči, Kontakty hráčů
+- **Hráči:** Hráči, Kontakty hráčů, Herní passy
 - **Herní sezení**
 - **Tržby:** Tržby podle položek, Prodeje
 - **Rezervace**
@@ -158,4 +185,5 @@ Pokrývají:
 - smazané hráče,
 - chybu jedné oblasti,
 - ručně nastavený druh produktu,
+- herní passy: stav, součty, omezení produktu, obnovu po návštěvě, odebrání v ggLeapu, přidání z Odoo (dvojklik, chyba API),
 - čísla přehledu.
