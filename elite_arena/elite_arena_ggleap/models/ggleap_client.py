@@ -4,7 +4,8 @@
   valid 10 minutes; it is renewed every 5 minutes.
 * Basic tier allows 20 requests/minute and 10 000/day; the client keeps a minimal gap
   between calls (``rpm``), counts calls and refuses to go over ``max_calls``.
-* 401 → new JWT (and the other Authorization scheme), 429/5xx → short pause and retry.
+* 401 → new JWT (and the other Authorization scheme), 429/5xx → short pause and retry
+  (write calls carry an idempotency key, so a retry is safe).
 """
 import json
 import logging
@@ -92,14 +93,24 @@ class GgleapClient:
 
     # ------------------------------------------------------------------ public
     def get(self, path, params=None):
+        return self._request("GET", path, params=params)
+
+    def post(self, path, body, correlation_id=None):
+        """Write call. ggLeap treats ``X-Correlation-Id`` as an idempotency key, so a retry
+        with the same id does not do the change twice."""
+        headers = {"X-Correlation-Id": correlation_id} if correlation_id else {}
+        return self._request("POST", path, body=body, headers=headers)
+
+    def _request(self, method, path, params=None, body=None, headers=None):
         last = None
         for attempt in range(4):
             self._ensure_jwt()
             self._throttle()
             try:
-                resp = self.session.get(self.base + path, params=self.encode(params), timeout=self.timeout,
-                                        headers={"Authorization": self.scheme + self.jwt,
-                                                 "Accept": "application/json"})
+                resp = self.session.request(method, self.base + path, params=self.encode(params), json=body,
+                                            timeout=self.timeout,
+                                            headers=dict(headers or {}, Authorization=self.scheme + self.jwt,
+                                                         Accept="application/json"))
             except requests.RequestException as err:
                 last = err
                 self.sleep(5 * (attempt + 1))

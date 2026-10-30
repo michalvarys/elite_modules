@@ -11,6 +11,8 @@
               action="action_ggleap_player"/>
     <menuitem id="menu_ggleap_partners" name="Kontakty hráčů" parent="menu_ggleap_players" sequence="20"
               action="action_ggleap_partners"/>
+    <menuitem id="menu_ggleap_gamepass" name="Herní passy" parent="menu_ggleap_players" sequence="30"
+              action="action_ggleap_gamepass"/>
     <menuitem id="menu_ggleap_visit" name="Herní sezení" parent="menu_ggleap_root" sequence="20"
               action="action_ggleap_visit"/>
     <menuitem id="menu_ggleap_sales" name="Tržby" parent="menu_ggleap_root" sequence="30"/>

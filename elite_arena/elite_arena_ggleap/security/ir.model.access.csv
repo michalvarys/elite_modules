@@ -12,3 +12,5 @@ access_ggleap_product_user,elite.arena.ggleap.product.user,model_elite_arena_ggl
 access_ggleap_product_manager,elite.arena.ggleap.product.manager,model_elite_arena_ggleap_product,group_ggleap_manager,1,1,0,0
 access_ggleap_machine_user,elite.arena.ggleap.machine.user,model_elite_arena_ggleap_machine,group_ggleap_user,1,0,0,0
 access_ggleap_booking_user,elite.arena.ggleap.booking.user,model_elite_arena_ggleap_booking,group_ggleap_user,1,0,0,0
+access_ggleap_gamepass_user,elite.arena.ggleap.gamepass.user,model_elite_arena_ggleap_gamepass,group_ggleap_user,1,0,0,0
+access_ggleap_gamepass_wizard_passes,elite.arena.ggleap.gamepass.wizard.passes,model_elite_arena_ggleap_gamepass_wizard,group_ggleap_passes,1,1,1,1

@@ -39,6 +39,8 @@
                             <field name="history_days"/>
                             <field name="details_per_run"/>
                             <field name="sessions_per_run"/>
+                            <field name="gamepasses_per_run"/>
+                            <field name="gamepass_days"/>
                             <field name="bookings_ahead"/>
                         </group>
                     </group>

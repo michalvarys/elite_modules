@@ -7,6 +7,13 @@ KINDS = [
     ("other", "Ostatní"),
 ]
 FREE_WORDS = ("free", "zdarma", "grátis", "gratis")
+OFFER_TYPES = [
+    ("StartOnFirstUse", "Při prvním použití"),
+    ("StartOnAllocation", "Hned po přidání"),
+    ("BulkBuy", "Hromadný nákup"),
+]
+# ggLeap numbers days of the week from Sunday
+DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 
 def guess_kind(name, product_type=None, price=None):
@@ -41,6 +48,13 @@ class GgleapProduct(models.Model):
     in_catalog = fields.Boolean(string="V nabídce ggLeap", readonly=True,
                                 help="Vypnuté = produkt už v ggLeap není, známe ho jen z dřívějších prodejů.")
     active = fields.Boolean(default=True)
+    # game pass settings (Offers); a pass added from Odoo takes them over
+    offer_type = fields.Selection(OFFER_TYPES, string="Začne běžet", readonly=True)
+    offer_priority = fields.Char(string="Priorita v ggLeap", readonly=True)
+    eligible_days = fields.Char(string="Platí ve dnech", readonly=True,
+                                help="Dny týdne, kdy jde pass použít (prázdné = každý den).")
+    eligible_pc_groups = fields.Char(string="Skupiny PC (JSON)", readonly=True,
+                                     help="Skupiny počítačů / konzolí, na kterých pass platí (prázdné = všude).")
 
     _sql_constraints = [("uuid_uniq", "unique(uuid)", "Produkt z ggLeapu už existuje.")]
 

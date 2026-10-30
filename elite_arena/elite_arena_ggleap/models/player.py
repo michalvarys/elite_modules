@@ -64,6 +64,12 @@ class GgleapPlayer(models.Model):
     visit_ids = fields.One2many("elite.arena.ggleap.visit", "player_id", string="Návštěvy")
     transaction_ids = fields.One2many("elite.arena.ggleap.transaction", "player_id", string="Prodeje")
     booking_ids = fields.One2many("elite.arena.ggleap.booking", "player_id", string="Rezervace")
+    gamepass_ids = fields.One2many("elite.arena.ggleap.gamepass", "player_id", string="Herní passy")
+    active_gamepass_ids = fields.One2many("elite.arena.ggleap.gamepass", "player_id", string="Platné passy",
+                                          domain=[("state", "=", "active")])
+    pass_hours_left = fields.Float(string="Zbývá v passech (h)", compute="_compute_pass_hours_left", store=True,
+                                   help="Součet nevyčerpaného času v platných passech.")
+    gamepasses_synced_at = fields.Datetime(string="Passy načteny", readonly=True)
 
     _sql_constraints = [("uuid_uniq", "unique(uuid)", "Hráč z ggLeapu už existuje.")]
 
@@ -76,6 +82,11 @@ class GgleapPlayer(models.Model):
                 rec.display_label = "%s (%s)" % (name, rec.username)
             else:
                 rec.display_label = name or rec.username or rec.uuid
+
+    @api.depends("gamepass_ids.state", "gamepass_ids.hours_left")
+    def _compute_pass_hours_left(self):
+        for rec in self:
+            rec.pass_hours_left = sum(rec.gamepass_ids.filtered(lambda g: g.state == "active").mapped("hours_left"))
 
     @api.depends("birthdate")
     def _compute_age(self):
@@ -100,3 +111,20 @@ class GgleapPlayer(models.Model):
         return {"type": "ir.actions.act_window", "name": "Prodeje · %s" % self.display_label,
                 "res_model": "elite.arena.ggleap.transaction", "view_mode": "list,form",
                 "domain": [("player_id", "=", self.id)]}
+
+    def action_open_gamepasses(self):
+        return {"type": "ir.actions.act_window", "name": "Herní passy",
+                "res_model": "elite.arena.ggleap.gamepass", "view_mode": "list,form",
+                "domain": [("player_id", "in", self.ids)], "context": {"search_default_active": 1}}
+
+    def action_refresh_gamepasses(self):
+        count = self.env["elite.arena.ggleap.sync"].refresh_gamepasses(self)
+        return {"type": "ir.actions.client", "tag": "display_notification",
+                "params": {"message": "Passy načteny z ggLeapu (%d)." % count, "type": "success",
+                           "next": {"type": "ir.actions.client", "tag": "soft_reload"}}}
+
+    def action_grant_gamepass(self):
+        self.ensure_one()
+        return {"type": "ir.actions.act_window", "name": "Přidat herní pass",
+                "res_model": "elite.arena.ggleap.gamepass.wizard", "view_mode": "form", "target": "new",
+                "context": {"default_player_id": self.id, "default_partner_id": self.partner_id.id}}

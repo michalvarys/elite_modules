@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
+from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 
 from ..models.config import DEFAULTS
@@ -9,7 +11,7 @@ from ..models.sync import parse_dt, parse_duration, segment
 NOW = datetime(2026, 10, 28, 12, 0, 0)
 U1, U2, U3, U4 = ("u1-0000-test", "u2-0000-test", "u3-0000-test", "u4-0000-test")
 PC1, PC2 = "pc1-0000-test", "pc2-0000-test"
-HOUR3, FREE1, COLA = "offer-3h-test", "offer-free-test", "prod-cola-test"
+HOUR3, FREE1, COLA, PS5 = "offer-3h-test", "offer-free-test", "prod-cola-test", "offer-ps5-test"
 
 
 def ts(dt):
@@ -24,6 +26,7 @@ class FakeClient(GgleapClient):
         self.fail = set(fail)
         self.calls = 0
         self.log = []
+        self.posts = []
 
     def get(self, path, params=None):
         self.calls += 1
@@ -56,7 +59,20 @@ class FakeClient(GgleapClient):
             day = datetime.strptime(params["Date"], "%Y-%m-%d")
             return {"Bookings": [b for b in self.data["bookings"]
                                  if day <= parse_dt(b["Start"]) < day + timedelta(days=params["Days"])]}
+        if path == "/users/gamepasses/list":
+            return {"Offers": list(self.data["gamepasses"].get(params["UserUuid"], []))}
         raise AssertionError("neočekávaný dotaz %s" % path)
+
+    def post(self, path, body, correlation_id=None):
+        self.calls += 1
+        self.posts.append((path, body, correlation_id))
+        if path in self.fail:
+            raise GgleapError("simulovaná chyba %s" % path)
+        if path == "/users/gamepasses/add":
+            dto = dict(body, Uuid="gp-new-%d" % len(self.posts), AddedAt=ts(NOW), SecondsUsed=0)
+            self.data["gamepasses"].setdefault(body["UserUuid"], []).append(dto)
+            return {"Offer": dto}
+        raise AssertionError("neočekávaný zápis %s" % path)
 
 
 def user(uuid, email, first, last, username, **over):
@@ -86,6 +102,13 @@ def sale(uuid, user_uuid, when, items, status="Paid", cash=0.0, card=0.0):
             "Items": {str(n): i for n, i in enumerate(items)}}
 
 
+def gamepass(uuid, offer, name, seconds, used=0, added=None, consumed=None, expires=None):
+    return {"Uuid": uuid, "OfferUuid": offer, "Name": name, "Seconds": seconds, "SecondsUsed": used,
+            "Type": "StartOnFirstUse", "Priority": "Normal", "AddedAt": ts(added or NOW - timedelta(days=5)),
+            "ConsumedAt": ts(consumed) if consumed else None,
+            "ExpiresAt": ts(expires or NOW + timedelta(days=365)), "EligibleDays": [], "EligiblePcGroups": []}
+
+
 def item(product, name, qty, amount):
     return {"ProductUuid": product, "Name": name, "Quantity": qty, "GrossTotalValue": amount}
 
@@ -99,8 +122,15 @@ def dataset():
                       "LastUpdate": ts(NOW)},
                      {"Uuid": PC2, "Name": "PC2", "GroupUuid": "g", "State": "InUse", "LastUpdate": ts(NOW)}],
         "products": [{"ProductUuid": COLA, "Name": "Coca Cola 330ML", "ProductType": "Generic", "Price": 45.0}],
-        "offers": [{"OfferUuid": HOUR3, "Name": "3 Hodiny", "Price": 210.0, "Seconds": 10800},
-                   {"OfferUuid": FREE1, "Name": "1 HODINA FREE", "Price": 0.0, "Seconds": 3600}],
+        "offers": [{"OfferUuid": HOUR3, "Name": "3 Hodiny", "Price": 210.0, "Seconds": 10800,
+                    "OfferType": "StartOnFirstUse", "Priority": "Normal", "EligibleDays": [0, 1, 2, 3, 4, 5, 6],
+                    "EligiblePcGroups": []},
+                   {"OfferUuid": FREE1, "Name": "1 HODINA FREE", "Price": 0.0, "Seconds": 3600,
+                    "OfferType": "StartOnFirstUse", "Priority": "Highest", "EligibleDays": [0, 1, 2, 3, 4, 5, 6],
+                    "EligiblePcGroups": []},
+                   {"OfferUuid": PS5, "Name": "PS5 1 Hodina", "Price": 130.0, "Seconds": 3600,
+                    "OfferType": "StartOnAllocation", "Priority": "High", "EligibleDays": [6, 0],
+                    "EligiblePcGroups": ["grp-ps5"]}],
         "users": [
             user(U1, "Karel.Novak@Example.com", "karel", "novák", "kaja"),
             user(U2, "jana@example.com", "Jana", "Dvořáková", "janca"),
@@ -149,6 +179,12 @@ def dataset():
         ],
         "sessions": {U1: [{"StartDateTime": ts(d3 - timedelta(days=1) + timedelta(seconds=1)), "Seconds": 7200,
                            "Ended": True}]},
+        "gamepasses": {
+            U1: [gamepass("gp-u1-active", HOUR3, "3 Hodiny", 10800, used=3600),
+                 gamepass("gp-u1-used", HOUR3, "3 Hodiny", 10800, used=10800, consumed=NOW - timedelta(days=40)),
+                 gamepass("gp-u1-old", FREE1, "1 HODINA FREE", 3600, expires=NOW - timedelta(days=1))],
+            U2: [gamepass("gp-u2-active", PS5, "PS5 1 Hodina", 3600, used=900)],
+        },
         "bookings": [
             {"BookingUuid": "b1-test", "Name": "Pařba", "UserUuid": U1, "Start": ts(NOW + timedelta(days=2)),
              "Duration": 120, "Machines": [PC1, PC2], "Paid": False, "Deleted": False},
@@ -166,7 +202,7 @@ class TestGgleapSync(TransactionCase):
         super().setUpClass()
         # start from an empty state even in a database that already holds synced data
         # (everything is rolled back after the tests)
-        for model in ("elite.arena.ggleap.transaction", "elite.arena.ggleap.visit", "elite.arena.ggleap.booking",
+        for model in ("elite.arena.ggleap.gamepass", "elite.arena.ggleap.transaction", "elite.arena.ggleap.visit", "elite.arena.ggleap.booking",
                       "elite.arena.ggleap.player", "elite.arena.ggleap.product", "elite.arena.ggleap.machine"):
             cls.env[model].with_context(active_test=False).search([]).unlink()
         status = cls.env["elite.arena.ggleap.status"].get_status()
@@ -181,9 +217,9 @@ class TestGgleapSync(TransactionCase):
         cls.partner_survey = cls.env["res.partner"].create({"name": "Petr ze survey", "email": "jiny@example.com",
                                                             "ref": U3})
 
-    def run_sync(self, data, **kw):
+    def run_sync(self, data, now=NOW, **kw):
         client = FakeClient(data, **kw)
-        message = self.sync.run(client=client, now=NOW, settings=self.settings)
+        message = self.sync.run(client=client, now=now, settings=self.settings)
         return client, message
 
     def player(self, uuid):
@@ -293,8 +329,9 @@ class TestGgleapSync(TransactionCase):
         self.assertEqual(u1.partner_id.email, "karel.novy@example.com")
         self.assertEqual(u1.partner_id.name, "Karel Novák (upraveno v Odoo)", "only the changed field is copied")
         self.assertTrue(self.player(U3).deleted)
-        details_calls = [c for c in client.log if c[0] in ("/users/user-details", "/sessions/get-user-sessions")]
-        self.assertFalse(details_calls, "details and session ends are fetched only once")
+        details_calls = [c for c in client.log if c[0] in ("/users/user-details", "/sessions/get-user-sessions",
+                                                            "/users/gamepasses/list")]
+        self.assertFalse(details_calls, "details, session ends and passes are fetched only once")
         activity = [c for c in client.log if c[0] == "/activity-logs/search"]
         self.assertEqual(len(activity), 1, "the second run continues from the cursor")
 
@@ -342,3 +379,103 @@ class TestGgleapSync(TransactionCase):
         self.assertEqual(data["top_players"][0]["amount"], 300.0)
         self.assertEqual({m["name"] for m in data["machines"]}, {"PC1", "PC2", "Konzole L"})
         self.assertTrue(data["payment_methods"])
+
+    # ------------------------------------------------------------------ game passes
+    def test_gamepasses(self):
+        self.run_sync(dataset())
+        u1, u2 = self.player(U1), self.player(U2)
+        states = {g.uuid: (g.state, g.hours_left) for g in u1.gamepass_ids}
+        self.assertEqual(states["gp-u1-active"], ("active", 2.0))
+        self.assertEqual(states["gp-u1-used"], ("used", 0.0))
+        self.assertEqual(states["gp-u1-old"], ("expired", 0.0))
+        self.assertEqual(u1.pass_hours_left, 2.0)
+        self.assertEqual(u1.partner_id.ggleap_pass_hours_left, 2.0)
+        self.assertEqual(u1.partner_id.ggleap_active_gamepass_ids.mapped("uuid"), ["gp-u1-active"])
+        self.assertEqual(u2.partner_id.ggleap_pass_hours_left, 0.75)
+        hour3 = self.env["elite.arena.ggleap.product"].search([("uuid", "=", HOUR3)])
+        self.assertEqual(u1.gamepass_ids.filtered(lambda g: g.uuid == "gp-u1-active").product_id, hour3)
+        self.assertTrue(u1.gamepasses_synced_at)
+
+        ps5 = self.env["elite.arena.ggleap.product"].search([("uuid", "=", PS5)])
+        self.assertEqual(ps5.eligible_days, "Sunday,Saturday")
+        self.assertEqual(ps5.eligible_pc_groups, '["grp-ps5"]')
+        self.assertEqual(ps5.offer_type, "StartOnAllocation")
+        self.assertFalse(hour3.eligible_days, "every day = no restriction")
+
+    def test_gamepass_after_visit_and_removal(self):
+        data = dataset()
+        self.run_sync(data)
+        u1 = self.player(U1)
+        # the player came today and used up the pass; ggLeap also removed the old free hour
+        data["activity"].append(login("a-in-today", U1, PC1, NOW + timedelta(minutes=30)))
+        data["gamepasses"][U1] = [gamepass("gp-u1-active", HOUR3, "3 Hodiny", 10800, used=10800,
+                                           consumed=NOW + timedelta(hours=2)),
+                                  data["gamepasses"][U1][1]]
+        self.run_sync(data, now=NOW + timedelta(hours=1))   # the visit is counted, passes are not due yet
+        client, _message = self.run_sync(data, now=NOW + timedelta(hours=3))
+        self.assertIn("/users/gamepasses/list", [c[0] for c in client.log], "reloaded after the visit")
+        states = {g.uuid: g.state for g in u1.gamepass_ids}
+        self.assertEqual(states["gp-u1-active"], "used")
+        self.assertEqual(states["gp-u1-old"], "removed")
+        self.assertEqual(u1.partner_id.ggleap_pass_hours_left, 0.0)
+
+    def test_grant_gamepass(self):
+        data = dataset()
+        self.run_sync(data)
+        self.env["ir.config_parameter"].sudo().set_param("elite_arena_ggleap.auth_token", "test")
+        u1 = self.player(U1)
+        partner = u1.partner_id
+        client = FakeClient(data)
+        Wizard = self.env["elite.arena.ggleap.gamepass.wizard"]
+        with patch.object(type(self.sync), "_make_client", return_value=client):
+            wizard = Wizard.with_context(**partner.action_grant_ggleap_gamepass()["context"]).create(
+                {"note": "dotazník"})
+            self.assertEqual(wizard.player_id, u1)
+            self.assertEqual(wizard.product_id.uuid, FREE1, "1 free hour is the default")
+            wizard._onchange_product_id()
+            self.assertEqual(wizard.hours, 1.0)
+            wizard.action_grant()
+            wizard.action_grant()   # double click: the same idempotency key
+        (path, body, key), second = client.posts
+        self.assertEqual(path, "/users/gamepasses/add")
+        self.assertEqual(second[2], key)
+        self.assertTrue(key.startswith("odoo-"))
+        self.assertEqual(body["UserUuid"], U1)
+        self.assertEqual(body["OfferUuid"], FREE1)
+        self.assertEqual(body["Seconds"], 3600)
+        self.assertEqual(body["Priority"], "Highest")
+        self.assertEqual(len(body["EligibleDays"]), 7)
+        self.assertEqual(body["EligiblePcGroups"], [])
+        self.assertTrue(body["ExpiresAt"].endswith("Z"))
+
+        granted = u1.gamepass_ids.filtered("granted_in_odoo")
+        self.assertEqual(len(granted), 2, "the fake adds twice; ggLeap would add once")
+        self.assertEqual(granted[0].grant_note, "dotazník")
+        self.assertEqual(granted[0].granted_by_id, self.env.user)
+        self.assertEqual(partner.ggleap_pass_hours_left, 4.0)
+        self.assertIn("Přidán herní pass", partner.message_ids[0].body)
+
+        # restrictions of the product go with the pass
+        with patch.object(type(self.sync), "_make_client", return_value=client):
+            ps5 = self.env["elite.arena.ggleap.product"].search([("uuid", "=", PS5)])
+            self.sync.grant_gamepass(u1, ps5, 1800, "PS5 dárek", NOW + timedelta(days=14), "StartOnFirstUse")
+        body = client.posts[-1][1]
+        self.assertEqual(body["EligibleDays"], ["Sunday", "Saturday"])
+        self.assertEqual(body["EligiblePcGroups"], ["grp-ps5"])
+        self.assertEqual(body["Type"], "StartOnFirstUse")
+
+        # a later full reload keeps the passes added from Odoo
+        with patch.object(type(self.sync), "_make_client", return_value=client):
+            u1.action_refresh_gamepasses()
+        self.assertEqual(len(u1.gamepass_ids.filtered("granted_in_odoo")), 3)
+        self.assertFalse(u1.gamepass_ids.filtered(lambda g: g.granted_in_odoo and g.state != "active"))
+
+    def test_grant_error_is_shown(self):
+        self.run_sync(dataset())
+        self.env["ir.config_parameter"].sudo().set_param("elite_arena_ggleap.auth_token", "test")
+        u1 = self.player(U1)
+        free = self.env["elite.arena.ggleap.product"].search([("uuid", "=", FREE1)])
+        client = FakeClient(dataset(), fail={"/users/gamepasses/add"})
+        with patch.object(type(self.sync), "_make_client", return_value=client), self.assertRaises(UserError):
+            self.sync.grant_gamepass(u1, free, 3600, "Hodina", NOW + timedelta(days=14), "StartOnFirstUse")
+        self.assertFalse(u1.gamepass_ids.filtered("granted_in_odoo"))
