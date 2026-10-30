@@ -1175,5 +1175,8 @@ Nastavení účtu (např. `slavek`):
 3. Agent volá JSON-RPC / XML-RPC (`/jsonrpc`, `/xmlrpc/2/object`) s loginem a API klíčem místo
    hesla.
 
-Pro agenta: u `res.partner` vždy uvádět seznam polí (`search_read(domain, ["name", ...])`) –
+Číselníky kliniky, na které data odkazují (lékařky, ordinace, úkony), čte také (18.0.1.8.1 –
+bez nich padal přehled tržeb).
+
+Pro agenta: u `res.partner` a `elite.vet.room` vždy uvádět seznam polí (`search_read(domain, ["name", ...])`) –
 partner má i účetní pole a ta účet číst nesmí, `search_read` bez polí skončí chybou přístupu.
