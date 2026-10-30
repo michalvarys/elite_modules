@@ -46,3 +46,6 @@ access_winvet_calendar_event_readonly,elite.vet.winvet.calendar.event.readonly,m
 access_deposit_readonly,elite.vet.deposit.readonly,model_elite_vet_deposit,group_winvet_readonly,1,0,0,0
 access_deposit_use_readonly,elite.vet.deposit.use.readonly,model_elite_vet_deposit_use,group_winvet_readonly,1,0,0,0
 access_pet_winvet_readonly,elite.vet.pet.winvet.readonly,elite_vet_reservation.model_elite_vet_pet,group_winvet_readonly,1,0,0,0
+access_doctor_winvet_readonly,elite.vet.doctor.winvet.readonly,elite_vet_calendar.model_elite_vet_doctor,group_winvet_readonly,1,0,0,0
+access_room_winvet_readonly,elite.vet.room.winvet.readonly,elite_vet_reservation.model_elite_vet_room,group_winvet_readonly,1,0,0,0
+access_procedure_winvet_readonly,elite.vet.procedure.winvet.readonly,elite_vet_reservation.model_elite_vet_procedure,group_winvet_readonly,1,0,0,0

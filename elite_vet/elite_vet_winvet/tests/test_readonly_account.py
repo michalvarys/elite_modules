@@ -15,7 +15,13 @@ DATA_MODELS = [
     "elite.vet.winvet.calendar.activity", "elite.vet.winvet.status", "elite.vet.winvet.status.entity",
     "elite.vet.winvet.schema.change", "elite.vet.winvet.stock.layer", "elite.vet.winvet.stock.total",
     "elite.vet.procedure.bundle", "elite.vet.procedure.bundle.line", "elite.vet.text.template",
+    # clinic lookups the WinVet data link to (doctor of a line, room / procedure of the calendar)
+    "elite.vet.doctor", "elite.vet.room", "elite.vet.procedure",
 ]
+
+
+#: models read only with a field list (accounting / reservation fields stay closed)
+FIELDS = {"res.partner": ["name", "winvet_ref"], "elite.vet.room": ["name"]}
 
 
 @tagged("post_install", "-at_install")
@@ -35,8 +41,8 @@ class TestReadonlyAccount(WinvetCase):
             with self.subTest(name):
                 Model = self.env[name].with_user(self.reader)
                 self.assertTrue(Model.has_access("read"), name)
-                # partners carry accounting fields the account must not read: an agent lists the fields
-                Model.search_read([], ["name", "winvet_ref"] if name == "res.partner" else None, limit=1)
+                # partners and rooms link records the account must not read: an agent lists the fields
+                Model.search_read([], FIELDS.get(name), limit=1)
                 for operation in ("write", "create", "unlink"):
                     self.assertFalse(Model.has_access(operation), "%s: %s" % (name, operation))
 
@@ -66,6 +72,16 @@ class TestReadonlyAccount(WinvetCase):
             visit.write({"diagnosis_name": "změna"})
         with self.assertRaises(AccessError):
             partner.write({"name": "Jiné jméno"})
+        # a line written by a doctor: the dashboard groups by doctor
+        self.push("users", [{"id": self.ref(4), "name": "Testovací-Winvetová Zdenka", "code": "ZT", "active": True}])
+        self.find("elite.vet.winvet.user", 4).doctor_id = self.doctor
+        self.push("sale_documents", [{"id": self.ref(5), "type": "UM", "number": "UM5", "parent_id": None,
+                                      "owner_id": self.ref(1), "date": "2031-03-02", "total": 500, "paid": 0,
+                                      "from_deposit": 0, "state": None, "entered_by": None, "method": None}])
+        self.push("sale_lines", [{"id": self.ref(6), "document_id": self.ref(5), "visit_id": self.ref(3),
+                                  "item_id": None, "item_code": None, "item_name": "Vyšetření", "quantity": 1,
+                                  "unit": "ks", "unit_price": 500, "amount": 500, "vat_rate": 0,
+                                  "date": "2031-03-02", "entered_by": self.ref(4)}])
         data = self.env["elite.vet.winvet.dashboard"].with_user(self.reader).get_data("2031-03-01", "2031-03-31")
         self.assertTrue(data)
         closure = self.env["elite.vet.cash.closure"].with_user(self.reader).closure_data(date(2031, 3, 1),
