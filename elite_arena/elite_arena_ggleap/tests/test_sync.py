@@ -11,6 +11,7 @@ from ..models.sync import parse_dt, parse_duration, segment
 NOW = datetime(2026, 10, 28, 12, 0, 0)
 U1, U2, U3, U4 = ("u1-0000-test", "u2-0000-test", "u3-0000-test", "u4-0000-test")
 PC1, PC2 = "pc1-0000-test", "pc2-0000-test"
+CS2, STEAM, FORTNITE = "app-cs2-test", "app-steam-test", "app-fortnite-test"
 HOUR3, FREE1, COLA, PS5 = "offer-3h-test", "offer-free-test", "prod-cola-test", "offer-ps5-test"
 
 
@@ -46,8 +47,11 @@ class FakeClient(GgleapClient):
             start, end = parse_dt(params["Start"]), parse_dt(params["End"])
             key, field = ("activity", "DateTime") if path.startswith("/activity") else ("transactions", None)
             out = []
+            actions = set(params.get("Actions") or [])
             for row in self.data[key]:
                 when = parse_dt(row["DateTime"] if field else row["Details"]["DateTime"])
+                if actions and row.get("Action") not in actions:
+                    continue
                 if start <= when < end:
                     out.append(row)
             return {"Entries" if key == "activity" else "Transactions": out}
@@ -59,6 +63,8 @@ class FakeClient(GgleapClient):
             day = datetime.strptime(params["Date"], "%Y-%m-%d")
             return {"Bookings": [b for b in self.data["bookings"]
                                  if day <= parse_dt(b["Start"]) < day + timedelta(days=params["Days"])]}
+        if path == "/apps/get-enabled-apps-summary":
+            return {"Apps": self.data["apps"]}
         if path == "/users/gamepasses/list":
             return {"Offers": list(self.data["gamepasses"].get(params["UserUuid"], []))}
         raise AssertionError("neočekávaný dotaz %s" % path)
@@ -107,6 +113,13 @@ def gamepass(uuid, offer, name, seconds, used=0, added=None, consumed=None, expi
             "Type": "StartOnFirstUse", "Priority": "Normal", "AddedAt": ts(added or NOW - timedelta(days=5)),
             "ConsumedAt": ts(consumed) if consumed else None,
             "ExpiresAt": ts(expires or NOW + timedelta(days=365)), "EligibleDays": [], "EligiblePcGroups": []}
+
+
+def launch(uuid, user_uuid, app, name, when, guest=False):
+    return {"Uuid": uuid, "DateTime": ts(when), "Action": "LaunchedApplication", "MachineUuid": PC1,
+            "IsGuest": guest, "UserUuid": None if guest else user_uuid,
+            "Data": {"ApplicationName": name, "ApplicationUuid": app, "SessionUuid": "s-" + uuid,
+                     "UserUuid": None if guest else user_uuid}}
 
 
 def item(product, name, qty, amount):
@@ -168,6 +181,15 @@ def dataset():
             dict(login("a-rin-6", U1, PC1, d3 - timedelta(days=1)), Action="RemoteLoggedIn"),
             login("a-in-guest", None, PC1, d3, guest=True),
             logout("a-out-guest", None, PC1, d3 + timedelta(minutes=45), "00:45:00", guest=True),
+            # what is played (PCs only); Fortnite is no longer in the catalog
+            launch("l-1", U1, STEAM, "Steam", d1 + timedelta(minutes=1)),
+            launch("l-2", U1, CS2, "Counter-Strike 2", d1 + timedelta(minutes=2)),
+            launch("l-3", U1, CS2, "Counter-Strike 2", d1 + timedelta(minutes=50)),
+            launch("l-4", U1, CS2, "Counter-Strike 2", d3 + timedelta(minutes=5)),
+            launch("l-5", U1, FORTNITE, "Fortnite", d3 + timedelta(hours=4)),
+            launch("l-6", U2, FORTNITE, "Fortnite", d2 + timedelta(minutes=5)),
+            launch("l-7", None, CS2, "Counter-Strike 2", d3 + timedelta(minutes=10), guest=True),
+            launch("l-8", U2, "app-bnet-test", "Battlenet", d2 + timedelta(minutes=1)),
         ],
         "transactions": [
             sale("t1-test", U1, d1 + timedelta(minutes=1), [item(HOUR3, "3 Hodiny", 1, 210.0),
@@ -179,6 +201,8 @@ def dataset():
         ],
         "sessions": {U1: [{"StartDateTime": ts(d3 - timedelta(days=1) + timedelta(seconds=1)), "Seconds": 7200,
                            "Ended": True}]},
+        "apps": [{"Uuid": CS2, "Name": "Counter-Strike 2", "AppType": "Game", "Tags": ["FPS", "Shooter"]},
+                 {"Uuid": STEAM, "Name": "Steam", "AppType": "Program", "Tags": []}],
         "gamepasses": {
             U1: [gamepass("gp-u1-active", HOUR3, "3 Hodiny", 10800, used=3600),
                  gamepass("gp-u1-used", HOUR3, "3 Hodiny", 10800, used=10800, consumed=NOW - timedelta(days=40)),
@@ -202,12 +226,13 @@ class TestGgleapSync(TransactionCase):
         super().setUpClass()
         # start from an empty state even in a database that already holds synced data
         # (everything is rolled back after the tests)
-        for model in ("elite.arena.ggleap.gamepass", "elite.arena.ggleap.transaction", "elite.arena.ggleap.visit", "elite.arena.ggleap.booking",
+        for model in ("elite.arena.ggleap.app.launch", "elite.arena.ggleap.app", "elite.arena.ggleap.gamepass", "elite.arena.ggleap.transaction", "elite.arena.ggleap.visit", "elite.arena.ggleap.booking",
                       "elite.arena.ggleap.player", "elite.arena.ggleap.product", "elite.arena.ggleap.machine"):
             cls.env[model].with_context(active_test=False).search([]).unlink()
         status = cls.env["elite.arena.ggleap.status"].get_status()
         status.entity_ids.unlink()
-        status.write({"activity_cursor": False, "transaction_cursor": False, "history_from": False,
+        status.write({"activity_cursor": False, "transaction_cursor": False, "launch_cursor": False,
+                      "history_from": False,
                       "backfill_done": False, "last_error": False, "last_error_at": False,
                       "last_success_at": False, "calls_today": 0})
         cls.sync = cls.env["elite.arena.ggleap.sync"]
@@ -320,7 +345,8 @@ class TestGgleapSync(TransactionCase):
         u1.partner_id.name = "Karel Novák (upraveno v Odoo)"
         counts = {m: self.env[m].search_count([]) for m in (
             "elite.arena.ggleap.visit", "elite.arena.ggleap.transaction", "elite.arena.ggleap.transaction.line",
-            "elite.arena.ggleap.player", "res.partner")}
+            "elite.arena.ggleap.player", "res.partner", "elite.arena.ggleap.app.launch",
+            "elite.arena.ggleap.player.game")}
         data["users"][0]["Email"] = "karel.novy@example.com"
         data["users"] = [u for u in data["users"] if u["Uuid"] != U3]   # deleted in ggLeap
         client, _message = self.run_sync(data)
@@ -333,7 +359,7 @@ class TestGgleapSync(TransactionCase):
                                                             "/users/gamepasses/list")]
         self.assertFalse(details_calls, "details, session ends and passes are fetched only once")
         activity = [c for c in client.log if c[0] == "/activity-logs/search"]
-        self.assertEqual(len(activity), 1, "the second run continues from the cursor")
+        self.assertEqual(len(activity), 2, "the second run continues from the cursors (visits, game launches)")
 
     def test_error_in_one_area_does_not_stop_others(self):
         with self.assertLogs("odoo.addons.elite_arena_ggleap.models.sync", level="ERROR"):
@@ -479,3 +505,50 @@ class TestGgleapSync(TransactionCase):
         with patch.object(type(self.sync), "_make_client", return_value=client), self.assertRaises(UserError):
             self.sync.grant_gamepass(u1, free, 3600, "Hodina", NOW + timedelta(days=14), "StartOnFirstUse")
         self.assertFalse(u1.gamepass_ids.filtered("granted_in_odoo"))
+
+    # ------------------------------------------------------------------ games
+    def test_games(self):
+        self.run_sync(dataset())
+        App = self.env["elite.arena.ggleap.app"]
+        cs2, steam, fortnite = (App.search([("uuid", "=", u)]) for u in (CS2, STEAM, FORTNITE))
+        self.assertTrue(cs2.is_game)
+        self.assertEqual(cs2.tags, "FPS, Shooter")
+        self.assertFalse(steam.is_game, "a launcher is not a game")
+        self.assertTrue(fortnite.is_game, "known only from a launch, guessed by name")
+        self.assertFalse(fortnite.in_catalog)
+        self.assertEqual(self.env["elite.arena.ggleap.app.launch"].search_count([]), 8)
+        self.assertFalse(App.search([("uuid", "=", "app-bnet-test")]).is_game, "launcher known only from a launch")
+        self.assertEqual(cs2.player_count, 1, "guests are not players")
+        self.assertEqual(cs2.launch_count, 4)
+
+        u1, u2 = self.player(U1), self.player(U2)
+        self.assertEqual(set(u1.game_ids.mapped("name")), {"Counter-Strike 2", "Fortnite"})
+        self.assertEqual(u1.main_game_id, cs2, "played on 2 days")
+        cs2_row = u1.player_game_ids.filtered(lambda g: g.app_id == cs2)
+        self.assertEqual((cs2_row.days, cs2_row.launches), (2, 3))
+        self.assertEqual(u1.partner_id.ggleap_main_game_id, cs2)
+        self.assertEqual(u1.partner_id.ggleap_game_ids, cs2 | fortnite)
+        self.assertEqual(u2.partner_id.ggleap_game_ids, fortnite)
+        Partner = self.env["res.partner"]
+        self.assertEqual(Partner.search([("ggleap_game_ids", "in", cs2.ids)]), u1.partner_id)
+
+        # the owner says Fortnite is not a game here: the sync keeps it and the contacts follow
+        fortnite.is_game = False
+        self.assertTrue(fortnite.is_game_manual)
+        self.run_sync(dataset())
+        self.assertFalse(fortnite.is_game)
+        self.assertEqual(u1.partner_id.ggleap_game_ids, cs2)
+        self.assertFalse(u2.partner_id.ggleap_game_ids)
+        self.assertFalse(u2.main_game_id)
+
+    def test_games_dashboard(self):
+        self.run_sync(dataset())
+        dash = self.env["elite.arena.ggleap.dashboard"].with_context(tz="Europe/Prague")
+        data = dash.get_data((NOW - timedelta(days=60)).date().isoformat(), NOW.date().isoformat())
+        games = data["games"]
+        self.assertEqual(games["players"], 2)
+        rows = {r["name"]: r for r in games["rows"]}
+        self.assertEqual(set(rows), {"Counter-Strike 2", "Fortnite"}, "Steam is not a game")
+        self.assertEqual((rows["Fortnite"]["players"], rows["Fortnite"]["share"]), (2, 100))
+        self.assertEqual(rows["Counter-Strike 2"]["days"], 2)
+        self.assertEqual(games["rows"][0]["name"], "Fortnite", "most players first")

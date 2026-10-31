@@ -25,6 +25,7 @@ from odoo.exceptions import UserError
 
 from .config import get_settings
 from .ggleap_client import BASES, GgleapAuthError, GgleapBudgetError, GgleapClient, GgleapError
+from .game import guess_is_game
 from .gamepass import pass_state
 from .product import DAY_NAMES, guess_kind
 
@@ -47,7 +48,7 @@ LINE_RULES = 2   # bump to re-apply stored transactions when the line rules chan
 CONTACT_TO_PARTNER = {"first_name": "name", "last_name": "name", "email": "email", "phone": "phone"}
 
 # Areas that commit after every downloaded chunk (and use a savepoint per chunk themselves).
-CHUNKED = {"activity", "transactions"}
+CHUNKED = {"activity", "launches", "transactions"}
 _depth = threading.local()
 
 _TS = re.compile(r"^(\d{4}-\d\d-\d\d)[T ](\d\d:\d\d(?::\d\d)?)(\.\d+)?(Z|[+-]\d\d:?\d\d)?$")
@@ -206,8 +207,10 @@ class GgleapSync(models.AbstractModel):
         steps = [
             ("machines", self._sync_machines, True),
             ("products", self._sync_products, True),
+            ("apps", self._sync_apps, True),
             ("players", self._sync_players, True),
             ("activity", self._sync_activity, True),
+            ("launches", self._sync_launches, True),
             ("transactions", self._sync_transactions, True),
             ("bookings", self._sync_bookings, True),
             # passes before the one-off backfills: they change with every visit
@@ -216,6 +219,7 @@ class GgleapSync(models.AbstractModel):
             ("sessions", self._sync_sessions, True),
             ("stats", self._sync_stats, False),
             ("partners", self._sync_partners, False),
+            ("games", self._sync_games, False),   # after partners: new players have a contact by now
         ]
         errors, notes, stop_api = [], [], False
         for key, func, uses_api in steps:
@@ -266,7 +270,8 @@ class GgleapSync(models.AbstractModel):
 
     def _summary(self, status):
         parts = []
-        labels = {"activity": "návštěvy", "transactions": "prodeje", "players": "hráči", "partners": "kontakty"}
+        labels = {"activity": "návštěvy", "launches": "spuštění her", "transactions": "prodeje", "players": "hráči",
+                  "partners": "kontakty"}
         for line in status.entity_ids:
             if line.entity in labels and (line.created or line.updated):
                 parts.append("%s +%d/~%d" % (labels[line.entity], line.created, line.updated))
@@ -849,6 +854,147 @@ class GgleapSync(models.AbstractModel):
         gamepass = found[dto["Uuid"]]
         gamepass.write({"granted_in_odoo": True, "granted_by_id": self.env.user.id, "grant_note": note or False})
         return gamepass
+
+    # ------------------------------------------------------------------ games
+    def _sync_apps(self, client, settings, now, deadline, status):
+        """Catalog of enabled apps; the type (Game / Program / Setting) tells games from launchers."""
+        apps = client.get("/apps/get-enabled-apps-summary").get("Apps") or []
+        rows = {}
+        for a in apps:
+            uuid = a.get("Uuid")
+            if not uuid:
+                continue
+            app_type = self._sel("elite.arena.ggleap.app", "app_type", a.get("AppType"))
+            rows[uuid] = {"name": clean(a.get("Name")) or uuid[:8], "app_type": app_type,
+                          "tags": ", ".join(t for t in (a.get("Tags") or []) if t and t != "Unknown") or False,
+                          "is_game": guess_is_game(a.get("Name"), app_type), "in_catalog": True}
+        App = self.env["elite.arena.ggleap.app"]
+        manual = set(App.search([("uuid", "in", list(rows)), ("is_game_manual", "=", True)]).mapped("uuid"))
+        for uuid in manual:
+            rows[uuid].pop("is_game")
+        _found, created, updated = self._upsert("elite.arena.ggleap.app", "uuid", rows)
+        if rows:
+            App.search([("uuid", "not in", list(rows)), ("in_catalog", "=", True)]).write({"in_catalog": False})
+        # apps known only from launches: guess again (the word list may have grown)
+        for app in App.search([("in_catalog", "=", False), ("is_game_manual", "=", False)]):
+            guess = guess_is_game(app.name)
+            if app.is_game != guess:
+                app.write({"is_game": guess})
+                updated += 1
+        return {"created": created, "updated": updated, "total": App.search_count([])}
+
+    def _sync_launches(self, client, settings, now, deadline, status):
+        """Which games people start (activity log "LaunchedApplication", PCs only). Own cursor,
+        so the history is walked even though visits were downloaded before."""
+        if not status.history_from:
+            status.write({"history_from": self._history_start(settings, now)})
+        start = (status.launch_cursor - ACTIVITY_OVERLAP) if status.launch_cursor else status.history_from
+        Launch = self.env["elite.arena.ggleap.app.launch"]
+        created = 0
+        while start < now:
+            if time.time() > deadline:
+                return {"created": created, "note": "pokračuje od %s" % start.date(), "total": Launch.search_count([])}
+            end = min(start + ACTIVITY_WINDOW, now)
+            with self._savepoint():
+                entries = list(client.paged("/activity-logs/search", {
+                    "TimeFrameType": "Custom", "Start": api_ts(start), "End": api_ts(end),
+                    "Actions": ["LaunchedApplication"], "Limit": 500}, "Entries"))
+                created += self._apply_launches(entries)
+                status.write({"launch_cursor": end})
+            self._commit()
+            start = end
+        return {"created": created, "total": Launch.search_count([])}
+
+    def _apply_launches(self, entries):
+        Launch = self.env["elite.arena.ggleap.app.launch"]
+        App = self.env["elite.arena.ggleap.app"].with_context(active_test=False)
+        entries = [e for e in entries if e.get("Action") == "LaunchedApplication" and e.get("Uuid")
+                   and parse_dt(e.get("DateTime")) and (e.get("Data") or {}).get("ApplicationUuid")]
+        known = set(Launch.search([("uuid", "in", [e["Uuid"] for e in entries])]).mapped("uuid"))
+        entries = [e for e in entries if e["Uuid"] not in known]
+        if not entries:
+            return 0
+        names = {}
+        for e in entries:
+            data = e["Data"]
+            names.setdefault(data["ApplicationUuid"], clean(data.get("ApplicationName")))
+        apps = {a.uuid: a.id for a in App.search([("uuid", "in", list(names))])}
+        missing = [u for u in names if u not in apps]
+        if missing:  # no longer in the catalog: known only from the launch
+            for a in App.create([{"uuid": u, "name": names[u] or u[:8], "is_game": guess_is_game(names[u]),
+                                  "in_catalog": False} for u in missing]):
+                apps[a.uuid] = a.id
+
+        def user_of(e):
+            return e.get("UserUuid") or e["Data"].get("UserUuid")
+
+        players = self._players_by_uuid(user_of(e) for e in entries if not e.get("IsGuest"))
+        machines = self._machines_by_uuid(e.get("MachineUuid") for e in entries)
+        vals, seen = [], set()
+        for e in entries:
+            if e["Uuid"] in seen:
+                continue
+            seen.add(e["Uuid"])
+            guest = bool(e.get("IsGuest")) or not user_of(e)
+            vals.append({"uuid": e["Uuid"], "start": parse_dt(e["DateTime"]), "app_id": apps[e["Data"]["ApplicationUuid"]],
+                         "player_id": False if guest else players.get(user_of(e)) or False, "is_guest": guest,
+                         "machine_id": machines.get(e.get("MachineUuid")) or False,
+                         "session_uuid": clean(e["Data"].get("SessionUuid"))})
+        Launch.create(vals)
+        return len(vals)
+
+    def _sync_games(self, client, settings, now, deadline, status):
+        """Games of every player and contact, and how many players each game has (local only)."""
+        cr = self.env.cr
+        tz = self.env.user.tz or "Europe/Prague"
+        cr.execute("""select app_id, count(distinct player_id), count(*), max(start)
+                        from elite_arena_ggleap_app_launch group by app_id""")
+        App = self.env["elite.arena.ggleap.app"].with_context(active_test=False)
+        app_rows = {a: (players, launches, last) for a, players, launches, last in cr.fetchall()}
+        for app in App.search([]):
+            players, launches, last = app_rows.get(app.id, (0, 0, None))
+            changes = self._diff(app, {"player_count": players, "launch_count": launches, "last_played": last or False})
+            if changes:
+                app.write(changes)
+
+        cr.execute("""select l.player_id, l.app_id, count(distinct (l.start at time zone 'UTC' at time zone %s)::date),
+                             count(*), min(l.start), max(l.start)
+                        from elite_arena_ggleap_app_launch l join elite_arena_ggleap_app a on a.id = l.app_id
+                       where l.player_id is not null and a.is_game
+                       group by 1, 2""", (tz,))
+        rows, by_player = {}, {}
+        for player_id, app_id, days, launches, first, last in cr.fetchall():
+            rows["%d-%d" % (player_id, app_id)] = {"player_id": player_id, "app_id": app_id, "days": days,
+                                                   "launches": launches, "first_played": first, "last_played": last}
+            by_player.setdefault(player_id, []).append((days, last, launches, app_id))
+        found, created, updated = self._upsert("elite.arena.ggleap.player.game", "key", rows)
+        stale = self.env["elite.arena.ggleap.player.game"].search([("key", "not in", list(rows))])
+        removed = len(stale)
+        stale.unlink()
+
+        def summary(entries):
+            ordered = sorted(entries, key=lambda r: (r[0], r[1], r[2]), reverse=True)
+            return set(r[3] for r in ordered), (ordered[0][3] if ordered else False)
+
+        Player = self.env["elite.arena.ggleap.player"]
+        players_changed = 0
+        for player in Player.search(["|", ("id", "in", list(by_player)), ("game_ids", "!=", False)]):
+            games, main = summary(by_player.get(player.id, []))
+            if set(player.game_ids.ids) != games or player.main_game_id.id != main:
+                player.write({"game_ids": [(6, 0, sorted(games))], "main_game_id": main})
+                players_changed += 1
+        by_partner = {}
+        for player_id, entries in by_player.items():
+            partner = Player.browse(player_id).partner_id
+            if partner:
+                by_partner.setdefault(partner.id, []).extend(entries)
+        Partner = self.env["res.partner"].with_context(active_test=False)
+        for partner in Partner.search(["|", ("id", "in", list(by_partner)), ("ggleap_game_ids", "!=", False)]):
+            games, main = summary(by_partner.get(partner.id, []))
+            if set(partner.ggleap_game_ids.ids) != games or partner.ggleap_main_game_id.id != main:
+                partner.write({"ggleap_game_ids": [(6, 0, sorted(games))], "ggleap_main_game_id": main})
+        return {"created": created, "updated": updated + removed + players_changed,
+                "total": App.search_count([("is_game", "=", True), ("player_count", ">", 0)])}
 
     def _sync_stats(self, client, settings, now, deadline, status):
         """Visit count, first/last visit, hours, spend and segment of every player (local only)."""

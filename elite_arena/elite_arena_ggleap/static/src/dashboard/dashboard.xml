@@ -100,6 +100,43 @@
                         </div>
                     </section>
 
+                    <section class="egd-panel egd-wide">
+                        <h5>Co se u nás hraje</h5>
+                        <t t-set="gm" t-value="games"/>
+                        <p class="egd-explain">
+                            Kolik různých hráčů danou hru v tomto období spustilo. Počítají se jen počítače,
+                            konzole a simulátory ggLeap nezapisuje. <t t-esc="gm.sentence"/>
+                            Kliknutím otevřete kontakty, které hru hrají. V Kontaktech je filtr „Herna: hraje“ pro e‑mailing.
+                        </p>
+                        <table t-if="gm.rows.length" class="table table-sm egd-top">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>Hra</th>
+                                    <th class="text-end">Hráčů</th>
+                                    <th class="text-end">Podíl</th>
+                                    <th class="text-end" title="Hráč a den, kdy hru spustil">Herních dní</th>
+                                    <th class="text-end" t-if="d.kpi_previous">Oproti srovnání</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="gm.rows" t-as="row" t-key="row.id" t-on-click="() => this.openGame(row)">
+                                    <td class="egd-top-name">
+                                        <div t-esc="row.name"/>
+                                        <div class="small text-muted" t-esc="row.tags"/>
+                                        <div class="egd-bar"><span t-att-style="'width:' + row.pct + '%;background:#7c3aed'"/></div>
+                                    </td>
+                                    <td class="text-end fw-bold" t-esc="whole(row.players)"/>
+                                    <td class="text-end" t-esc="row.share + ' %'"/>
+                                    <td class="text-end text-muted" t-esc="whole(row.days)"/>
+                                    <td class="text-end" t-if="d.kpi_previous" t-att-class="row.cls" t-esc="row.change"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-else="" class="egd-empty text-muted">
+                            V tomto období žádná spuštění her (nebo se historie her ještě stahuje).
+                        </div>
+                    </section>
+
                     <section class="egd-panel">
                         <h5>Co se prodává</h5>
                         <t t-set="maxAmount" t-value="d.top_products.length ? d.top_products[0].amount : 0"/>

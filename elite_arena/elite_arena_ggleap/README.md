@@ -5,6 +5,21 @@ a přehled herny. ggLeap nemá webhooky, takže stahování běží cronem každ
 Synchronizace jen čte. Do ggLeapu Odoo zapíše jedině herní pass, který někdo přidá
 hráči ručně (viz [Herní passy](#herní-passy)).
 
+## Nasazení a aktualizace
+
+**Po každé změně kódu modulu spusťte aktualizaci modulu, a to dřív, než se Odoo restartuje s novým kódem.**
+Modul přidává pole na kontakt (`res.partner`). Bez aktualizace chybí v databázi sloupec a spadne celé Odoo,
+ne jen Herna, protože kontakt se čte při každém načtení stránky.
+
+```bash
+cd elite_modules && git pull
+docker compose exec odoo odoo -d NAZEV_DATABAZE -u elite_arena_ggleap --stop-after-init --no-http
+docker compose restart odoo
+```
+
+Když něco selže, vraťte kód na předchozí commit (`git checkout <commit>`) a restartujte. Starý kód
+s aktualizovanou databází funguje, nový kód s neaktualizovanou databází ne.
+
 ## Nastavení
 
 1. V administraci ggLeapu: **Settings → API → Public API** → zkopírovat AuthToken.
@@ -47,6 +62,8 @@ Přístup řídí skupiny v kategorii **Herna (ggLeap)**:
 | Prodeje | `/transactions/search` | `elite.arena.ggleap.transaction` + `.line` | od kurzoru po 14 dnech, překryv 3 dny kvůli vratkám |
 | Rezervace | `/bookings/get-bookings` | `elite.arena.ggleap.booking` | okno od předevčírka na `bookings_ahead` dní |
 | Detail hráče | `/users/user-details` | `elite.arena.ggleap.player` | jednou pro každého nového hráče |
+| Katalog her | `/apps/get-enabled-apps-summary` | `elite.arena.ggleap.app` | každý běh celé; typ Game / Program / Setting odliší hry od launcherů |
+| Spuštění her | `/activity-logs/search` (LaunchedApplication) | `elite.arena.ggleap.app.launch` | vlastní kurzor, po 7 dnech; první stažení historie je asi 60 dotazů |
 | Herní passy | `/users/gamepasses/list` | `elite.arena.ggleap.gamepass` | jednou pro každého hráče, pak znovu po každé návštěvě (`gamepasses_per_run`, výchozí 10) |
 
 Pravidla párování a výpočtu:
@@ -72,6 +89,25 @@ Pravidla párování a výpočtu:
   - Hodnoty položek z ggLeapu jsou ceníkové, proto se přepočtou tak, aby dávaly dohromady cenu prodeje.
   - Hodina zdarma „koupená“ za coiny má v ggLeapu hodnotu 1 000, ale stojí 0 Kč.
   - Ceníková hodnota zůstává v poli *Hodnota podle ceníku*.
+
+## Hry
+
+ggLeap zapisuje každé spuštění aplikace na **počítači**. Konzole (PS5) a simulátory hru nezapisují,
+u nich je vidět jen místo v *Herních sezeních*.
+
+- **Hra, nebo ne:** typ aplikace z katalogu ggLeapu (Game / Program / Setting). Steam, Epic, Discord,
+  prohlížeče a nastavení se nepočítají. Aplikace, které už v katalogu nejsou, se odhadnou podle názvu.
+  Ručně to jde přepnout v **Herna → Hry → Co se hraje** (sloupec *Je to hra*, jen Správce) a synchronizace
+  ruční nastavení nepřepíše.
+- **Steam zakrývá konkrétní hru.** Spuštění „Steam“ neříká, co se pak hrálo. Hry z nabídky herny (CS2,
+  Fortnite, Valorant…) se ale zapisují zvlášť.
+- **U hráče a kontaktu** (přepočítá se po každém běhu):
+  - *Herna: hraje*: všechny hry, které u nás spustil. Ve vyhledávání kontaktů napište název hry do *Herna: hraje*,
+    nebo v e‑mailingu filtr `Herna: hraje obsahuje Counter-Strike 2`.
+  - *Herna: hraje nejvíc*: hra, kterou hrál v nejvíc různých dnech. Kontakty jde podle ní seskupit.
+  - Hráč má záložku *Hry*: dny hraní, počet spuštění, poprvé a naposledy.
+- **Přehled → Co se u nás hraje:** různí hráči na hru v období, podíl ze všech, kdo na PC něco hráli,
+  herní dny (hráč × den) a změna oproti srovnávanému období. Kliknutí otevře kontakty, které hru hrají.
 
 ## Herní passy
 
@@ -154,6 +190,7 @@ Dny se počítají v časovém pásmu uživatele, výchozí je Europe/Prague.
 - **Tržby a návštěvy v čase:** sloupce jsou tržby podle druhu, čára je počet návštěv. Delší období se zobrazí po měsících.
 - **Kdo k nám chodí a kdo odchází:** počty ve skupinách ke dnešku. Kliknutí otevře seznam hráčů.
 - **Kdy se chodí:** mapa den × hodina příchodu.
+- **Co se u nás hraje:** viz [Hry](#hry).
 - **Další panely:** co se prodává, nejlepší hráči období, jak platí (hotově, kartou, z kreditu) a vytížení počítačů.
 
 ## Menu
@@ -161,6 +198,7 @@ Dny se počítají v časovém pásmu uživatele, výchozí je Europe/Prague.
 - **Přehled**
 - **Hráči:** Hráči, Kontakty hráčů, Herní passy
 - **Herní sezení**
+- **Hry:** Co se hraje, Spuštění her
 - **Tržby:** Tržby podle položek, Prodeje
 - **Rezervace**
 - **Konfigurace:** Nastavení, Stav synchronizace, Produkty, Počítače
@@ -185,5 +223,6 @@ Pokrývají:
 - smazané hráče,
 - chybu jedné oblasti,
 - ručně nastavený druh produktu,
+- hry: katalog vs. launchery, odhad mimo katalog, hry hráče a kontaktu, ruční přepnutí, panel v přehledu,
 - herní passy: stav, součty, omezení produktu, obnovu po návštěvě, odebrání v ggLeapu, přidání z Odoo (dvojklik, chyba API),
 - čísla přehledu.

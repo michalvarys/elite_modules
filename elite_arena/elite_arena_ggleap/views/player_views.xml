@@ -19,6 +19,7 @@
                 <field name="total_spent" sum="Celkem"/>
                 <field name="balance" optional="hide"/>
                 <field name="pass_hours_left" optional="show" widget="float_time"/>
+                <field name="main_game_id" optional="show"/>
                 <field name="registered_at" optional="hide"/>
                 <field name="age" optional="hide"/>
                 <field name="partner_id" optional="show"/>
@@ -73,6 +74,8 @@
                             <field name="last_visit"/>
                             <field name="days_since_visit"/>
                             <field name="hours_played"/>
+                            <field name="main_game_id"/>
+                            <field name="game_ids" widget="many2many_tags"/>
                             <field name="registered_at"/>
                             <field name="last_seen_ggleap"/>
                         </group>
@@ -88,6 +91,17 @@
                         </group>
                     </group>
                     <notebook>
+                        <page string="Hry" name="games">
+                            <field name="player_game_ids">
+                                <list limit="20">
+                                    <field name="app_id"/>
+                                    <field name="days"/>
+                                    <field name="launches"/>
+                                    <field name="first_played"/>
+                                    <field name="last_played"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Herní passy" name="gamepasses">
                             <field name="gamepass_ids">
                                 <list limit="20" decoration-muted="state != 'active'">
@@ -145,6 +159,7 @@
                 <field name="display_label" string="Hráč"
                        filter_domain="['|', '|', '|', ('display_label', 'ilike', self), ('username', 'ilike', self), ('email', 'ilike', self), ('phone', 'ilike', self)]"/>
                 <field name="email"/>
+                <field name="game_ids" string="Hraje"/>
                 <filter name="aktivni" string="Chodí pravidelně" domain="[('segment', '=', 'aktivni_stali')]"/>
                 <filter name="novy" string="Nový, zatím jednou" domain="[('segment', '=', 'jednou_nedavno')]"/>
                 <filter name="ohrozeni" string="Přestává chodit" domain="[('segment', '=', 'ohrozeni')]"/>
@@ -165,6 +180,7 @@
                 <filter name="first_visit" string="První návštěva" date="first_visit"/>
                 <group expand="0" string="Seskupit">
                     <filter name="group_segment" string="Skupina" context="{'group_by': 'segment'}"/>
+                    <filter name="group_main_game" string="Hraje nejvíc" context="{'group_by': 'main_game_id'}"/>
                     <filter name="group_first" string="Měsíc první návštěvy" context="{'group_by': 'first_visit:month'}"/>
                     <filter name="group_last" string="Měsíc poslední návštěvy" context="{'group_by': 'last_visit:month'}"/>
                 </group>

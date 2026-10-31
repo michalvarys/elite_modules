@@ -1,6 +1,6 @@
 {
     "name": "Elite Arena - ggLeap data",
-    "version": "18.0.1.1.0",
+    "version": "18.0.1.2.0",
     "category": "Services",
     "summary": "Automatická synchronizace z ggLeapu (herna): hráči, návštěvy, prodeje, produkty, PC, rezervace "
                "a herní passy; propojení hráčů s kontakty, přidávání passů a přehled tržeb a návštěvnosti.",
@@ -13,6 +13,7 @@ analytické tabulky (hráči, návštěvy, prodeje a jejich položky, produkty, 
 Hráči s e-mailem se propojí s kontakty, které dostanou skupinu podle toho, jak chodí
 (chodí pravidelně, přestává chodit, ztracený, přišel jen jednou...), takže jdou rovnou
 použít v e-mailingu. Přehled ukazuje tržby, návštěvy, vytížení podle hodin a odchod hráčů.
+U kontaktu je vidět, jaké hry hráč hraje (filtr pro e-mailing), a přehled ukazuje, co se hraje nejvíc.
 U kontaktu jsou vidět herní passy hráče a jde mu přidat nový (např. hodinu zdarma).
 Synchronizace jen čte; do ggLeapu Odoo zapíše jedině pass, který někdo přidá.
 """,
@@ -35,6 +36,7 @@ Synchronizace jen čte; do ggLeapu Odoo zapíše jedině pass, který někdo př
         "views/machine_views.xml",
         "views/booking_views.xml",
         "views/gamepass_views.xml",
+        "views/game_views.xml",
         "views/partner_views.xml",
         "views/dashboard_views.xml",
         "views/menus.xml",

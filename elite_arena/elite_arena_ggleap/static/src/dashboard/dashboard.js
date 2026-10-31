@@ -251,6 +251,37 @@ export class GgleapDashboard extends Component {
         return text;
     }
 
+    // ---------- games ----------
+    get games() {
+        const g = this.state.data.games;
+        const max = g.rows.length ? g.rows[0].players : 0;
+        const rows = g.rows.map((r) => {
+            let change = "", cls = "";
+            if (r.previous !== null && r.previous !== undefined) {
+                const diff = r.players - r.previous;
+                if (!r.previous) { change = "nová"; cls = "text-success"; }
+                else if (diff) { change = (diff > 0 ? "▲ " : "▼ ") + Math.abs(diff); cls = diff > 0 ? "text-success" : "text-danger"; }
+            }
+            return { ...r, pct: this.sharePct(r.players, max), change, cls };
+        });
+        let sentence = "";
+        if (rows.length) {
+            const top = rows[0];
+            sentence = "Nejvíc hráčů hraje " + top.name + ": " + plural(top.players, "hráč", "hráči", "hráčů") +
+                ", to je " + top.share + " % všech, kdo u nás na PC něco hráli.";
+            if (rows.length > 1) {
+                sentence += " Za ní " + rows.slice(1, 3).map((r) => r.name + " (" + r.share + " %)").join(" a ") + ".";
+            }
+        }
+        return { rows, sentence, players: g.players };
+    }
+    openGame(row) {
+        this.action.doAction({
+            type: "ir.actions.act_window", name: "Kontakty · hrají " + row.name, res_model: "res.partner",
+            views: [[false, "list"], [false, "form"]], domain: [["ggleap_game_ids", "in", [row.id]]],
+        });
+    }
+
     // ---------- drill-down ----------
     utcDomain(field) {
         const p = this.state.data.period;

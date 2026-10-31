@@ -15,6 +15,11 @@
               action="action_ggleap_gamepass"/>
     <menuitem id="menu_ggleap_visit" name="Herní sezení" parent="menu_ggleap_root" sequence="20"
               action="action_ggleap_visit"/>
+    <menuitem id="menu_ggleap_games" name="Hry" parent="menu_ggleap_root" sequence="25"/>
+    <menuitem id="menu_ggleap_app" name="Co se hraje" parent="menu_ggleap_games" sequence="10"
+              action="action_ggleap_app"/>
+    <menuitem id="menu_ggleap_app_launch" name="Spuštění her" parent="menu_ggleap_games" sequence="20"
+              action="action_ggleap_app_launch"/>
     <menuitem id="menu_ggleap_sales" name="Tržby" parent="menu_ggleap_root" sequence="30"/>
     <menuitem id="menu_ggleap_line" name="Tržby podle položek" parent="menu_ggleap_sales" sequence="10"
               action="action_ggleap_line"/>
