@@ -8,6 +8,7 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 
 from .holidays import holiday_name
 from .pet import SPECIES
+from .recurrence import occurrence_dates
 
 STATES = [
     ("web_new", "Čekající z webu"), ("confirmed", "Potvrzená"), ("done", "Proběhla"),
@@ -17,6 +18,7 @@ BUSY_STATES = ("confirmed", "done")
 INACTIVE_STATES = ("cancelled", "no_show")
 # Clinic opening hours timezone; must not depend on the acting user's timezone (cron, sudo, web).
 TZ = pytz.timezone("Europe/Prague")
+WEEKDAY_FIELDS = ("repeat_mon", "repeat_tue", "repeat_wed", "repeat_thu", "repeat_fri", "repeat_sat", "repeat_sun")
 # Czech day names hard-coded: must not depend on the user or browser language.
 WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"]
 # Reception books far ahead (vaccination in a year); the website has its own horizon in settings.
@@ -136,6 +138,26 @@ class VetReservation(models.Model):
         help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
              "Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí.")
     repeat_weekly_until = fields.Date(string="Opakovat týdně do", help="Jen u blokace: založí kopie na stejný den v týdnu až do tohoto data.")
+    # Repetition of a new block as in WinVet (B1, 31. 10.): used once in create() and cleared,
+    # the copies are ordinary blocks (models/recurrence.py).
+    repeat_rule = fields.Selection(
+        [("none", "Neopakovat"), ("daily", "Denně"), ("weekly", "Týdně"),
+         ("monthly", "Měsíčně"), ("yearly", "Ročně")],
+        string="Opakování", default="none")
+    repeat_interval = fields.Integer(string="Opakovat každý", default=1)
+    repeat_mon = fields.Boolean(string="po")
+    repeat_tue = fields.Boolean(string="út")
+    repeat_wed = fields.Boolean(string="st")
+    repeat_thu = fields.Boolean(string="čt")
+    repeat_fri = fields.Boolean(string="pá")
+    repeat_sat = fields.Boolean(string="so")
+    repeat_sun = fields.Boolean(string="ne")
+    repeat_end = fields.Selection(
+        [("never", "Bez konce"), ("count", "Konec po"), ("until", "Konec v")],
+        string="Konec opakování", default="never",
+        help="Bez konce: blokace se založí na rok dopředu.")
+    repeat_count = fields.Integer(string="Počet opakování", default=10)
+    repeat_until = fields.Date(string="Opakovat do")
     # The block form shows it instead of room_id: one block per checked room, all rooms checked =
     # one clinic-wide block (room_id empty). Not stored: create() and write() turn it into room_id;
     # an existing block shows the rooms of its group (_block_group: the blocks created together).
@@ -379,7 +401,7 @@ class VetReservation(models.Model):
         records._check_block_rights()   # any other default of the kind
         # Copies of a repeated block are created from the original input (all rooms),
         # hence before splitting; each copy is then split according to its own week.
-        records._repeat_weekly_blocks()
+        records._repeat_blocks()
         records._split_all_rooms_block()
         records._check_overlap()
         if other_rooms:
@@ -530,19 +552,36 @@ class VetReservation(models.Model):
         self._check_block_rights()
         return super().unlink()
 
-    def _repeat_weekly_blocks(self):
-        """Weekly block repetition = materialized copies, no rrule."""
-        for rec in self.filtered(lambda r: r.kind == "block" and r.repeat_weekly_until):
-            until = rec.repeat_weekly_until
-            rec.repeat_weekly_until = False
-            # Shift by weeks in local time so 12:00 stays 12:00 across daylight-saving changes.
+    def _repeat_blocks(self):
+        """Repeated block = materialized copies, no rrule (the rule: models/recurrence.py).
+
+        The block itself stays as entered; the copies are the rule's other dates. "Konec po N"
+        counts the block itself. The old "Opakovat týdně do" = weekly on the same day until."""
+        for rec in self.filtered(lambda r: r.kind == "block" and (r.repeat_rule != "none" or r.repeat_weekly_until)):
+            rule, interval, end, until = rec.repeat_rule, rec.repeat_interval, rec.repeat_end, rec.repeat_until
+            weekdays = [wd for wd, name in enumerate(WEEKDAY_FIELDS) if rec[name]]
+            if rule == "none":
+                rule, interval, weekdays, end, until = "weekly", 1, [], "until", rec.repeat_weekly_until
+            count = rec.repeat_count
+            rec.write(dict({name: False for name in WEEKDAY_FIELDS},
+                           repeat_rule="none", repeat_weekly_until=False, repeat_until=False))
+            # Shift by days in local time so 12:00 stays 12:00 across daylight-saving changes.
             tz_start = pytz.utc.localize(rec.start).astimezone(TZ).replace(tzinfo=None)
             tz_stop = pytz.utc.localize(rec.stop).astimezone(TZ).replace(tzinfo=None)
+            if interval < 1:
+                raise ValidationError(_("Opakovat každý: zadejte aspoň 1."))
+            if end == "count" and count < 1:
+                raise ValidationError(_("Konec po: zadejte aspoň 1 opakování."))
+            if end == "until" and (not until or until < tz_start.date()):
+                raise ValidationError(_("Konec opakování musí být v den blokace nebo později."))
+            dates = occurrence_dates(tz_start.date(), rule, interval, weekdays, end, count=count, until=until)
+            if end == "count":
+                dates = [d for d in dates if d != tz_start.date()][:count - 1]
             vals_list = []
-            for i in range(1, 53):
-                shift = timedelta(days=7 * i)
-                if (tz_start + shift).date() > until:
-                    break
+            for day in dates:
+                if day == tz_start.date():
+                    continue
+                shift = timedelta(days=(day - tz_start.date()).days)
                 vals_list.append({
                     "kind": "block", "block_reason": rec.block_reason, "block_scope": rec.block_scope,
                     "room_id": rec.room_id.id, "note": rec.note,
