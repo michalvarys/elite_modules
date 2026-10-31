@@ -40,10 +40,12 @@ TYP 3 = a changed occurrence and TYP 4 = a deleted occurrence; both point to the
 ID_PREDEK and to the occurrence with OPAKOVANI_INDEX (0 = the first occurrence), like DevExpress
 itself matches them. A changed occurrence is a complete row with its own time and data.
 
-All-day events (VOLBY bit 0) are stored from 23:00 of the previous day to 23:00 of the last day;
-they are normalised to local midnights (rounded to the nearest midnight), see :func:`day_bounds`.
-Recurrences of all-day events are expanded on those real days (a weekly "Wednesday" all-day pattern
-is stored from Tuesday 23:00; its deleted occurrences are stored the same way).
+ZACATEK / KONEC are stored one hour behind the clock the clinic sees, in summer and in winter
+alike (WinVet shows 10:00, the column has 09:00), see :data:`STORAGE_SHIFT`; the bridge sends the
+clock time. All-day events (VOLBY bit 0) are therefore stored from 23:00 of the previous day to
+23:00 of the last day; they are normalised to local midnights (rounded to the nearest midnight),
+see :func:`day_bounds`. Recurrences of all-day events are expanded on those real days (a weekly
+"Wednesday" all-day pattern is stored from Tuesday 23:00; its deleted occurrences likewise).
 """
 
 from __future__ import annotations
@@ -63,6 +65,10 @@ DELPHI_EPOCH = _dt.datetime(1899, 12, 30)
 MAX_OCCURRENCES = 5000
 TYP_NORMAL, TYP_PATTERN, TYP_CHANGED, TYP_DELETED = 0, 1, 3, 4
 OPTION_ALL_DAY = 1
+#: KALENDAR_NEW.ZACATEK / KONEC + this = the clock time WinVet shows (constant all year: the
+#: analysis copy has events on 6. 11. 2026 at 09:00 that WinVet shows at 10:00, and summer events
+#: start at 7:00-18:xx in a clinic open 8-20; all-day events sit at 23:00 in every season).
+STORAGE_SHIFT = _dt.timedelta(hours=1)
 
 DAILY, WEEKLY, MONTHLY, YEARLY = 0, 1, 2, 3
 DAY_DAY, DAY_EVERY_DAY, DAY_WEEKDAY, DAY_WEEKEND = 0, 1, 2, 3
@@ -350,6 +356,12 @@ def _as_datetime(value) -> Optional[_dt.datetime]:
     return None
 
 
+def _event_time(value) -> Optional[_dt.datetime]:
+    """ZACATEK / KONEC -> the clock time WinVet shows."""
+    stored = _as_datetime(value)
+    return stored + STORAGE_SHIFT if stored else None
+
+
 def day_bounds(start: _dt.datetime, end: _dt.datetime) -> Tuple[_dt.datetime, _dt.datetime]:
     """All-day event -> [first midnight, last midnight) in local time (at least one day)."""
     first = nearest_midnight(start)
@@ -430,7 +442,7 @@ class EventBuilder:
                 self._problem(f"unknown event type {typ}")
 
         for row in plain:
-            start, end = _as_datetime(row.get("ZACATEK")), _as_datetime(row.get("KONEC"))
+            start, end = _event_time(row.get("ZACATEK")), _event_time(row.get("KONEC"))
             if start is None or end is None:
                 self._problem("event without time")
                 continue
@@ -451,7 +463,7 @@ class EventBuilder:
         return sorted(out.values(), key=lambda r: (r["start"], r["key"]))
 
     def _changed(self, row: Mapping, parent: Optional[int], original: Optional[_dt.date], out: Dict[str, dict]):
-        start, end = _as_datetime(row.get("ZACATEK")), _as_datetime(row.get("KONEC"))
+        start, end = _event_time(row.get("ZACATEK")), _event_time(row.get("KONEC"))
         if start is None or end is None:
             self._problem("event without time")
             return
@@ -464,12 +476,12 @@ class EventBuilder:
         out[key] = self.record(row, key, start, end, recurring=True, occurrence_date=day)
 
     def _expand(self, pattern_id: int, pattern: Mapping, exceptions: Sequence[Mapping], out: Dict[str, dict]):
-        start, end = _as_datetime(pattern.get("ZACATEK")), _as_datetime(pattern.get("KONEC"))
+        start, end = _event_time(pattern.get("ZACATEK")), _event_time(pattern.get("KONEC"))
         if start is None or end is None:
             self._problem("event without time")
             return
         if (to_int(pattern.get("VOLBY")) or 0) & OPTION_ALL_DAY:
-            # all-day: the rule works on the real days (stored from 23:00 of the previous day)
+            # all-day: the rule works on the real days (midnights, see day_bounds)
             start, end = day_bounds(start, end)
         duration = max(end - start, _dt.timedelta(minutes=1))
         try:

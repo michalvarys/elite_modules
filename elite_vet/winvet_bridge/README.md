@@ -84,6 +84,9 @@ Most čte i kalendář WinVetu (`KALENDAR_NEW`, kalendáře `KALENDAR_NEW_KALEND
 - **Opakované záznamy** most rozloží na jednotlivé výskyty (změněné a smazané výskyty WinVetu
   respektuje). Formát binárních sloupců (`OPAKOVANI_INFO`, `ZDROJ_INFO`) je popsaný v
   `winvet_bridge/scheduler.py`.
+- **Čas:** WinVet ukládá začátek a konec v `KALENDAR_NEW` o hodinu dřív, než ho ukazuje (v létě i
+  v zimě: rezervace v 10:00 má ve sloupci 09:00). Most od verze 5.0.1 hodinu přičítá; starší most
+  posílal všechny časy kalendáře o hodinu dřív.
 - **Celodenní záznamy** (WinVet je ukládá od 23:00 předchozího dne) se zarovnají na půlnoc.
 - **Nečte se:** `ZPRAVA` (poznámky), připomínky, Google ID. `TITULEK` obsahuje jména klientů – jsou
   to osobní údaje, do logu se nikdy nepíšou (log má jen počty).

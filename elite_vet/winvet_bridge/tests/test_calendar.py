@@ -171,7 +171,7 @@ class EventBuilderTest(unittest.TestCase):
         events, builder = self.build([
             row(1, D(2026, 9, 21, 10), D(2026, 9, 21, 10, 30)),
             row(2, D(2026, 9, 19, 10), D(2026, 9, 19, 10, 30)),        # before the window
-            row(3, D(2026, 9, 30, 23, 30), D(2026, 10, 1, 0, 30)),      # reaches into the window
+            row(3, D(2026, 9, 30, 22, 30), D(2026, 10, 1, 0, 30)),      # 23:30 on the clock, reaches into the window
             row(4, D(2026, 10, 1, 8), D(2026, 10, 1, 9)),              # after the window
             row(5, D(2026, 9, 22, 9), D(2026, 9, 22, 9, 15), resources=("ORDINACE 1", "6")),
         ])
@@ -180,13 +180,24 @@ class EventBuilderTest(unittest.TestCase):
         self.assertEqual(set(rec), CONTRACT_KEYS["calendar_events"])
         self.assertEqual(list(rec), list(SPECS["calendar_events"].keys))
         self.assertEqual((rec["id"], rec["start"], rec["end"], rec["all_day"], rec["recurring"]),
-                         (1, "2026-09-21 10:00:00", "2026-09-21 10:30:00", False, False))
+                         (1, "2026-09-21 11:00:00", "2026-09-21 11:30:00", False, False))  # stored 10:00 = 11:00 on the clock
         self.assertEqual((rec["resource_ids"], rec["activity_id"], rec["owner_id"], rec["patient_id"]),
                          ([5], 3, None, None))
         self.assertEqual((rec["busy_status"], rec["done"], rec["modified"]), (2, False, "2026-10-01 09:08:07"))
         self.assertIsNone(rec["pattern_id"])
         self.assertEqual(events["5"]["resource_ids"], [5, 6])
         self.assertEqual(builder.problems, {})
+
+    def test_times_are_stored_one_hour_behind_the_clock(self):
+        # WinVet shows 10:00, KALENDAR_NEW has 09:00 - in summer and in winter alike
+        # (analysis copy 31. 10. 2026: event 1049 on 6. 11.; summer starts 7:00-18:xx for a clinic open 8-20)
+        builder = EventBuilder(Window(dt.date(2026, 9, 1), dt.date(2026, 11, 30)), {})
+        events = {r["key"]: r for r in builder.build([
+            row(1049, D(2026, 11, 6, 9), D(2026, 11, 6, 10)),
+            row(868, D(2026, 9, 23, 7), D(2026, 9, 23, 7, 30)),
+        ])}
+        self.assertEqual((events["1049"]["start"], events["1049"]["end"]), ("2026-11-06 10:00:00", "2026-11-06 11:00:00"))
+        self.assertEqual((events["868"]["start"], events["868"]["end"]), ("2026-09-23 08:00:00", "2026-09-23 08:30:00"))
 
     def test_all_day_stored_at_23_00(self):
         events, _b = self.build([
@@ -214,9 +225,9 @@ class EventBuilderTest(unittest.TestCase):
         changed, regular = events["49-20260926"], events["49-20260927"]
         self.assertEqual((changed["id"], changed["pattern_id"], changed["start"], changed["resource_ids"],
                           changed["occurrence_date"], changed["title"]),
-                         (60, 49, "2026-09-26 11:00:00", [6], "2026-09-26", "changed"))
+                         (60, 49, "2026-09-26 12:00:00", [6], "2026-09-26", "changed"))
         self.assertEqual((regular["id"], regular["pattern_id"], regular["start"], regular["end"],
-                          regular["recurring"]), (49, 49, "2026-09-27 08:00:00", "2026-09-27 08:30:00", True))
+                          regular["recurring"]), (49, 49, "2026-09-27 09:00:00", "2026-09-27 09:30:00", True))
         self.assertEqual(builder.problems, {})
 
     def test_all_day_recurrence_works_on_the_real_days(self):
@@ -240,7 +251,7 @@ class EventBuilderTest(unittest.TestCase):
         ]
         events, _b = self.build(rows)
         self.assertIn("70-20260903", events)
-        self.assertEqual(events["70-20260903"]["start"], "2026-09-22 15:00:00")
+        self.assertEqual(events["70-20260903"]["start"], "2026-09-22 16:00:00")
         self.assertEqual(sorted(k for k in events if k != "70-20260903"),
                          ["70-202609%02d" % d for d in range(20, 21)])  # count 20 = 1. .. 20. 9.
 

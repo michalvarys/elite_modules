@@ -342,8 +342,9 @@ for an occurrence of a recurring event, the date being the occurrence's original
 `id` (ID_KALENDAR of the row the data comes from: the event, the pattern, or the changed occurrence),
 `pattern_id` (ID_KALENDAR of the recurrence pattern or `null`), `recurring` (bool),
 `occurrence_date` (`YYYY-MM-DD` original date of the occurrence or `null`),
-`start`, `end` (`YYYY-MM-DD HH:MM:SS` Europe/Prague local time like every contract datetime; `end` is
-exclusive), `all_day` (bool, VOLBY bit 0; then `start`/`end` are local midnights, `end` = the day after
+`start`, `end` (`YYYY-MM-DD HH:MM:SS` Europe/Prague local time like every contract datetime – the
+clock time WinVet shows; `KALENDAR_NEW.ZACATEK/KONEC` are stored one hour behind it all year, the
+bridge adds the hour since 5.0.1; `end` is exclusive), `all_day` (bool, VOLBY bit 0; then `start`/`end` are local midnights, `end` = the day after
 the last day), `resource_ids` (list of `calendar_resources` ids, possibly empty or several),
 `activity_id` (ID_ORD_CINNOST), `owner_id` (ID_PARTNER), `patient_id` (ID_PACIENT) – ids 0/negative →
 `null` –, `title` (TITULEK, **personal data: client names**), `busy_status` (STAV, int: 0 free,
