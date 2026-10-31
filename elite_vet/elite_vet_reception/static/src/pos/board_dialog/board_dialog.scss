@@ -215,13 +215,14 @@ $ev-board-line: #e2e8f0;
         cursor: default;
         background: repeating-linear-gradient(135deg, #94a3b8 0 6px, #64748b 6px 12px) !important;
     }
-    // WinVet calendar entries (elite_vet_winvet): read-only, grey hatched, WinVet colour stripe
+    // WinVet calendar entries (elite_vet_winvet): read-only, plain light grey, WinVet colour stripe
+    // (not hatched: hatching means a block or time outside the opening hours)
     &.o_ev_board_winvet {
         cursor: help;
         color: #334155;
         border: 1px solid #cbd5e1;
         box-shadow: none;
-        background: repeating-linear-gradient(135deg, #e2e8f0 0 6px, #f1f5f9 6px 12px) !important;
+        background: #e8edf3 !important;
     }
     // web-only blocks: light and dashed, a click goes through to the column (reception books there)
     &.o_ev_board_block.o_ev_board_block_web {

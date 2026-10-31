@@ -74,6 +74,13 @@ class VetDoctorAssignment(models.Model):
         self._check_roster_owned()
         return super().unlink()
 
+    def set_room(self, room_id):
+        """Room picked in the Rozpis lékařů popover: a roster assignment changes it in its
+        shift (the sync then moves the assignment), a manual one directly."""
+        for rec in self:
+            (rec.shift_id or rec).write({"room_id": room_id})
+        return True
+
     @api.depends("doctor_id", "room_id", "hour_from", "hour_to")
     def _compute_display_name(self):
         for rec in self:

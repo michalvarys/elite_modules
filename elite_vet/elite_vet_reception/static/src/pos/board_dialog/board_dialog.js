@@ -373,7 +373,7 @@ export class BoardDialog extends Component {
     eventStyle(room, e) {
         let style = `top:${this.top(e.start)}px;height:${this.height(e.start, e.end)}px`;
         if (this.isWinvet(e)) {
-            // grey hatched card, the WinVet colour as the left stripe (board_dialog.scss)
+            // plain light grey card, the WinVet colour as the left stripe (board_dialog.scss)
             return `${style};left:${this.eventLeft(room)}px;border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
         }
         if (e.kind !== "block") {

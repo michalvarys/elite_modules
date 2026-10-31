@@ -6,7 +6,8 @@
  * (elite.vet.doctor.assignment). The holidays are computed on the server
  * (`elite.vet.shift.holiday_map`, models/holidays.py) - nothing is entered and
  * no records are created. Month: the name in the day cell; week / day: the name
- * under the day in the header. Clicking the day works as before.
+ * under the day in the header. Clicking the day works as before (a double-click no
+ * longer fails, see onDateClick).
  */
 import { registry } from "@web/core/registry";
 import { calendarView } from "@web/views/calendar/calendar_view";
@@ -45,6 +46,18 @@ export class HolidayCalendarCommonRenderer extends CalendarCommonRenderer {
             ...super.options,
             dayCellDidMount: this.onHolidayCellDidMount,
         };
+    }
+
+    /**
+     * A double-click on a day opens the form after the first click and closes the calendar;
+     * FullCalendar then reports the second click without its mouse event (destroy() ->
+     * onPointerUp({})) and the base handler fails on `info.jsEvent.defaultPrevented`.
+     */
+    onDateClick(info) {
+        if (!info.jsEvent) {
+            return;
+        }
+        super.onDateClick(info);
     }
 
     holidayName(iso) {
