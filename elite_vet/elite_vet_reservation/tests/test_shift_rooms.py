@@ -190,6 +190,18 @@ class TestShiftRooms(ReservationCase):
         a.write({"procedure_ids": [(6, 0, self.derm.ids)], "note": "jen derma"})
         self.assertEqual(a.procedure_ids, self.derm)
 
+    def test_set_room_from_the_calendar_popover(self):
+        # Rozpis lékařů popover: a roster assignment changes its room through the shift.
+        s = self.shift()
+        a = self.linked(s)
+        a.set_room(self.room2.id)
+        self.assertEqual((s.room_id, a.room_id), (self.room2, self.room2))
+        self.assertEqual(self.linked(s), a)
+        # A manual assignment is written directly.
+        m = self.assign(self.dr_b, self.room1, self.day + timedelta(days=1), 9.0, 11.0)
+        m.set_room(self.room2.id)
+        self.assertEqual(m.room_id, self.room2)
+
     def test_manual_assignment_still_editable(self):
         a = self.assign(self.dr_b, self.room2, self.day, 9.0, 11.5)
         self.assertFalse(a.from_roster)

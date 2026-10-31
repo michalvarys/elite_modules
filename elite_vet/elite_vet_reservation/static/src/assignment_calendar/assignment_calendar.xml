@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- The usual popover body plus the room buttons (one click = the room is changed). -->
+    <t t-name="elite_vet_reservation.AssignmentCalendarPopover.body">
+        <t t-call="web.CalendarCommonPopover.body"/>
+        <div t-if="state.rooms.length" class="o_ev_assignment_rooms list-group-item">
+            <div class="fw-bold mb-1">Změnit ordinaci</div>
+            <div class="d-flex flex-wrap gap-1">
+                <t t-foreach="state.rooms" t-as="room" t-key="room.id">
+                    <button type="button" class="btn btn-sm"
+                            t-att-class="room.id === roomId ? 'btn-primary' : 'btn-outline-secondary'"
+                            t-att-disabled="state.saving"
+                            t-att-aria-pressed="room.id === roomId ? 'true' : 'false'"
+                            t-on-click="() => this.onPickRoom(room)">
+                        <span class="o_ev_room_dot" t-attf-style="background: {{ room.color_hex }}"/>
+                        <t t-esc="room.name"/>
+                    </button>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

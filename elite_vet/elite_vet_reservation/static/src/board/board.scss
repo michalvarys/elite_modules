@@ -141,9 +141,10 @@
 }
 body.evb-resizing, body.evb-resizing * { cursor: col-resize !important; user-select: none !important; }
 
-// ---------- WinVet calendar entries (elite_vet_winvet): read-only, grey hatched, WinVet colour stripe ----------
+// ---------- WinVet calendar entries (elite_vet_winvet): read-only, plain light grey, WinVet colour stripe ----------
+// Not hatched: hatching means a block or time outside the opening hours.
 .evb-event.evb-winvet {
-    background: repeating-linear-gradient(135deg, #e2e8f0 0 6px, #f1f5f9 6px 12px) !important;
+    background: #e8edf3 !important;
     color: #334155; border: 1px solid #cbd5e1; cursor: help; box-shadow: none;
 }
 .evb-wv-note {
