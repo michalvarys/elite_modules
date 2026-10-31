@@ -3,15 +3,18 @@ from odoo import api, fields, models
 ENTITIES = [
     ("machines", "Počítače"),
     ("products", "Produkty"),
+    ("apps", "Hry (katalog)"),
     ("players", "Hráči"),
     ("activity", "Návštěvy (přihlášení)"),
+    ("launches", "Spuštění her"),
     ("transactions", "Prodeje"),
     ("bookings", "Rezervace"),
     ("gamepasses", "Herní passy"),
     ("details", "Detaily hráčů"),
     ("sessions", "Délka sezení"),
-    ("partners", "Kontakty"),
     ("stats", "Skupiny hráčů"),
+    ("partners", "Kontakty"),
+    ("games", "Hry hráčů"),
 ]
 
 
@@ -34,6 +37,7 @@ class GgleapStatus(models.Model):
     calls_today = fields.Integer(string="Dotazů dnes", readonly=True)
     activity_cursor = fields.Datetime(string="Návštěvy staženy do", readonly=True)
     transaction_cursor = fields.Datetime(string="Prodeje staženy do", readonly=True)
+    launch_cursor = fields.Datetime(string="Spuštění her stažena do", readonly=True)
     history_from = fields.Datetime(string="Historie od", readonly=True,
                                    help="Odkud se při prvním běhu začalo stahovat.")
     backfill_done = fields.Boolean(string="Historie stažena", readonly=True)
@@ -94,8 +98,8 @@ class GgleapStatus(models.Model):
     def action_restart_history(self):
         """Downloads visits and sales again from the start of the history window."""
         self.ensure_one()
-        self.write({"activity_cursor": False, "transaction_cursor": False, "history_from": False,
-                    "backfill_done": False})
+        self.write({"activity_cursor": False, "transaction_cursor": False, "launch_cursor": False,
+                    "history_from": False, "backfill_done": False})
         return self.action_sync_now()
 
 

@@ -70,6 +70,12 @@ class GgleapPlayer(models.Model):
     pass_hours_left = fields.Float(string="Zbývá v passech (h)", compute="_compute_pass_hours_left", store=True,
                                    help="Součet nevyčerpaného času v platných passech.")
     gamepasses_synced_at = fields.Datetime(string="Passy načteny", readonly=True)
+    # games (recomputed by the sync from the launches on PCs)
+    player_game_ids = fields.One2many("elite.arena.ggleap.player.game", "player_id", string="Hry")
+    game_ids = fields.Many2many("elite.arena.ggleap.app", "elite_arena_ggleap_player_app_rel", "player_id", "app_id",
+                                string="Hraje", readonly=True, help="Hry, které hráč u nás spustil (jen na PC).")
+    main_game_id = fields.Many2one("elite.arena.ggleap.app", string="Hraje nejvíc", readonly=True,
+                                   ondelete="set null", help="Hra, kterou hrál v nejvíc různých dnech.")
 
     _sql_constraints = [("uuid_uniq", "unique(uuid)", "Hráč z ggLeapu už existuje.")]
 

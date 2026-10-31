@@ -16,6 +16,12 @@ class ResPartner(models.Model):
     ggleap_days_since_visit = fields.Integer(string="Herna: dní od návštěvy", compute="_compute_ggleap", store=True)
     ggleap_pass_hours_left = fields.Float(string="Herna: zbývá v passech (h)", compute="_compute_ggleap", store=True,
                                           help="Nevyčerpaný čas v platných herních passech ggLeapu.")
+    ggleap_game_ids = fields.Many2many("elite.arena.ggleap.app", "res_partner_ggleap_app_rel", "partner_id", "app_id",
+                                       string="Herna: hraje", readonly=True,
+                                       help="Hry, které hráč v herně spustil (jen na PC). Hodí se jako filtr "
+                                            "pro e-mailing, např. pozvánka na turnaj.")
+    ggleap_main_game_id = fields.Many2one("elite.arena.ggleap.app", string="Herna: hraje nejvíc", readonly=True,
+                                          ondelete="set null")
     ggleap_gamepass_ids = fields.One2many("elite.arena.ggleap.gamepass", "partner_id", string="Herní passy")
     ggleap_active_gamepass_ids = fields.One2many("elite.arena.ggleap.gamepass", "partner_id", string="Platné passy",
                                                  domain=[("state", "=", "active")])

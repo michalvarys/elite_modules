@@ -32,6 +32,7 @@
                             <field name="history_from"/>
                             <field name="activity_cursor"/>
                             <field name="transaction_cursor"/>
+                            <field name="launch_cursor"/>
                             <field name="backfill_done"/>
                             <field name="last_error" decoration-danger="last_error"/>
                             <field name="last_error_at" invisible="not last_error"/>

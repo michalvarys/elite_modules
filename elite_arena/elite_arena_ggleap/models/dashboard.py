@@ -80,6 +80,7 @@ class GgleapDashboard(models.AbstractModel):
             "payment_methods": self._payment_methods(start, end),
             "machines": self._machines(start, end),
             "top_players": self._top_players(start, end),
+            "games": self._games(start, end, p_start, p_end, compare),
             "segments": self._segments(),
             "sync": {
                 "last_success_at": fields.Datetime.to_string(status.last_success_at) if status.last_success_at else False,
@@ -228,6 +229,36 @@ class GgleapDashboard(models.AbstractModel):
         return [{"id": pid, "name": name or "—", "segment": seg, "segment_label": labels.get(seg, ""),
                  "amount": float(spent), "visits": visits}
                 for pid, name, seg, spent, visits in self.env.cr.fetchall()]
+
+    def _games(self, start, end, p_start, p_end, compare=True):
+        """What people play on the PCs: different players per game in the period (and in the
+        comparison period). Consoles and simulators do not log the game."""
+        tz = self._tz().zone
+        query = """
+            select a.id, a.name, a.tags, count(distinct l.player_id),
+                   count(distinct (l.player_id, (l.start at time zone 'UTC' at time zone %s)::date))
+                       filter (where l.player_id is not null), count(*)
+              from elite_arena_ggleap_app_launch l join elite_arena_ggleap_app a on a.id = l.app_id
+             where a.is_game and l.start >= %s and l.start < %s
+             group by 1, 2, 3"""
+        self.env.cr.execute(query, (tz, start, end))
+        rows = self.env.cr.fetchall()
+        previous = {}
+        if compare:
+            self.env.cr.execute(query, (tz, p_start, p_end))
+            previous = {r[0]: r[3] for r in self.env.cr.fetchall()}
+        self.env.cr.execute("""select count(distinct l.player_id) from elite_arena_ggleap_app_launch l
+                                 join elite_arena_ggleap_app a on a.id = l.app_id
+                                where a.is_game and l.start >= %s and l.start < %s""", (start, end))
+        gamers = self.env.cr.fetchone()[0] or 0
+        rows.sort(key=lambda r: (r[3], r[4], r[5]), reverse=True)
+        return {
+            "players": gamers,
+            "rows": [{"id": app_id, "name": name, "tags": tags or "", "players": players, "days": days,
+                      "launches": launches, "share": round(100.0 * players / gamers) if gamers else 0,
+                      "previous": previous.get(app_id, 0) if compare else None}
+                     for app_id, name, tags, players, days, launches in rows[:TOP_LIMIT]],
+        }
 
     def _segments(self):
         """Current state (not period-dependent): how many players are in each group and what
