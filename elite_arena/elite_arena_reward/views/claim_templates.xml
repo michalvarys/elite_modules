@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="claim_layout" name="Odměna: rámeček">
+        <t t-call="website.layout">
+            <t t-set="head"><meta name="robots" content="noindex, nofollow"/></t>
+            <t t-set="pageName" t-value="'odmena'"/>
+            <div id="wrap" class="o_arena_reward">
+                <div class="container py-5">
+                    <div class="mx-auto" style="max-width:560px">
+                        <div style="background:#111111;color:#ffffff;border-radius:16px 16px 0 0;padding:28px">
+                            <p style="margin:0 0 6px 0;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ff4d6d">Odměna od Elite Arény</p>
+                            <h1 style="margin:0;font-size:28px;line-height:1.2;color:#ffffff"><t t-out="title"/></h1>
+                        </div>
+                        <div style="background:#ffffff;color:#1f2328;border-radius:0 0 16px 16px;padding:28px;border:1px solid #e5e7eb;border-top:0">
+                            <t t-out="0"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="claim_page" name="Odměna: vyzvednutí">
+        <t t-call="elite_arena_reward.claim_layout">
+            <t t-set="title" t-value="reward.name"/>
+            <t t-if="done">
+                <p class="fs-5 mb-3">Hotovo<t t-if="first_name">, <t t-out="first_name"/></t>! Odměnu máš na herním účtu.</p>
+                <p class="mb-3">Až se u nás přihlásíš na počítač nebo konzoli, čas se ti odečte z odměny jako první.
+                    <t t-if="claim.gamepass_id.expires_at">Platí do <t t-out="claim.date_text(claim.gamepass_id.expires_at)"/>.</t></p>
+                <p class="mb-0">Těšíme se na tebe v Aréně!</p>
+            </t>
+            <t t-elif="not claim.is_open">
+                <p class="fs-5 mb-3">Tenhle odkaz už neplatí.</p>
+                <p class="mb-0">Odměnu šlo vyzvednout do <t t-out="claim.date_text(claim.expires_at)"/>.
+                    Stav se u nás a domluvíme se.</p>
+            </t>
+            <t t-else="">
+                <p t-if="first_name" class="fs-5 mb-3">Ahoj <t t-out="first_name"/>,</p>
+                <p class="mb-3" t-if="reward.description" t-out="reward.description"/>
+                <p class="mb-3" t-else="">Máme pro tebe <strong><t t-out="reward.name"/></strong>. Klikni na tlačítko
+                    a přidáme ti ji na herní účet.</p>
+                <p class="mb-4 text-muted small">Po vyzvednutí platí <t t-out="reward.pass_valid_days"/> dní.
+                    Vyzvednout si ji můžeš do <t t-out="claim.date_text(claim.expires_at)"/>.</p>
+                <div t-if="error" class="alert alert-warning" role="alert" t-out="error"/>
+                <form t-att-action="'/odmena/%s/vyzvednout' % claim.token" method="post" class="text-center">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <button type="submit" class="btn btn-lg"
+                            style="background:#e4002b;color:#ffffff;font-weight:bold;padding:14px 32px;border-radius:8px">
+                        Vyzvednout odměnu
+                    </button>
+                </form>
+            </t>
+        </t>
+    </template>
+
+    <template id="claim_not_found" name="Odměna: neplatný odkaz">
+        <t t-call="elite_arena_reward.claim_layout">
+            <t t-set="title" t-value="'Odkaz nefunguje'"/>
+            <p class="mb-0">Tenhle odkaz na odměnu neznáme. Zkontroluj, že je celý, nebo se nám ozvi na baru.</p>
+        </t>
+    </template>
+</odoo>

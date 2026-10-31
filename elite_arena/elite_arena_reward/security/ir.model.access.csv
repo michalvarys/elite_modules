@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_arena_reward_user,elite.arena.reward.user,model_elite_arena_reward,elite_arena_ggleap.group_ggleap_user,1,0,0,0
+access_arena_reward_manager,elite.arena.reward.manager,model_elite_arena_reward,elite_arena_ggleap.group_ggleap_manager,1,1,1,1
+access_arena_reward_claim_user,elite.arena.reward.claim.user,model_elite_arena_reward_claim,elite_arena_ggleap.group_ggleap_user,1,0,0,0
+access_arena_reward_claim_manager,elite.arena.reward.claim.manager,model_elite_arena_reward_claim,elite_arena_ggleap.group_ggleap_manager,1,1,0,0

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_arena_reward_list" model="ir.ui.view">
+        <field name="name">elite.arena.reward.list</field>
+        <field name="model">elite.arena.reward</field>
+        <field name="arch" type="xml">
+            <list string="Odměny">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="hours" widget="float_time"/>
+                <field name="pass_valid_days"/>
+                <field name="offered_count"/>
+                <field name="claimed_count"/>
+                <field name="claim_rate" widget="percentage" options="{'digits': [16, 0]}"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_arena_reward_form" model="ir.ui.view">
+        <field name="name">elite.arena.reward.form</field>
+        <field name="model">elite.arena.reward</field>
+        <field name="arch" type="xml">
+            <form string="Odměna">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_claims" type="object" class="oe_stat_button" icon="fa-gift">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="claimed_count"/> / <field name="offered_count"/></span>
+                                <span class="o_stat_text">Vyzvednuto</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        Hráč dostane osobní odkaz. Pass se mu do ggLeapu přidá až ve chvíli, kdy si odměnu
+                        na webu vyzvedne. Odměny posílají automatické e-maily a dotazník spokojenosti.
+                    </div>
+                    <div class="oe_title"><h1><field name="name" placeholder="např. Hodina hraní zdarma"/></h1></div>
+                    <group>
+                        <group string="Co hráč dostane">
+                            <field name="product_id" placeholder="Hodina zdarma za 0 Kč"/>
+                            <field name="hours" widget="float_time"/>
+                            <field name="start_type" widget="radio"/>
+                            <field name="pass_valid_days"/>
+                        </group>
+                        <group string="Odkaz">
+                            <field name="claim_valid_days"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Text na stránce, kde si hráč odměnu vyzvedne"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_arena_reward" model="ir.actions.act_window">
+        <field name="name">Odměny</field>
+        <field name="res_model">elite.arena.reward</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_arena_reward_claim_list" model="ir.ui.view">
+        <field name="name">elite.arena.reward.claim.list</field>
+        <field name="model">elite.arena.reward.claim</field>
+        <field name="arch" type="xml">
+            <list string="Odkazy na odměny" create="0" decoration-success="state == 'claimed'"
+                  decoration-muted="state in ('expired', 'canceled') or is_test">
+                <field name="create_date" string="Nabídnuto"/>
+                <field name="partner_id"/>
+                <field name="reward_id"/>
+                <field name="origin"/>
+                <field name="visited_at"/>
+                <field name="claimed_at"/>
+                <field name="expires_at" optional="hide"/>
+                <field name="state" widget="badge" decoration-success="state == 'claimed'" decoration-info="state == 'offered'"/>
+                <field name="last_error" optional="show"/>
+                <field name="is_test" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_arena_reward_claim_form" model="ir.ui.view">
+        <field name="name">elite.arena.reward.claim.form</field>
+        <field name="model">elite.arena.reward.claim</field>
+        <field name="arch" type="xml">
+            <form string="Odkaz na odměnu" create="0">
+                <header>
+                    <button name="action_claim_for_player" type="object" string="Přidat odměnu hráči teď"
+                            class="btn-primary" invisible="state != 'offered' or is_test"
+                            groups="elite_arena_ggleap.group_ggleap_manager"
+                            confirm="Pass se hned přidá do účtu hráče v ggLeapu. Pokračovat?"/>
+                    <button name="action_cancel" type="object" string="Zrušit odkaz" invisible="state != 'offered'"
+                            groups="elite_arena_ggleap.group_ggleap_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="offered,claimed"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-warning" role="alert" invisible="not last_error">
+                        <field name="last_error"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="reward_id"/>
+                            <field name="origin"/>
+                            <field name="url" widget="url"/>
+                            <field name="is_test" invisible="not is_test"/>
+                        </group>
+                        <group>
+                            <field name="create_date" string="Nabídnuto"/>
+                            <field name="expires_at"/>
+                            <field name="visited_at"/>
+                            <field name="claimed_at"/>
+                            <field name="player_id"/>
+                            <field name="gamepass_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_arena_reward_claim_search" model="ir.ui.view">
+        <field name="name">elite.arena.reward.claim.search</field>
+        <field name="model">elite.arena.reward.claim</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id"/>
+                <field name="reward_id"/>
+                <field name="origin"/>
+                <filter name="offered" string="Čeká na vyzvednutí" domain="[('state', '=', 'offered')]"/>
+                <filter name="claimed" string="Vyzvednuto" domain="[('state', '=', 'claimed')]"/>
+                <filter name="visited" string="Otevřel, ale nevyzvedl" domain="[('state', '=', 'offered'), ('visited_at', '!=', False)]"/>
+                <filter name="error" string="S chybou" domain="[('last_error', '!=', False)]"/>
+                <separator/>
+                <filter name="no_test" string="Bez zkušebních" domain="[('is_test', '=', False)]"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_origin" string="Odkud" context="{'group_by': 'origin'}"/>
+                    <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_arena_reward_claim" model="ir.actions.act_window">
+        <field name="name">Vyzvednutí odměn</field>
+        <field name="res_model">elite.arena.reward.claim</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_no_test': 1}</field>
+    </record>
+
+    <menuitem id="menu_arena_marketing" name="Marketing" parent="elite_arena_ggleap.menu_ggleap_root" sequence="35"/>
+    <menuitem id="menu_arena_reward_claim" name="Vyzvednutí odměn" parent="menu_arena_marketing" sequence="50"
+              action="action_arena_reward_claim"/>
+    <menuitem id="menu_arena_reward" name="Odměny" parent="menu_arena_marketing" sequence="60"
+              action="action_arena_reward"/>
+</odoo>
