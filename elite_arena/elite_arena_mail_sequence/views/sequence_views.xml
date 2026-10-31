@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mail_sequence_list" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.list</field>
+        <field name="model">elite.arena.mail.sequence</field>
+        <field name="arch" type="xml">
+            <list string="Automatické e-maily" decoration-muted="state != 'running'">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="trigger"/>
+                <field name="state" widget="badge" decoration-success="state == 'running'" decoration-warning="state == 'paused'"/>
+                <field name="enrolled_count"/>
+                <field name="running_count"/>
+                <field name="returned_count"/>
+                <field name="claimed_count"/>
+                <field name="mail_count"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_mail_sequence_form" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.form</field>
+        <field name="model">elite.arena.mail.sequence</field>
+        <field name="arch" type="xml">
+            <form string="Automatické e-maily">
+                <header>
+                    <button name="action_start" type="object" string="Spustit" class="btn-primary"
+                            invisible="state == 'running'"
+                            confirm="Série začne zařazovat hráče a posílat jim e-maily (každou hodinu, jen přes den). Spustit?"/>
+                    <button name="action_pause" type="object" string="Pozastavit" invisible="state != 'running'"/>
+                    <button name="action_preview_candidates" type="object" string="Kdo splňuje podmínky"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_enrollments" type="object" class="oe_stat_button" icon="fa-users">
+                            <field name="enrolled_count" widget="statinfo" string="Zařazeno"/>
+                        </button>
+                        <button name="action_open_mails" type="object" class="oe_stat_button" icon="fa-envelope">
+                            <field name="mail_count" widget="statinfo" string="E-mailů"/>
+                        </button>
+                    </div>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <div class="alert alert-success" role="alert" invisible="not enrolled_count">
+                        <field name="result"/>
+                    </div>
+                    <div class="alert alert-info" role="alert" style="white-space: pre-line">
+                        <field name="explanation"/>
+                    </div>
+                    <group>
+                        <group string="Kdo se zařadí">
+                            <field name="trigger" widget="radio"/>
+                            <label for="min_days" string="Dní od návštěvy"/>
+                            <div class="o_row">
+                                <span>od</span><field name="min_days" class="oe_inline"/>
+                                <span>do</span><field name="max_days" class="oe_inline"/>
+                            </div>
+                            <field name="min_visits"/>
+                            <field name="max_visits"/>
+                            <field name="include_existing"/>
+                        </group>
+                        <group string="Pravidla">
+                            <field name="stop_when_back"/>
+                            <field name="reenroll_days"/>
+                            <field name="activated_at" invisible="not activated_at"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Kroky" name="steps">
+                            <field name="step_ids">
+                                <list editable="bottom">
+                                    <field name="delay_days"/>
+                                    <field name="name"/>
+                                    <field name="step_type"/>
+                                    <field name="mail_template_id"/>
+                                    <field name="reward_id"/>
+                                    <field name="skip_if_claimed"/>
+                                    <button name="action_send_test" type="object" string="Poslat zkušební" icon="fa-paper-plane"/>
+                                </list>
+                            </field>
+                            <p class="text-muted">
+                                Den = kolik dní po zařazení do série e-mail přijde. Text e-mailu upravíte po otevření
+                                šablony. „Poslat zkušební“ ho pošle vám, odkaz na odměnu v něm nic nepřidá.
+                            </p>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_mail_sequence" model="ir.actions.act_window">
+        <field name="name">Automatické e-maily</field>
+        <field name="res_model">elite.arena.mail.sequence</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_mail_sequence_enrollment_list" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.enrollment.list</field>
+        <field name="model">elite.arena.mail.sequence.enrollment</field>
+        <field name="arch" type="xml">
+            <list string="Zařazení" create="0" decoration-success="returned_at" decoration-muted="state in ('stopped', 'unsubscribed')">
+                <field name="enrolled_at"/>
+                <field name="partner_id"/>
+                <field name="sequence_id"/>
+                <field name="state" widget="badge" decoration-info="state == 'running'" decoration-success="state == 'returned'"/>
+                <field name="next_step_id"/>
+                <field name="next_at"/>
+                <field name="claimed"/>
+                <field name="returned_at"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_mail_sequence_enrollment_form" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.enrollment.form</field>
+        <field name="model">elite.arena.mail.sequence.enrollment</field>
+        <field name="arch" type="xml">
+            <form string="Zařazení" create="0">
+                <header>
+                    <button name="action_stop" type="object" string="Zastavit" invisible="state != 'running'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="running,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="sequence_id"/>
+                            <field name="enrolled_at"/>
+                            <field name="last_visit_at_enroll"/>
+                        </group>
+                        <group>
+                            <field name="next_step_id"/>
+                            <field name="next_at"/>
+                            <field name="returned_at"/>
+                            <field name="claimed"/>
+                            <field name="note"/>
+                        </group>
+                    </group>
+                    <field name="mail_ids">
+                        <list>
+                            <field name="sent_at"/>
+                            <field name="step_id"/>
+                            <field name="state"/>
+                            <field name="claim_id"/>
+                            <field name="claim_state"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_mail_sequence_enrollment_search" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.enrollment.search</field>
+        <field name="model">elite.arena.mail.sequence.enrollment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id"/>
+                <field name="sequence_id"/>
+                <filter name="running" string="Probíhá" domain="[('state', '=', 'running')]"/>
+                <filter name="returned" string="Vrátili se" domain="[('returned_at', '!=', False)]"/>
+                <group expand="0" string="Seskupit">
+                    <filter name="group_sequence" string="Série" context="{'group_by': 'sequence_id'}"/>
+                    <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_mail_sequence_enrollment" model="ir.actions.act_window">
+        <field name="name">Zařazení hráči</field>
+        <field name="res_model">elite.arena.mail.sequence.enrollment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_mail_sequence_mail_list" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.mail.list</field>
+        <field name="model">elite.arena.mail.sequence.mail</field>
+        <field name="arch" type="xml">
+            <list string="Odeslané e-maily" create="0" decoration-muted="is_test or state == 'skipped'">
+                <field name="sent_at"/>
+                <field name="partner_id"/>
+                <field name="sequence_id"/>
+                <field name="step_id"/>
+                <field name="state"/>
+                <field name="claim_id"/>
+                <field name="claim_state"/>
+                <field name="mail_id" optional="hide"/>
+                <field name="is_test" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_mail_sequence_mail" model="ir.actions.act_window">
+        <field name="name">Odeslané e-maily</field>
+        <field name="res_model">elite.arena.mail.sequence.mail</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_test', '=', False)]</field>
+    </record>
+
+    <menuitem id="menu_mail_sequence" name="Automatické e-maily" parent="elite_arena_reward.menu_arena_marketing"
+              sequence="10" action="action_mail_sequence"/>
+    <menuitem id="menu_mail_sequence_enrollment" name="Zařazení hráči" parent="elite_arena_reward.menu_arena_marketing"
+              sequence="20" action="action_mail_sequence_enrollment"/>
+    <menuitem id="menu_mail_sequence_mail" name="Odeslané e-maily" parent="elite_arena_reward.menu_arena_marketing"
+              sequence="30" action="action_mail_sequence_mail"/>
+</odoo>

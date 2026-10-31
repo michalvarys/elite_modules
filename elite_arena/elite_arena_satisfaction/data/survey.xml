@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="survey_satisfaction" model="survey.survey">
+            <field name="title">Jak se ti u nás líbilo?</field>
+            <field name="access_mode">token</field>
+            <field name="users_login_required" eval="False"/>
+            <field name="is_attempts_limited" eval="True"/>
+            <field name="attempts_limit">1</field>
+            <field name="questions_layout">page_per_question</field>
+            <field name="questions_selection">all</field>
+            <field name="arena_reward_id" ref="elite_arena_reward.reward_free_hour"/>
+            <field name="description" type="html"><p>Děkujeme, že jsi k nám přišel/přišla. Odpověz nám na pár rychlých otázek, zabere to asi minutu. Na konci si vyzvedneš dárek.</p></field>
+            <field name="description_done" type="html"><p>Děkujeme! Tvoje odpovědi nám pomůžou udělat Arénu ještě lepší.</p></field>
+        </record>
+        <record id="q_recommend" model="survey.question">
+            <field name="survey_id" ref="survey_satisfaction"/>
+            <field name="sequence">10</field>
+            <field name="title">Jak moc bys nás doporučil/a kámošům?</field>
+            <field name="question_type">scale</field>
+            <field name="constr_mandatory" eval="True"/>
+            <field name="scale_min">0</field>
+            <field name="scale_max">10</field>
+            <field name="scale_min_label">Vůbec</field>
+            <field name="scale_max_label">Určitě</field>
+        </record>
+        <record id="q_liked" model="survey.question">
+            <field name="survey_id" ref="survey_satisfaction"/>
+            <field name="sequence">20</field>
+            <field name="title">Co se ti u nás líbilo nejvíc?</field>
+            <field name="question_type">multiple_choice</field>
+            <field name="constr_mandatory" eval="True"/>
+        </record>
+        <record id="q_liked_a1" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">1</field>
+            <field name="value">Výkonné počítače</field>
+        </record>
+        <record id="q_liked_a2" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">2</field>
+            <field name="value">Konzole (PS5)</field>
+        </record>
+        <record id="q_liked_a3" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">3</field>
+            <field name="value">Závodní simulátory</field>
+        </record>
+        <record id="q_liked_a4" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">4</field>
+            <field name="value">Obsluha</field>
+        </record>
+        <record id="q_liked_a5" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">5</field>
+            <field name="value">Atmosféra a prostředí</field>
+        </record>
+        <record id="q_liked_a6" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">6</field>
+            <field name="value">Ceny</field>
+        </record>
+        <record id="q_liked_a7" model="survey.question.answer">
+            <field name="question_id" ref="q_liked"/>
+            <field name="sequence">7</field>
+            <field name="value">Turnaje a akce</field>
+        </record>
+        <record id="q_better" model="survey.question">
+            <field name="survey_id" ref="survey_satisfaction"/>
+            <field name="sequence">30</field>
+            <field name="title">Co bychom měli zlepšit?</field>
+            <field name="question_type">text_box</field>
+            <field name="constr_mandatory" eval="False"/>
+        </record>
+        <record id="q_again" model="survey.question">
+            <field name="survey_id" ref="survey_satisfaction"/>
+            <field name="sequence">40</field>
+            <field name="title">Přijdeš k nám znovu?</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="True"/>
+        </record>
+        <record id="q_again_a1" model="survey.question.answer">
+            <field name="question_id" ref="q_again"/>
+            <field name="sequence">1</field>
+            <field name="value">Určitě</field>
+        </record>
+        <record id="q_again_a2" model="survey.question.answer">
+            <field name="question_id" ref="q_again"/>
+            <field name="sequence">2</field>
+            <field name="value">Asi jo</field>
+        </record>
+        <record id="q_again_a3" model="survey.question.answer">
+            <field name="question_id" ref="q_again"/>
+            <field name="sequence">3</field>
+            <field name="value">Ještě nevím</field>
+        </record>
+        <record id="q_again_a4" model="survey.question.answer">
+            <field name="question_id" ref="q_again"/>
+            <field name="sequence">4</field>
+            <field name="value">Spíš ne</field>
+        </record>
+        <record id="q_source" model="survey.question">
+            <field name="survey_id" ref="survey_satisfaction"/>
+            <field name="sequence">50</field>
+            <field name="title">Jak ses o nás dozvěděl/a?</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="True"/>
+        </record>
+        <record id="q_source_a1" model="survey.question.answer">
+            <field name="question_id" ref="q_source"/>
+            <field name="sequence">1</field>
+            <field name="value">Od kámošů</field>
+        </record>
+        <record id="q_source_a2" model="survey.question.answer">
+            <field name="question_id" ref="q_source"/>
+            <field name="sequence">2</field>
+            <field name="value">Instagram nebo TikTok</field>
+        </record>
+        <record id="q_source_a3" model="survey.question.answer">
+            <field name="question_id" ref="q_source"/>
+            <field name="sequence">3</field>
+            <field name="value">Google</field>
+        </record>
+        <record id="q_source_a4" model="survey.question.answer">
+            <field name="question_id" ref="q_source"/>
+            <field name="sequence">4</field>
+            <field name="value">Šel/šla jsem kolem</field>
+        </record>
+        <record id="q_source_a5" model="survey.question.answer">
+            <field name="question_id" ref="q_source"/>
+            <field name="sequence">5</field>
+            <field name="value">Jinak</field>
+        </record>
+    </data>
+</odoo>

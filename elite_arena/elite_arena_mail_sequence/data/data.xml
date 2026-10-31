@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_lost_offer" model="mail.template">
+            <field name="name">Automaticky: dlouho nebyl – dárek</field>
+            <field name="model_id" ref="model_elite_arena_mail_sequence_mail"/>
+            <field name="subject">Chybíš nám! Máme pro tebe dárek</field>
+            <field name="email_from">Elite Arena &lt;no-reply@elite-arena.cz&gt;</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1f2328">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff">
+    <div style="background:#111111;color:#ffffff;padding:28px 28px 24px 28px">
+      <p style="margin:0 0 6px 0;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ff4d6d">Dárek od Elite Arény</p>
+      <h1 style="margin:0;font-size:28px;line-height:1.15;color:#ffffff">Dlouho jsme tě neviděli</h1>
+    </div>
+    <div style="padding:28px">
+      <p style="margin:0 0 16px 0">Ahoj <t t-out="object.first_name"/>,</p>
+      <p style="margin:0 0 16px 0">už je to nějaký čas, co jsme tě viděli v Aréně. Chybíš nám, a tak pro tebe máme dárek:</p>
+      <p style="margin:0 0 16px 0;padding:14px 18px;background:#f6f7fb;border-radius:8px;font-size:18px;text-align:center"><strong t-out="object.reward_name"/></p>
+      <p style="margin:0 0 28px 0;text-align:center">
+        <a t-att-href="object.claim_url" style="background:#e4002b;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:bold;font-size:18px;display:inline-block">Vyzvednout odměnu</a>
+      </p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#57606a">Odměnu si můžeš vyzvednout do <t t-out="object.claim_until"/>. Po vyzvednutí platí <t t-out="object.pass_days"/> dní. Odkaz je jen pro tebe.</p>
+      <p style="margin:0 0 16px 0">Stačí kliknout na tlačítko a odměnu ti připíšeme na herní účet.</p>
+      <p style="margin:0">Těšíme se na tebe!<br/>Tým Elite Arény</p>
+    </div>
+    <div style="padding:16px 28px 24px 28px;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:12px;color:#6e7781">Tenhle e-mail ti posíláme, protože máš herní účet v Elite Aréně. Nechceš od nás dostávat e-maily? <a t-att-href="object.unsubscribe_url" style="color:#6e7781">Odhlásit se</a>.</p>
+    </div>
+  </div>
+</div>
+            </field>
+        </record>
+        <record id="mail_lost_reminder" model="mail.template">
+            <field name="name">Automaticky: dlouho nebyl – připomínka</field>
+            <field name="model_id" ref="model_elite_arena_mail_sequence_mail"/>
+            <field name="subject">Tvůj dárek z Elite Arény pořád čeká</field>
+            <field name="email_from">Elite Arena &lt;no-reply@elite-arena.cz&gt;</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1f2328">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff">
+    <div style="background:#111111;color:#ffffff;padding:28px 28px 24px 28px">
+      <p style="margin:0 0 6px 0;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ff4d6d">Připomínka</p>
+      <h1 style="margin:0;font-size:28px;line-height:1.15;color:#ffffff">Dárek na tebe pořád čeká</h1>
+    </div>
+    <div style="padding:28px">
+      <p style="margin:0 0 16px 0">Ahoj <t t-out="object.first_name"/>,</p>
+      <p style="margin:0 0 16px 0">jen připomínáme, že na tebe pořád čeká dárek, který jsme ti poslali:</p>
+      <p style="margin:0 0 16px 0;padding:14px 18px;background:#f6f7fb;border-radius:8px;font-size:18px;text-align:center"><strong t-out="object.reward_name"/></p>
+      <p style="margin:0 0 28px 0;text-align:center">
+        <a t-att-href="object.claim_url" style="background:#e4002b;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:bold;font-size:18px;display:inline-block">Vyzvednout odměnu</a>
+      </p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#57606a">Odměnu si můžeš vyzvednout do <t t-out="object.claim_until"/>. Po vyzvednutí platí <t t-out="object.pass_days"/> dní. Odkaz je jen pro tebe.</p>
+      <p style="margin:0">Těšíme se na tebe!<br/>Tým Elite Arény</p>
+    </div>
+    <div style="padding:16px 28px 24px 28px;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:12px;color:#6e7781">Tenhle e-mail ti posíláme, protože máš herní účet v Elite Aréně. Nechceš od nás dostávat e-maily? <a t-att-href="object.unsubscribe_url" style="color:#6e7781">Odhlásit se</a>.</p>
+    </div>
+  </div>
+</div>
+            </field>
+        </record>
+        <record id="mail_new_offer" model="mail.template">
+            <field name="name">Automaticky: nový hráč – dárek</field>
+            <field name="model_id" ref="model_elite_arena_mail_sequence_mail"/>
+            <field name="subject">Díky za návštěvu! Máme pro tebe dárek</field>
+            <field name="email_from">Elite Arena &lt;no-reply@elite-arena.cz&gt;</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1f2328">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff">
+    <div style="background:#111111;color:#ffffff;padding:28px 28px 24px 28px">
+      <p style="margin:0 0 6px 0;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ff4d6d">Dárek od Elite Arény</p>
+      <h1 style="margin:0;font-size:28px;line-height:1.15;color:#ffffff">Díky za návštěvu</h1>
+    </div>
+    <div style="padding:28px">
+      <p style="margin:0 0 16px 0">Ahoj <t t-out="object.first_name"/>,</p>
+      <p style="margin:0 0 16px 0">děkujeme za návštěvu v Elite Aréně. Doufáme, že se ti u nás líbilo. Abychom se brzy zase viděli, máme pro tebe dárek:</p>
+      <p style="margin:0 0 16px 0;padding:14px 18px;background:#f6f7fb;border-radius:8px;font-size:18px;text-align:center"><strong t-out="object.reward_name"/></p>
+      <p style="margin:0 0 28px 0;text-align:center">
+        <a t-att-href="object.claim_url" style="background:#e4002b;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:bold;font-size:18px;display:inline-block">Vyzvednout odměnu</a>
+      </p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#57606a">Odměnu si můžeš vyzvednout do <t t-out="object.claim_until"/>. Po vyzvednutí platí <t t-out="object.pass_days"/> dní. Odkaz je jen pro tebe.</p>
+      <p style="margin:0 0 16px 0">Stačí kliknout na tlačítko a odměnu ti připíšeme na herní účet.</p>
+      <p style="margin:0">Těšíme se na tebe!<br/>Tým Elite Arény</p>
+    </div>
+    <div style="padding:16px 28px 24px 28px;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:12px;color:#6e7781">Tenhle e-mail ti posíláme, protože máš herní účet v Elite Aréně. Nechceš od nás dostávat e-maily? <a t-att-href="object.unsubscribe_url" style="color:#6e7781">Odhlásit se</a>.</p>
+    </div>
+  </div>
+</div>
+            </field>
+        </record>
+
+        <record id="sequence_lost" model="elite.arena.mail.sequence">
+            <field name="name">Hráči, kteří dlouho nebyli</field>
+            <field name="sequence">10</field>
+            <field name="trigger">lost</field>
+            <field name="min_days">45</field>
+            <field name="max_days">180</field>
+            <field name="min_visits">1</field>
+            <field name="stop_when_back" eval="True"/>
+            <field name="reenroll_days">180</field>
+        </record>
+        <record id="sequence_lost_step_offer" model="elite.arena.mail.sequence.step">
+            <field name="sequence_id" ref="sequence_lost"/>
+            <field name="name">Dárek</field>
+            <field name="delay_days">0</field>
+            <field name="mail_template_id" ref="mail_lost_offer"/>
+            <field name="reward_id" ref="elite_arena_reward.reward_free_hour"/>
+        </record>
+        <record id="sequence_lost_step_reminder" model="elite.arena.mail.sequence.step">
+            <field name="sequence_id" ref="sequence_lost"/>
+            <field name="name">Připomínka dárku</field>
+            <field name="delay_days">10</field>
+            <field name="mail_template_id" ref="mail_lost_reminder"/>
+            <field name="skip_if_claimed" eval="True"/>
+        </record>
+
+        <record id="sequence_new" model="elite.arena.mail.sequence">
+            <field name="name">Noví hráči</field>
+            <field name="sequence">20</field>
+            <field name="trigger">first_visit</field>
+            <field name="min_days">7</field>
+            <field name="max_days">30</field>
+            <field name="min_visits">1</field>
+            <field name="stop_when_back" eval="False"/>
+            <field name="reenroll_days">0</field>
+        </record>
+        <record id="sequence_new_step_offer" model="elite.arena.mail.sequence.step">
+            <field name="sequence_id" ref="sequence_new"/>
+            <field name="name">Díky za návštěvu + dárek</field>
+            <field name="delay_days">0</field>
+            <field name="mail_template_id" ref="mail_new_offer"/>
+            <field name="reward_id" ref="elite_arena_reward.reward_free_hour"/>
+        </record>
+    </data>
+
+    <record id="cron_mail_sequence" model="ir.cron">
+        <field name="name">Elite Arena: automatické e-maily</field>
+        <field name="model_id" ref="model_elite_arena_mail_sequence"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_run()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+    </record>
+</odoo>

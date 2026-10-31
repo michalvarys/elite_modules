@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_satisfaction" model="mail.template">
+            <field name="name">Automaticky: dotazník spokojenosti</field>
+            <field name="model_id" ref="elite_arena_mail_sequence.model_elite_arena_mail_sequence_mail"/>
+            <field name="subject">Jak se ti u nás líbilo? Za minutu dotazníku dárek</field>
+            <field name="email_from">Elite Arena &lt;no-reply@elite-arena.cz&gt;</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1f2328">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff">
+    <div style="background:#111111;color:#ffffff;padding:28px 28px 24px 28px">
+      <p style="margin:0 0 6px 0;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ff4d6d">Minuta tvého času</p>
+      <h1 style="margin:0;font-size:28px;line-height:1.15;color:#ffffff">Jak se ti u nás líbilo?</h1>
+    </div>
+    <div style="padding:28px">
+      <p style="margin:0 0 16px 0">Ahoj <t t-out="object.first_name"/>,</p>
+      <p style="margin:0 0 16px 0">děkujeme za návštěvu v Elite Aréně! Zajímá nás, jak se ti u nás líbilo a co můžeme zlepšit. Dotazník zabere asi minutu.</p>
+      <p style="margin:0 0 16px 0" t-if="object.survey_reward_name">Na konci si vyzvedneš dárek: <strong t-out="object.survey_reward_name"/>.</p>
+      <p style="margin:0 0 28px 0;text-align:center">
+        <a t-att-href="object.survey_url" style="background:#e4002b;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:bold;font-size:18px;display:inline-block">Vyplnit dotazník</a>
+      </p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#57606a">Odkaz je jen pro tebe a dotazník můžeš vyplnit jednou.</p>
+      <p style="margin:0">Děkujeme!<br/>Tým Elite Arény</p>
+    </div>
+    <div style="padding:16px 28px 24px 28px;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:12px;color:#6e7781">Tenhle e-mail ti posíláme, protože máš herní účet v Elite Aréně. Nechceš od nás dostávat e-maily? <a t-att-href="object.unsubscribe_url" style="color:#6e7781">Odhlásit se</a>.</p>
+    </div>
+  </div>
+</div>
+            </field>
+        </record>
+        <record id="sequence_satisfaction" model="elite.arena.mail.sequence">
+            <field name="name">Dotazník spokojenosti</field>
+            <field name="sequence">30</field>
+            <field name="trigger">first_visit</field>
+            <field name="min_days">2</field>
+            <field name="max_days">14</field>
+            <field name="min_visits">1</field>
+            <field name="stop_when_back" eval="False"/>
+            <field name="reenroll_days">0</field>
+        </record>
+        <record id="sequence_satisfaction_step" model="elite.arena.mail.sequence.step">
+            <field name="sequence_id" ref="sequence_satisfaction"/>
+            <field name="name">Dotazník spokojenosti</field>
+            <field name="delay_days">0</field>
+            <field name="step_type">survey</field>
+            <field name="survey_id" ref="survey_satisfaction"/>
+            <field name="mail_template_id" ref="mail_satisfaction"/>
+        </record>
+    </data>
+    <record id="action_arena_satisfaction_survey" model="ir.actions.act_window">
+        <field name="name">Dotazník spokojenosti</field>
+        <field name="res_model">survey.survey</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" ref="survey_satisfaction"/>
+    </record>
+</odoo>

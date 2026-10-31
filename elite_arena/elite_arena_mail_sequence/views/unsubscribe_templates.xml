@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="unsubscribe_page" name="Odhlášení z e-mailů">
+        <t t-call="elite_arena_reward.claim_layout">
+            <t t-set="title" t-value="'Odhlášení z e-mailů'"/>
+            <t t-if="not mail">
+                <p class="mb-0">Tenhle odkaz neznáme. Napiš nám prosím odpovědí na e-mail a odhlásíme tě ručně.</p>
+            </t>
+            <t t-elif="done">
+                <p class="fs-5 mb-3">Hotovo, už ti nebudeme posílat e-maily.</p>
+                <p class="mb-0">Kdyby sis to rozmyslel/a, stačí nám napsat. V Aréně tě rádi uvidíme i tak!</p>
+            </t>
+            <t t-else="">
+                <p class="mb-3">Opravdu nechceš dostávat e-maily od Elite Arény? Přijdeš tak o odměny a pozvánky na akce.</p>
+                <form t-att-action="'/arena/odhlasit/%s' % mail.token" method="post">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <button type="submit" class="btn btn-outline-dark">Ano, odhlásit</button>
+                </form>
+            </t>
+        </t>
+    </template>
+</odoo>

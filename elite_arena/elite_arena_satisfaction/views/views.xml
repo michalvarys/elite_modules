@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_survey_form_arena_reward" model="ir.ui.view">
+        <field name="name">survey.survey.form.arena.reward</field>
+        <field name="model">survey.survey</field>
+        <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="arena_reward_id"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_mail_sequence_form_survey" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.form.survey</field>
+        <field name="model">elite.arena.mail.sequence</field>
+        <field name="inherit_id" ref="elite_arena_mail_sequence.view_mail_sequence_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='step_ids']/list/field[@name='mail_template_id']" position="after">
+                <field name="survey_id" invisible="step_type != 'survey'" required="step_type == 'survey'"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_mail_sequence_mail_list_survey" model="ir.ui.view">
+        <field name="name">elite.arena.mail.sequence.mail.list.survey</field>
+        <field name="model">elite.arena.mail.sequence.mail</field>
+        <field name="inherit_id" ref="elite_arena_mail_sequence.view_mail_sequence_mail_list"/>
+        <field name="arch" type="xml">
+            <field name="claim_state" position="after">
+                <field name="survey_state" optional="show"/>
+            </field>
+        </field>
+    </record>
+    <menuitem id="menu_arena_satisfaction_survey" name="Dotazník spokojenosti"
+              parent="elite_arena_reward.menu_arena_marketing" sequence="40" action="action_arena_satisfaction_survey"/>
+</odoo>
