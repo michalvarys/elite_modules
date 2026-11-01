@@ -2,6 +2,7 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
+import { CancelDialog } from "@elite_vet_reservation/cancel_dialog/cancel_dialog";
 import { setSoundOn, playChime, isSoundOn } from "@elite_vet_reservation/sound/sound";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
 
@@ -557,11 +558,19 @@ export class ReservationBoard extends Component {
             "evb-preview-dim": p.focus !== null && p.focus !== room.id,
         };
     }
-    async reject(item) {
+    reject(item) {
         this.leaveWaiting();
-        if (!confirm("Odmítnout rezervaci " + item.name + "? Klientovi odejde e-mail o zrušení.")) return;
-        await this.orm.call("elite.vet.reservation", "action_cancel", [[item.id], "clinic"]);
-        await this.load(true);
+        this.dialog.add(CancelDialog, {
+            title: "Odmítnout žádost",
+            question: `Odmítnout rezervaci ${item.name} (${item.date_label})?` +
+                (item.email ? " Klientovi odejde e-mail o zrušení." : ""),
+            confirmLabel: "Odmítnout",
+            mailTo: item.email || false,
+            onConfirm: async (message) => {
+                await this.orm.call("elite.vet.reservation", "action_cancel", [[item.id], "clinic", message]);
+                await this.load(true);
+            },
+        });
     }
 }
 

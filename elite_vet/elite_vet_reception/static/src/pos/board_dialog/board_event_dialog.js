@@ -27,7 +27,7 @@ export class BoardEventDialog extends Component {
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
-        this.state = useState({ detail: null, busy: false, confirmCancel: false, confirmNoShow: false });
+        this.state = useState({ detail: null, busy: false, confirmCancel: false, confirmNoShow: false, cancelMessage: "" });
         onWillStart(() => this.load());
     }
 
@@ -129,7 +129,12 @@ export class BoardEventDialog extends Component {
     }
 
     askCancel() {
+        this.state.cancelMessage = "";
         this.state.confirmCancel = true;
+    }
+
+    onCancelMessage(ev) {
+        this.state.cancelMessage = ev.target.value;
     }
 
     keep() {
@@ -161,8 +166,10 @@ export class BoardEventDialog extends Component {
 
     cancel() {
         return this.run(async () => {
+            // request 1. 11.: the clinic's message goes into the cancellation e-mail
+            const message = this.detail.cancel_sends_email ? this.state.cancelMessage : null;
             const result = await callReception(this.orm, this.notification, "cancel_reservation", [
-                this.detail.reservation_id,
+                this.detail.reservation_id, message,
             ]);
             if (result) {
                 const mail = result.email_sent ? " Klient dostane e-mail o zrušení." : "";

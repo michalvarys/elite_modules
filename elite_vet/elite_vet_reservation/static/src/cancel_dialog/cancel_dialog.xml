@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- Request 1. 11.: cancel / reject with a message for the client in the cancellation e-mail. -->
+    <t t-name="elite_vet_reservation.CancelDialog">
+        <Dialog title="props.title" size="'md'" contentClass="'o_ev_cancel_dialog'">
+            <p class="o_ev_cancel_question" t-esc="props.question"/>
+            <label t-if="props.mailTo" class="o_ev_cancel_message">
+                <span>Zpráva klientovi (nepovinné)</span>
+                <textarea class="form-control o_ev_cancel_text" rows="4" t-att-value="state.message"
+                          t-on-input="onMessage"
+                          placeholder="Např. důvod zrušení nebo nabídka jiného termínu"/>
+                <small>Vloží se do e-mailu o zrušení, který odejde na <t t-esc="props.mailTo"/>.</small>
+            </label>
+            <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-esc="state.error"/>
+            <t t-set-slot="footer">
+                <button class="btn btn-danger o_ev_cancel_confirm" t-att-disabled="state.busy"
+                        t-on-click="confirm" t-esc="props.confirmLabel"/>
+                <button class="btn btn-secondary" t-att-disabled="state.busy" t-on-click="props.close">Zpět</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

@@ -36,7 +36,7 @@
                          The e-mail warning is shown only where an e-mail is actually sent. -->
                     <button name="action_cancel" type="object" string="Zrušit"
                             invisible="kind == 'block' or not contact_email or state in ('cancelled','done','no_show')"
-                            confirm="Opravdu zrušit? Klientovi odejde e-mail o zrušení."/>
+                            confirm="Opravdu zrušit? Klientovi odejde e-mail o zrušení – se zprávou z pole Zpráva klientovi při zrušení, pokud je vyplněná."/>
                     <button name="action_cancel" type="object" string="Zrušit"
                             invisible="kind == 'block' or contact_email or state in ('cancelled','done','no_show')"
                             confirm="Opravdu zrušit tuto rezervaci?"/>
@@ -120,6 +120,11 @@
                     </group>
                     <group>
                         <field name="note" placeholder="Interní poznámka recepce"/>
+                    </group>
+                    <!-- Request 1. 11.: the clinic's text for the client, sent in the cancellation e-mail. -->
+                    <group invisible="kind == 'block' or not contact_email or state in ('done', 'no_show')">
+                        <field name="cancel_message" readonly="state == 'cancelled'"
+                               placeholder="Důvod zrušení pro klienta – vloží se do e-mailu, který odejde po kliknutí na Zrušit"/>
                     </group>
                     <group string="Záloha" invisible="kind == 'block' or deposit_state == 'none'">
                         <field name="deposit_state"/>

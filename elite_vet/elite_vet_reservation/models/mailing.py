@@ -88,8 +88,8 @@ class VetReservationMailing(models.Model):
                 rec._message_log(body=_("Klient nebyl o potvrzení informován."))
         return res
 
-    def action_cancel(self, reason="clinic"):
-        res = super().action_cancel(reason)
+    def action_cancel(self, reason="clinic", message=None):
+        res = super().action_cancel(reason, message)
         self.filtered(lambda r: r.kind == "reservation")._send_template("mail_cancelled")
         if reason == "client":
             notify = self._clinic_notify_email()

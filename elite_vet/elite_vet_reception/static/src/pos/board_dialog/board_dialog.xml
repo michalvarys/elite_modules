@@ -170,6 +170,12 @@
                 </div>
                 <div t-if="state.confirmCancel" class="alert alert-warning mt-3 mb-0 o_ev_board_confirm">
                     <div class="mb-2" t-esc="cancelQuestion"/>
+                    <label t-if="detail.cancel_sends_email" class="d-block mb-2 o_ev_board_cancel_message">
+                        <span class="fw-semibold">Zpráva klientovi (nepovinné)</span>
+                        <textarea class="form-control mt-1 o_ev_board_cancel_text" rows="3" t-att-value="state.cancelMessage"
+                                  t-on-input="onCancelMessage" placeholder="Např. důvod zrušení nebo nabídka jiného termínu"/>
+                        <small class="text-muted">Vloží se do e-mailu o zrušení na <t t-esc="detail.email"/>.</small>
+                    </label>
                     <button class="btn btn-danger btn-lg me-2 o_ev_board_cancel_yes" t-att-disabled="state.busy" t-on-click="cancel">Ano, zrušit rezervaci</button>
                     <button class="btn btn-light btn-lg" t-att-disabled="state.busy" t-on-click="keep">Ne</button>
                 </div>

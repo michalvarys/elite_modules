@@ -167,6 +167,10 @@ class VetReservation(models.Model):
         help="Blokace platí v každé zaškrtnuté ordinaci. Všechny zaškrtnuté = blokace celé kliniky.")
     cancel_token = fields.Char(default=lambda self: uuid.uuid4().hex, index=True, copy=False)
     cancel_reason = fields.Selection([("client", "Klient"), ("clinic", "Klinika"), ("no_show", "Nedorazil")], string="Důvod zrušení")
+    # Request 1. 11. (Lucie): the clinic's own words to the client, added to the cancellation e-mail.
+    cancel_message = fields.Text(
+        string="Zpráva klientovi při zrušení", copy=False,
+        help="Napište důvod nebo cokoli dalšího – vloží se do e-mailu o zrušení, který klient dostane.")
     deposit_state = fields.Selection([("none", "Bez zálohy"), ("pending", "Čeká na zálohu"), ("paid", "Zaplaceno"), ("refunded", "Vráceno")], default="none", string="Záloha")
     transaction_id = fields.Many2one("payment.transaction", string="Platba", ondelete="set null")
     lang = fields.Char(string="Jazyk klienta", default="cs_CZ")
@@ -603,8 +607,13 @@ class VetReservation(models.Model):
                 rec.action_match_client()
             rec.write({"state": "confirmed"})
 
-    def action_cancel(self, reason="clinic"):
-        self.write({"state": "cancelled", "cancel_reason": reason})
+    def action_cancel(self, reason="clinic", message=None):
+        """`message`: the clinic's text for the client (cancellation e-mail); None keeps the one
+        already written on the reservation (form)."""
+        vals = {"state": "cancelled", "cancel_reason": reason}
+        if message is not None:
+            vals["cancel_message"] = (message or "").strip() or False
+        self.write(vals)
 
     def action_done(self):
         self.write({"state": "done"})
