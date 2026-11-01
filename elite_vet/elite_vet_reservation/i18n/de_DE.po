@@ -357,8 +357,13 @@ msgstr "Anzahlung | Elite Vet"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Describe the problem"
-msgstr "Beschreiben Sie das Problem"
+msgid "Specify the reason for your visit"
+msgstr "Grund des Besuchs näher beschreiben"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "e.g. a check-up, vaccination, limping on the left leg"
+msgstr "z. B. Kontrolle, Impfung, lahmt am linken Bein"
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__display_name
@@ -1087,8 +1092,8 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__problem
-msgid "Popis problému"
-msgstr ""
+msgid "Důvod návštěvy"
+msgstr "Grund des Besuchs"
 
 #. module: elite_vet_reservation
 #. odoo-python

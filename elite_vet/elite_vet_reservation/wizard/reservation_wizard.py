@@ -98,7 +98,7 @@ class ReservationWizard(models.TransientModel):
                                   help="Klient v posledních 12 měsících nedorazil – jen upozornění.")
     has_pet = fields.Boolean(compute="_compute_has_pet",
                                  help="Vybraný mazlíček patří vybranému existujícímu klientovi.")
-    problem = fields.Text(string="Popis problému")
+    problem = fields.Text(string="Důvod návštěvy")
     note = fields.Text(string="Interní poznámka")
     send_email = fields.Boolean(string="Poslat klientovi potvrzení e-mailem",
                                 compute="_compute_send_email", store=True, readonly=False)

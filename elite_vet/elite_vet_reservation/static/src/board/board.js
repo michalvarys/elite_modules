@@ -174,7 +174,7 @@ export class ReservationBoard extends Component {
         if (e.kind === "reservation") lines.push(this.originTitle(e));
         if (e.phone) lines.push("Telefon: " + e.phone);
         if (e.email) lines.push("E-mail: " + e.email);
-        if (e.problem) lines.push("Popis problému: " + e.problem);
+        if (e.problem) lines.push("Důvod návštěvy: " + e.problem);
         return lines.join("\n");
     }
     isShort(e) { return e.end - e.start <= 15; }

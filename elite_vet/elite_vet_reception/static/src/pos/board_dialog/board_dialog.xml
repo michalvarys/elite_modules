@@ -157,7 +157,7 @@
                         <dd t-esc="detail.linked"/>
                     </t>
                     <t t-if="detail.problem">
-                        <dt>Popis problému</dt>
+                        <dt>Důvod návštěvy</dt>
                         <dd class="o_ev_board_pre" t-esc="detail.problem"/>
                     </t>
                     <t t-if="detail.note">
