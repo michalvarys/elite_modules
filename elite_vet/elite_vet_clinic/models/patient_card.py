@@ -18,6 +18,8 @@ from odoo.addons.elite_vet_reservation.models.pet import SPECIES, normalize_phon
 from odoo.addons.elite_vet_winvet.models.item import KINDS
 from odoo.addons.elite_vet_winvet.models.winvet_tools import name_words
 
+from .readonly_mode import check_clinic_writable, clinic_readonly
+
 from .clinical_record import STATES, SUMMARY_LENGTH, TZ, insert_template_text, record_text_title
 from .pet_alert import ALERT_KINDS
 
@@ -107,10 +109,11 @@ class ClinicalRecordCardApi(models.Model):
 
     @api.model
     def _can_write(self):
-        return self.env.user.has_group("elite_vet_clinic.group_clinic_nurse")
+        return self.env.user.has_group("elite_vet_clinic.group_clinic_nurse") and not clinic_readonly(self.env)
 
     @api.model
     def _check_can_write(self):
+        check_clinic_writable(self.env)
         if not self._can_write():
             raise AccessError(_("Záznamy návštěv mohou zapisovat jen sestry a lékařky."))
 
@@ -323,6 +326,8 @@ class ClinicalRecordCardApi(models.Model):
                 "can_write": self._can_write(),
                 "can_edit_templates": user.has_group("elite_vet_clinic.group_clinic_doctor"),
                 "is_manager": user.has_group("elite_vet_reservation.group_reservation_manager"),
+                # read-only mode (production while the clinic works in WinVet)
+                "readonly": clinic_readonly(self.env),
             },
             "today": date_str(today),
         }

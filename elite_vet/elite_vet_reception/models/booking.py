@@ -12,6 +12,7 @@ from odoo import _, api, models
 from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
+from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable
 from odoo.addons.elite_vet_reservation.models.availability import intersect, subtract
 from odoo.addons.elite_vet_reservation.models.holidays import holiday_name
 from odoo.addons.elite_vet_reservation.models.reservation import RECEPTION_HORIZON_DAYS, minutes_label
@@ -208,6 +209,7 @@ class ReceptionBooking(models.AbstractModel):
 
     @api.model
     def book(self, pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None):
+        check_clinic_writable(self.env)
         self._check_reception()
         pet = self.env["elite.vet.pet"].browse(self._to_id(pet_id)).exists()
         if not pet:

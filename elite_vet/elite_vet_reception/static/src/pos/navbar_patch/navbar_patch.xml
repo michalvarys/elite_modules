@@ -15,6 +15,8 @@
 
     <t t-inherit="point_of_sale.Navbar" t-inherit-mode="extension">
         <xpath expr="//OrderTabs" position="before">
+            <span t-if="pos.config.elite_vet_readonly" class="badge text-bg-warning fs-6 me-2 o_ev_readonly_badge"
+                  title="Pracuje se ve WinVetu, data se sem přenášejí. Nic se neuloží.">Jen pro čtení</span>
             <ReceptionTabs t-if="pos.isReceptionPos"/>
         </xpath>
     </t>

@@ -89,6 +89,9 @@
     <!-- The client action. -->
     <t t-name="elite_vet_clinic.PatientCard">
         <div class="o_action evpc ev-clinic" t-ref="root">
+          <div t-if="state.data?.permissions?.readonly" class="alert alert-warning rounded-0 mb-0 py-2 evpc-readonly" role="status">
+              <i class="fa fa-lock me-2" aria-hidden="true"/>Jen pro čtení. Pracuje se ve WinVetu, data se sem přenášejí. Změny může dělat jen správce rezervací.
+          </div>
           <div class="o_content evpc-scroll" t-att-class="state.mode === 'card' ? 'evpc-scroll-card' : ''">
 
             <!-- ============ start screen ============ -->

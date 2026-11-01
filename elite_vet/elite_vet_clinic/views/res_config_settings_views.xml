@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Read-only mode for production while the clinic still works in WinVet -->
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.elite_vet_clinic</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Elite Vet" string="Elite Vet" name="elite_vet_clinic"
+                     logo="/elite_vet_clinic/static/description/icon.png" groups="base.group_system">
+                    <block title="Provoz" name="elite_vet_operation">
+                        <setting id="elite_vet_readonly_mode" string="Ordinace, karty a pokladna jen pro čtení"
+                                 help="Dokud se pracuje ve WinVetu: lékařky, sestry a recepce v Ordinaci, na kartách a v pokladně nic neuloží. Měnit může jen správce rezervací. Přenos z WinVetu a nové rezervace běží dál.">
+                            <field name="elite_vet_readonly_mode"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -12,6 +12,7 @@ from odoo.exceptions import UserError
 
 from odoo.addons.elite_vet_clinic.models.clinical_record import local_date
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
+from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable
 from odoo.addons.elite_vet_reservation.models.reservation import STATES, WEEKDAY_ABBR
 from odoo.addons.elite_vet_sale.models.clinical_record import PAYMENT_STATES
 
@@ -119,6 +120,7 @@ class ReceptionBoard(models.AbstractModel):
         e-mail about the new time (the move dialog's checkbox, task 25). end_minute (task 28):
         the new end on that day; without it the duration is kept. force=True: "Přesto přesunout"
         after the doctor / room rule refused the move."""
+        check_clinic_writable(self.env)
         self._check_reception()
         reservation = self._board_reservation(reservation_id)
         if reservation.state not in MOVABLE_STATES:
@@ -146,6 +148,7 @@ class ReceptionBoard(models.AbstractModel):
     def cancel_reservation(self, reservation_id):
         """Cancel the (main) reservation as the clinic with `action_cancel` - the client gets the
         cancellation e-mail when the reservation has one, as in the backend."""
+        check_clinic_writable(self.env)
         self._check_reception()
         main = self._main_reservation(self._board_reservation(reservation_id))
         if main.state not in CANCELLABLE_STATES:
@@ -161,6 +164,7 @@ class ReceptionBoard(models.AbstractModel):
         """Mark a reservation as Nedorazil with the backend's `action_no_show` (the form button):
         no e-mail to the client, the second-room copy follows, the board refreshes itself (bus)
         and the no-show counts in the client's "Nedorazil N×"."""
+        check_clinic_writable(self.env)
         self._check_reception()
         reservation = self._board_reservation(reservation_id)
         if reservation.is_second_room:

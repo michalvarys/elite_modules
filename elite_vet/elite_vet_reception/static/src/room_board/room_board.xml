@@ -73,6 +73,9 @@
 
     <t t-name="elite_vet_reception.RoomBoard">
         <div class="evrm ev-clinic o_action">
+            <div t-if="state.data?.perms.readonly" class="alert alert-warning rounded-0 mb-0 py-2 evrm-readonly" role="status">
+                <i class="fa fa-lock me-2" aria-hidden="true"/>Jen pro čtení. Pracuje se ve WinVetu, data se sem přenášejí. Změny může dělat jen správce rezervací.
+            </div>
             <div class="evrm-toolbar">
                 <t t-set="column" t-value="state.view !== 'all' ? currentColumn : null"/>
                 <div class="evrm-title">
