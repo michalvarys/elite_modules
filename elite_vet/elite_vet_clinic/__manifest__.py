@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Ordinace",
-    "version": "18.0.1.9.0",
+    "version": "18.0.1.10.0",
     "category": "Services",
     "summary": "Karta pacienta a záznam návštěvy: vitální hodnoty, záznam z vyšetření, účet, šablony textů a balíčky výkonů.",
     "description": """
@@ -28,6 +28,7 @@ Popis API je v README.md.
         "views/partner_views.xml",
         "views/reservation_views.xml",
         "views/menus.xml",
+        "views/res_config_settings_views.xml",
         "report/visit_report.xml",
     ],
     "assets": {

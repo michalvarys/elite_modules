@@ -6,3 +6,4 @@ from . import test_patient_card_ui
 from . import test_visit_report
 from . import test_winvet_visit_report
 from . import test_record_text
+from . import test_readonly_mode

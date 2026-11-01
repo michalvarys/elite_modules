@@ -17,3 +17,4 @@ from . import test_visit_report_till
 from . import test_undo_check_in
 from . import test_winvet_pairing
 from . import test_new_client_pet
+from . import test_readonly_mode

@@ -13,6 +13,7 @@ from odoo.osv import expression
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
 from odoo.addons.elite_vet_clinic.models.pet_alert import ALERT_KINDS
+from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable
 from odoo.addons.elite_vet_reservation.models.pet import SPECIES, normalize_phone
 
 OWNER_FIELDS = ("name", "phone", "mobile", "email", "street", "city", "zip")
@@ -344,6 +345,7 @@ class ReceptionCardIndex(models.AbstractModel):
         Task 31: a new owner can come with their first pet (`pet_vals`, the values of save_pet:
         every pet field and the alerts, never deceased). Both are created in one go: when the
         pet fails validation, the owner is not created either. The result then has `new_pet_id`."""
+        check_clinic_writable(self.env)
         self._check_reception()
         vals = _clean(vals, OWNER_FIELDS)
         if pet_vals is not None and (partner_id or not isinstance(pet_vals, dict)):
@@ -376,6 +378,7 @@ class ReceptionCardIndex(models.AbstractModel):
         Keys of PET_FIELDS (text; dates RRRR-MM-DD; weight with a decimal comma; empty = none),
         `deceased` (bool, only when editing) and `alerts` ([{id?, kind, note}], the full list of
         active alerts). Only name and species are required."""
+        check_clinic_writable(self.env)
         self._check_reception()
         partner = self._get_owner(partner_id)
         alerts = vals.get("alerts") if isinstance(vals, dict) else None
@@ -417,6 +420,7 @@ class ReceptionCardIndex(models.AbstractModel):
     def match_reservation(self, reservation_id, partner_id, pet_id):
         """Link a (web) reservation to an owner and a pet from the card index; its second-room
         copy gets the same client. The board is notified by the reservation write."""
+        check_clinic_writable(self.env)
         self._check_reception()
         reservation = self.env["elite.vet.reservation"].browse(self._to_id(reservation_id)).exists()
         if not reservation or reservation.kind != "reservation":

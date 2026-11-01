@@ -13,6 +13,7 @@ from odoo.exceptions import AccessError, UserError
 
 from odoo.addons.elite_vet_clinic.models.clinical_record import local_date
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
+from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable
 from odoo.addons.elite_vet_reservation.models.holidays import holiday_name
 from odoo.addons.elite_vet_reservation.models.live import notify_board
 from odoo.addons.elite_vet_sale.models.clinical_record import PAYMENT_STATES
@@ -184,6 +185,7 @@ class Reception(models.AbstractModel):
     def check_in(self, reservation_id, employee_name=None, note=None):
         """The client of a reservation arrived: its record (existing or new) is waiting.
         `note` (optional): internal note of the reception for the room (reception_note)."""
+        check_clinic_writable(self.env)
         self._check_reception()
         reservation = self.env["elite.vet.reservation"].sudo().browse(int(reservation_id)).exists()
         if not reservation or reservation.kind != "reservation":
@@ -231,6 +233,7 @@ class Reception(models.AbstractModel):
         """A client without a reservation: today's open record of the pet, else a new draft.
         `room_id` (optional, task 15): the room the visit goes to; without it the visit is
         unassigned (Nepřiřazení on the screen Ordinace). `note`: internal note for the room."""
+        check_clinic_writable(self.env)
         self._check_reception()
         Records = self._records()
         pet = Records._get_pet(pet_id)
@@ -265,6 +268,7 @@ class Reception(models.AbstractModel):
     def set_reception_note(self, record_id, note):
         """Edit (or clear) the internal note of the reception on an open visit (Dnes, waiting
         or in the room). The client never sees it."""
+        check_clinic_writable(self.env)
         self._check_reception()
         record = self._records().browse(int(record_id)).exists()
         if not record:
@@ -328,6 +332,7 @@ class Reception(models.AbstractModel):
         Task 15: `room_id` = the room calling (screen Ordinace); the visit moves there. A record
         without a doctor gets the doctor on duty in its room (see _set_room); with two on duty and
         no `doctor_id` the result has `needs_doctor` (the client asks and calls assign_room)."""
+        check_clinic_writable(self.env)
         self._check_reception()
         if not self.env.user.has_group(NURSE_GROUP):
             raise AccessError(_("Pacienta může zavolat jen sestra nebo lékařka."))

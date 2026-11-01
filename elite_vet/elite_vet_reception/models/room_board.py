@@ -22,6 +22,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, date_str, local_time
+from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable, clinic_readonly
 from odoo.addons.elite_vet_reservation.models.live import notify_board
 from odoo.addons.elite_vet_reservation.models.reservation import TZ
 from odoo.addons.elite_vet_reservation.models.room import format_hour
@@ -126,6 +127,7 @@ class ReceptionRooms(models.AbstractModel):
     @api.model
     def assign_room(self, record_id, room_id=False, doctor_id=False):
         """Today's draft visit into a room (room_id False = Nepřiřazení)."""
+        check_clinic_writable(self.env)
         self._check_reception()
         record = self._records().browse(int(record_id)).exists()
         if not record:
@@ -142,6 +144,7 @@ class ReceptionRooms(models.AbstractModel):
         """Vzít dalšího (task 26): the unassigned patient waiting the longest today (draft, stage
         Čeká, no room; earliest arrival) goes into the room, with the same doctor rules as
         assign_room. Returns its dict + needs_doctor, or False when nobody waits."""
+        check_clinic_writable(self.env)
         self._check_reception()
         room = self._get_room(room_id)
         if not room:
@@ -211,7 +214,9 @@ class ReceptionRooms(models.AbstractModel):
             "date": date_str(day), "is_today": is_today, "time": local_time(now),
             "columns": columns,
             "rooms": [{"id": r.id, "name": r.name, "color": r.color_hex} for r in rooms],
-            "perms": {"can_call": user.has_group(NURSE_GROUP),
+            "perms": {"can_call": user.has_group(NURSE_GROUP) and not clinic_readonly(self.env),
+                      # read-only mode (production while the clinic works in WinVet)
+                      "readonly": clinic_readonly(self.env),
                       "user_room_id": user_room.id or None,
                       # task 23: an account of a team member opens the room of her duty
                       "member_account": bool(member),

@@ -13,6 +13,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today, local_time
+from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable
 from odoo.addons.elite_vet_reservation.models.live import notify_board
 from odoo.addons.elite_vet_winvet.models.winvet_calendar import calendar_enabled
 
@@ -139,6 +140,7 @@ class ReceptionWinvetCalendar(models.AbstractModel):
     def check_in_winvet(self, event_id, employee_name=None, note=None):
         """The client of today's WinVet entry arrived: today's open record of the pet (or a new one)
         is linked to the entry and waits; the room comes from the WinVet calendar mapping."""
+        check_clinic_writable(self.env)
         self._check_reception()
         if not calendar_enabled(self.env):
             raise UserError(_("Kalendář z WinVetu je vypnutý."))
@@ -190,6 +192,7 @@ class ReceptionWinvetCalendar(models.AbstractModel):
         """Spárovat…: a WinVet appointment without a WinVet patient (title only) belongs to a pet
         of the card index. Stored in Odoo only (`manual_pet_id` of the entry, never overwritten by
         the sync); when WinVet later sends its own patient, that one wins."""
+        check_clinic_writable(self.env)
         event = self._winvet_event_for_pairing(event_id)
         if event.done:
             raise UserError(_("Objednávka je ve WinVetu už vyřízená."))
@@ -206,6 +209,7 @@ class ReceptionWinvetCalendar(models.AbstractModel):
     @api.model
     def unpair_winvet(self, event_id):
         """Zrušit spárování: the WinVet appointment is without a pet again (before the check-in)."""
+        check_clinic_writable(self.env)
         event = self._winvet_event_for_pairing(event_id)
         if not event.manual_pet_id:
             raise UserError(_("Objednávka není spárovaná v Odoo."))
