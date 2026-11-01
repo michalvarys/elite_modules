@@ -48,6 +48,16 @@ class TestMasterData(WinvetCase):
                                  6: "other", 7: "service", 8: "other"})
         self.assertEqual(self.find("elite.vet.winvet.item", 8).classification, "other")
 
+    def test_owner_gets_czech(self):
+        self.env["res.lang"]._activate_lang("cs_CZ")
+        self.push("owners", [self.owner(1)])
+        owner = self.find("res.partner", 1)
+        self.assertEqual(owner.lang, "cs_CZ")
+        # a language changed in Odoo is not overwritten by the next push
+        owner.lang = "en_US"
+        self.push("owners", [self.owner(1, name="Jiné Jméno-Winvet", modified="2026-10-02 08:30:00")])
+        self.assertEqual(owner.lang, "en_US")
+
     def test_idempotent_push(self):
         owners = [self.owner(1), self.owner(2, kind="company", name="Útulek Test s.r.o.", company_reg="12345678")]
         patients = [self.patient(10, 1), self.patient(11, 2, species="morče", name=None)]
