@@ -35,6 +35,8 @@ ENTITY_MODEL = {
 MASTER = {"users", "items", "owners", "contacts", "patients"}
 # res.partner.winvet_ref (defined by elite_vet_reservation) is a Char field.
 CHAR_REF_MODELS = {"res.partner"}
+# WinVet keeps no language of its clients; they are Czech.
+CLIENT_LANG = "cs_CZ"
 
 OWNER_KINDS = {0: "company", 1: "person", 2: "group"}
 CLASSIFICATION_KEYS = {key for key, _label in CLASSIFICATIONS}
@@ -405,8 +407,11 @@ class WinvetSync(models.AbstractModel):
             if kind == "person":
                 v["is_vet_client"] = True
             vals[ref] = v
+        # The push runs as superuser (OdooBot, English): without it every new owner would get e-mails
+        # in English. Only on create, a language changed in Odoo stays.
+        lang = {"lang": CLIENT_LANG} if self.env["res.lang"]._lang_get(CLIENT_LANG) else {}
         self._upsert("res.partner", vals, stats, errors, guard="winvet_modified",
-                     create_extra=lambda v: {"winvet_merge_pending": v.get("winvet_kind") == "person"})
+                     create_extra=lambda v: dict(lang, winvet_merge_pending=v.get("winvet_kind") == "person"))
 
     def _push_contacts(self, records, stats, errors, batch, batches):
         partners = self._ref_map("res.partner", {to_int(r.get("owner_id")) for r in records.values()})
