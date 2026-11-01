@@ -42,6 +42,8 @@ class ReservationWizard(models.TransientModel):
     step = fields.Selection(STEPS, string="Krok", default="what", required=True)
 
     # 1. What and when
+    title = fields.Char(string="Popis", help="Nepovinné – ukáže se jako první v názvu rezervace v kalendáři. "
+                                            "Bez klienta je povinné.")
     procedure_id = fields.Many2one("elite.vet.procedure", string="Úkon")
     allowed_doctor_ids = fields.Many2many("elite.vet.doctor", compute="_compute_allowed_doctors")
     duration = fields.Integer(string="Délka (min)", compute="_compute_duration", store=True, readonly=False,
@@ -80,7 +82,8 @@ class ReservationWizard(models.TransientModel):
     is_manual = fields.Boolean(help="Termín byl zadán ručně (pro shrnutí).")
 
     # 3. Client
-    partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient")],
+    partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient"),
+                                     ("none", "Bez klienta")],
                                     string="Klient", default="existing", required=True)
     partner_id = fields.Many2one("res.partner", string="Vyhledat klienta", domain=[("type", "=", "contact")],
                                  help="Hledá podle jména, telefonu i e-mailu.")
@@ -200,7 +203,7 @@ class ReservationWizard(models.TransientModel):
             return self.pet_id
         return self.env["elite.vet.pet"]
 
-    @api.depends("procedure_id", "date", "minute", "room_id", "slot_doctor_id", "doctor_id", "contact_name",
+    @api.depends("title", "procedure_id", "date", "minute", "room_id", "slot_doctor_id", "doctor_id", "contact_name",
                  "contact_phone", "contact_email", "partner_mode", "partner_id", "pet_id", "pet_name",
                  "pet_species", "send_email", "is_manual", "duration")
     def _compute_summary(self):
@@ -212,9 +215,12 @@ class ReservationWizard(models.TransientModel):
             if pet and not selected_pet and w.pet_species:
                 pet = "%s (%s, nový)" % (pet, species.get(w.pet_species))
             client = w.contact_name or ""
-            if not w._selected_partner():
+            if w.partner_mode == "none":
+                client = "bez klienta"
+            elif not w._selected_partner():
                 client += " (nový klient)"
-            rows = [
+            rows = [("Popis", w.title)] if w.title else []
+            rows += [
                 ("Úkon", w.procedure_id.name or ""),
                 ("Termín", "%s %s–%s (%d min)%s" % (w.day_label, minutes_label(w.minute), minutes_label(w.minute + w._effective_duration()),
                                                     w._effective_duration(), " (zadáno ručně)" if w.is_manual else "")
@@ -224,7 +230,7 @@ class ReservationWizard(models.TransientModel):
                 ("Klient", client),
                 ("Kontakt", " · ".join(x for x in (w.contact_phone, w.contact_email) if x)),
                 ("Mazlíček", pet or "—"),
-                ("E-mail klientovi", "ano" if w.send_email and w.contact_email else "ne"),
+                ("E-mail klientovi", "ano" if w.send_email and w.contact_email and w.partner_mode != "none" else "ne"),
             ]
             w.summary = Markup("<table class='table table-sm mb-0'>%s</table>") % Markup("").join(
                 Markup("<tr><th class='w-25'>%s</th><td>%s</td></tr>") % (escape(k), escape(v)) for k, v in rows)
@@ -279,12 +285,14 @@ class ReservationWizard(models.TransientModel):
 
     @api.onchange("partner_mode")
     def _onchange_partner_mode(self):
-        """Switching to a new client drops the selected client, their pet and contact."""
-        if self.partner_mode == "new" and self.partner_id:
+        """Switching to a new client (or none) drops the selected client, their pet and contact."""
+        if self.partner_mode in ("new", "none") and self.partner_id:
             self.partner_id = False
             self.pet_id = False
             self.contact_name = self.contact_phone = self.contact_email = False
             self.send_email_offered = False
+        if self.partner_mode == "none":
+            self.contact_name = self.contact_phone = self.contact_email = False
 
     @api.onchange("partner_id")
     def _onchange_partner(self):
@@ -441,6 +449,8 @@ class ReservationWizard(models.TransientModel):
         self.ensure_one()
         if self.partner_mode == "existing" and not self.partner_id:
             raise UserError(_("Vyhledejte klienta, nebo zvolte „Nový klient“."))
+        if self.partner_mode == "none" and not (self.title or "").strip():
+            raise UserError(_("Rezervace bez klienta potřebuje popis – vyplňte Popis v prvním kroku."))
         if self.partner_mode == "new":
             if not (self.contact_name or "").strip():
                 raise UserError(_("Vyplňte jméno a příjmení klienta."))
@@ -461,24 +471,28 @@ class ReservationWizard(models.TransientModel):
         env = self.with_context(clean_context(self.env.context)).env
         partner = self._selected_partner()
         pet = self._selected_pet()
-        if not partner:
+        no_client = self.partner_mode == "none"
+        if not partner and not no_client:
             partner = env["res.partner"].find_or_create_client(
                 self.contact_name, self.contact_email, self.contact_phone)
-        if not pet and (self.pet_name or "").strip():
+        if not pet and partner and (self.pet_name or "").strip():
             pet = env["elite.vet.pet"].find_or_create(partner, self.pet_name, self.pet_species)
         start = env["elite.vet.availability"].local_to_utc(self.date, self.minute)
         Res = env["elite.vet.reservation"]
-        if not self.send_email:
+        if not self.send_email or no_client:
             Res = Res.with_context(ev_no_mail=True)
         rec = Res.create({
             "kind": "reservation", "state": "confirmed", "source": "internal",
             "procedure_id": self.procedure_id.id, "room_id": self.room_id.id,
             "doctor_id": (self.slot_doctor_id or self.doctor_id).id or False,
             "start": start, "stop": start + timedelta(minutes=self._effective_duration()),
-            "partner_id": partner.id, "pet_id": pet.id or False,
-            "contact_name": self.contact_name or partner.name,
-            "contact_phone": self.contact_phone or False, "contact_email": self.contact_email or False,
-            "pet_name": pet.name or False, "pet_species": pet.species or self.pet_species or False,
+            "title": (self.title or "").strip() or False,
+            "partner_id": partner.id or False, "pet_id": pet.id or False,
+            "contact_name": False if no_client else (self.contact_name or partner.name),
+            "contact_phone": False if no_client else (self.contact_phone or False),
+            "contact_email": False if no_client else (self.contact_email or False),
+            "pet_name": pet.name or (self.pet_name or "").strip() or False,
+            "pet_species": pet.species or self.pet_species or False,
             "problem": self.problem or False, "note": self.note or False,
             "lang": partner.lang or "cs_CZ",
         })
