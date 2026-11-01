@@ -128,6 +128,10 @@ class VetReservation(models.Model):
     contact_phone = fields.Char(string="Telefon")
     pet_name = fields.Char(string="Jméno mazlíčka")
     pet_species = fields.Selection(SPECIES, string="Druh zvířete")
+    # Request 1. 11. (Lucie): a short text of reception, e.g. for a reservation without a client;
+    # it leads the name (board, till).
+    title = fields.Char(string="Popis", help="Nepovinný krátký popis – ukáže se jako první v názvu rezervace "
+                                             "v kalendáři. Hodí se hlavně pro rezervaci bez klienta.")
     problem = fields.Text(string="Popis problému")
     note = fields.Text(string="Interní poznámka")
     # Internal note (request 25. 10.): not translatable, the reason typed in any UI language is the
@@ -195,7 +199,8 @@ class VetReservation(models.Model):
         installed = dict(self.env["res.lang"].get_installed())
         return "cs_CZ" if "cs_CZ" in installed else (self.env.lang or "en_US")
 
-    @api.depends("kind", "contact_name", "partner_id.name", "pet_name", "pet_id.name", "procedure_id.name", "block_reason")
+    @api.depends("kind", "title", "contact_name", "partner_id.name", "pet_name", "pet_id.name", "procedure_id.name",
+                 "block_reason")
     def _compute_name(self):
         lang = self._clinic_lang()
         for rec in self:
@@ -203,7 +208,8 @@ class VetReservation(models.Model):
             if rec.kind == "block":
                 rec.name = loc.block_reason or loc.env._("Blokace")
                 continue
-            parts = [rec.partner_id.name or rec.contact_name or loc.env._("Bez jména"),
+            client = rec.partner_id.name or rec.contact_name
+            parts = [rec.title or "", client or ("" if rec.title else loc.env._("Bez jména")),
                      rec.pet_id.name or rec.pet_name or "", loc.procedure_id.name or ""]
             rec.name = " / ".join(p for p in parts if p)
 

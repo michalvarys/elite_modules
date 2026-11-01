@@ -80,6 +80,39 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.pet_id.partner_id, r.partner_id)
         self.assertEqual(r.pet_id.species, "cat")
 
+    def test_reservation_without_client_with_description(self):
+        """Request 1. 11. (Lucie): a description above the procedure; with it, no client is needed."""
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        partners = self.env["res.partner"].search_count([])
+        w = self.W.with_user(self.reception).create({"procedure_id": self.vacc.id, "date": self.day})
+        w.action_step_time()
+        w.slot_ids.filtered(lambda ln: ln.minute == 10 * 60)[:1].action_select()
+        w.write({"partner_mode": "none", "pet_name": "Rex"})
+        with self.assertRaises(UserError, msg="without a client the description is required"):
+            w.action_step_summary()
+        w.title = "Kontrola po operaci – zavolá"
+        w.action_step_summary()
+        self.assertIn("bez klienta", w.summary)
+        self.assertIn("Kontrola po operaci", w.summary)
+        w.action_save()
+        r = self.env["elite.vet.reservation"].search([("title", "=", "Kontrola po operaci – zavolá")])
+        self.assertEqual(len(r), 1)
+        self.assertFalse(r.partner_id or r.contact_name or r.contact_email)
+        self.assertEqual(r.pet_name, "Rex")
+        self.assertFalse(r.pet_id)
+        self.assertEqual(r.name, "Kontrola po operaci – zavolá / Rex / %s" % self.vacc.name)
+        self.assertEqual(self.env["res.partner"].search_count([]), partners, "no client created")
+        self.assertFalse(self.mails_to("@"), "nobody to notify")
+
+    def test_description_leads_the_name_with_a_client(self):
+        r = self.env["elite.vet.reservation"].create({
+            "kind": "reservation", "procedure_id": self.vacc.id, "room_id": self.room1.id,
+            "start": self.dt(self.day, 11, 0), "stop": self.dt(self.day, 11, 15),
+            "contact_name": "Jana Popisová", "title": "Přivézt výsledky"})
+        self.assertEqual(r.name, "Přivézt výsledky / Jana Popisová / %s" % self.vacc.name)
+        r.title = False
+        self.assertEqual(r.name, "Jana Popisová / %s" % self.vacc.name)
+
     def test_custom_duration_limits_slots_and_sets_stop(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         # Busy from 10:15: 10:00 fits for 15 min, not for 45 min.
