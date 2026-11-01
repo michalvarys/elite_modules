@@ -2,6 +2,7 @@ from . import setup
 from . import item
 from . import status
 from . import stock_layer
+from . import stock_regleta
 from . import sync
 from . import sale_order
 from . import clinical_record

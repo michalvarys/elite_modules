@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Prodej a sklad",
-    "version": "18.0.1.2.0",
+    "version": "18.0.1.3.0",
     "category": "Sales/Point of Sale",
     "summary": "Česká účetní osnova s cenami včetně DPH, pokladna Recepce, sklad s FEFO a role prodeje a skladu.",
     "description": """
@@ -36,12 +36,17 @@ bezpečně spustit znovu (elite.vet.sale.setup.ensure_setup). Popis je v README.
         "views/goods_receipt_views.xml",
         "views/stock_views.xml",
         "views/menus.xml",
+        "views/stock_regleta_views.xml",
+        "report/stock_regleta_report.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "elite_vet_sale/static/src/board_patch/*",
             "elite_vet_sale/static/src/patient_card_patch/*",
             "elite_vet_sale/static/src/goods_receipt/*",
+        ],
+        "web.report_assets_common": [
+            "elite_vet_sale/static/src/report/stock_regleta.scss",
         ],
     },
     "post_init_hook": "post_init_hook",

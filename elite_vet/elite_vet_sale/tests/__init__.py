@@ -9,3 +9,4 @@ from . import test_goods_receipt
 from . import test_stock_views
 from . import test_till_rights
 from . import test_visit_report_lots
+from . import test_stock_regleta

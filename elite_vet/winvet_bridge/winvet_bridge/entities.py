@@ -26,6 +26,7 @@ bundle_lines    templates SABLONA_VYKONU_POLOZKA
 phrases         templates FRAZE
 stock_lots      stock     DOKLAD_POLOZKA_SK (receipt lines, minus issues), DOKLAD (sales, supplier/date)
 stock_totals    stock     VARIANTA_SKLAD_STAV
+stock_moves     stock     DOKLAD_POLOZKA_SK (every movement), DOKLAD (sales, number/date) (contract v6)
 calendar_*      calendar  KALENDAR_NEW_KALENDAR, ORD_CINNOST, KALENDAR_NEW (window read, see
                           :mod:`winvet_bridge.scheduler`)
 deposits        deposits  PARTNER_ZALOHA (contract v5)
@@ -329,6 +330,28 @@ def _stock_totals(r: dict) -> dict:
         "id": to_int(r["ID_VARIANTA_SKLAD_STAV"]),
         "item_id": to_ref(r["ID_VARIANTA"]),
         "total": to_float(r["STAV_CELKEM"]),
+    }
+
+
+def _stock_moves(r: dict) -> dict:
+    sign = to_int(r["ZNAMENKO"])
+    return {
+        "id": to_int(r["ID_DOKLAD_POLOZKA"]),
+        "item_id": to_ref(r["ID_VARIANTA"]),
+        "direction": "in" if sign == 1 else "out" if sign == -1 else None,
+        "move_type": norm_value(r["TYP_POHYBU"]),
+        # the document date; movements without a document (opening rows) use the creation date
+        "date": norm_value(r["DATUM_DOKLADU"]) or norm_value(r["ZALOZENI_ZAZNAMU"]),
+        "document": norm_value(r["DOKLAD"]),
+        "document_type": norm_value(r["TYP_DOKLADU"]),
+        "quantity": to_float(r["MNOZSTVI"]),
+        "unit": norm_value(r["MERNA_JEDNOTKA"]),
+        "unit_price": to_float(r["CENA_MJ"]),
+        "amount": to_float(r["CENA"]),
+        "vat_amount": to_float(r["CENA_DPH"]),
+        "vat_rate": to_float(r["SAZBA_DPH"]),
+        "amount_includes_vat": flag_equals(r["S_DPH"], "A"),
+        "receipt_id": to_ref(r["ID_DOKLAD_POLOZKA_PRIJEM"]) if sign == -1 else None,
     }
 
 
@@ -726,6 +749,26 @@ _spec(
     id_expr="c.ID_PARTNER_ZALOHA_CERPANI",
     mapper=_deposit_uses,
     keys=("id", "deposit_id", "document_id", "document_number", "date", "amount", "state"),
+)
+
+_spec(
+    name="stock_moves",
+    group="stock",
+    tables=("DOKLAD_POLOZKA_SK", "DOKLAD"),
+    # every stock line: receipts (ZNAMENKO = 1) and issues (-1, pointing to their receipt line)
+    sql=(
+        "select m.ID_DOKLAD_POLOZKA, m.ID_VARIANTA, m.ZNAMENKO, m.TYP_POHYBU, m.MNOZSTVI, m.MERNA_JEDNOTKA, "
+        "m.CENA_MJ, m.CENA, m.CENA_DPH, m.SAZBA_DPH, m.S_DPH, m.ID_DOKLAD_POLOZKA_PRIJEM, m.ZALOZENI_ZAZNAMU, "
+        "d.DATUM_DOKLADU, d.DOKLAD, d.TYP_DOKLADU "
+        "from DOKLAD_POLOZKA_SK m "
+        "left join DOKLAD d on d.ID_DOKLAD = m.ID_DOKLAD"
+    ),
+    id_expr="m.ID_DOKLAD_POLOZKA",
+    mapper=_stock_moves,
+    keys=(
+        "id", "item_id", "direction", "move_type", "date", "document", "document_type", "quantity", "unit",
+        "unit_price", "amount", "vat_amount", "vat_rate", "amount_includes_vat", "receipt_id",
+    ),
 )
 
 assert tuple(SPECS) == ENTITY_ORDER

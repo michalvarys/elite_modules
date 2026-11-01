@@ -300,3 +300,12 @@ Plná synchronizace ze zálohy posílá i zálohy klientů (`deposits`, `deposit
 dokladů. Most 5.0.0 čte nový sloupec `DOKLAD.FORMA_UHRADY` a triggery žurnálu u `PARTNER_ZALOHA`, takže
 se změnily otisky `sales` a `journal` a přibyla skupina `deposits`: do `/opt/winvet-import/`
 zkopírujte spolu s mostem **nový `verified.json`**, jinak budou tržby a zálohy blokované.
+
+## Pohyby skladu pro regletu (most 6.0.0)
+
+Most 6.0.0 posílá navíc všechny pohyby skladu (`stock_moves`: příjemky, výdejky, datum, množství,
+cena, DPH), ze kterých Odoo počítá Regletu skladu. Most čte další sloupce `DOKLAD_POLOZKA_SK`, takže se
+změnil otisk skupiny `stock`: do `/opt/winvet-import/` zkopírujte spolu s mostem **nový
+`verified.json`** (je ve stejném adresáři, `cp -a` z kroku 3 ho přenese), jinak bude sklad blokovaný.
+Odoo bez nového modulu `elite_vet_sale` pohyby odmítne a most je přeskočí – nic jiného se nezmění.
+

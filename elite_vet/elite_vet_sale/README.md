@@ -103,6 +103,21 @@ stav, oříznutí záporného stavu, souhrn neaktivních položek) se ukládají
 skladu“), ne do chyb pushe – jinak by po každém cyklu přepsala `last_error` a skryla
 skutečné chyby jiných oblastí.
 
+## Regleta skladu (PDF pro účetní)
+
+WinVet data → Regleta skladu (jen vedení): za zvolené období po položkách počáteční stav, příjem,
+výdej a konečný stav – množství a nákupní cena bez DPH i s DPH; příjemky v období s dodavatelem,
+rekapitulace DPH příjmu a souhrn po skupinách. Data: pohyby skladu z mostu 6.0.0 (kontrakt v6,
+`stock_moves` → `elite.vet.winvet.stock.move`), staré jako poslední záloha WinVetu.
+
+Ocenění podle příjemky (`models/stock_regleta.py`): příjem = množství × cena za MJ z řádku příjemky,
+bez DPH / s DPH podle sazby řádku; výdej = množství × cena té příjemky, ze které se vydalo (WinVet
+ji u výdeje vede). Hodnota skladu ve WinVetu se liší – WinVet přičítá příjem s DPH, ale odečítá
+výdej bez DPH. Příjemky se sazbou 0 % se berou, jak jsou zadané, a v sestavě jsou označené `*`.
+Pole DPH řádku (CENA_DPH) a celková cena záporných příjmových řádků jsou ve WinVetu místy chybné,
+proto se nepoužívají. Na kopii WinVetu k 26. 10. 2026 dává konečný stav 460 955 Kč bez DPH
+(ocenění šarží stejnou cenou 460 817 Kč; rozdíl jsou zaokrouhlené zbytky dílčích balení).
+
 ## Účet z karty pacienta → nabídka
 
 `action_done` (a `mark_done` z karty) po uzavření záznamu s položkami zavolá

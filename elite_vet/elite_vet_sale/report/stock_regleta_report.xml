@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Regleta skladu (PDF): opening stock, receipts, issues and closing stock of a period per item,
+         from elite.vet.stock.regleta.regleta_data() (models/stock_regleta.py). Managers only.
+         Uses the print styles of the Uzávěrka (.evc, elite_vet_winvet cash_closure.scss) plus
+         stock_regleta.scss; wkhtmltopdf: tables only. A4 landscape - four column groups. -->
+    <record id="paperformat_stock_regleta" model="report.paperformat">
+        <field name="name">A4 na šířku – regleta skladu</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">16</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+        <field name="css_margins" eval="False"/>
+    </record>
+
+    <record id="report_stock_regleta" model="ir.actions.report">
+        <field name="name">Regleta skladu (PDF)</field>
+        <field name="model">elite.vet.stock.regleta.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">elite_vet_sale.report_stock_regleta_document</field>
+        <field name="report_file">elite_vet_sale.report_stock_regleta_document</field>
+        <field name="print_report_name">object._regleta_filename()</field>
+        <field name="paperformat_id" ref="paperformat_stock_regleta"/>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+    </record>
+
+    <template id="report_stock_regleta_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="elite_vet_sale.report_stock_regleta_body"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- one value cell group: quantity (optional), without VAT, with VAT -->
+    <template id="report_stock_regleta_cells">
+        <td t-if="with_qty" class="evc-num evr-qty" t-out="quantity_label(cell['qty'])"/>
+        <td class="evc-num" t-out="money(cell['net'])"/>
+        <td class="evc-num evr-gross" t-out="money(cell['gross'])"/>
+    </template>
+
+    <template id="report_stock_regleta_body">
+        <t t-set="r" t-value="o._regleta_data()"/>
+        <t t-set="clinic" t-value="r['clinic']"/>
+        <t t-set="parts" t-value="[('opening', 'Počáteční stav'), ('in', 'Příjem'), ('out', 'Výdej'), ('closing', 'Konečný stav')]"/>
+        <div class="article evc evr" data-oe-lang="cs_CZ">
+            <table class="evc-letterhead">
+                <tr>
+                    <td>
+                        <div class="evc-clinic-name" t-out="clinic['name']"/>
+                        <div t-if="clinic['address']" t-out="clinic['address']"/>
+                        <div t-if="clinic['ico'] or clinic['dic']">
+                            <t t-if="clinic['ico']">IČO <t t-out="clinic['ico']"/></t>
+                            <t t-if="clinic['ico'] and clinic['dic']"> · </t>
+                            <t t-if="clinic['dic']">DIČ <t t-out="clinic['dic']"/></t>
+                        </div>
+                    </td>
+                    <td class="evc-head-right">
+                        <div class="evc-title">Regleta skladu</div>
+                        <div>Období <b t-out="r['period']"/></div>
+                        <div class="evc-muted">Nákupní ceny v Kč · data z WinVetu<t t-if="r['last_move']">
+                            (poslední pohyb <t t-out="r['last_move'].strftime('%-d. %-m. %Y')"/>)</t></div>
+                    </td>
+                </tr>
+            </table>
+
+            <p t-if="not r['has_data']" class="evc-summary">Z WinVetu zatím nepřišly žádné pohyby skladu – most
+                musí být ve verzi 6.0.0 nebo novější.</p>
+
+            <!-- 1. summary -->
+            <div class="evc-section">
+                <h2>1. Souhrn</h2>
+                <table class="evc-table evr-summary">
+                    <thead>
+                        <tr>
+                            <th>Skupina</th>
+                            <th class="evc-num">Počáteční stav bez DPH</th><th class="evc-num">s DPH</th>
+                            <th class="evc-num">Příjem bez DPH</th><th class="evc-num">s DPH</th>
+                            <th class="evc-num">Výdej bez DPH</th><th class="evc-num">s DPH</th>
+                            <th class="evc-num">Konečný stav bez DPH</th><th class="evc-num">s DPH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="r['groups']" t-as="g">
+                            <td t-out="g['label']"/>
+                            <t t-foreach="parts" t-as="part">
+                                <t t-set="cell" t-value="g['totals'][part[0]]"/>
+                                <t t-set="with_qty" t-value="False"/>
+                                <t t-call="elite_vet_sale.report_stock_regleta_cells"/>
+                            </t>
+                        </tr>
+                        <tr class="evc-total">
+                            <td>SKLAD CELKEM</td>
+                            <t t-foreach="parts" t-as="part">
+                                <t t-set="cell" t-value="r['totals'][part[0]]"/>
+                                <t t-set="with_qty" t-value="False"/>
+                                <t t-call="elite_vet_sale.report_stock_regleta_cells"/>
+                            </t>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-if="r['check']" class="evc-note">Kontrola: konečné množství souhlasí se stavem skladu ve WinVetu
+                    u <t t-out="r['check']['items'] - r['check']['differ']"/> z <t t-out="r['check']['items']"/> položek<t t-if="r['check']['differ']">;
+                    u <t t-out="r['check']['differ']"/> se liší – ty je potřeba ověřit ve WinVetu</t>.</p>
+                <p t-if="r['negative']" class="evc-note"><t t-out="r['negative']"/> položek má na konci období záporný stav –
+                    WinVet z nich vydal víc, než přijal (výdej před zadáním příjemky nebo chybějící příjemka).</p>
+            </div>
+
+            <!-- 2. receipts and VAT -->
+            <div class="evc-section">
+                <h2>2. Příjemky v období</h2>
+                <table t-if="r['receipts']" class="evc-table">
+                    <thead>
+                        <tr>
+                            <th>Doklad</th><th>Datum</th><th>Dodavatel</th>
+                            <th class="evc-num">Bez DPH</th><th class="evc-num">DPH</th><th class="evc-num">S DPH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="r['receipts']" t-as="row">
+                            <td><t t-out="row['number']"/><t t-if="row['zero_vat']"> *</t></td>
+                            <td t-out="row['date'] and row['date'].strftime('%-d. %-m. %Y') or ''"/>
+                            <td t-out="row['supplier']"/>
+                            <td class="evc-num" t-out="money(row['net'])"/>
+                            <td class="evc-num" t-out="money(row['vat'])"/>
+                            <td class="evc-num" t-out="money(row['gross'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-summary">V období nebyla žádná příjemka.</p>
+                <h3 t-if="r['vat_rows']">Rekapitulace DPH příjmu</h3>
+                <table t-if="r['vat_rows']" class="evc-table evr-vat">
+                    <thead>
+                        <tr><th>Sazba</th><th class="evc-num">Základ</th><th class="evc-num">DPH</th><th class="evc-num">Celkem</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="r['vat_rows']" t-as="row">
+                            <td><t t-out="'%g' % row['rate']"/> %</td>
+                            <td class="evc-num" t-out="money(row['net'])"/>
+                            <td class="evc-num" t-out="money(row['vat'])"/>
+                            <td class="evc-num" t-out="money(row['gross'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-if="r['zero_vat']['count']" class="evc-note">* Příjemka obsahuje řádky se sazbou DPH 0 %
+                    (<t t-out="r['zero_vat']['count']"/> řádků, <t t-out="money(r['zero_vat']['net'])"/> Kč). Jsou převzaté,
+                    jak jsou zadané ve WinVetu (cena bez DPH = s DPH) – ověřte je podle faktury dodavatele
+                    (např. dodávka z EU s přenesením daňové povinnosti).</p>
+            </div>
+
+            <!-- 3. items -->
+            <div class="evc-section">
+                <h2>3. Pohyb po položkách</h2>
+                <table t-if="r['groups']" class="evc-table evr-items">
+                    <thead>
+                        <tr class="evr-head-parts">
+                            <th rowspan="2">Položka</th>
+                            <th rowspan="2">MJ</th>
+                            <th t-foreach="parts" t-as="part" colspan="3" class="evr-part" t-out="part[1]"/>
+                        </tr>
+                        <tr>
+                            <t t-foreach="parts" t-as="part">
+                                <th class="evc-num evr-qty">Množství</th>
+                                <th class="evc-num">Bez DPH</th>
+                                <th class="evc-num evr-gross">S DPH</th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="r['groups']" t-as="g">
+                            <tr class="evc-kind"><td colspan="14" t-out="g['label']"/></tr>
+                            <tr t-foreach="g['rows']" t-as="row">
+                                <td><t t-out="row['name']"/><span t-if="row['code']" class="evc-muted"> · <t t-out="row['code']"/></span></td>
+                                <td t-out="row['unit']"/>
+                                <t t-foreach="parts" t-as="part">
+                                    <t t-set="cell" t-value="row[part[0]]"/>
+                                    <t t-set="with_qty" t-value="True"/>
+                                    <t t-call="elite_vet_sale.report_stock_regleta_cells"/>
+                                </t>
+                            </tr>
+                            <tr class="evc-total">
+                                <td colspan="2"><t t-out="g['label']"/> celkem</td>
+                                <t t-foreach="parts" t-as="part">
+                                    <td class="evr-qty"/>
+                                    <td class="evc-num" t-out="money(g['totals'][part[0]]['net'])"/>
+                                    <td class="evc-num evr-gross" t-out="money(g['totals'][part[0]]['gross'])"/>
+                                </t>
+                            </tr>
+                            <tr class="evc-spacer"><td colspan="14"/></tr>
+                        </t>
+                    </tbody>
+                </table>
+                <p t-else="" class="evc-summary">Ve skladu není do konce období žádný pohyb.</p>
+            </div>
+
+            <div class="evc-section">
+                <h2>Jak se počítá</h2>
+                <p class="evc-note">Pohyby skladu z WinVetu (příjemky SP, výdejky SV) podle data dokladu. Oceňuje se
+                    nákupní cenou z příjemky: příjem cenou zadanou na příjemce (bez DPH a s DPH podle jejího řádku),
+                    výdej množstvím krát cena té příjemky, ze které se vydalo (WinVet u každého výdeje vede, ze kterého
+                    příjmu je) – co se přijme, odejde ze skladu za stejnou cenu. Počáteční stav je součet všech pohybů
+                    před začátkem období, konečný = počáteční + příjem − výdej. Hodnota skladu, kterou ukazuje
+                    WinVet, se liší: WinVet přičítá příjem s DPH, ale výdej odečítá bez DPH, takže mu ve skladu
+                    zůstává DPH příjmu.<t t-if="r['no_receipt']['count']"> <t t-out="r['no_receipt']['count']"/>
+                    výdejů bez známé příjemky je oceněno nákladovou cenou WinVetu
+                    (<t t-out="money(r['no_receipt']['net'])"/> Kč bez DPH).</t>
+                    Množství jsou v jednotce položky; skupiny se sčítají jen v korunách. Položek v sestavě:
+                    <t t-out="r['item_count']"/>.</p>
+            </div>
+        </div>
+        <div class="footer evc-footer">
+            <table class="evc-footer-table">
+                <tr>
+                    <td><t t-out="clinic['name']"/> · Regleta skladu <t t-out="r['period']"/> · vytvořeno <t t-out="r['generated']"/></td>
+                    <td class="evc-footer-right">Strana <span class="page"/> z <span class="topage"/></td>
+                </tr>
+            </table>
+        </div>
+    </template>
+</odoo>

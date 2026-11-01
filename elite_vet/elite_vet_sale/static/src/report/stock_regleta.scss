@@ -1,0 +1,20 @@
+// Regleta skladu (report/stock_regleta_report.xml): on top of the Uzávěrka print styles (.evc,
+// elite_vet_winvet cash_closure.scss). A4 landscape, 14 columns.
+.evr {
+    padding: 0 10mm;
+
+    .evr-items {
+        font-size: 7pt;
+        > thead > tr > th, > tbody > tr > td { padding-right: 1.2mm; }
+        > thead > tr.evr-head-parts > th.evr-part {
+            text-align: center;
+            color: #1d1d1b;
+            border-bottom: 1px solid #bfc3c9;
+        }
+        // a thin rule before every column group (Počáteční stav / Příjem / Výdej / Konečný stav)
+        > thead > tr > th.evr-qty, > tbody > tr > td.evr-qty { border-left: 1px solid #bfc3c9; padding-left: 1.2mm; }
+    }
+    .evr-summary { font-size: 8pt; }
+    .evr-vat { width: 60%; }
+    .evr-gross { color: #5f6368; }
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Regleta skladu (PDF) for the accountant (managers), next to Uzávěrka. -->
+    <record id="view_stock_regleta_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.stock.regleta.wizard.form</field>
+        <field name="model">elite.vet.stock.regleta.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Regleta skladu (PDF)">
+                <group>
+                    <field name="preset" widget="radio" options="{'horizontal': true}"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <p class="text-muted">
+                    Počáteční stav, příjem, výdej a konečný stav skladu za období po položkách – množství
+                    a nákupní ceny bez DPH i s DPH, příjemky a rekapitulace DPH. Z pohybů skladu, které poslal
+                    most z WinVetu (data jsou stará jako poslední záloha WinVetu).
+                </p>
+                <footer>
+                    <button name="action_print" type="object" string="Vytisknout PDF" class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Zrušit" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_stock_regleta_wizard" model="ir.actions.act_window">
+        <field name="name">Regleta skladu (PDF)</field>
+        <field name="res_model">elite.vet.stock.regleta.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(6, 0, [ref('elite_vet_reservation.group_reservation_manager')])]"/>
+    </record>
+    <menuitem id="menu_winvet_stock_regleta" name="Regleta skladu" parent="elite_vet_winvet.menu_winvet_root"
+              action="action_stock_regleta_wizard" sequence="12"
+              groups="elite_vet_reservation.group_reservation_manager"/>
+</odoo>
