@@ -102,7 +102,7 @@
                                     <option value="other">Other</option>
                                 </select>
                             </label>
-                            <label>Describe the problem <textarea name="problem" rows="3" required="required"></textarea></label>
+                            <label>Specify the reason for your visit <textarea name="problem" rows="3" required="required" placeholder="e.g. a check-up, vaccination, limping on the left leg"></textarea></label>
                             <label>E-mail for confirmation <input name="contact_email" type="email" autocomplete="email" required="required"/></label>
                             <label>Phone <input name="contact_phone" type="tel" autocomplete="tel" required="required"/></label>
                             <label class="evbk-consent"><input name="consent" type="checkbox"/>

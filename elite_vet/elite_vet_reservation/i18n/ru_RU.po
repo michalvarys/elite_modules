@@ -357,8 +357,13 @@ msgstr "Задаток | Elite Vet"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Describe the problem"
-msgstr "Опишите проблему"
+msgid "Specify the reason for your visit"
+msgstr "Уточните причину визита"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "e.g. a check-up, vaccination, limping on the left leg"
+msgstr "например, осмотр, прививка, хромает на левую лапу"
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__display_name
@@ -1087,8 +1092,8 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__problem
-msgid "Popis problému"
-msgstr ""
+msgid "Důvod návštěvy"
+msgstr "Причина визита"
 
 #. module: elite_vet_reservation
 #. odoo-python

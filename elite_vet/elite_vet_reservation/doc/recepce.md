@@ -273,7 +273,7 @@ vkládáte ručně“. Zkontrolujte čas a klikněte **Použít ruční čas**.
    Pokud už klient se stejným e-mailem nebo telefonem v kartotéce je, použije se
    ten a nový se nezakládá.
 4. Nový mazlíček: **Nový mazlíček – jméno** a **Druh**.
-5. Volitelně **Popis problému** a **Interní poznámka** (klient ji nevidí).
+5. Volitelně **Důvod návštěvy** a **Interní poznámka** (klient ji nevidí).
 6. **Poslat klientovi potvrzení e-mailem** – zaškrtne se samo, když je vyplněný e-mail.
    Odškrtněte, pokud klient e-mail nechce.
 7. Klikněte **Dále**.

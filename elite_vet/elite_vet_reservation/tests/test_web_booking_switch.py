@@ -194,18 +194,19 @@ class TestWebBookingSwitch(HttpCase):
         self.assertIn("T23 text pod rezervací", html)
 
     def test_first_tab_is_by_procedure(self):
-        """"Podle problému" became "Podle úkonu" (task 19); the client's "Popište problém" stays."""
+        """"Podle problému" became "Podle úkonu" (task 19); the client's text box asks for the reason
+        of the visit, not a problem - it can just be a check-up."""
         view = self.env.ref("elite_vet_reservation.booking_widget")
         self.assertIn(">By procedure<", view.arch_db)
-        self.assertNotIn("by problem", view.arch_db.lower())
-        expected = {"cs_CZ": ("Podle úkonu", "Popište problém"), "de_DE": ("Nach Leistung", None),
-                    "ru_RU": ("По услуге", None)}
+        self.assertNotIn("problem", view.arch_db.replace('name="problem"', "").lower())
+        expected = {"cs_CZ": ("Podle úkonu", "Upřesněte důvod návštěvy"),
+                    "de_DE": ("Nach Leistung", "Grund des Besuchs näher beschreiben"),
+                    "ru_RU": ("По услуге", "Уточните причину визита")}
         installed = dict(self.env["res.lang"].get_installed())
-        for lang, (tab, kept) in expected.items():
+        for lang, (tab, label) in expected.items():
             if lang not in installed:
                 continue
             arch = view.with_context(lang=lang).arch_db
             self.assertIn(tab, arch, lang)
-            self.assertNotIn("problému", arch.replace("Popište problém", ""), lang)
-            if kept:
-                self.assertIn(kept, arch, lang)
+            self.assertIn(label, arch, lang)
+            self.assertNotIn("problém", arch, lang)

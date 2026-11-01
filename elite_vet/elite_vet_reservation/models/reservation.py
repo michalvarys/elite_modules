@@ -132,7 +132,7 @@ class VetReservation(models.Model):
     # it leads the name (board, till).
     title = fields.Char(string="Popis", help="Nepovinný krátký popis – ukáže se jako první v názvu rezervace "
                                              "v kalendáři. Hodí se hlavně pro rezervaci bez klienta.")
-    problem = fields.Text(string="Popis problému")
+    problem = fields.Text(string="Důvod návštěvy")
     note = fields.Text(string="Interní poznámka")
     # Internal note (request 25. 10.): not translatable, the reason typed in any UI language is the
     # one everybody sees (it used to be stored only in the language of the user who typed it).
