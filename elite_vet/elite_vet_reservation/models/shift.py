@@ -32,7 +32,7 @@ class VetShift(models.Model):
     room_id = fields.Many2one(
         "elite.vet.room", string="Ordinace", ondelete="restrict",
         help="Ve které ordinaci lékařka slouží. Směna s ordinací se sama propíše do rezervací "
-             "(Rezervace → Rozpis lékařů, tabule, volné termíny). Prázdné = směna se do rezervací "
+             "(Rezervace → Rozpis lékařů, kalendář, volné termíny). Prázdné = směna se do rezervací "
              "nepropíše (např. sestra). Předvyplní se výchozí ordinace lékařky.")
     accepts_bookings = fields.Boolean(related="doctor_id.accepts_bookings")
     # The shift's own time: prefilled from the shift type (again when the type changes),

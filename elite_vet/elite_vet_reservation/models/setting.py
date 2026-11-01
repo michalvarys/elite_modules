@@ -39,7 +39,7 @@ class EliteVetSetting(models.Model):
         help="WinVet (podle adresy) = na stránce /rezervacni-system je formulář WinVet z adresy "
              "níže, jako dřív. Náš webový rezervační systém (stránka i chat) pak žádné rezervace "
              "nepřijímá. Elite Vet (náš kalendář) = na stejném místě je náš rezervační průvodce "
-             "a žádosti z webu chodí do Odoo (Rezervace › Čekající). Recepce, tabule a pokladna "
+             "a žádosti z webu chodí do Odoo (Rezervace › Čekající). Recepce, kalendář a pokladna "
              "objednávají v obou režimech stejně.")
 
     booking_slot_step = fields.Integer("Krok slotů (min)", default=15,

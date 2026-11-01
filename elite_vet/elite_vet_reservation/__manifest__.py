@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rezervace",
-    "version": "18.0.2.15.1",
+    "version": "18.0.2.15.2",
     "category": "Website",
     "summary": "Rezervacni kalendar kliniky: ordinace, ukony, rozpis lekaru, online rezervace.",
     "description": """

@@ -1,5 +1,5 @@
 /**
- * Tabule in the till: the day board of the consulting rooms in a large dialog above the POS
+ * Kalendář in the till: the day board of the consulting rooms in a large dialog above the POS
  * (the open order stays below it). Same data as the backend board (`board_data`): rooms as
  * columns, time axis, doctor shifts, reservations, blocks and the payment chip. A click on a
  * reservation opens its detail, a click into a free place opens Objednat prefilled, a reservation
@@ -169,7 +169,7 @@ export class BoardDialog extends Component {
     }
 
     get title() {
-        return "Tabule";
+        return "Kalendář";
     }
 
     get dayTitle() {

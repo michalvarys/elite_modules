@@ -9,7 +9,7 @@
         <record id="group_reservation_reception" model="res.groups">
             <field name="name">Recepce</field>
             <field name="category_id" ref="module_category_elite_vet_reservation"/>
-            <field name="comment">Vidí tabuli, potvrzuje a zakládá rezervace, spravuje klienty.</field>
+            <field name="comment">Vidí kalendář, potvrzuje a zakládá rezervace, spravuje klienty.</field>
         </record>
         <record id="group_reservation_manager" model="res.groups">
             <field name="name">Správce rezervací</field>

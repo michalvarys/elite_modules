@@ -8,7 +8,7 @@ class PosConfig(models.Model):
 
     is_elite_vet_reception = fields.Boolean(
         string="Pokladna recepce", compute="_compute_is_elite_vet_reception",
-        help="Pokladna „Recepce“: v pokladně jsou záložky Dnes, Objednat, Kartotéka a Tabule "
+        help="Pokladna „Recepce“: v pokladně jsou záložky Dnes, Objednat, Kartotéka a Kalendář "
              "a po přihlášení se otevře záložka Dnes.")
 
     elite_vet_readonly = fields.Boolean(

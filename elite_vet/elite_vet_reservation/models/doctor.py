@@ -17,7 +17,7 @@ class VetDoctor(models.Model):
 
     calendar_color = fields.Char(
         string="Barva v kalendáři",
-        help="Barva jejího proužku na kartách rezervací a její služby na tabuli. Když ji nevyberete, "
+        help="Barva jejího proužku na kartách rezervací a její služby v kalendáři. Když ji nevyberete, "
              "přidělí se automaticky – každá lékařka má jinou.")
 
     default_room_id = fields.Many2one(

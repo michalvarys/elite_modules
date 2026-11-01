@@ -53,7 +53,7 @@
                 <div colspan="2" class="text-muted">
                     WinVet = na stránce /rezervacni-system je formulář WinVet z této adresy, náš
                     systém z webu rezervace nepřijímá. Elite Vet = na stejném místě je náš průvodce
-                    a žádosti chodí do Rezervace › Čekající. Recepce, tabule a pokladna objednávají
+                    a žádosti chodí do Rezervace › Čekající. Recepce, kalendář a pokladna objednávají
                     v obou režimech stejně.
                 </div>
             </xpath>

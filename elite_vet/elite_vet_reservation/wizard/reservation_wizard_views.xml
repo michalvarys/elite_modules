@@ -47,7 +47,7 @@
                     </group>
                     <group invisible="not room_id">
                         <div class="text-muted" colspan="2">
-                            Předvyplněno z tabule: <field name="room_id" readonly="1" class="d-inline" options="{'no_open': True}"/> v <field name="time_label" class="d-inline"/>.
+                            Předvyplněno z kalendáře: <field name="room_id" readonly="1" class="d-inline" options="{'no_open': True}"/> v <field name="time_label" class="d-inline"/>.
                             Je-li čas volný, krok s výběrem času se přeskočí.
                         </div>
                     </group>

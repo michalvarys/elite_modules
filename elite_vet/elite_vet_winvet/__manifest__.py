@@ -1,8 +1,8 @@
 {
     "name": "Elite Vet - WinVet data",
-    "version": "18.0.1.8.1",
+    "version": "18.0.1.8.2",
     "category": "Services",
-    "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby, zálohy a jejich analýzy; uzávěrka (PDF); ruční výdaje a zisk; kalendář WinVetu na tabuli.",
+    "summary": "Příjem dat z WinVetu (most winvet_bridge): kartotéka, tržby, úkony, léky, platby, zálohy a jejich analýzy; uzávěrka (PDF); ruční výdaje a zisk; kalendář WinVetu v kalendáři rezervací.",
     "description": """
 Elite Vet - WinVet data
 =======================

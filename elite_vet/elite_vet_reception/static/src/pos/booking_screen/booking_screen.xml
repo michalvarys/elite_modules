@@ -17,7 +17,7 @@
                 </div>
                 <div t-if="state.prefill" class="alert mb-3 o_ev_prefill"
                      t-att-class="state.prefill.found === false ? 'alert-warning' : 'alert-info'">
-                    Z tabule: <b><t t-esc="state.prefill.room"/>, <t t-esc="dayLabel(state.prefill.day)"/>, <t t-esc="state.prefill.label"/></b>.
+                    Z kalendáře: <b><t t-esc="state.prefill.room"/>, <t t-esc="dayLabel(state.prefill.day)"/>, <t t-esc="state.prefill.label"/></b>.
                     <t t-if="!state.procedureId"> Vyberte úkon – čas se vybere, pokud je pro něj volný.</t>
                     <t t-elif="state.prefill.found === false"> Tento čas pro vybraný úkon volný není – vyberte jiný.</t>
                     <t t-elif="state.prefill.found"> Čas je vybraný.</t>
@@ -235,7 +235,7 @@
                         <button t-else="" class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
                             Objednat
                         </button>
-                        <button class="btn btn-light btn-lg o_ev_open_board" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Tabule</button>
+                        <button class="btn btn-light btn-lg o_ev_open_board" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Kalendář</button>
                     </div>
                     <div t-if="state.selected and !pet and !state.move" class="text-warning mt-2">Chybí klient a zvíře – najděte je v kroku 1.</div>
                 </div>
