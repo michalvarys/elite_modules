@@ -145,9 +145,10 @@ class ReceptionBoard(models.AbstractModel):
         return self.board_reservation(reservation.id)
 
     @api.model
-    def cancel_reservation(self, reservation_id):
+    def cancel_reservation(self, reservation_id, message=None):
         """Cancel the (main) reservation as the clinic with `action_cancel` - the client gets the
-        cancellation e-mail when the reservation has one, as in the backend."""
+        cancellation e-mail when the reservation has one, as in the backend, with `message`
+        (the clinic's text) in it."""
         check_clinic_writable(self.env)
         self._check_reception()
         main = self._main_reservation(self._board_reservation(reservation_id))
@@ -155,7 +156,7 @@ class ReceptionBoard(models.AbstractModel):
             raise UserError(_("Zrušit jde jen potvrzenou nebo čekající rezervaci."))
         if self._reservation_visit(main):
             raise UserError(_("Klient už je přijatý (návštěva je založená) – rezervaci nejde zrušit."))
-        main.action_cancel("clinic")
+        main.action_cancel("clinic", message)
         return {"reservation_id": main.id, "state": main.state, "email_sent": bool(main.contact_email)}
 
 

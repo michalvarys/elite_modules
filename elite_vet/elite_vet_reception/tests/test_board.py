@@ -190,6 +190,13 @@ class TestBoard(ReceptionCase):
         with self.assertRaises(UserError, msg="already cancelled"):
             api.cancel_reservation(quiet.id)
 
+    def test_cancel_with_message(self):
+        res = self.board_res(10, 0, pet=self.new_pet("Se zprávou"), contact_email="zprava@example.invalid")
+        self.api(self.reception).cancel_reservation(res.id, "Omlouváme se, lékařka onemocněla.")
+        self.assertEqual(res.cancel_message, "Omlouváme se, lékařka onemocněla.")
+        mail = self.env["mail.mail"].search([("model", "=", "elite.vet.reservation"), ("res_id", "=", res.id)], order="id")
+        self.assertIn("lékařka onemocněla", mail[-1:].body_html)
+
     def test_cancel_refused_after_check_in(self):
         res = self.board_res(9, 0, pet=self.new_pet("Už přijatý"))
         api = self.api(self.reception)

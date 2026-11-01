@@ -60,6 +60,25 @@ class TestMail(ReservationCase):
         r = self.reservation(start=self.dt(WED, 9, 0))
         r.action_cancel("clinic")
         self.assertTrue(self.mails_to("klient@example.cz"))
+        self.assertNotIn("background:#f1f5f9", self.mails_to("klient@example.cz")[-1].body_html)
+
+    def test_cancel_message_in_mail(self):
+        """Request 1. 11.: the clinic's text goes into the cancellation e-mail, escaped, in any language."""
+        self.env["res.lang"]._activate_lang("de_DE")
+        r = self.reservation(start=self.dt(WED, 9, 0), lang="de_DE")
+        r.action_cancel("clinic", "  Lékařka je nemocná.\nNabízíme <b>čtvrtek</b> 10:00.  ")
+        self.assertEqual(r.cancel_message, "Lékařka je nemocná.\nNabízíme <b>čtvrtek</b> 10:00.")
+        body = self.mails_to("klient@example.cz")[-1].body_html
+        self.assertIn("Lékařka je nemocná.", body)
+        self.assertIn("&lt;b&gt;čtvrtek&lt;/b&gt;", body)
+        # an empty message is no message; None (form button) keeps the text written on the form
+        empty = self.reservation(start=self.dt(WED, 10, 0))
+        empty.action_cancel("clinic", "   ")
+        self.assertFalse(empty.cancel_message)
+        form = self.reservation(start=self.dt(WED, 11, 0))
+        form.cancel_message = "Z formuláře"
+        form.action_cancel()
+        self.assertEqual(form.cancel_message, "Z formuláře")
 
     def test_reminder_cron_marks_and_sends_once(self):
         soon = fields.Datetime.now() + timedelta(hours=20)

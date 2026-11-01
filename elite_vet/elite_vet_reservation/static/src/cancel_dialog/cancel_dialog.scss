@@ -1,0 +1,13 @@
+// Request 1. 11.: cancel dialog with a message for the client (backend board and till).
+.o_ev_cancel_dialog {
+    .o_ev_cancel_question { white-space: pre-line; }
+    .o_ev_cancel_message {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+        margin-bottom: 10px;
+        span { font-weight: 600; font-size: 0.85rem; color: #475569; }
+        small { color: #64748b; }
+    }
+}
