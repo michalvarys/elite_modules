@@ -47,11 +47,11 @@ Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje
    `check` vypíše verzi WinVetu, otisky schématu a blokované entity (Odoo nekontaktuje).
    `--dry-run` data jen načte a spočítá dávky, nic neodesílá a neukládá stav.
 
-## Co se přenáší (kontrakt v2, most 2.0.0; v3 sklad, v4 kalendář, v5 zálohy)
+## Co se přenáší (kontrakt v2, most 2.0.0; v3 sklad, v4 kalendář, v5 zálohy, v6 pohyby skladu)
 
 Pořadí entit: `users, items, owners, contacts, patients, vaccinations, visits, vitals,
 sale_documents, sale_lines, payments, bundles, bundle_lines, phrases, stock_lots, stock_totals,
-calendar_resources, calendar_activities, calendar_events, deposits, deposit_uses` (podrobně
+calendar_resources, calendar_activities, calendar_events, deposits, deposit_uses, stock_moves` (podrobně
 v `CONTRACT.md`).
 
 Novinky v2:
@@ -182,7 +182,7 @@ neblokuje. Žádná data v otisku nejsou.
 | clinical | PRIPAD, DENNI_ZAZNAM, DENNI_ZAZNAM_HODNOTA | visits, vitals, sale_lines (datum řádku) |
 | sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments, stock_lots (sloupec dodavatele) |
 | templates | SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA, FRAZE | bundles, bundle_lines, phrases |
-| stock | DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV | stock_lots (také DOKLAD ze skupiny sales), stock_totals |
+| stock | DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV | stock_lots, stock_moves (obě také DOKLAD ze skupiny sales), stock_totals |
 | calendar | KALENDAR_NEW, KALENDAR_NEW_KALENDAR, ORD_CINNOST | calendar_resources, calendar_activities, calendar_events |
 | deposits | PARTNER_ZALOHA, PARTNER_ZALOHA_CERPANI | deposits, deposit_uses |
 | journal | ZURNAL, VERZE | přírůstková synchronizace |

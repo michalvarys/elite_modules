@@ -53,7 +53,7 @@ class GuardTest(unittest.TestCase):
     def test_sales_change_blocks_only_sales_entities(self):
         result = evaluate(schema(sales="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
         self.assertEqual(result.mismatched_groups, ["sales"])
-        self.assertEqual(result.blocked_entities, ["sale_documents", "sale_lines", "payments", "stock_lots"])
+        self.assertEqual(result.blocked_entities, ["sale_documents", "sale_lines", "payments", "stock_lots", "stock_moves"])
         self.assertFalse(result.journal_blocked)
 
     def test_clinical_change_blocks_dependent_sale_lines(self):
@@ -91,6 +91,7 @@ class GuardTest(unittest.TestCase):
             self.assertEqual(groups[name], ["templates"], name)
         self.assertEqual(groups["stock_lots"], ["stock", "sales"])
         self.assertEqual(groups["stock_totals"], ["stock"])
+        self.assertEqual(groups["stock_moves"], ["stock", "sales"])
         self.assertEqual(set(groups), set(ENTITY_ORDER))
         grouped = {t for tables in GROUP_TABLES.values() for t in tables}
         for name, tables in ENTITY_TABLES.items():

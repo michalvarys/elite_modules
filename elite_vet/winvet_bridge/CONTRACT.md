@@ -459,3 +459,41 @@ the journal as a full sync – **replace `verified.json` together with the bridg
 
 Sizes v5 (analysis copy, data until 26. 10. 2026): deposits 38 (19 000 Kč received in September),
 deposit_uses 34.
+
+
+## Contract v6 additions (stock movements for the stock report, 2026-11-01)
+
+Bridge version 6.0.0. One new entity appended to the push order (v6): `…, deposits, deposit_uses,
+stock_moves`. **v5 receivers answer `{"ok": false, "error": "unknown entity"}` → the bridge skips it**
+(v2 forward compatibility); nothing else changes.
+
+### stock_moves  [DOKLAD_POLOZKA_SK, DOKLAD] – not journaled → always `mode=full`
+One record for every stock line (receipts and issues of every document type, also the lines without
+a document). `id` (ID_DOKLAD_POLOZKA), `item_id` (ID_VARIANTA, 0/negative → `null`), `direction`
+(`in` for ZNAMENKO = 1, `out` for -1, else `null`), `move_type` (TYP_POHYBU, raw: `P` receipt, `V`
+issue, `D` receipt, `G` opening row without a document), `date` (DOKLAD.DATUM_DOKLADU, without a
+document ZALOZENI_ZAZNAMU, `YYYY-MM-DD`), `document` (DOKLAD.DOKLAD), `document_type`
+(DOKLAD.TYP_DOKLADU: `SP` příjemka, `SV` výdejka), `quantity` (MNOZSTVI, positive in both directions),
+`unit` (MERNA_JEDNOTKA), `unit_price` (CENA_MJ), `amount` (CENA, the line value), `vat_amount` (CENA_DPH), `vat_rate`
+(SAZBA_DPH), `amount_includes_vat` (bool, S_DPH = 'A'), `receipt_id` (ID_DOKLAD_POLOZKA_PRIJEM of an
+issue = the receipt line it was issued from; always `null` for a receipt).
+
+How WinVet values the stock (analysis copy 14. 10. 2026; sums and counts only): every issue points
+to its receipt line (2076 of 2076). A receipt keeps the price as entered (S_DPH = 'A': `amount`
+includes VAT, `vat_amount` is the VAT part), an issue gets a net cost of WinVet's own (no VAT; in 570
+of 2046 issues not the net price of its receipt line, 72 receipt lines were issued at more than one
+price). WinVet's stock value (`SKLAD_STAV.CENA`, 478 136 Kč) is exactly receipts at their entered
+price minus issues at that cost, so it keeps the VAT of the receipts. Odoo therefore values the
+stock report by the receipt lines (see elite_vet_sale, Regleta skladu). 103 receipt lines (240 868 Kč)
+are entered with VAT rate 0. `vat_amount` is not reliable: on 30 receipt lines WinVet stores rate x
+the price with VAT (36 Kč of 300 Kč at 12 %), so Odoo derives the net value from `vat_rate`. `amount` = `quantity` x `unit_price` on every issue and
+every positive receipt line, but not on 23 of the 42 negative receipt lines (returns: -2 ks x 64,99 Kč
+with CENA -1 559,76 Kč); Odoo values receipt lines by `quantity` x `unit_price`, like the stock layers.
+
+### Guard
+`stock_moves` reads more columns of DOKLAD_POLOZKA_SK, so the `stock` fingerprint changed once
+(re-approved for 2603 on the analysis copy: `d0d0e586f88432b0`); DOKLAD columns were already read,
+`sales` is unchanged. A bridge 6.0.0 with an older `verified.json` blocks stock_lots, stock_totals and
+stock_moves – **replace `verified.json` together with the bridge**.
+
+Sizes v6 (analysis copy): stock_moves 2912 (811 + 17 receipt lines, 2076 issue lines, 8 opening rows).

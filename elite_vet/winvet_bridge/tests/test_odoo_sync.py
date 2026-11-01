@@ -205,7 +205,7 @@ class SyncRunnerTest(unittest.TestCase):
             odoo.unknown_entities = {"deposits", "deposit_uses"}
             report = self.runner(source, odoo).run()
             entities = [p["entity"] for p in odoo.pushes()]
-        self.assertEqual(entities[-2:], ["deposits", "deposit_uses"])
+        self.assertEqual([e for e in entities if e.startswith("deposit")], ["deposits", "deposit_uses"])
         self.assertEqual([e.entity for e in report.entities if e.unsupported], ["deposits", "deposit_uses"])
         modes = {e.entity: e.mode for e in report.entities}
         self.assertEqual((modes["deposits"], modes["deposit_uses"]), ("incremental", "full"))
@@ -248,7 +248,7 @@ class SyncRunnerTest(unittest.TestCase):
             report = self.runner(source, odoo).run()
             status = odoo.calls[0]["body"]["params"]
             pushed = {p["entity"] for p in odoo.pushes()}
-        blocked = ["sale_documents", "sale_lines", "payments", "stock_lots"]  # stock_lots reads DOKLAD
+        blocked = ["sale_documents", "sale_lines", "payments", "stock_lots", "stock_moves"]  # stock reads DOKLAD
         self.assertEqual(status["blocked"], blocked)
         self.assertIn("sales", status["message"])
         self.assertTrue(pushed.isdisjoint(blocked))

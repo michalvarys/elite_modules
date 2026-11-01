@@ -6,15 +6,17 @@ from odoo.addons.elite_vet_winvet.models.winvet_tools import to_bool, to_date, t
 
 _logger = logging.getLogger(__name__)
 
-STOCK_ENTITIES = ["stock_lots", "stock_totals"]
+STOCK_ENTITIES = ["stock_lots", "stock_totals", "stock_moves"]
 STOCK_MODELS = {
     "stock_lots": "elite.vet.winvet.stock.layer",
     "stock_totals": "elite.vet.winvet.stock.total",
+    "stock_moves": "elite.vet.winvet.stock.move",
 }
-STOCK_LABELS = {"stock_lots": "Sklad – šarže", "stock_totals": "Sklad – stavy"}
+STOCK_LABELS = {"stock_lots": "Sklad – šarže", "stock_totals": "Sklad – stavy", "stock_moves": "Sklad – pohyby"}
 STOCK_FIXUPS = [
     ("elite.vet.winvet.stock.layer", "item_id", "item_winvet_ref", "elite.vet.winvet.item"),
     ("elite.vet.winvet.stock.total", "item_id", "item_winvet_ref", "elite.vet.winvet.item"),
+    ("elite.vet.winvet.stock.move", "item_id", "item_winvet_ref", "elite.vet.winvet.item"),
 ]
 
 
@@ -71,6 +73,24 @@ class WinvetSync(models.AbstractModel):
         for ref, v in vals.items():
             v["total"] = to_float(records[ref].get("total"))
         self._upsert("elite.vet.winvet.stock.total", vals, stats, errors)
+
+    def _push_stock_moves(self, records, stats, errors, batch, batches):
+        """Contract v6: every stock line, for the Regleta skladu (models/stock_regleta.py)."""
+        vals = self._stock_item_vals(records)
+        stats["skipped"] += len(records) - len(vals)
+        for ref, v in vals.items():
+            r = records[ref]
+            direction = to_str(r.get("direction"))
+            v.update({"direction": direction if direction in ("in", "out") else False,
+                      "move_type": to_str(r.get("move_type")), "date": to_date(r.get("date")),
+                      "document": to_str(r.get("document")), "document_type": to_str(r.get("document_type")),
+                      "quantity": to_float(r.get("quantity")), "unit": to_str(r.get("unit")),
+                      "unit_price": to_float(r.get("unit_price")), "amount": to_float(r.get("amount")),
+                      "vat_amount": to_float(r.get("vat_amount")),
+                      "vat_rate": to_float(r.get("vat_rate")),
+                      "amount_includes_vat": to_bool(r.get("amount_includes_vat")),
+                      "receipt_winvet_ref": to_int(r.get("receipt_id")) or 0})
+        self._upsert("elite.vet.winvet.stock.move", vals, stats, errors)
 
     def _after_full_run(self, entity, stats, errors):
         super()._after_full_run(entity, stats, errors)

@@ -2,9 +2,10 @@
   "comment": "WinVet versions verified for the bridge: version -> schema fingerprints per group. Update with 'python -m winvet_bridge approve --yes' after checking a new WinVet version.",
   "versions": {
     "2603": {
-      "approved": "2026-10-22 09:57:54",
+      "approved": "2026-11-01 14:41:15",
       "calendar_approved": "2026-10-25 (contract v4, analysis copy)",
       "deposits_approved": "2026-10-27 (contract v5: deposits group, sales + DOKLAD.FORMA_UHRADY, journal + PARTNER_ZALOHA triggers; analysis copy)",
+      "stock_moves_approved": "2026-11-01 (contract v6: stock group + DOKLAD_POLOZKA_SK movement columns; analysis copy)",
       "engine": "5.0.1",
       "fingerprints": {
         "calendar": "df31de3832520240",
@@ -15,7 +16,7 @@
         "owners": "2f9a2363f1b5e868",
         "patients": "0cb68af2ba80384d",
         "sales": "8c0a07549f67767a",
-        "stock": "f2192ca5a59bc5b2",
+        "stock": "d0d0e586f88432b0",
         "templates": "e0b7163e7162f167"
       },
       "ods": "13.1"

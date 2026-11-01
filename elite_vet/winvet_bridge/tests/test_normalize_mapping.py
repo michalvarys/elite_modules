@@ -52,6 +52,9 @@ CONTRACT_KEYS = {
     "deposits": {"id", "owner_id", "date", "amount", "sign", "method", "document_id", "used", "refunded",
                  "refunded_date", "balance", "note", "state"},
     "deposit_uses": {"id", "deposit_id", "document_id", "document_number", "date", "amount", "state"},
+    # contract v6
+    "stock_moves": {"id", "item_id", "direction", "move_type", "date", "document", "document_type", "quantity",
+                    "unit", "unit_price", "amount", "vat_amount", "vat_rate", "amount_includes_vat", "receipt_id"},
 }
 
 
@@ -296,7 +299,7 @@ class MappingTest(unittest.TestCase):
         from winvet_bridge.guard import GROUP_TABLES
         from winvet_bridge.journal import JOURNAL_TABLES
         from winvet_bridge.sync import ALWAYS_FULL
-        self.assertEqual(ENTITY_ORDER[-2:], DEPOSIT_ENTITIES)
+        self.assertEqual(ENTITY_ORDER[-3:-1], DEPOSIT_ENTITIES)
         self.assertEqual(tuple(GROUP_TABLES["deposits"]), ("PARTNER_ZALOHA", "PARTNER_ZALOHA_CERPANI"))
         for name in DEPOSIT_ENTITIES:
             self.assertEqual(SPECS[name].group, "deposits")
@@ -304,6 +307,26 @@ class MappingTest(unittest.TestCase):
         self.assertNotIn("PARTNER_ZALOHA_CERPANI", JOURNAL_TABLES)
         self.assertIn("deposit_uses", ALWAYS_FULL)
         self.assertNotIn("deposits", ALWAYS_FULL)
+
+    def test_stock_moves(self):
+        """Contract v6: every stock line; an issue points to its receipt line, a receipt never."""
+        from winvet_bridge.sync import ALWAYS_FULL
+        self.assertEqual(ENTITY_ORDER[-1], "stock_moves")
+        self.assertEqual(SPECS["stock_moves"].group, "stock")
+        self.assertIn("stock_moves", ALWAYS_FULL)
+        row = {col: None for col in select_columns(SPECS["stock_moves"].sql)}
+        row.update(ID_DOKLAD_POLOZKA=7, ID_VARIANTA=5, ZNAMENKO=-1, TYP_POHYBU="V", MNOZSTVI=0.5,
+                   MERNA_JEDNOTKA="bal", CENA=50.0, CENA_DPH=0.0, SAZBA_DPH=0.0, S_DPH="A",
+                   ID_DOKLAD_POLOZKA_PRIJEM=3, DATUM_DOKLADU=dt.date(2026, 10, 1), DOKLAD="SV0001",
+                   TYP_DOKLADU="SV", ZALOZENI_ZAZNAMU=dt.date(2026, 9, 30))
+        rec = SPECS["stock_moves"].mapper(row)
+        self.assertEqual((rec["direction"], rec["receipt_id"], rec["date"], rec["amount_includes_vat"]),
+                         ("out", 3, "2026-10-01", True))
+        row.update(ZNAMENKO=1, TYP_POHYBU="G", ID_DOKLAD_POLOZKA_PRIJEM=3, DATUM_DOKLADU=None, DOKLAD=None,
+                   TYP_DOKLADU=None, S_DPH="0")
+        rec = SPECS["stock_moves"].mapper(row)
+        self.assertEqual((rec["direction"], rec["receipt_id"], rec["date"], rec["amount_includes_vat"]),
+                         ("in", None, "2026-09-30", False))
 
     def test_build_sql(self):
         sql = build_sql(SPECS["sale_documents"], 3)
