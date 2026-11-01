@@ -71,14 +71,20 @@ class TestMail(ReservationCase):
         body = self.mails_to("klient@example.cz")[-1].body_html
         self.assertIn("Lékařka je nemocná.", body)
         self.assertIn("&lt;b&gt;čtvrtek&lt;/b&gt;", body)
-        # an empty message is no message; None (form button) keeps the text written on the form
+        # an empty message is no message
         empty = self.reservation(start=self.dt(WED, 10, 0))
         empty.action_cancel("clinic", "   ")
         self.assertFalse(empty.cancel_message)
-        form = self.reservation(start=self.dt(WED, 11, 0))
-        form.cancel_message = "Z formuláře"
-        form.action_cancel()
-        self.assertEqual(form.cancel_message, "Z formuláře")
+
+    def test_form_cancel_asks_in_a_dialog(self):
+        """"Zrušit" on the form opens the dialog; the message is entered only there."""
+        r = self.reservation(start=self.dt(WED, 11, 0))
+        action = r.action_open_cancel_wizard()
+        wizard = self.env[action["res_model"]].with_context(action["context"]).create({"message": "Z dialogu"})
+        self.assertEqual(r.state, "confirmed", "nothing happens before the dialog is confirmed")
+        wizard.action_cancel()
+        self.assertEqual((r.state, r.cancel_reason, r.cancel_message), ("cancelled", "clinic", "Z dialogu"))
+        self.assertIn("Z dialogu", self.mails_to("klient@example.cz")[-1].body_html)
 
     def test_reminder_cron_marks_and_sends_once(self):
         soon = fields.Datetime.now() + timedelta(hours=20)
