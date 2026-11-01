@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Request 1. 11.: confirm the cancel, with a message for the client in the e-mail. -->
+    <record id="view_cancel_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.cancel.wizard.form</field>
+        <field name="model">elite.vet.reservation.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Zrušit rezervaci">
+                <field name="reservation_id" invisible="1"/>
+                <p>Opravdu zrušit? Klientovi odejde e-mail o zrušení na <field name="contact_email" class="d-inline" readonly="1"/>.</p>
+                <group>
+                    <field name="message" nolabel="1" colspan="2"
+                           placeholder="Zpráva klientovi (nepovinné) – např. důvod zrušení nebo nabídka jiného termínu. Vloží se do e-mailu."/>
+                </group>
+                <footer>
+                    <button name="action_cancel" type="object" string="Zrušit rezervaci" class="btn-danger"/>
+                    <button special="cancel" string="Zpět" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

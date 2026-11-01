@@ -608,12 +608,20 @@ class VetReservation(models.Model):
             rec.write({"state": "confirmed"})
 
     def action_cancel(self, reason="clinic", message=None):
-        """`message`: the clinic's text for the client (cancellation e-mail); None keeps the one
-        already written on the reservation (form)."""
+        """`message`: the clinic's text for the client (cancellation e-mail); None leaves the field as it is."""
         vals = {"state": "cancelled", "cancel_reason": reason}
         if message is not None:
             vals["cancel_message"] = (message or "").strip() or False
         self.write(vals)
+
+    def action_open_cancel_wizard(self):
+        """"Zrušit" with an e-mail to the client: a dialog asks first and takes the clinic's message."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window", "res_model": "elite.vet.reservation.cancel.wizard",
+            "name": _("Zrušit rezervaci"), "view_mode": "form", "views": [[False, "form"]],
+            "target": "new", "context": {"default_reservation_id": self.id},
+        }
 
     def action_done(self):
         self.write({"state": "done"})
