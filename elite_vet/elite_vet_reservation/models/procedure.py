@@ -28,7 +28,7 @@ class VetProcedure(models.Model):
 
     name = fields.Char(string="Název", required=True, translate=True)
     duration = fields.Integer(string="Délka (min)", required=True, default=30)
-    symbol = fields.Char(string="Zkratka", size=3, help="Písmeno na tabuli, např. V = vakcinace.")
+    symbol = fields.Char(string="Zkratka", size=3, help="Písmeno v kalendáři, např. V = vakcinace.")
     color = fields.Selection(PROCEDURE_COLORS, string="Barva", required=True, default="green")
     custom_color = fields.Char(
         string="Vlastní barva",

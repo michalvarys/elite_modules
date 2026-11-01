@@ -24,7 +24,7 @@ export class ReceptionTabs extends Component {
             { key: "card", label: "Kartotéka…", icon: "fa-address-book-o" },
             { key: "booking", label: "Objednat", icon: "fa-calendar-plus-o", screen: BOOKING_SCREEN },
             { key: "till", label: "Pokladna", icon: "fa-shopping-basket", screen: "ProductScreen" },
-            { key: "board", label: "Tabule", icon: "fa-calendar" },
+            { key: "board", label: "Kalendář", icon: "fa-calendar" },
         ];
     }
 

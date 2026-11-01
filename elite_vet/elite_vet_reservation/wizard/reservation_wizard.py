@@ -68,7 +68,7 @@ class ReservationWizard(models.TransientModel):
     holiday_warning = fields.Char(compute="_compute_holiday_warning",
                                   help="Státní svátek v den rezervace - jen upozornění, rezervace jde uložit.")
     warning = fields.Char(string="Upozornění", readonly=True,
-                             help="Proč se předvyplněný čas z tabule nepoužil.")
+                             help="Proč se předvyplněný čas z kalendáře nepoužil.")
     time_label = fields.Char(compute="_compute_time_label")
     # Manual slot: outside the offered times (closed, no shift, web-only block, weekend).
     manual = fields.Boolean(string="Zadat čas ručně",

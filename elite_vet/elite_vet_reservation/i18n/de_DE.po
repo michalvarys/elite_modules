@@ -329,7 +329,7 @@ msgstr ""
 #: model_terms:ir.actions.act_window,help:elite_vet_reservation.action_assignment
 msgid ""
 "Datum, lékařka, ordinace, od–do. Podle toho se na webu nabízí termíny\n"
-"               „k lékaři“ a na tabuli je vidět, kdo je v ordinaci."
+"               „k lékaři“ a v kalendáři je vidět, kdo je v ordinaci."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -608,7 +608,7 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model_terms:ir.actions.act_window,help:elite_vet_reservation.action_room
 msgid ""
-"Každá ordinace je sloupec na tabuli. Sál založte taky, jen odškrtněte\n"
+"Každá ordinace je sloupec v kalendáři. Sál založte taky, jen odškrtněte\n"
 "               „Rezervovatelná online“."
 msgstr ""
 
@@ -1175,7 +1175,7 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_procedure__symbol
-msgid "Písmeno na tabuli, např. V = vakcinace."
+msgid "Písmeno v kalendáři, např. V = vakcinace."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1372,7 +1372,7 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.actions.client,name:elite_vet_reservation.action_board
 #: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_board
-msgid "Tabule"
+msgid "Kalendář"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1485,7 +1485,7 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:res.groups,comment:elite_vet_reservation.group_reservation_reception
-msgid "Vidí tabuli, potvrzuje a zakládá rezervace, spravuje klienty."
+msgid "Vidí kalendář, potvrzuje a zakládá rezervace, spravuje klienty."
 msgstr ""
 
 #. module: elite_vet_reservation

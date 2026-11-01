@@ -183,7 +183,7 @@
             <form string="Kalendář z WinVetu" create="0" delete="0">
                 <sheet>
                     <div class="alert alert-info" role="status" invisible="not enabled">
-                        <strong>Kalendář z WinVetu je zapnutý.</strong> Záznamy z WinVetu se ukazují na tabuli
+                        <strong>Kalendář z WinVetu je zapnutý.</strong> Záznamy z WinVetu se ukazují v kalendáři
                         (v pokladně i v Odoo) jako „z WinVetu“ a záznamy s časem v namapované ordinaci
                         obsazují termín pro všechna objednávání v Odoo (web, chat, recepce, pokladna).
                     </div>
@@ -205,7 +205,7 @@
                     </group>
                     <button name="action_disable" type="object" class="btn-warning" string="Vypnout kalendář z WinVetu"
                             invisible="not enabled"
-                            confirm="Záznamy z WinVetu zmizí z tabule a přestanou blokovat termíny. Most je dál posílá, ale Odoo je neukládá. Pokračovat?"/>
+                            confirm="Záznamy z WinVetu zmizí z kalendáře a přestanou blokovat termíny. Most je dál posílá, ale Odoo je neukládá. Pokračovat?"/>
                     <button name="action_enable" type="object" class="btn-primary" string="Zapnout kalendář z WinVetu"
                             invisible="enabled"/>
                     <button name="action_purge" type="object" class="btn-outline-danger ms-2" string="Smazat přenesené záznamy"

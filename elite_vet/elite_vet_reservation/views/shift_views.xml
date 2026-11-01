@@ -39,7 +39,7 @@
             </field>
             <xpath expr="//sheet" position="inside">
                 <div class="alert alert-info" role="status" invisible="is_note or not room_id">
-                    Směna s ordinací se sama propíše do rezervací (Rezervace → Rozpis lékařů, tabule,
+                    Směna s ordinací se sama propíše do rezervací (Rezervace → Rozpis lékařů, kalendář,
                     volné termíny). Bez ordinace se do rezervací nepropíše.
                 </div>
             </xpath>

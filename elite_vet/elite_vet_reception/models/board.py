@@ -1,4 +1,4 @@
-"""Reservation board inside the POS ("Tabule"): detail of a board event and its actions.
+"""Reservation board inside the POS ("Kalendář"): detail of a board event and its actions.
 
 The day itself is read with `elite.vet.reservation.board_data` (same data as the backend board,
 with the payment state from elite_vet_sale). These methods add what the till needs on top of it:
