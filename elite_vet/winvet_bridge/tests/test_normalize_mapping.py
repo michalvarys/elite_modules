@@ -54,7 +54,8 @@ CONTRACT_KEYS = {
     "deposit_uses": {"id", "deposit_id", "document_id", "document_number", "date", "amount", "state"},
     # contract v6
     "stock_moves": {"id", "item_id", "direction", "move_type", "date", "document", "document_type", "quantity",
-                    "unit", "unit_price", "amount", "vat_amount", "vat_rate", "amount_includes_vat", "receipt_id"},
+                    "unit", "unit_price", "amount", "vat_amount", "vat_rate", "amount_includes_vat", "receipt_id",
+                    "item_vat_rate"},
 }
 
 
@@ -318,10 +319,12 @@ class MappingTest(unittest.TestCase):
         row.update(ID_DOKLAD_POLOZKA=7, ID_VARIANTA=5, ZNAMENKO=-1, TYP_POHYBU="V", MNOZSTVI=0.5,
                    MERNA_JEDNOTKA="bal", CENA=50.0, CENA_DPH=0.0, SAZBA_DPH=0.0, S_DPH="A",
                    ID_DOKLAD_POLOZKA_PRIJEM=3, DATUM_DOKLADU=dt.date(2026, 10, 1), DOKLAD="SV0001",
-                   TYP_DOKLADU="SV", ZALOZENI_ZAZNAMU=dt.date(2026, 9, 30))
+                   TYP_DOKLADU="SV", ZALOZENI_ZAZNAMU=dt.date(2026, 9, 30), ITEM_VAT_RATE=12.0)
         rec = SPECS["stock_moves"].mapper(row)
         self.assertEqual((rec["direction"], rec["receipt_id"], rec["date"], rec["amount_includes_vat"]),
                          ("out", 3, "2026-10-01", True))
+        self.assertEqual(rec["item_vat_rate"], 12.0)
+        self.assertIn("coalesce(p.DPH, v.DPH_PRODEJ) as ITEM_VAT_RATE", SPECS["stock_moves"].sql)
         row.update(ZNAMENKO=1, TYP_POHYBU="G", ID_DOKLAD_POLOZKA_PRIJEM=3, DATUM_DOKLADU=None, DOKLAD=None,
                    TYP_DOKLADU=None, S_DPH="0")
         rec = SPECS["stock_moves"].mapper(row)

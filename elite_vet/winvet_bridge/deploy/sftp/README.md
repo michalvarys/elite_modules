@@ -309,3 +309,8 @@ změnil otisk skupiny `stock`: do `/opt/winvet-import/` zkopírujte spolu s most
 `verified.json`** (je ve stejném adresáři, `cp -a` z kroku 3 ho přenese), jinak bude sklad blokovaný.
 Odoo bez nového modulu `elite_vet_sale` pohyby odmítne a most je přeskočí – nic jiného se nezmění.
 
+Most 6.1.0 posílá u pohybů navíc nákupní sazbu DPH položky (WinVet ji na části příjemek nevyplňuje
+a počítá s ní sám). Čte přitom `VARIANTA.ID_DPH_NAKUP` a tabulku `DPH`, takže se změnil otisk skupiny
+`catalog`: i tady zkopírujte **nový `verified.json`** spolu s mostem, jinak budou položky, uživatelé
+a pohyby skladu blokované.
+

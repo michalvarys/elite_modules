@@ -124,7 +124,7 @@
                     </thead>
                     <tbody>
                         <tr t-foreach="r['receipts']" t-as="row">
-                            <td><t t-out="row['number']"/><t t-if="row['zero_vat']"> *</t></td>
+                            <td t-out="row['number']"/>
                             <td t-out="row['date'] and row['date'].strftime('%-d. %-m. %Y') or ''"/>
                             <td t-out="row['supplier']"/>
                             <td class="evc-num" t-out="money(row['net'])"/>
@@ -148,10 +148,9 @@
                         </tr>
                     </tbody>
                 </table>
-                <p t-if="r['zero_vat']['count']" class="evc-note">* Příjemka obsahuje řádky se sazbou DPH 0 %
-                    (<t t-out="r['zero_vat']['count']"/> řádků, <t t-out="money(r['zero_vat']['net'])"/> Kč). Jsou převzaté,
-                    jak jsou zadané ve WinVetu (cena bez DPH = s DPH) – ověřte je podle faktury dodavatele
-                    (např. dodávka z EU s přenesením daňové povinnosti).</p>
+                <p t-if="r['item_rate']['count']" class="evc-note">U <t t-out="r['item_rate']['count']"/> řádků příjemek
+                    (<t t-out="money(r['item_rate']['net'])"/> Kč bez DPH) nemá WinVet vyplněnou sazbu DPH, cena je
+                    zadaná s DPH – použita nákupní sazba DPH položky, stejně jako to počítá WinVet.</p>
             </div>
 
             <!-- 3. items -->
@@ -201,15 +200,13 @@
 
             <div class="evc-section">
                 <h2>Jak se počítá</h2>
-                <p class="evc-note">Pohyby skladu z WinVetu (příjemky SP, výdejky SV) podle data dokladu. Oceňuje se
-                    nákupní cenou z příjemky: příjem cenou zadanou na příjemce (bez DPH a s DPH podle jejího řádku),
-                    výdej množstvím krát cena té příjemky, ze které se vydalo (WinVet u každého výdeje vede, ze kterého
-                    příjmu je) – co se přijme, odejde ze skladu za stejnou cenu. Počáteční stav je součet všech pohybů
-                    před začátkem období, konečný = počáteční + příjem − výdej. Hodnota skladu, kterou ukazuje
-                    WinVet, se liší: WinVet přičítá příjem s DPH, ale výdej odečítá bez DPH, takže mu ve skladu
-                    zůstává DPH příjmu.<t t-if="r['no_receipt']['count']"> <t t-out="r['no_receipt']['count']"/>
-                    výdejů bez známé příjemky je oceněno nákladovou cenou WinVetu
-                    (<t t-out="money(r['no_receipt']['net'])"/> Kč bez DPH).</t>
+                <p class="evc-note">Pohyby skladu z WinVetu (příjemky SP, výdejky SV) podle data dokladu, oceněné
+                    nákupními cenami tak, jak je počítá WinVet: příjem cenou zadanou na příjemce (bez DPH a s DPH podle
+                    sazby řádku, případně nákupní sazby položky), výdej nákladovou cenou WinVetu – váženou průměrnou
+                    nákupní cenou bez DPH v okamžiku výdeje, s DPH podle sazby položky. Počáteční stav je součet všech
+                    pohybů před začátkem období, konečný = počáteční + příjem − výdej; vyprodaná položka má hodnotu 0.
+                    Hodnota skladu, kterou ukazuje WinVet, se liší: WinVet přičítá příjem s DPH, ale výdej odečítá
+                    bez DPH, takže mu ve skladu zůstává DPH příjmu.
                     Množství jsou v jednotce položky; skupiny se sčítají jen v korunách. Položek v sestavě:
                     <t t-out="r['item_count']"/>.</p>
             </div>

@@ -352,6 +352,9 @@ def _stock_moves(r: dict) -> dict:
         "vat_rate": to_float(r["SAZBA_DPH"]),
         "amount_includes_vat": flag_equals(r["S_DPH"], "A"),
         "receipt_id": to_ref(r["ID_DOKLAD_POLOZKA_PRIJEM"]) if sign == -1 else None,
+        # purchase VAT rate of the item (sale rate when not set): WinVet leaves the line rate 0 on some
+        # receipts entered with VAT and then uses this one
+        "item_vat_rate": to_float(r["ITEM_VAT_RATE"]),
     }
 
 
@@ -754,20 +757,22 @@ _spec(
 _spec(
     name="stock_moves",
     group="stock",
-    tables=("DOKLAD_POLOZKA_SK", "DOKLAD"),
+    tables=("DOKLAD_POLOZKA_SK", "DOKLAD", "VARIANTA", "DPH"),
     # every stock line: receipts (ZNAMENKO = 1) and issues (-1, pointing to their receipt line)
     sql=(
         "select m.ID_DOKLAD_POLOZKA, m.ID_VARIANTA, m.ZNAMENKO, m.TYP_POHYBU, m.MNOZSTVI, m.MERNA_JEDNOTKA, "
         "m.CENA_MJ, m.CENA, m.CENA_DPH, m.SAZBA_DPH, m.S_DPH, m.ID_DOKLAD_POLOZKA_PRIJEM, m.ZALOZENI_ZAZNAMU, "
-        "d.DATUM_DOKLADU, d.DOKLAD, d.TYP_DOKLADU "
+        "d.DATUM_DOKLADU, d.DOKLAD, d.TYP_DOKLADU, coalesce(p.DPH, v.DPH_PRODEJ) as ITEM_VAT_RATE "
         "from DOKLAD_POLOZKA_SK m "
-        "left join DOKLAD d on d.ID_DOKLAD = m.ID_DOKLAD"
+        "left join DOKLAD d on d.ID_DOKLAD = m.ID_DOKLAD "
+        "left join VARIANTA v on v.ID_VARIANTA = m.ID_VARIANTA "
+        "left join DPH p on p.ID_DPH = v.ID_DPH_NAKUP"
     ),
     id_expr="m.ID_DOKLAD_POLOZKA",
     mapper=_stock_moves,
     keys=(
         "id", "item_id", "direction", "move_type", "date", "document", "document_type", "quantity", "unit",
-        "unit_price", "amount", "vat_amount", "vat_rate", "amount_includes_vat", "receipt_id",
+        "unit_price", "amount", "vat_amount", "vat_rate", "amount_includes_vat", "receipt_id", "item_vat_rate",
     ),
 )
 

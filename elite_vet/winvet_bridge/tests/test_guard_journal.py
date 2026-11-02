@@ -67,7 +67,7 @@ class GuardTest(unittest.TestCase):
 
     def test_catalog_change_blocks_users_and_items(self):
         result = evaluate(schema(catalog="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
-        self.assertEqual(result.blocked_entities, ["users", "items"])
+        self.assertEqual(result.blocked_entities, ["users", "items", "stock_moves"])  # stock_moves reads the item VAT rate
 
     def test_deposits_change_blocks_only_deposit_entities(self):
         result = evaluate(schema(deposits="ffffffffffffffff"), VERIFIED, ENTITY_TABLES)
@@ -91,7 +91,7 @@ class GuardTest(unittest.TestCase):
             self.assertEqual(groups[name], ["templates"], name)
         self.assertEqual(groups["stock_lots"], ["stock", "sales"])
         self.assertEqual(groups["stock_totals"], ["stock"])
-        self.assertEqual(groups["stock_moves"], ["stock", "sales"])
+        self.assertEqual(groups["stock_moves"], ["stock", "sales", "catalog"])
         self.assertEqual(set(groups), set(ENTITY_ORDER))
         grouped = {t for tables in GROUP_TABLES.values() for t in tables}
         for name, tables in ENTITY_TABLES.items():
