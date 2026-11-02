@@ -108,8 +108,8 @@
                 <p t-if="r['check']" class="evc-note">Kontrola: konečné množství souhlasí se stavem skladu ve WinVetu
                     u <t t-out="r['check']['items'] - r['check']['differ']"/> z <t t-out="r['check']['items']"/> položek<t t-if="r['check']['differ']">;
                     u <t t-out="r['check']['differ']"/> se liší – ty je potřeba ověřit ve WinVetu</t>.</p>
-                <p t-if="r['negative']" class="evc-note"><t t-out="r['negative']"/> položek má na konci období záporný stav –
-                    WinVet z nich vydal víc, než přijal (výdej před zadáním příjemky nebo chybějící příjemka).</p>
+                <p t-if="r['negative']" class="evc-note"><t t-out="r['negative']"/> položek má na konci období záporný stav
+                    (v přehledu po položkách červeně, seznam v části 4).</p>
             </div>
 
             <!-- 2. receipts and VAT -->
@@ -174,7 +174,7 @@
                     <tbody>
                         <t t-foreach="r['groups']" t-as="g">
                             <tr class="evc-kind"><td colspan="14" t-out="g['label']"/></tr>
-                            <tr t-foreach="g['rows']" t-as="row">
+                            <tr t-foreach="g['rows']" t-as="row" t-att-class="'evr-negative' if row['closing']['qty'] &lt;= -0.001 else None">
                                 <td><t t-out="row['name']"/><span t-if="row['code']" class="evc-muted"> · <t t-out="row['code']"/></span></td>
                                 <td t-out="row['unit']"/>
                                 <t t-foreach="parts" t-as="part">
@@ -198,13 +198,38 @@
                 <p t-else="" class="evc-summary">Ve skladu není do konce období žádný pohyb.</p>
             </div>
 
+            <div t-if="r['negative_rows']" class="evc-section">
+                <h2>4. Položky se záporným stavem</h2>
+                <p class="evc-note">Ve WinVetu se z nich vydalo víc, než se přijalo – chybí příjemka, nebo je výdej
+                    zadaný ve špatném množství či jednotce (např. tablety místo balení). Ve WinVetu je to potřeba opravit;
+                    do té doby je záporný stav oceněný průměrnou nákupní cenou a snižuje hodnotu skladu.</p>
+                <table class="evc-table evr-negative-list">
+                    <thead>
+                        <tr>
+                            <th>Položka</th><th>MJ</th><th class="evc-num">Konečný stav</th>
+                            <th class="evc-num">Bez DPH</th><th class="evc-num">S DPH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="r['negative_rows']" t-as="row">
+                            <td><t t-out="row['name']"/><span t-if="row['code']" class="evc-muted"> · <t t-out="row['code']"/></span></td>
+                            <td t-out="row['unit']"/>
+                            <td class="evc-num" t-out="quantity_label(row['closing']['qty'])"/>
+                            <td class="evc-num" t-out="money(row['closing']['net'])"/>
+                            <td class="evc-num" t-out="money(row['closing']['gross'])"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="evc-section">
                 <h2>Jak se počítá</h2>
                 <p class="evc-note">Pohyby skladu z WinVetu (příjemky SP, výdejky SV) podle data dokladu, oceněné
                     nákupními cenami tak, jak je počítá WinVet: příjem cenou zadanou na příjemce (bez DPH a s DPH podle
                     sazby řádku, případně nákupní sazby položky), výdej nákladovou cenou WinVetu – váženou průměrnou
                     nákupní cenou bez DPH v okamžiku výdeje, s DPH podle sazby položky. Počáteční stav je součet všech
-                    pohybů před začátkem období, konečný = počáteční + příjem − výdej; vyprodaná položka má hodnotu 0.
+                    pohybů před začátkem období, konečný = počáteční + příjem − výdej; vyprodaná položka má hodnotu 0. Výdej
+                    z prázdného skladu (WinVet ho povolí a vede s nulovou cenou) se nepočítá, stejně jako ve WinVetu.
                     Hodnota skladu, kterou ukazuje WinVet, se liší: WinVet přičítá příjem s DPH, ale výdej odečítá
                     bez DPH, takže mu ve skladu zůstává DPH příjmu.
                     Množství jsou v jednotce položky; skupiny se sčítají jen v korunách. Položek v sestavě:

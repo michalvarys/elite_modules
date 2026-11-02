@@ -114,7 +114,9 @@ Ocenění jako ve WinVetu (`models/stock_regleta.py`): příjem = množství × 
 bez DPH / s DPH podle sazby řádku – když ji WinVet nevyplnil (u části příjemek zadaných s DPH), podle
 nákupní sazby položky (most 6.1.0; se starším mostem prodejní sazba položky, bez sazby léky a zboží
 12 %, ostatní 21 %); výdej = nákladová cena WinVetu (vážená průměrná nákupní cena bez DPH), s DPH
-podle sazby položky. Vyprodaná položka tak má hodnotu 0. Pole DPH řádku (CENA_DPH) a celková cena
+podle sazby položky. Vyprodaná položka tak má hodnotu 0. Výdej z prázdného skladu (WinVet ho povolí, vydá z pomocného
+řádku G s nulovou cenou) se nepočítá, stejně jako ve WinVetu; položky, které zůstanou pod nulou
+(vydáno víc, než přijato), jsou v sestavě červeně a v seznamu „Položky se záporným stavem“. Pole DPH řádku (CENA_DPH) a celková cena
 záporných příjmových řádků jsou ve WinVetu místy chybné, proto se nepoužívají. Hodnota skladu ve
 WinVetu se liší – WinVet přičítá příjem s DPH, ale odečítá výdej bez DPH.
 

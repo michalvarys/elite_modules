@@ -8,7 +8,9 @@ from odoo.addons.elite_vet_winvet.tests.common import BASE
 from .common import SaleCase
 
 ITEM = BASE + 7101
+ITEM2 = BASE + 7102
 R1, R2, I1, I2, I3, OTHER = (BASE + n for n in (8101, 8102, 8103, 8104, 8105, 8106))
+G1, I4, R3, I5 = (BASE + n for n in (8107, 8108, 8109, 8110))
 
 
 @tagged("post_install", "-at_install")
@@ -24,6 +26,9 @@ class TestStockRegleta(SaleCase):
             {"id": ITEM, "code": "RG1", "name": "Regleta lék", "classification": "product",
              "stock_tracked": True, "tracked_drug": False, "unit": "ks", "barcode": None,
              "price": 200.0, "price_untaxed": 178.57, "vat_rate": 12.0, "active": True},
+            {"id": ITEM2, "code": "RG2", "name": "Regleta do mínusu", "classification": "product",
+             "stock_tracked": True, "tracked_drug": False, "unit": "bal", "barcode": None,
+             "price": 100.0, "price_untaxed": 89.29, "vat_rate": 12.0, "active": True},
         ], mode="incremental")
         cls.push_raw("stock_moves", [
             # receipt in September: 10 ks at 112 Kč with VAT; WinVet left the line rate 0 - the item's
@@ -38,6 +43,13 @@ class TestStockRegleta(SaleCase):
             cls.move(I3, "out", "2026-10-12", 1, 107.69, receipt=R2, doc="SV0003"),
             # after the period: not in the October regleta
             cls.move(OTHER, "out", "2026-11-02", 1, 107.69, receipt=R1, doc="SV0004"),
+            # RG2: issued from an empty stock - WinVet's placeholder row G, cost 0, not in its stock
+            dict(cls.move(G1, "in", "2026-10-01", 1, 0.0, item=ITEM2), move_type="G", quantity=0.0, unit_price=0.0,
+                 document=None, document_type=None),
+            cls.move(I4, "out", "2026-10-01", 1, 0.0, receipt=G1, item=ITEM2),
+            # then 1 bal received and 1,5 issued: below zero in WinVet too
+            cls.move(R3, "in", "2026-10-02", 1, 112.0, rate=12.0, doc="SP0003", item=ITEM2),
+            cls.move(I5, "out", "2026-10-03", 1.5, 150.0, receipt=R3, item=ITEM2),
         ])
 
     @classmethod
@@ -49,8 +61,8 @@ class TestStockRegleta(SaleCase):
         return res
 
     @staticmethod
-    def move(ref, direction, day, qty, amount, rate=0.0, receipt=None, doc=None, item_rate=12.0):
-        return {"id": ref, "item_id": ITEM, "direction": direction, "move_type": "P" if direction == "in" else "V",
+    def move(ref, direction, day, qty, amount, rate=0.0, receipt=None, doc=None, item_rate=12.0, item=ITEM):
+        return {"id": ref, "item_id": item, "direction": direction, "move_type": "P" if direction == "in" else "V",
                 "date": day, "document": doc, "document_type": "SP" if direction == "in" else "SV",
                 "quantity": qty, "unit": "ks", "unit_price": amount / qty, "amount": amount, "vat_amount": 0.0,
                 "vat_rate": rate, "amount_includes_vat": True, "receipt_id": receipt, "item_vat_rate": item_rate}
@@ -81,9 +93,18 @@ class TestStockRegleta(SaleCase):
             self.assertAlmostEqual(row[part]["qty"], qty, msg=part)
             self.assertAlmostEqual(row[part]["net"], net, msg=part)
             self.assertAlmostEqual(row[part]["gross"], gross, msg=part)
-        self.assertEqual([d["number"] for d in r["receipts"]], ["SP0002"])
-        self.assertEqual([(v["rate"], round(v["net"], 2), v["gross"]) for v in r["vat_rows"]], [(12.0, 600.0, 672.0)])
-        self.assertEqual((r["item_rate"]["count"], r["negative"]), (0, 0))
+        self.assertEqual([d["number"] for d in r["receipts"]], ["SP0003", "SP0002"])  # by date
+        self.assertEqual([(v["rate"], round(v["net"], 2), v["gross"]) for v in r["vat_rows"]], [(12.0, 700.0, 784.0)])
+        self.assertEqual(r["item_rate"]["count"], 0)
+
+    def test_issue_from_empty_stock_and_below_zero(self):
+        """The issue from WinVet's placeholder row is left out; what is still below zero is listed."""
+        r = self.data()
+        row = next(row for g in r["groups"] for row in g["rows"] if row["code"] == "RG2")
+        self.assertAlmostEqual(row["out"]["qty"], 1.5)
+        self.assertAlmostEqual(row["closing"]["qty"], -0.5)
+        self.assertAlmostEqual(row["closing"]["net"], -50.0)
+        self.assertEqual((r["negative"], [x["code"] for x in r["negative_rows"]]), (1, ["RG2"]))
 
     def test_september_receipt_without_line_rate(self):
         r = self.data(date(2026, 9, 1), date(2026, 9, 30))
@@ -141,6 +162,8 @@ class TestStockRegleta(SaleCase):
         self.assertIn("Regleta skladu", html)
         self.assertIn("Regleta lék", html)
         self.assertIn("SP0002", html)
+        self.assertIn("4. Položky se záporným stavem", html)
+        self.assertIn('class="evr-negative"', html)
         self.assertEqual(wizard._regleta_filename(), "Regleta_skladu_2026-10-01_2026-10-31")
         with self.assertRaises(AccessError):
             self.env["elite.vet.stock.regleta.wizard"].with_user(self.reception).create({}).action_print()
