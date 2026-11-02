@@ -17,4 +17,8 @@
     .evr-summary { font-size: 8pt; }
     .evr-vat { width: 60%; }
     .evr-gross { color: #5f6368; }
+    // an item below zero: to be fixed in WinVet
+    .evr-items > tbody > tr.evr-negative > td,
+    .evr-items > tbody > tr.evr-negative > td.evr-gross { color: #b3261e; }
+    .evr-negative-list { width: 70%; }
 }

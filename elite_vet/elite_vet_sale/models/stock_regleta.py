@@ -12,6 +12,10 @@ Valuation as WinVet does it (weighted average purchase price, see winvet_bridge/
   the time of the issue - not the price of the receipt line it points to), with VAT at the item rate.
 
 With this an item that is sold out is worth 0 (checked on the WinVet data: 68 items, 0,15 Kč).
+
+An issue from an empty stock (WinVet allows it, DO_ZAPORU) draws from a placeholder row of type G
+(no document, no quantity, no price) and costs 0; WinVet leaves it out of its stock, so does the
+regleta. An item still below zero (more issued than received) is listed in the report.
 """
 from collections import defaultdict
 from datetime import date
@@ -168,6 +172,7 @@ class StockRegleta(models.AbstractModel):
     def regleta_data(self, date_from, date_to):
         Move = self.env["elite.vet.winvet.stock.move"]
         moves = Move.search([("date", "<=", date_to)])
+        placeholders = set(Move.search([("move_type", "=", "G")]).mapped("winvet_ref"))
         items = defaultdict(self._zero)
         info = {}
         receipt_docs = {}
@@ -175,6 +180,8 @@ class StockRegleta(models.AbstractModel):
         item_rate = {"count": 0, "net": 0.0}
         for m in moves:
             if not m.direction or not m.item_winvet_ref:
+                continue
+            if m.direction == "out" and m.receipt_winvet_ref in placeholders:
                 continue
             qty = m.quantity or 0.0
             net, gross = m._values()
@@ -212,6 +219,9 @@ class StockRegleta(models.AbstractModel):
                 for k in ("qty", "net", "gross"):
                     totals[part][k] += group["totals"][part][k]
         last_move = max((m.date for m in Move.search([], order="date desc", limit=1)), default=False)
+        # WinVet lets an item go below zero (more issued than received)
+        negative_rows = sorted((row for g in groups for row in g["rows"] if row["closing"]["qty"] <= -0.001),
+                               key=lambda r: (r["name"].lower(), r["code"]))
         return {
             "clinic": self.env["elite.vet.cash.closure"]._clinic(),
             "period": period_label(date_from, date_to),
@@ -219,8 +229,8 @@ class StockRegleta(models.AbstractModel):
             "groups": groups,
             "totals": totals,
             "item_count": sum(len(g["rows"]) for g in groups),
-            # WinVet lets an item go below zero (more issued than received)
-            "negative": sum(1 for g in groups for row in g["rows"] if row["closing"]["qty"] <= -0.001),
+            "negative": len(negative_rows),
+            "negative_rows": negative_rows,
             "receipts": self._receipt_rows(receipt_docs),
             "vat_rows": [dict(v, rate=rate) for rate, v in sorted(vat_rows.items())],
             "item_rate": item_rate,
