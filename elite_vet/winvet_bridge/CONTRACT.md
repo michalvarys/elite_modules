@@ -497,3 +497,20 @@ with CENA -1 559,76 Kč); Odoo values receipt lines by `quantity` x `unit_price`
 stock_moves – **replace `verified.json` together with the bridge**.
 
 Sizes v6 (analysis copy): stock_moves 2912 (811 + 17 receipt lines, 2076 issue lines, 8 opening rows).
+
+### Bridge 6.1.0: the item VAT rate (2026-11-02)
+`stock_moves` gains `item_vat_rate`: the purchase VAT rate of the item (VARIANTA.ID_DPH_NAKUP →
+DPH.DPH), its sale rate DPH_PRODEJ when not set. Older receivers ignore the key.
+
+Correction of the analysis above (copies 26. 10. and 2. 11. 2026): the receipt lines "with VAT rate
+0" are not 0 % receipts - all of them are entered with VAT (S_DPH = 'A') and WinVet itself uses the
+item's purchase rate for them (issue cost = price / (1 + item rate) in 203 of 203 checkable issues).
+And an issue's cost is not the price of its receipt line but WinVet's weighted average purchase price
+without VAT (two receipts at 38,71 and 33,29 → issues at 33,78); `receipt_id` only says which receipt
+line the quantity was taken from. Valued like that (receipts by their price and rate, issues at
+`amount`) a sold-out item is worth 0 (68 of 68 items on the 26. 10. copy, 0,15 Kč in total).
+Odoo's Regleta skladu values the stock this way since elite_vet_sale 18.0.1.4.0.
+
+Guard: the new columns are read from VARIANTA and DPH; DPH joins the `catalog` group, so the
+`catalog` fingerprint changed (re-approved for 2603: `7bc364a72e4945dd`) and a catalog change now
+blocks stock_moves too. **Replace `verified.json` together with the bridge.**

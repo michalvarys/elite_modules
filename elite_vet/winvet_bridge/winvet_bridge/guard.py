@@ -37,7 +37,7 @@ GROUP_TABLES: Dict[str, Sequence[str]] = {
     "patients": ("PACIENT", "VAKCINACE_ODCERVENI"),
     "clinical": ("PRIPAD", "DENNI_ZAZNAM", "DENNI_ZAZNAM_HODNOTA"),
     "sales": ("DOKLAD", "DOKLAD_POLOZKA_UM", "PLATBA", "TYP_DOKLADU", "DRUH_DOKLADU"),
-    "catalog": ("VARIANTA", "VARIANTA_CENIK", "KLASIFIKACE_VYROBKU", "VARIANTA_TYP", "UZIVATEL_NEW"),
+    "catalog": ("VARIANTA", "VARIANTA_CENIK", "KLASIFIKACE_VYROBKU", "VARIANTA_TYP", "UZIVATEL_NEW", "DPH"),
     "templates": ("SABLONA_VYKONU", "SABLONA_VYKONU_POLOZKA", "FRAZE"),
     "stock": ("DOKLAD_POLOZKA_SK", "VARIANTA_SKLAD_STAV"),
     # contract v4: the calendar (resources, activities, events)

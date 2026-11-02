@@ -89,6 +89,7 @@ class WinvetSync(models.AbstractModel):
                       "vat_amount": to_float(r.get("vat_amount")),
                       "vat_rate": to_float(r.get("vat_rate")),
                       "amount_includes_vat": to_bool(r.get("amount_includes_vat")),
+                      "item_vat_rate": to_float(r.get("item_vat_rate")),
                       "receipt_winvet_ref": to_int(r.get("receipt_id")) or 0})
         self._upsert("elite.vet.winvet.stock.move", vals, stats, errors)
 

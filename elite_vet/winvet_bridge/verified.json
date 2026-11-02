@@ -2,14 +2,14 @@
   "comment": "WinVet versions verified for the bridge: version -> schema fingerprints per group. Update with 'python -m winvet_bridge approve --yes' after checking a new WinVet version.",
   "versions": {
     "2603": {
-      "approved": "2026-11-01 14:41:15",
+      "approved": "2026-11-02 16:23:57",
       "calendar_approved": "2026-10-25 (contract v4, analysis copy)",
       "deposits_approved": "2026-10-27 (contract v5: deposits group, sales + DOKLAD.FORMA_UHRADY, journal + PARTNER_ZALOHA triggers; analysis copy)",
       "stock_moves_approved": "2026-11-01 (contract v6: stock group + DOKLAD_POLOZKA_SK movement columns; analysis copy)",
       "engine": "5.0.1",
       "fingerprints": {
         "calendar": "df31de3832520240",
-        "catalog": "cac72032339edbfa",
+        "catalog": "7bc364a72e4945dd",
         "clinical": "15d972323c953af3",
         "deposits": "332c71f2ff192fe8",
         "journal": "bd584dd4978d39b4",
@@ -19,7 +19,8 @@
         "stock": "d0d0e586f88432b0",
         "templates": "e0b7163e7162f167"
       },
-      "ods": "13.1"
+      "ods": "13.1",
+      "stock_moves_item_vat_approved": "2026-11-02 (bridge 6.1.0: stock_moves reads VARIANTA.ID_DPH_NAKUP and DPH.DPH; DPH joins the catalog group; analysis copy)"
     }
   }
 }

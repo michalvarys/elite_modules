@@ -107,16 +107,21 @@ skutečné chyby jiných oblastí.
 
 WinVet data → Regleta skladu (jen vedení): za zvolené období po položkách počáteční stav, příjem,
 výdej a konečný stav – množství a nákupní cena bez DPH i s DPH; příjemky v období s dodavatelem,
-rekapitulace DPH příjmu a souhrn po skupinách. Data: pohyby skladu z mostu 6.0.0 (kontrakt v6,
+rekapitulace DPH příjmu a souhrn po skupinách. Data: pohyby skladu z mostu 6.0.0+ (kontrakt v6,
 `stock_moves` → `elite.vet.winvet.stock.move`), staré jako poslední záloha WinVetu.
 
-Ocenění podle příjemky (`models/stock_regleta.py`): příjem = množství × cena za MJ z řádku příjemky,
-bez DPH / s DPH podle sazby řádku; výdej = množství × cena té příjemky, ze které se vydalo (WinVet
-ji u výdeje vede). Hodnota skladu ve WinVetu se liší – WinVet přičítá příjem s DPH, ale odečítá
-výdej bez DPH. Příjemky se sazbou 0 % se berou, jak jsou zadané, a v sestavě jsou označené `*`.
-Pole DPH řádku (CENA_DPH) a celková cena záporných příjmových řádků jsou ve WinVetu místy chybné,
-proto se nepoužívají. Na kopii WinVetu k 26. 10. 2026 dává konečný stav 460 955 Kč bez DPH
-(ocenění šarží stejnou cenou 460 817 Kč; rozdíl jsou zaokrouhlené zbytky dílčích balení).
+Ocenění jako ve WinVetu (`models/stock_regleta.py`): příjem = množství × cena za MJ z řádku příjemky,
+bez DPH / s DPH podle sazby řádku – když ji WinVet nevyplnil (u části příjemek zadaných s DPH), podle
+nákupní sazby položky (most 6.1.0; se starším mostem prodejní sazba položky, bez sazby léky a zboží
+12 %, ostatní 21 %); výdej = nákladová cena WinVetu (vážená průměrná nákupní cena bez DPH), s DPH
+podle sazby položky. Vyprodaná položka tak má hodnotu 0. Pole DPH řádku (CENA_DPH) a celková cena
+záporných příjmových řádků jsou ve WinVetu místy chybné, proto se nepoužívají. Hodnota skladu ve
+WinVetu se liší – WinVet přičítá příjem s DPH, ale odečítá výdej bez DPH.
+
+Ověřeno na záloze WinVetu z 2. 11. 2026 (4 439 pohybů): říjen počáteční stav 339 309 / 387 891 Kč,
+konečný 467 887 / 536 809 Kč (bez / s DPH); konečné množství souhlasí s WinVetem u 541 z 549
+položek. Zbytková hodnota vyprodaných položek je −872 Kč u 4 položek s chybou přímo ve WinVetu
+(řádek příjemky s cenou 0, inventurní příjem za 1,12 Kč).
 
 ## Účet z karty pacienta → nabídka
 

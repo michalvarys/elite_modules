@@ -1,21 +1,17 @@
 """Regleta skladu (PDF): opening stock, receipts, issues and closing stock of a period, per item,
 from the WinVet stock movements (contract v6: stock_moves) – for the accountant.
 
-Valuation: by the receipt line. WinVet keeps the receipt price as entered (with VAT) but issues at a
-net cost of its own, so its stock value keeps the VAT of the receipts (see winvet_bridge/CONTRACT.md,
-contract v6). Here every receipt line gets a value without and with VAT from its quantity x unit
-price (the line total CENA is wrong on some negative receipt lines – returns) and VAT rate:
+Valuation as WinVet does it (weighted average purchase price, see winvet_bridge/CONTRACT.md):
 
-* price entered with VAT: with VAT = the value, without VAT = value / (1 + rate);
-* price entered without VAT: without VAT = the value, with VAT = value * (1 + rate);
+* a receipt line is worth quantity x unit price (the line total CENA is wrong on some negative
+  receipt lines - returns); entered with VAT: without VAT = value / (1 + rate), entered without VAT:
+  with VAT = value * (1 + rate). The rate is the rate of the line, or - WinVet leaves it 0 on many
+  receipts entered with VAT - the purchase VAT rate of the item, which WinVet then uses itself
+  (the VAT amount of the line, CENA_DPH, is not used: on some lines it is rate x the price with VAT);
+* an issue is worth WinVet's own cost of the line (CENA, without VAT: the average purchase price at
+  the time of the issue - not the price of the receipt line it points to), with VAT at the item rate.
 
-(the VAT amount of the line, CENA_DPH, is not used: on some lines WinVet computes it as rate x the
-price with VAT - 36 Kč of 300 Kč at 12 % instead of 32,14 Kč);
-
-and every issue is valued by the receipt line it was issued from (WinVet links each issue to it):
-quantity x that unit price. What comes in leaves at the same price. An issue without a known
-receipt line falls back to WinVet's own (net) cost. Receipt lines entered at VAT rate 0 are taken
-as entered and listed in the report.
+With this an item that is sold out is worth 0 (checked on the WinVet data: 68 items, 0,15 Kč).
 """
 from collections import defaultdict
 from datetime import date
@@ -30,6 +26,9 @@ from odoo.addons.elite_vet_winvet.models.cash_closure import money, period_label
 MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
 KIND_ROWS = [("product", "Léky a zboží"), ("service", "Úkony"), ("other", "Ostatní")]
 EPS = 0.0005
+# an item without any VAT rate in WinVet: goods (medicines) 12 %, the rest 21 %
+DEFAULT_RATES = {"product": 12.0}
+DEFAULT_RATE = 21.0
 PARTS = ("opening", "in", "out", "closing")
 
 
@@ -77,16 +76,28 @@ class WinvetStockMove(models.Model):
     vat_amount = fields.Float(string="DPH", readonly=True)
     vat_rate = fields.Float(string="Sazba DPH (%)", readonly=True)
     amount_includes_vat = fields.Boolean(string="Částka s DPH", readonly=True)
+    item_vat_rate = fields.Float(string="Nákupní sazba DPH položky (%)", readonly=True,
+                                 help="Z WinVetu (most 6.1.0); použije se, když řádek nemá sazbu.")
     receipt_winvet_ref = fields.Integer(string="WinVet ID příjmu", index=True, readonly=True,
                                         help="U výdeje řádek příjemky, ze kterého se vydalo.")
 
     _sql_constraints = [("winvet_ref_unique", "unique(winvet_ref)", "Pohyb WinVetu už existuje.")]
 
-    def _receipt_values(self):
-        """(value without VAT, value with VAT) of a receipt line: quantity x unit price and VAT rate."""
+    def _rate(self):
+        """VAT rate of the line, else the purchase rate of the item (else its sale rate: older bridge),
+        else the default of its kind."""
         self.ensure_one()
+        return self.vat_rate or self.item_vat_rate or self.item_id.vat_rate or \
+            DEFAULT_RATES.get(self.item_id.kind, DEFAULT_RATE)
+
+    def _values(self):
+        """(value without VAT, value with VAT) of the line, positive for receipts and issues."""
+        self.ensure_one()
+        factor = 1.0 + self._rate() / 100.0
+        if self.direction == "out":
+            net = self.amount or 0.0
+            return net, net * factor
         amount = (self.quantity or 0.0) * (self.unit_price or 0.0) if self.unit_price else (self.amount or 0.0)
-        factor = 1.0 + (self.vat_rate or 0.0) / 100.0
         if self.amount_includes_vat:
             return amount / factor, amount
         return amount, amount * factor
@@ -157,33 +168,16 @@ class StockRegleta(models.AbstractModel):
     def regleta_data(self, date_from, date_to):
         Move = self.env["elite.vet.winvet.stock.move"]
         moves = Move.search([("date", "<=", date_to)])
-        receipts = {m.winvet_ref: m for m in Move.search([("direction", "=", "in")])}
-        unit_prices = {}
-        for ref, rec in receipts.items():
-            net, gross = rec._receipt_values()
-            qty = rec.quantity or 0.0
-            unit_prices[ref] = (net / qty, gross / qty) if qty else (0.0, 0.0)
-
         items = defaultdict(self._zero)
         info = {}
         receipt_docs = {}
         vat_rows = defaultdict(lambda: {"net": 0.0, "vat": 0.0, "gross": 0.0})
-        zero_vat = {"count": 0, "net": 0.0}
-        no_receipt = {"count": 0, "net": 0.0}
+        item_rate = {"count": 0, "net": 0.0}
         for m in moves:
             if not m.direction or not m.item_winvet_ref:
                 continue
             qty = m.quantity or 0.0
-            if m.direction == "in":
-                net, gross = m._receipt_values()
-            else:
-                prices = unit_prices.get(m.receipt_winvet_ref)
-                if prices:
-                    net, gross = qty * prices[0], qty * prices[1]
-                else:
-                    # no receipt line known: WinVet's own cost (net), VAT rate of the item
-                    net = m.amount or 0.0
-                    gross = net * (1.0 + (m.item_id.vat_rate or 0.0) / 100.0)
+            net, gross = m._values()
             key = m.item_winvet_ref
             info.setdefault(key, m)
             row = items[key]
@@ -193,23 +187,19 @@ class StockRegleta(models.AbstractModel):
                 self._add(row["opening"], sign, qty, net, gross)
             else:
                 self._add(row[m.direction], 1, qty, net, gross)
-                if m.direction == "out" and not unit_prices.get(m.receipt_winvet_ref):
-                    no_receipt["count"] += 1
-                    no_receipt["net"] += net
                 if m.direction == "in" and (m.amount or m.quantity):
-                    rate = m.vat_rate or 0.0
+                    rate = m._rate()
                     vat_rows[rate]["net"] += net
                     vat_rows[rate]["vat"] += gross - net
                     vat_rows[rate]["gross"] += gross
-                    if not rate and m.amount:
-                        zero_vat["count"] += 1
-                        zero_vat["net"] += net
+                    if not m.vat_rate and rate and m.amount:
+                        item_rate["count"] += 1
+                        item_rate["net"] += net
                     doc = receipt_docs.setdefault(m.document or "", {
                         "number": m.document or _("bez dokladu"), "date": m.date, "net": 0.0, "gross": 0.0,
-                        "zero_vat": False, "layers": []})
+                        "layers": []})
                     doc["net"] += net
                     doc["gross"] += gross
-                    doc["zero_vat"] = doc["zero_vat"] or (not rate and bool(m.amount))
                     doc["layers"].append(m.winvet_ref)
             row["closing"]["qty"] = row["opening"]["qty"] + row["in"]["qty"] - row["out"]["qty"]
             row["closing"]["net"] = row["opening"]["net"] + row["in"]["net"] - row["out"]["net"]
@@ -233,8 +223,7 @@ class StockRegleta(models.AbstractModel):
             "negative": sum(1 for g in groups for row in g["rows"] if row["closing"]["qty"] <= -0.001),
             "receipts": self._receipt_rows(receipt_docs),
             "vat_rows": [dict(v, rate=rate) for rate, v in sorted(vat_rows.items())],
-            "zero_vat": zero_vat,
-            "no_receipt": no_receipt,
+            "item_rate": item_rate,
             "last_move": last_move,
             "check": self._check_winvet(items, date_to, last_move),
             "has_data": bool(Move.search_count([])),
@@ -272,8 +261,7 @@ class StockRegleta(models.AbstractModel):
         for doc in docs.values():
             supplier = next((suppliers[r] for r in doc["layers"] if suppliers.get(r)), "")
             rows.append({"number": doc["number"], "date": doc["date"], "supplier": supplier or "",
-                         "net": doc["net"], "vat": doc["gross"] - doc["net"], "gross": doc["gross"],
-                         "zero_vat": doc["zero_vat"]})
+                         "net": doc["net"], "vat": doc["gross"] - doc["net"], "gross": doc["gross"]})
         return sorted(rows, key=lambda r: (r["date"] or date.min, r["number"]))
 
     def _check_winvet(self, items, date_to, last_move):
