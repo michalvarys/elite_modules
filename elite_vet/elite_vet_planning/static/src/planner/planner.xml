@@ -64,7 +64,7 @@
                                                     t-on-click="() => this.openCell(row, slot, day)">
                                                     <t t-foreach="items" t-as="shift" t-key="shift.id">
                                                         <t t-set="conflict" t-value="chipConflict(shift)"/>
-                                                        <span t-attf-class="evp-chip #{conflict ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''}" t-att-style="chipStyle(shift)"
+                                                        <span t-attf-class="evp-chip #{conflict or notBooked(shift) ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''}" t-att-style="chipStyle(shift)"
                                                               t-att-title="chipTitle(shift)">
                                                             <t t-esc="chipLabel(shift)"/>
                                                             <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
@@ -211,6 +211,10 @@
                                 <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.removeShift(shift)">Smazat</button>
                             </div>
                             <div t-if="chipConflict(shift)" class="evp-warn" t-esc="chipConflict(shift)"/>
+                            <div t-if="shift.booking and shift.booking.ok !== null"
+                                 t-attf-class="evp-booking #{shift.booking.ok ? 'evp-booking-ok' : 'evp-warn'}">
+                                <t t-if="shift.booking.ok">✓ </t><t t-esc="shift.booking.text"/>
+                            </div>
                         </t>
                     </div>
                     <div class="evp-times">
