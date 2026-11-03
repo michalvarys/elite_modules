@@ -82,6 +82,7 @@ class ReceptionBoard(models.AbstractModel):
             "time_label": "%s–%s" % (local_time(reservation.start), local_time(reservation.stop)),
             "room_id": reservation.room_id.id or None,
             "room": reservation.room_id.name or None,
+            "title": reservation.title or None,
             "procedure_id": reservation.procedure_id.id or None,
             "procedure": reservation.procedure_id.with_context(lang=lang).name or None,
             "doctor_id": reservation.doctor_id.id or None,

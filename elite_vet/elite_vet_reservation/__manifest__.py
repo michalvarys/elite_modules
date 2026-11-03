@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Rezervace",
-    "version": "18.0.2.17.1",
+    "version": "18.0.2.19.0",
     "category": "Website",
     "summary": "Rezervacni kalendar kliniky: ordinace, ukony, rozpis lekaru, online rezervace.",
     "description": """
@@ -40,6 +40,7 @@ bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
         "views/menus.xml",
         "views/booking_page.xml",
         "views/rozpis_page.xml",
+        "data/procedure_data.xml",
         "data/mail_templates.xml",
         "data/cron.xml",
     ],

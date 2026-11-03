@@ -65,6 +65,19 @@ class TestBoard(ReceptionCase):
         self.assertEqual(data["visit_label"], "Čeká")
         self.assertFalse(data["can_check_in"] or data["can_move"] or data["can_cancel"])
 
+    def test_detail_and_board_show_the_description(self):
+        """Request 3. 11. (Lucie): the Popis was in the name only, the board and its detail lost it."""
+        res = self.board_res(10, 0, pet=self.new_pet("Popisový"))
+        api = self.api(self.reception)
+        self.assertIsNone(api.board_reservation(res.id)["title"])
+        res.title = "Přivézt výsledky"
+        self.assertEqual(api.board_reservation(res.id)["title"], "Přivézt výsledky")
+        day = res.start.strftime("%Y-%m-%d")
+        event = next(e for e in self.env["elite.vet.reservation"].with_user(self.reception).board_data(day)["events"] if e["id"] == res.id)
+        self.assertEqual(event["title"], "Přivézt výsledky")
+        row = next(r for r in api.today_data()["arriving"] if r["reservation_id"] == res.id)
+        self.assertEqual(row["title"], "Přivézt výsledky", "the Dnes list of the till too")
+
     def test_detail_of_a_web_reservation_without_pet(self):
         res = self.board_res(9, 30, source="web", contact_name="Webová Tabule", pet_name="Neznámý")
         data = self.api(self.reception).board_reservation(res.id)

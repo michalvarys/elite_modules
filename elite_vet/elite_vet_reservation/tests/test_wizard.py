@@ -113,6 +113,57 @@ class TestReservationWizard(ReservationCase):
         r.title = False
         self.assertEqual(r.name, "Jana Popisová / %s" % self.vacc.name)
 
+    # ---------- request 3. 11. (Lucie): the procedure is optional, an empty one is Jiné ----------
+    def test_wizard_without_procedure_books_other(self):
+        other = self.env.ref("elite_vet_reservation.procedure_other")
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.W.with_user(self.reception).create({"date": self.day, "title": "Zavolá, co mu je"})
+        self.assertEqual(w.duration, other.duration, "Jiné's duration until a procedure is picked")
+        self.assertIn(self.dr_a, w.allowed_doctor_ids)
+        w.duration = 45
+        w.action_step_time()
+        self.assertEqual(w.procedure_id, other)
+        self.assertEqual(w.duration, 45, "a typed duration wins over Jiné's")
+        w.slot_ids.filtered(lambda ln: ln.minute == 9 * 60)[:1].action_select()
+        self.fill_new_client(w)
+        w.action_step_summary()
+        w.action_save()
+        r = self.env["elite.vet.reservation"].search([("title", "=", "Zavolá, co mu je")])
+        self.assertEqual(r.procedure_id, other)
+        self.assertEqual(r.duration_minutes, 45)
+
+    def test_reservation_without_procedure_gets_other(self):
+        other = self.env.ref("elite_vet_reservation.procedure_other")
+        r = self.reservation(procedure_id=False, start=self.dt(self.day, 11, 0), stop=False)
+        self.assertEqual(r.procedure_id, other)
+        self.assertEqual(r.duration_minutes, other.duration)
+        r.procedure_id = self.vacc
+        r.procedure_id = False
+        self.assertEqual(r.procedure_id, other, "a procedure cleared in the form is Jiné too")
+        block = self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Porada", "block_scope": "full", "room_id": self.room1.id,
+            "start": self.dt(self.day, 13, 0), "stop": self.dt(self.day, 14, 0)})
+        self.assertFalse(block.procedure_id, "a block has no procedure")
+
+    def test_pet_name_and_species_follow_the_selected_pet(self):
+        """Request 3. 11. (Lucie): a selected pet is the source of its name and species."""
+        partner = self.env["res.partner"].create({"name": "Majitel Mazlíčka"})
+        pet = self.env["elite.vet.pet"].create({"name": "Bára", "partner_id": partner.id, "species": "cat"})
+        r = self.reservation(start=self.dt(self.day, 9, 0), partner_id=partner.id, pet_id=pet.id,
+                             pet_name=False, pet_species=False)
+        self.assertEqual((r.pet_name, r.pet_species), ("Bára", "cat"))
+        pet.write({"name": "Barunka", "species": "dog"})
+        self.assertEqual((r.pet_name, r.pet_species), ("Barunka", "dog"))
+        typed = self.reservation(start=self.dt(self.day, 10, 0), pet_name="Ťapka", pet_species="rabbit")
+        self.assertEqual((typed.pet_name, typed.pet_species), ("Ťapka", "rabbit"), "without a pet: as typed")
+        typed.pet_id = pet
+        self.assertEqual(typed.pet_name, "Barunka")
+
+    def test_form_pet_fields_read_only_with_a_pet(self):
+        arch = self.env["elite.vet.reservation"].get_view(view_type="form")["arch"]
+        for name in ("pet_name", "pet_species"):
+            self.assertIn('name="%s" readonly="pet_id"' % name, arch)
+
     def test_custom_duration_limits_slots_and_sets_stop(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
         # Busy from 10:15: 10:00 fits for 15 min, not for 45 min.
@@ -361,7 +412,10 @@ class TestReservationWizard(ReservationCase):
         with self.assertRaises(ValidationError):
             w.action_save()
 
-    def test_procedure_required(self):
+    def test_procedure_required_only_without_other(self):
+        """An empty procedure is Jiné (request 3. 11.); only a database without Jiné asks for one."""
+        self.env["ir.model.data"].search([
+            ("module", "=", "elite_vet_reservation"), ("name", "=", "procedure_other")]).unlink()
         w = self.W.create({"date": self.day})
         with self.assertRaises(UserError):
             w.action_step_time()

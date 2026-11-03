@@ -318,10 +318,12 @@ export class BoardDialog extends Component {
         if (e.kind === "block") {
             return e.name;
         }
-        if (e.pet && e.owner) {
-            return `${e.pet} (${e.owner})`;
+        const who = e.pet && e.owner ? `${e.pet} (${e.owner})` : e.pet || e.owner;
+        // Popis of reception (request 1. 11.) leads, like in the reservation name.
+        if (e.title) {
+            return who ? `${e.title} · ${who}` : e.title;
         }
-        return e.pet || e.owner || e.name;
+        return who || e.name;
     }
 
     eventTitle(e) {

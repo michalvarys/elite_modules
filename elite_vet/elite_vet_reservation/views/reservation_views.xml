@@ -57,7 +57,7 @@
                     <group>
                         <group string="Termín">
                             <field name="title" invisible="kind == 'block'" placeholder="Nepovinné – ukáže se v kalendáři"/>
-                            <field name="procedure_id" invisible="kind == 'block'" required="kind == 'reservation'"/>
+                            <field name="procedure_id" invisible="kind == 'block'" placeholder="Nepovinné – prázdné uloží Jiné"/>
                             <field name="block_reason" invisible="kind == 'reservation'" required="kind == 'block'"/>
                             <field name="block_scope" widget="radio" invisible="kind != 'block'" required="kind == 'block'"/>
                             <field name="room_id" required="kind == 'reservation' and state in ('confirmed', 'done')"
@@ -107,12 +107,13 @@
                         </group>
                         <group string="Klient" invisible="kind == 'block'">
                             <field name="partner_id"/>
-                            <field name="pet_id"/>
                             <field name="contact_name"/>
                             <field name="contact_email" widget="email"/>
                             <field name="contact_phone" widget="phone"/>
-                            <field name="pet_name"/>
-                            <field name="pet_species"/>
+                            <field name="pet_id"/>
+                            <!-- with a pet selected: from its card, read-only -->
+                            <field name="pet_name" readonly="pet_id" force_save="1"/>
+                            <field name="pet_species" readonly="pet_id" force_save="1"/>
                             <field name="lang" invisible="1"/>
                         </group>
                     </group>
