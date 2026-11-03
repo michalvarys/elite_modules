@@ -8,7 +8,7 @@ Nic nového vedle rozpisu nevzniká: každé přiřazení v plánu je směna v R
 
 | Menu | Kdo | Co |
 |---|---|---|
-| Rozpis služeb › Plánování | Správce rozpisu | Rozpis místností (měsíc × úseky), Požadavky na směny, bilance hodin, export CSV, tisk |
+| Rozpis služeb › Plánování | Správce rozpisu | Rozpis místností (měsíc × úseky) s panelem Požadavky na směny nad ním, bilance hodin, export CSV, tisk |
 | Rozpis služeb › Personál | Správce rozpisu | role, zkratka, úvazek, barva, dovolená, účet |
 | Rozpis služeb › Dostupnost a absence | Správce rozpisu | seznam všech záznamů (filtry Absence, Dovolená) |
 | Rozpis služeb › Úseky plánu | Správce rozpisu | úseky (Recepce, Ordinace 1, …), jejich směny a časy, ordinace v rezervacích |

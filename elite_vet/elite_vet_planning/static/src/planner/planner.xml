@@ -8,16 +8,10 @@
                     <span class="btn btn-light evp-month" t-esc="monthLabel"/>
                     <button class="btn btn-secondary" t-on-click="() => this.goMonth(1)" title="Další měsíc">›</button>
                 </div>
-                <div class="btn-group evp-tabs">
-                    <button t-attf-class="btn #{state.tab === 'rooms' ? 'btn-primary' : 'btn-secondary'}"
-                            t-on-click="() => this.setTab('rooms')">Rozpis místností</button>
-                    <button t-attf-class="btn #{state.tab === 'requests' ? 'btn-primary' : 'btn-secondary'}"
-                            t-on-click="() => this.setTab('requests')">Požadavky na směny</button>
-                </div>
                 <div class="evp-tools">
                     <span t-if="state.busy" class="text-muted evp-saving">Ukládání…</span>
                     <span t-else="" class="text-muted evp-saving">Všechny změny uloženy</span>
-                    <button t-if="state.data and state.tab === 'rooms' and assignmentCount" class="btn btn-warning"
+                    <button t-if="state.data and assignmentCount" class="btn btn-warning"
                             t-on-click="adoptAssignments"
                             title="Služby zadané v Rezervace › Rozpis lékařů převede na směny v rozpisu, dál se plánují tady">
                         Převzít služby z Rozpisu lékařů (<t t-esc="assignmentCount"/>)
@@ -31,134 +25,118 @@
             <div t-if="state.data" class="evp-body">
                 <h2 class="evp-print-title">Rozpis služeb – <t t-esc="monthLabel"/></h2>
 
-                <!-- ================= Rozpis místností ================= -->
-                <t t-if="state.tab === 'rooms'">
-                    <!-- Požadavky na směny above the plan (Lucie, 3. 11.): resizable by the bottom edge,
-                         scrolls inside, day columns aligned and scrolled together with the plan. -->
-                    <div class="evp-req-panel">
-                        <div class="evp-req-panel-head">
-                            <button class="btn btn-sm btn-link" t-on-click="toggleRequests">
-                                <t t-esc="state.reqOpen ? '▾' : '▸'"/> Požadavky na směny
-                            </button>
-                            <small t-if="state.reqOpen" class="text-muted">Klik nebo písmeno v buňce (D, N, L, P, S, M, R, O, V, Del) · velikost změníte tažením za spodní okraj</small>
+                <!-- Požadavky na směny above the plan (Lucie, 3. 11.): resizable by the bottom edge,
+                     scrolls inside, day columns aligned and scrolled together with the plan. -->
+                <div class="evp-req-panel">
+                    <div class="evp-req-panel-head">
+                        <button class="btn btn-sm btn-link" t-on-click="toggleRequests">
+                            <t t-esc="state.reqOpen ? '▾' : '▸'"/> Požadavky na směny
+                        </button>
+                        <small t-if="state.reqOpen" class="text-muted">Klik nebo písmeno v buňce (D, N, L, P, S, M, R, O, V, Del) · tečka = zadal(a) si sám/sama · velikost změníte tažením za spodní okraj</small>
+                    </div>
+                    <t t-if="state.reqOpen">
+                        <div class="evp-scroll evp-req-scroll" t-ref="reqScroll" t-att-style="'height:' + state.reqHeight + 'px'"
+                             t-on-scroll="onReqScroll">
+                            <t t-call="elite_vet_planning.PlannerRequestsTable"/>
                         </div>
-                        <t t-if="state.reqOpen">
-                            <div class="evp-scroll evp-req-scroll" t-ref="reqScroll" t-att-style="'height:' + state.reqHeight + 'px'"
-                                 t-on-scroll="onReqScroll">
-                                <t t-call="elite_vet_planning.PlannerRequestsTable"/>
-                            </div>
-                            <div class="evp-resize" title="Táhnutím zvětšíte nebo zmenšíte" t-on-pointerdown="startResize"/>
-                        </t>
-                    </div>
-                    <div class="evp-scroll" t-ref="gridScroll" t-on-scroll="onGridScroll">
-                        <table class="evp-grid">
-                            <thead>
-                                <tr>
-                                    <th class="evp-head-row">Úsek / směna</th>
-                                    <t t-foreach="days" t-as="day" t-key="day.date">
-                                        <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
-                                            <div class="evp-day-num" t-esc="day.day"/>
-                                            <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
-                                            <div t-if="day.note" class="evp-day-note" t-att-title="day.note" t-esc="day.note"/>
-                                            <button t-if="day.weekday === 0" class="evp-copy" title="Zkopírovat sem směny z předchozího týdne"
-                                                    t-on-click="(ev) => this.copyWeek(day, ev)">⧉</button>
-                                        </th>
-                                    </t>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="state.data.rows" t-as="row" t-key="row.id">
-                                    <t t-foreach="row.slots" t-as="slot" t-key="slot.id">
-                                        <tr t-attf-class="#{slot_first ? 'evp-row-first' : ''} evp-kind-#{row.kind}">
-                                            <th class="evp-head-row">
-                                                <span t-if="slot_first" class="evp-row-name" t-esc="row.name"/>
-                                                <span class="evp-slot-name"><t t-esc="slot.name"/> <small t-esc="slot.time"/></span>
-                                            </th>
-                                            <t t-foreach="days" t-as="day" t-key="day.date">
-                                                <t t-set="applies" t-value="slotApplies(slot, day)"/>
-                                                <t t-set="items" t-value="cellShifts(slot, day)"/>
-                                                <td t-att-class="dayClass(day, 'evp-cell' + (applies ? '' : ' evp-off'))"
-                                                    t-on-click="() => this.openCell(row, slot, day)">
-                                                    <t t-foreach="items" t-as="shift" t-key="shift.id">
-                                                        <t t-set="conflict" t-value="chipConflict(shift)"/>
-                                                        <span t-attf-class="evp-chip #{conflict or notBooked(shift) ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''}" t-att-style="chipStyle(shift)"
-                                                              t-att-title="chipTitle(shift)">
-                                                            <t t-esc="chipLabel(shift)"/>
-                                                            <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
-                                                            <button class="evp-x" title="Odebrat" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
-                                                        </span>
-                                                    </t>
-                                                </td>
-                                            </t>
-                                        </tr>
-                                    </t>
+                        <div class="evp-resize" title="Táhnutím zvětšíte nebo zmenšíte" t-on-pointerdown="startResize"/>
+                    </t>
+                </div>
+                <div class="evp-scroll" t-ref="gridScroll" t-on-scroll="onGridScroll">
+                    <table class="evp-grid">
+                        <thead>
+                            <tr>
+                                <th class="evp-head-row">Úsek / směna</th>
+                                <t t-foreach="days" t-as="day" t-key="day.date">
+                                    <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
+                                        <div class="evp-day-num" t-esc="day.day"/>
+                                        <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
+                                        <div t-if="day.note" class="evp-day-note" t-att-title="day.note" t-esc="day.note"/>
+                                        <button t-if="day.weekday === 0" class="evp-copy" title="Zkopírovat sem směny z předchozího týdne"
+                                                t-on-click="(ev) => this.copyWeek(day, ev)">⧉</button>
+                                    </th>
                                 </t>
-                                <tr class="evp-row-first evp-absence-row">
-                                    <th class="evp-head-row"><span class="evp-row-name">Absence</span>
-                                        <span class="evp-slot-name"><small>D · NV · L · PN · Š</small></span></th>
-                                    <t t-foreach="days" t-as="day" t-key="day.date">
-                                        <td t-att-class="dayClass(day, 'evp-cell evp-absences')">
-                                            <t t-foreach="absencesOn(day)" t-as="r" t-key="r.member_id">
-                                                <span class="evp-abs" t-att-title="(staffById[r.member_id].name) + (r.note ? ' – ' + r.note : '')">
-                                                    <t t-esc="staffById[r.member_id].initials"/> <b t-esc="r.short"/>
-                                                </span>
-                                            </t>
-                                        </td>
-                                    </t>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 class="evp-h3">Bilance hodin</h3>
-                    <div class="evp-scroll">
-                        <table class="evp-balance">
-                            <thead>
-                                <tr>
-                                    <th>Jméno</th><th>Úvazek</th><th>Fond</th><th>Odpracováno</th><th>Ranní</th>
-                                    <th>Odpolední</th><th>Celodenní (12 h)</th><th>Víkendy</th><th>Absence</th><th>Saldo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="state.data.staff" t-as="m" t-key="m.id">
-                                    <t t-set="b" t-value="balance(m)"/>
-                                    <tr>
-                                        <td><span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/> <t t-esc="m.name"/></td>
-                                        <td><t t-esc="fmt(m.weekly_hours)"/> h/t</td>
-                                        <td><t t-esc="fmt(b.fond)"/> h</td>
-                                        <td t-att-title="'Směny ' + fmt(b.shift_hours) + ' h + D/L/Š ' + fmt(b.credited) + ' h'"><t t-esc="fmt(b.worked)"/> h</td>
-                                        <td t-esc="b.morning"/>
-                                        <td t-esc="b.afternoon"/>
-                                        <td t-esc="b.full_day"/>
-                                        <td><t t-esc="b.weekend"/> <small class="text-muted" t-if="b.weekend">(<t t-esc="fmt(b.weekend_hours)"/> h)</small></td>
-                                        <td t-esc="absenceText(m)"/>
-                                        <td t-attf-class="evp-saldo #{b.saldo &gt; 0.05 ? 'evp-plus' : (b.saldo &lt; -0.05 ? 'evp-minus' : '')}">
-                                            <t t-if="b.saldo &gt; 0.05">+</t><t t-esc="fmt(b.saldo)"/> h
-                                        </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.data.rows" t-as="row" t-key="row.id">
+                                <t t-foreach="row.slots" t-as="slot" t-key="slot.id">
+                                    <tr t-attf-class="#{slot_first ? 'evp-row-first' : ''} evp-kind-#{row.kind}">
+                                        <th class="evp-head-row">
+                                            <span t-if="slot_first" class="evp-row-name" t-esc="row.name"/>
+                                            <span class="evp-slot-name"><t t-esc="slot.name"/> <small t-esc="slot.time"/></span>
+                                        </th>
+                                        <t t-foreach="days" t-as="day" t-key="day.date">
+                                            <t t-set="applies" t-value="slotApplies(slot, day)"/>
+                                            <t t-set="items" t-value="cellShifts(slot, day)"/>
+                                            <td t-att-class="dayClass(day, 'evp-cell' + (applies ? '' : ' evp-off'))"
+                                                t-on-click="() => this.openCell(row, slot, day)">
+                                                <t t-foreach="items" t-as="shift" t-key="shift.id">
+                                                    <t t-set="conflict" t-value="chipConflict(shift)"/>
+                                                    <span t-attf-class="evp-chip #{conflict or notBooked(shift) ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''}" t-att-style="chipStyle(shift)"
+                                                          t-att-title="chipTitle(shift)">
+                                                        <t t-esc="chipLabel(shift)"/>
+                                                        <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
+                                                        <button class="evp-x" title="Odebrat" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
+                                                    </span>
+                                                </t>
+                                            </td>
+                                        </t>
                                     </tr>
                                 </t>
-                            </tbody>
-                        </table>
-                    </div>
-                    <p class="evp-help text-muted">
-                        Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna v jeden den se počítá jednou
-                        (8–16 + 12–20 = 12 h, celodenní). D, L a Š se počítají jako odpracovaný den, NV a PN ne.
-                        Služby lékařek v úsecích s ordinací se samy propisují do kalendáře rezervací.
-                    </p>
-                </t>
+                            </t>
+                            <tr class="evp-row-first evp-absence-row">
+                                <th class="evp-head-row"><span class="evp-row-name">Absence</span>
+                                    <span class="evp-slot-name"><small>D · NV · L · PN · Š</small></span></th>
+                                <t t-foreach="days" t-as="day" t-key="day.date">
+                                    <td t-att-class="dayClass(day, 'evp-cell evp-absences')">
+                                        <t t-foreach="absencesOn(day)" t-as="r" t-key="r.member_id">
+                                            <span class="evp-abs" t-att-title="(staffById[r.member_id].name) + (r.note ? ' – ' + r.note : '')">
+                                                <t t-esc="staffById[r.member_id].initials"/> <b t-esc="r.short"/>
+                                            </span>
+                                        </t>
+                                    </td>
+                                </t>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-                <!-- ================= Požadavky na směny ================= -->
-                <t t-if="state.tab === 'requests'">
-                    <p class="evp-help text-muted">
-                        Klikněte na buňku, nebo do ní napište: <b>D</b> dovolená, <b>N</b> náhradní volno, <b>L</b> lékař,
-                        <b>P</b> nemoc, <b>S</b> školení, <b>M</b> může, <b>R</b> jen ráno, <b>O</b> jen odpoledne,
-                        <b>V</b> volno / nemůže, <b>Del</b> nebo <b>Backspace</b> vymaže. Šipkami se pohybujete po tabulce.
-                        Tečka u záznamu = zadal(a) si sám/sama v Moje dostupnost.
-                    </p>
-                    <div class="evp-scroll">
-                        <t t-call="elite_vet_planning.PlannerRequestsTable"/>
-                    </div>
-                </t>
+                <h3 class="evp-h3">Bilance hodin</h3>
+                <div class="evp-scroll">
+                    <table class="evp-balance">
+                        <thead>
+                            <tr>
+                                <th>Jméno</th><th>Úvazek</th><th>Fond</th><th>Odpracováno</th><th>Ranní</th>
+                                <th>Odpolední</th><th>Celodenní (12 h)</th><th>Víkendy</th><th>Absence</th><th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.data.staff" t-as="m" t-key="m.id">
+                                <t t-set="b" t-value="balance(m)"/>
+                                <tr>
+                                    <td><span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/> <t t-esc="m.name"/></td>
+                                    <td><t t-esc="fmt(m.weekly_hours)"/> h/t</td>
+                                    <td><t t-esc="fmt(b.fond)"/> h</td>
+                                    <td t-att-title="'Směny ' + fmt(b.shift_hours) + ' h + D/L/Š ' + fmt(b.credited) + ' h'"><t t-esc="fmt(b.worked)"/> h</td>
+                                    <td t-esc="b.morning"/>
+                                    <td t-esc="b.afternoon"/>
+                                    <td t-esc="b.full_day"/>
+                                    <td><t t-esc="b.weekend"/> <small class="text-muted" t-if="b.weekend">(<t t-esc="fmt(b.weekend_hours)"/> h)</small></td>
+                                    <td t-esc="absenceText(m)"/>
+                                    <td t-attf-class="evp-saldo #{b.saldo &gt; 0.05 ? 'evp-plus' : (b.saldo &lt; -0.05 ? 'evp-minus' : '')}">
+                                        <t t-if="b.saldo &gt; 0.05">+</t><t t-esc="fmt(b.saldo)"/> h
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="evp-help text-muted">
+                    Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna v jeden den se počítá jednou
+                    (8–16 + 12–20 = 12 h, celodenní). D, L a Š se počítají jako odpracovaný den, NV a PN ne.
+                    Služby lékařek v úsecích s ordinací se samy propisují do kalendáře rezervací.
+                </p>
             </div>
 
             <!-- ================= cell dialog ================= -->

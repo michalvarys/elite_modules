@@ -17,7 +17,6 @@ const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "če
 const PRESETS = [[10, 18], [8, 14], [9, 15], [14, 20]];
 // Keyboard entry in Požadavky na směny.
 const KEY_CODES = { d: "D", n: "NV", l: "L", p: "PN", s: "S", m: "can", r: "morning", o: "afternoon", v: "off" };
-const TAB_KEY = "elite_vet_planning.tab";
 // The requests panel above the plan: open / closed and its height, remembered by the browser.
 const REQ_OPEN_KEY = "elite_vet_planning.requests_open";
 const REQ_HEIGHT_KEY = "elite_vet_planning.requests_height";
@@ -73,11 +72,9 @@ export class Planner extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
-        let tab = "rooms";
-        try { tab = localStorage.getItem(TAB_KEY) || "rooms"; } catch { /* private mode */ }
         this.state = useState({
             month: currentMonth(),
-            data: null, busy: false, tab,
+            data: null, busy: false,
             cell: null,          // {slot, row, day} of the open cell dialog
             newFrom: "", newTo: "", helperName: "",
             picker: null,        // {member, day, note} of the request picker
@@ -115,10 +112,6 @@ export class Planner extends Component {
         this.state.month = shiftMonth(this.state.month, delta);
         this.state.cell = null;
         await this.load();
-    }
-    setTab(tab) {
-        this.state.tab = tab;
-        try { localStorage.setItem(TAB_KEY, tab); } catch { /* private mode */ }
     }
 
     get monthLabel() {
