@@ -46,19 +46,22 @@ def day_hours(spans):
     return total
 
 
-def month_balance(members, shifts, requests, first, last):
+def month_balance(members, shifts, requests, first, last, assignments=()):
     """{member id: balance row} for the month.
 
     fond        = working days (Mon–Fri without holidays) × weekly hours / 5
     worked      = shift hours (overlaps on a day counted once) + D / L / Š on working days × daily fond
     morning / afternoon / full_day = weekday counts (full day = 12 h and more), weekend = Sat + Sun
-    NV and PN add nothing; saldo = worked − fond.
+    NV and PN add nothing; saldo = worked − fond. `assignments`: manual services of Rozpis lékařů
+    (without a shift) count like shifts.
     """
     workdays = set(working_days(first, last))
     spans = defaultdict(list)
     for shift in shifts:
         if shift.doctor_id and not shift.type_id.is_note:
             spans[(shift.doctor_id.id, shift.date)].append(roster_hours(shift.hour_from, shift.hour_to))
+    for a in assignments:   # services entered straight in Rozpis lékařů (no shift)
+        spans[(a.doctor_id.id, a.date)].append((a.hour_from, a.hour_to))
     absences = defaultdict(list)
     for req in requests:
         if req.code in ABSENCE_CODES:
@@ -115,18 +118,53 @@ class Planner(models.AbstractModel):
                 "vacation_left": member.vacation_left}
 
     @api.model
-    def _shift_vals(self, shift):
-        return {"id": shift.id, "date": fields.Date.to_string(shift.date), "slot_id": shift.planning_slot_id.id,
-                "row_id": shift.planning_row_id.id, "member_id": shift.doctor_id.id,
+    def _shift_vals(self, shift, slot=None):
+        slot = slot if slot is not None else shift.planning_slot_id
+        return {"id": shift.id, "date": fields.Date.to_string(shift.date), "slot_id": slot.id or 0,
+                "row_id": slot.row_id.id or 0, "member_id": shift.doctor_id.id,
                 "helper_name": shift.helper_name or "", "hour_from": shift.hour_from, "hour_to": shift.hour_to,
-                "room": shift.room_id.name or "", "type": shift.type_id.name or ""}
+                "room": shift.room_id.name or "", "type": shift.type_id.name or "",
+                "from_roster": not shift.planning_slot_id}
 
     @api.model
-    def _days(self, first, last):
+    def _roster_slot(self, shift, rows):
+        return self._slot_for(rows, shift.date, shift.room_id or shift.doctor_id.default_room_id,
+                              shift.doctor_id.staff_role if shift.doctor_id else "helper",
+                              shift.type_id, shift.hour_from)
+
+    @api.model
+    def _slot_for(self, rows, day, room, role, shift_type, hour_from):
+        """Slot of the plan where a shift entered in Rozpis služeb (no planning_slot_id) is shown.
+        Only for display, the shift itself is not changed. Row: the one with the shift's room,
+        else the one with the doctor's default room, else by role (reception / helpers).
+        Slot in the row: among the slots of the same shift type on that day (else all of that day,
+        else the same type, else all) the one with the nearest start. No row -> empty slot (the
+        "Z rozpisu – bez úseku" row of the screen)."""
+        Slot = self.env["elite.vet.planning.slot"]
+        row = rows.filtered(lambda r: room and r.room_id == room)[:1]
+        if not row:
+            if role == "helper":
+                row = rows.filtered(lambda r: r.kind == "helpers")[:1]
+            elif role == "reception":
+                row = rows.filtered(lambda r: r.kind == "room" and not r.room_id
+                                    and "reception" in (r.preferred_roles or ""))[:1]
+        if not row or not row.slot_ids:
+            return Slot
+        slots = row.slot_ids
+        on_day = slots.filtered(lambda sl: sl.applies_to(day))
+        same_type = slots.filtered(lambda sl: shift_type and sl.type_id == shift_type)
+        candidates = (same_type & on_day) or on_day or same_type or slots
+        return candidates.sorted(lambda sl: (abs(sl.hour_from - hour_from), sl.sequence, sl.id))[:1]
+
+    @api.model
+    def _days(self, first, last, notes=None):
+        """Days of the month; `notes` = full-day notes of the roster (Zavřeno …) by date."""
         holidays = holidays_between(first, last)
         today = fields.Date.context_today(self)
+        notes = notes or {}
         return [{"date": fields.Date.to_string(d), "day": d.day, "weekday": d.weekday(),
-                 "weekend": d.weekday() >= 5, "holiday": holidays.get(d) or "", "today": d == today}
+                 "weekend": d.weekday() >= 5, "holiday": holidays.get(d) or "", "today": d == today,
+                 "note": notes.get(d, "")}
                 for d in (first + timedelta(days=i) for i in range((last - first).days + 1))]
 
     # ---------- management ----------
@@ -137,24 +175,45 @@ class Planner(models.AbstractModel):
         members = self._members()
         Shift = self.env["elite.vet.shift"].sudo()
         shifts = Shift.search([("date", ">=", first), ("date", "<=", last)])
-        planned = shifts.filtered("planning_slot_id")
+        day_notes = {}
+        for note in shifts.filtered("type_id.is_note"):
+            day_notes[note.date] = ", ".join(filter(None, [day_notes.get(note.date), note.display_name]))
         requests = self.env["elite.vet.staff.request"].sudo().search([("date", ">=", first), ("date", "<=", last)])
         notes = self.env["elite.vet.staff.month.note"].sudo().search([("month", "=", first)])
         rows = self.env["elite.vet.planning.row"].sudo().search([])
-        balance = month_balance(members, shifts.filtered(lambda s: s.doctor_id in members), requests, first, last)
+        manual = self._manual_assignments(first, last)
+        balance = month_balance(members, shifts.filtered(lambda s: s.doctor_id in members), requests, first, last,
+                                manual.filtered(lambda a: a.doctor_id in members))
+        shift_vals = []
+        for shift in shifts.filtered(lambda x: not x.type_id.is_note and (x.doctor_id or x.helper_name)):
+            slot = shift.planning_slot_id or self._roster_slot(shift, rows)
+            shift_vals.append(self._shift_vals(shift, slot))
+        # Services entered straight in Rezervace › Rozpis lékařů (no shift): shown with a negative id.
+        Slot = self.env["elite.vet.planning.slot"]
+        for a in manual:
+            slot = self._slot_for(rows, a.date, a.room_id, "doctor", False, a.hour_from)
+            shift_vals.append({"id": -a.id, "date": fields.Date.to_string(a.date), "slot_id": slot.id or 0,
+                               "row_id": slot.row_id.id or 0, "member_id": a.doctor_id.id, "helper_name": "",
+                               "hour_from": a.hour_from, "hour_to": a.hour_to, "room": a.room_id.name or "",
+                               "type": _("Rozpis lékařů"), "from_roster": True, "assignment": True})
+        row_vals = [{"id": r.id, "name": r.name, "kind": r.kind, "room": r.room_id.name or "",
+                     "preferred_roles": [x.strip() for x in (r.preferred_roles or "").split(",") if x.strip()],
+                     "slots": [{"id": sl.id, "name": sl.name, "hour_from": sl.hour_from, "hour_to": sl.hour_to,
+                                "days": sl.days, "time": sl.time_display} for sl in r.slot_ids]}
+                    for r in rows]
+        if any(not v["slot_id"] for v in shift_vals):
+            # shifts no row fits (e.g. a room without a row): one read-only row, so nothing is hidden
+            row_vals.append({"id": 0, "name": _("Z rozpisu – bez úseku"), "kind": "roster", "room": "",
+                             "preferred_roles": [], "slots": [{"id": 0, "name": _("Ostatní"), "hour_from": 0,
+                                                               "hour_to": 0, "days": "all", "time": ""}]})
         return {
             "month": fields.Date.to_string(first),
-            "days": self._days(first, last),
-            "rows": [{"id": r.id, "name": r.name, "kind": r.kind, "room": r.room_id.name or "",
-                      "preferred_roles": [x.strip() for x in (r.preferred_roles or "").split(",") if x.strip()],
-                      "slots": [{"id": s.id, "name": s.name, "hour_from": s.hour_from, "hour_to": s.hour_to,
-                                 "days": s.days, "time": s.time_display} for s in r.slot_ids]}
-                     for r in rows],
+            "days": self._days(first, last, day_notes),
+            "rows": row_vals,
             "staff": [self._member_vals(m) for m in members],
             "roles": [{"key": k, "label": label} for k, label in STAFF_ROLES],
-            "shifts": [self._shift_vals(s) for s in planned],
-            # shifts entered in Rozpis služeb by hand: shown as "other" so nobody is planned twice
-            "other_shifts": [self._shift_vals(s) for s in shifts - planned if s.doctor_id],
+            # planned shifts and the ones entered in Rozpis služeb (shown in their slot, from_roster)
+            "shifts": shift_vals,
             "requests": [{"member_id": r.member_id.id, "date": fields.Date.to_string(r.date), "code": r.code,
                           "short": SHORT[r.code], "note": r.note or "", "self": r.entered_by_member}
                          for r in requests],
@@ -191,25 +250,73 @@ class Planner(models.AbstractModel):
     @api.model
     def update_shift(self, month, shift_id, hour_from, hour_to):
         self._check_manager()
-        self.env["elite.vet.shift"].browse(shift_id).exists().write({"hour_from": hour_from, "hour_to": hour_to})
+        self._record(shift_id).write({"hour_from": hour_from, "hour_to": hour_to})
         return self.load_month(month)
 
     @api.model
     def remove_shift(self, month, shift_id):
         self._check_manager()
-        self.env["elite.vet.shift"].browse(shift_id).exists().unlink()
+        self._record(shift_id).unlink()
         return self.load_month(month)
 
     @api.model
+    def _record(self, shift_id):
+        """Positive id = shift, negative = manual service of Rozpis lékařů (see load_month).
+        Sudo for the service: Správce rozpisu need not have rights to Rezervace."""
+        if shift_id < 0:
+            return self.env["elite.vet.doctor.assignment"].sudo().browse(-shift_id).exists().filtered(
+                lambda a: not a.shift_id)
+        return self.env["elite.vet.shift"].browse(shift_id).exists()
+
+    @api.model
+    def _manual_assignments(self, first, last):
+        return self.env["elite.vet.doctor.assignment"].sudo().search(
+            [("date", ">=", first), ("date", "<=", last), ("shift_id", "=", False)])
+
+    @api.model
+    def adopt_assignments(self, month):
+        """"Převzít služby z Rozpisu lékařů": each manual service of the month becomes a planned
+        shift with the same doctor, room, day and time. The roster sync then takes the service over
+        (links it, procedures and note stay), so nothing is entered twice. A service whose room
+        has no row of the plan is skipped."""
+        self._check_manager()
+        first, last = month_bounds(month)
+        rows = self.env["elite.vet.planning.row"].search([])
+        Shift = self.env["elite.vet.shift"]
+        done = skipped = 0
+        for a in self._manual_assignments(first, last).sorted(lambda x: (x.date, x.hour_from)):
+            if not a.exists() or a.shift_id:
+                continue   # already taken over by a shift created a moment ago
+            slot = self._slot_for(rows, a.date, a.room_id, "doctor", False, a.hour_from)
+            if not slot or slot.row_id.room_id != a.room_id:
+                skipped += 1
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    Shift.create({"date": a.date, "doctor_id": a.doctor_id.id, "type_id": slot.type_id.id,
+                                  "planning_slot_id": slot.id, "room_id": a.room_id.id,
+                                  "hour_from": a.hour_from, "hour_to": a.hour_to})
+                done += 1
+            except (UserError, ValueError):
+                skipped += 1
+        if done:
+            notify_board(self.env)
+        result = self.load_month(month)
+        result["message"] = _("Převzato %(ok)s služeb, přeskočeno %(skip)s (ordinace bez úseku nebo kolize).",
+                              ok=done, skip=skipped)
+        return result
+
+    @api.model
     def copy_previous_week(self, month, monday):
-        """Planned shifts of the week before `monday` are copied 7 days ahead (within `month`).
+        """Shifts of the week before `monday` (planned or entered in Rozpis služeb) are copied 7 days ahead (within `month`).
         Skipped: a person who already has that slot that day, or has an absence / "Nemůžu"."""
         self._check_manager()
         first, last = month_bounds(month)
         start = fields.Date.to_date(monday)
         Shift = self.env["elite.vet.shift"]
-        source = Shift.search([("planning_slot_id", "!=", False), ("date", ">=", start - timedelta(days=7)),
-                               ("date", "<", start)])
+        rows = self.env["elite.vet.planning.row"].search([])
+        source = Shift.search([("date", ">=", start - timedelta(days=7)), ("date", "<", start),
+                               ("type_id.is_note", "=", False)])
         blocked = {(r.member_id.id, r.date) for r in self.env["elite.vet.staff.request"].search(
             [("date", ">=", start), ("date", "<", start + timedelta(days=7)),
              ("code", "in", list(ABSENCE_CODES) + ["off"])])}
@@ -218,7 +325,11 @@ class Planner(models.AbstractModel):
             day = shift.date + timedelta(days=7)
             if not (first <= day <= last):
                 continue
-            taken = Shift.search_count([("planning_slot_id", "=", shift.planning_slot_id.id), ("date", "=", day),
+            slot = shift.planning_slot_id or self._roster_slot(shift, rows)
+            if not slot:
+                skipped += 1
+                continue
+            taken = Shift.search_count([("planning_slot_id", "=", slot.id), ("date", "=", day),
                                         ("doctor_id", "=", shift.doctor_id.id),
                                         ("helper_name", "=", shift.helper_name or False)])
             if taken or (shift.doctor_id.id, day) in blocked:
@@ -226,7 +337,7 @@ class Planner(models.AbstractModel):
                 continue
             try:
                 with self.env.cr.savepoint():
-                    shift.copy({"date": day, "planning_slot_id": shift.planning_slot_id.id})
+                    shift.copy({"date": day, "planning_slot_id": slot.id})
                 copied += 1
             except (UserError, ValueError):
                 skipped += 1
@@ -316,7 +427,9 @@ class Planner(models.AbstractModel):
                                                          "label": labels[r.code], "note": r.note or "",
                                                          "locked": r.code not in SELF_CODES}
                          for r in requests},
-            "balance": month_balance(member, shifts, requests, first, last)[member.id],
+            "balance": month_balance(member, shifts, requests, first, last, self.env["elite.vet.doctor.assignment"].sudo().search(
+                [("doctor_id", "=", member.id), ("date", ">=", first), ("date", "<=", last),
+                 ("shift_id", "=", False)]))[member.id],
         })
         return result
 

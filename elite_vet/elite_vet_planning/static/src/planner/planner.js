@@ -163,6 +163,7 @@ export class Planner extends Component {
 
     // ---------- cell dialog ----------
     openCell(row, slot, day) {
+        if (row.kind === "roster") return;   // read-only row of shifts no block fits
         this.state.cell = { row, slot, day };
         this.state.newFrom = hm(slot.hour_from);
         this.state.newTo = hm(slot.hour_to);
@@ -201,10 +202,7 @@ export class Planner extends Component {
         for (const s of data.shifts.filter((x) => x.member_id === member.id && x.date === day.date)) {
             const row = data.rows.find((r) => r.id === s.row_id);
             const slot = row?.slots.find((x) => x.id === s.slot_id);
-            bits.push(`${row?.name || ""} ${slot?.name || ""}`.trim());
-        }
-        for (const s of data.other_shifts.filter((x) => x.member_id === member.id && x.date === day.date)) {
-            bits.push(s.type + (s.room ? " · " + s.room : ""));
+            bits.push(s.assignment ? `Rozpis lékařů ${s.room}` : `${row?.name || ""} ${slot?.name || ""}`.trim());
         }
         return bits.join(" · ");
     }
@@ -253,6 +251,14 @@ export class Planner extends Component {
         const from = field === "hour_from" ? value : shift.hour_from;
         const to = field === "hour_to" ? value : shift.hour_to;
         await this.call("update_shift", shift.id, from, to);
+    }
+    get assignmentCount() { return this.state.data.shifts.filter((s) => s.assignment).length; }
+    async adoptAssignments() { await this.call("adopt_assignments"); }
+    chipTitle(shift) {
+        const conflict = this.chipConflict(shift);
+        const origin = shift.assignment ? "Služba zadaná v Rezervace › Rozpis lékařů"
+            : shift.from_roster ? "Směna zadaná v Rozpisu služeb" : "";
+        return [origin, conflict].filter(Boolean).join(" · ") || null;
     }
     async copyWeek(day, ev) {
         ev.stopPropagation();

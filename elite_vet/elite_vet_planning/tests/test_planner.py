@@ -102,3 +102,35 @@ class TestPlanner(ReservationCase):
 
     def assignments_on(self, doctor, day):
         return self.Assignment.search([("doctor_id", "=", doctor.id), ("date", "=", day)])
+
+    def test_roster_shift_and_manual_service_are_shown(self):
+        shift = self.env["elite.vet.shift"].create({
+            "date": self.day, "doctor_id": self.dr_b.id, "type_id": self.t_morning.id,
+            "room_id": self.room1.id, "hour_from": 12, "hour_to": 20})
+        manual = self.assign(self.dr_a, self.room1, self.day, 8, 12)
+        data = self.P.load_month(self.month)
+        by_id = {v["id"]: v for v in data["shifts"]}
+        self.assertEqual(by_id[shift.id]["slot_id"], self.afternoon.id)
+        self.assertTrue(by_id[shift.id]["from_roster"])
+        self.assertEqual(by_id[-manual.id]["slot_id"], self.morning.id)
+        self.assertTrue(by_id[-manual.id]["assignment"])
+        # time change and delete work on the manual service too
+        self.P.update_shift(self.month, -manual.id, 8, 11)
+        self.assertEqual(manual.hour_to, 11)
+        self.P.remove_shift(self.month, -manual.id)
+        self.assertFalse(manual.exists())
+
+    def test_adopt_manual_services(self):
+        manual = self.assign(self.dr_a, self.room1, self.day, 9, 15)
+        result = self.P.adopt_assignments(self.month)
+        self.assertIn("Převzato 1", result["message"])
+        self.assertTrue(manual.exists())
+        self.assertEqual(manual.shift_id.planning_slot_id, self.morning)
+        self.assertEqual((manual.hour_from, manual.hour_to, manual.room_id), (9, 15, self.room1))
+        self.assertFalse([v for v in result["shifts"] if v.get("assignment")])
+
+    def test_manual_service_counts_in_balance(self):
+        self.assign(self.dr_a, self.room1, self.day, 8, 12)
+        self.P.add_shift(self.month, self.afternoon.id, self.day, self.dr_a.id)   # 12–20, touches the manual 8–12
+        b = self.P.load_month(self.month)["balance"][self.dr_a.id]
+        self.assertEqual(b["shift_hours"], 12)
