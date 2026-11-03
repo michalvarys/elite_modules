@@ -100,6 +100,25 @@
             &:disabled { opacity: .25; } } }
     .evp-role-label { color: #64748b; margin-left: 4px; }
 
+    // requests panel above the plan
+    .evp-req-panel { margin-bottom: 10px; }
+    .evp-req-panel-head { display: flex; align-items: center; gap: 8px;
+        .btn-link { font-weight: 600; padding: 2px 0; text-decoration: none; } }
+    .evp-req-scroll {
+        overflow: auto; box-shadow: inset 0 0 0 1px var(--evp-line);
+        thead th { position: sticky; top: 0; z-index: 3; background: #fff; }
+        thead th.evp-we { background: var(--evp-we); }
+        thead th.evp-hol { background: var(--evp-hol); }
+        thead .evp-head-row { z-index: 4; }
+        // same first column as the plan, so the days sit exactly above each other
+        .evp-requests .evp-head-row { width: 170px; min-width: 170px; max-width: 170px; }
+    }
+    .evp-resize {
+        height: 8px; cursor: ns-resize; background: #e2e8f0; border-radius: 0 0 6px 6px; touch-action: none;
+        &::after { content: ""; display: block; width: 40px; height: 2px; margin: 3px auto 0; background: #94a3b8; border-radius: 1px; }
+        &:hover { background: #cbd5e1; }
+    }
+
     // dialogs
     .evp-modal-back {
         position: fixed; inset: 0; z-index: 1050; background: rgba(15, 23, 42, .35);
@@ -162,7 +181,7 @@ html .o_web_client > .o_action_manager > .evp.o_action { overflow: auto; }
 // Print: A4 landscape for the clinic's notice board, no buttons.
 @media print {
     @page { size: A4 landscape; margin: 7mm; }
-    .o_main_navbar, .o_control_panel, .evp-toolbar, .evp-copy, .evp-x, .evp-modal-back, .evp-help, .evp-order,
+    .o_main_navbar, .o_control_panel, .evp-toolbar, .evp-req-panel, .evp-copy, .evp-x, .evp-modal-back, .evp-help, .evp-order,
     .evp-note-col input { display: none !important; }
     .o_action_manager, .o_action, .evp, .evp-scroll { overflow: visible !important; height: auto !important; }
     .evp { font-size: 8px; }

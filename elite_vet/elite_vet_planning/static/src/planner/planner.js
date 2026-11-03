@@ -8,7 +8,7 @@
  */
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, useRef, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
 
 const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
 const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen",
@@ -18,6 +18,22 @@ const PRESETS = [[10, 18], [8, 14], [9, 15], [14, 20]];
 // Keyboard entry in Požadavky na směny.
 const KEY_CODES = { d: "D", n: "NV", l: "L", p: "PN", s: "S", m: "can", r: "morning", o: "afternoon", v: "off" };
 const TAB_KEY = "elite_vet_planning.tab";
+// The requests panel above the plan: open / closed and its height, remembered by the browser.
+const REQ_OPEN_KEY = "elite_vet_planning.requests_open";
+const REQ_HEIGHT_KEY = "elite_vet_planning.requests_height";
+const REQ_MIN = 80, REQ_MAX = 1200, REQ_DEFAULT = 260;
+
+function loadSetting(key, fallback) {
+    try {
+        const v = localStorage.getItem(key);
+        return v === null ? fallback : JSON.parse(v);
+    } catch {
+        return fallback;
+    }
+}
+function saveSetting(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ }
+}
 
 function pad(n) { return String(n).padStart(2, "0"); }
 export function hm(value) {
@@ -66,7 +82,11 @@ export class Planner extends Component {
             newFrom: "", newTo: "", helperName: "",
             picker: null,        // {member, day, note} of the request picker
             focus: null,         // "memberId|date" of the focused request cell
+            reqOpen: loadSetting(REQ_OPEN_KEY, true),
+            reqHeight: loadSetting(REQ_HEIGHT_KEY, REQ_DEFAULT),
         });
+        this.gridScroll = useRef("gridScroll");
+        this.reqScroll = useRef("reqScroll");
         this.onKey = (ev) => {
             if (ev.key === "Escape") { this.state.cell = null; this.state.picker = null; }
         };
@@ -265,6 +285,32 @@ export class Planner extends Component {
     async copyWeek(day, ev) {
         ev.stopPropagation();
         await this.call("copy_previous_week", day.date);
+    }
+
+    // ---------- requests panel above the plan ----------
+    toggleRequests() {
+        this.state.reqOpen = !this.state.reqOpen;
+        saveSetting(REQ_OPEN_KEY, this.state.reqOpen);
+    }
+    startResize(ev) {
+        ev.preventDefault();
+        const startY = ev.clientY, startH = this.state.reqHeight;
+        const move = (e) => {
+            this.state.reqHeight = Math.max(REQ_MIN, Math.min(REQ_MAX, startH + e.clientY - startY));
+        };
+        const up = () => {
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", up);
+            saveSetting(REQ_HEIGHT_KEY, this.state.reqHeight);
+        };
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", up);
+    }
+    // Both tables have the same day columns: scrolling one sideways scrolls the other.
+    onReqScroll() { this.syncScroll(this.reqScroll.el, this.gridScroll.el); }
+    onGridScroll() { this.syncScroll(this.gridScroll.el, this.reqScroll.el); }
+    syncScroll(from, to) {
+        if (from && to && to.scrollLeft !== from.scrollLeft) to.scrollLeft = from.scrollLeft;
     }
 
     // ---------- requests ----------
