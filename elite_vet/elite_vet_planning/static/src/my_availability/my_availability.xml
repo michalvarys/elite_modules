@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="elite_vet_planning.MyAvailability">
+        <div class="evp o_action">
+            <div class="evp-toolbar">
+                <div class="btn-group">
+                    <button class="btn btn-secondary" t-on-click="() => this.goMonth(-1)" title="Předchozí měsíc">‹</button>
+                    <span class="btn btn-light evp-month" t-esc="monthLabel"/>
+                    <button class="btn btn-secondary" t-on-click="() => this.goMonth(1)" title="Další měsíc">›</button>
+                </div>
+                <div t-if="state.data and state.data.member" class="evp-tools">
+                    <span t-if="state.busy" class="text-muted evp-saving">Ukládání…</span>
+                    <button class="btn btn-secondary" t-on-click="() => this.fill('can')">Zbytek měsíce: Můžu</button>
+                </div>
+            </div>
+            <div t-if="state.data" class="evp-body">
+                <t t-if="!state.data.member">
+                    <div class="alert alert-warning">
+                        Váš účet není propojený s členem týmu. Požádejte vedení, ať vás propojí
+                        v Rozpis služeb › Lékařky › Účet.
+                    </div>
+                </t>
+                <t t-else="">
+                    <h3 class="evp-h3"><t t-esc="state.data.member.name"/></h3>
+                    <p class="evp-help text-muted">
+                        Klikněte na den a vyberte, jestli můžete pracovat. Dovolenou, NV a další absence zapisuje vedení
+                        (u dne je pak zámek); přání napište do poznámky. Naplánované směny vidíte v modrém štítku.
+                    </p>
+                    <div class="evm-summary">
+                        <span>Úvazek <b><t t-esc="fmt(state.data.member.weekly_hours)"/> h/týden</b></span>
+                        <span>Fond měsíce <b><t t-esc="fmt(state.data.balance.fond)"/> h</b></span>
+                        <span>Naplánováno <b><t t-esc="fmt(state.data.balance.worked)"/> h</b></span>
+                        <span>Zbývá dovolené <b><t t-esc="fmt(state.data.member.vacation_left)"/> dní</b></span>
+                    </div>
+                    <div class="evm-grid">
+                        <t t-foreach="weekdays" t-as="wd" t-key="wd"><div class="evm-wd" t-esc="wd"/></t>
+                        <t t-foreach="leading" t-as="i" t-key="'e' + i"><div/></t>
+                        <t t-foreach="state.data.days" t-as="day" t-key="day.date">
+                            <t t-set="r" t-value="req(day)"/>
+                            <button t-att-class="dayClass(day)" t-on-click="() => this.openDay(day)" t-att-title="day.holiday or null">
+                                <span class="evm-num"><t t-esc="day.day"/>.</span>
+                                <span t-if="r" t-attf-class="evm-code evp-code-#{r.code}"><t t-if="r.locked">🔒 </t><t t-esc="r.label"/></span>
+                                <t t-foreach="shifts(day)" t-as="s" t-key="s.id">
+                                    <span class="evm-shift" t-esc="shiftLabel(s)"/>
+                                </t>
+                                <span t-if="r and r.note" class="evm-note" t-esc="r.note"/>
+                            </button>
+                        </t>
+                    </div>
+                </t>
+            </div>
+
+            <div t-if="state.open" class="evp-modal-back" t-on-click.self="() => this.state.open = null">
+                <div class="evp-modal evp-modal-sm" role="dialog">
+                    <div class="evp-modal-head">
+                        <b><t t-esc="weekdays[state.open.weekday]"/> <t t-esc="state.open.day"/>. <t t-esc="monthLabel"/></b>
+                        <button class="btn-close" t-on-click="() => this.state.open = null" aria-label="Zavřít"/>
+                    </div>
+                    <input class="form-control" t-model="state.note" placeholder="Poznámka (např. chci dovolenou, do 14:00)"/>
+                    <div class="evp-codes">
+                        <t t-foreach="state.data.codes" t-as="c" t-key="c.key">
+                            <button t-attf-class="btn evp-code-btn evp-code-#{c.key}" t-on-click="() => this.pick(c.key)">
+                                <b t-esc="c.short"/> <t t-esc="c.label"/>
+                            </button>
+                        </t>
+                    </div>
+                    <div class="evp-modal-foot">
+                        <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.pick(false)">Smazat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

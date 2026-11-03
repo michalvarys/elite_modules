@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_planner" model="ir.actions.client">
+        <field name="name">Plánování</field>
+        <field name="tag">elite_vet_planning.planner</field>
+    </record>
+    <record id="action_my_availability" model="ir.actions.client">
+        <field name="name">Moje dostupnost</field>
+        <field name="tag">elite_vet_planning.my_availability</field>
+    </record>
+</odoo>

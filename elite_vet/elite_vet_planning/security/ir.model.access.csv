@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_planning_row_manager,elite.vet.planning.row.manager,model_elite_vet_planning_row,elite_vet_calendar.group_calendar_manager,1,1,1,1
+access_planning_slot_manager,elite.vet.planning.slot.manager,model_elite_vet_planning_slot,elite_vet_calendar.group_calendar_manager,1,1,1,1
+access_staff_request_manager,elite.vet.staff.request.manager,model_elite_vet_staff_request,elite_vet_calendar.group_calendar_manager,1,1,1,1
+access_staff_month_note_manager,elite.vet.staff.month.note.manager,model_elite_vet_staff_month_note,elite_vet_calendar.group_calendar_manager,1,1,1,1
