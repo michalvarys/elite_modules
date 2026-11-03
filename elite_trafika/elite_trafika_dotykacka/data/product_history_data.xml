@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Zboží, které se v Dotykačce prodávalo, ale dnes v ní není (smazané produkty a produkty
+             prodávané pod dřívějším názvem). Je archivované: v pokladně se nenabízí, jen drží
+             historické prodeje. -->
+        <record id="product_category_historie" model="product.category">
+            <field name="name">Dotykačka – dřívější zboží</field>
+            <field name="parent_id" ref="elite_trafika_pos.product_category_trafika"/>
+        </record>
+        <record id="product_117855672994706" model="product.template">
+            <field name="name">VUSE Bluesberry raspberry</field>
+            <field name="type">consu</field>
+            <field name="list_price">209.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_2635964933869342" model="product.template">
+            <field name="name">VUSE GO reload 1000 grape ice</field>
+            <field name="type">consu</field>
+            <field name="list_price">145.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_2452136038633130" model="product.template">
+            <field name="name">VUSE GO Mango ice</field>
+            <field name="type">consu</field>
+            <field name="list_price">209.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_1231510628076288" model="product.template">
+            <field name="name">VUSE Bluesberry ice</field>
+            <field name="type">consu</field>
+            <field name="list_price">209.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_4333859995257557" model="product.template">
+            <field name="name">VUSE strawberry kiwi</field>
+            <field name="type">consu</field>
+            <field name="list_price">209.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_2077735149505162" model="product.template">
+            <field name="name">VUSE creamy tabaco</field>
+            <field name="type">consu</field>
+            <field name="list_price">209.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_1592043067804250" model="product.template">
+            <field name="name">VUSE pepermint ice</field>
+            <field name="type">consu</field>
+            <field name="list_price">209.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_3799261130369987" model="product.template">
+            <field name="name">10 G VIP Cena</field>
+            <field name="type">consu</field>
+            <field name="list_price">1000.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_3723725532321350" model="product.template">
+            <field name="name">PIPE malá duha</field>
+            <field name="type">consu</field>
+            <field name="list_price">60.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_joint_1ks" model="product.template">
+            <field name="name">JOINT 1ks</field>
+            <field name="type">consu</field>
+            <field name="list_price">190.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_indoor_vdsko_1g" model="product.template">
+            <field name="name">INDOOR švédsko 1g</field>
+            <field name="type">consu</field>
+            <field name="list_price">200.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_indoor_vdsko_2g" model="product.template">
+            <field name="name">INDOOR švédsko 2g</field>
+            <field name="type">consu</field>
+            <field name="list_price">380.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_jw_itlie_1g" model="product.template">
+            <field name="name">JW Itálie 1g</field>
+            <field name="type">consu</field>
+            <field name="list_price">200.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_origen_spain_1g" model="product.template">
+            <field name="name">ORIGEN Spain 1g</field>
+            <field name="type">consu</field>
+            <field name="list_price">200.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_origen_spain_2g" model="product.template">
+            <field name="name">ORIGEN Spain 2g</field>
+            <field name="type">consu</field>
+            <field name="list_price">380.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_cbd_joint" model="product.template">
+            <field name="name">CBD joint</field>
+            <field name="type">consu</field>
+            <field name="list_price">110.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_t9hc_hasis_caramello" model="product.template">
+            <field name="name">T9HC Hasis Caramello</field>
+            <field name="type">consu</field>
+            <field name="list_price">200.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_skleenka_pipe" model="product.template">
+            <field name="name">Skleňenka pipe</field>
+            <field name="type">consu</field>
+            <field name="list_price">60.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_cheese_1g" model="product.template">
+            <field name="name">Cheese 1g</field>
+            <field name="type">consu</field>
+            <field name="list_price">200.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_jw_itlie_2g" model="product.template">
+            <field name="name">JW Itálie 2g</field>
+            <field name="type">consu</field>
+            <field name="list_price">380.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_indoor_vdsko_5g" model="product.template">
+            <field name="name">INDOOR švédsko 5g</field>
+            <field name="type">consu</field>
+            <field name="list_price">750.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_jw_itlie_5g" model="product.template">
+            <field name="name">JW Itálie 5g</field>
+            <field name="type">consu</field>
+            <field name="list_price">750.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_jw_itlie_10g" model="product.template">
+            <field name="name">JW Itálie 10g</field>
+            <field name="type">consu</field>
+            <field name="list_price">0.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_t9hc_hasis_black_afghan" model="product.template">
+            <field name="name">T9HC Hasis Black Afghan</field>
+            <field name="type">consu</field>
+            <field name="list_price">200.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_cheese_2g" model="product.template">
+            <field name="name">Cheese 2g</field>
+            <field name="type">consu</field>
+            <field name="list_price">0.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_cheese_3g" model="product.template">
+            <field name="name">Cheese 3g</field>
+            <field name="type">consu</field>
+            <field name="list_price">0.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_pipe_zlat" model="product.template">
+            <field name="name">Pipe zlatá</field>
+            <field name="type">consu</field>
+            <field name="list_price">85.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_origen_spain_3g" model="product.template">
+            <field name="name">ORIGEN Spain 3g</field>
+            <field name="type">consu</field>
+            <field name="list_price">500.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_jw_itlie_3g" model="product.template">
+            <field name="name">JW Itálie 3g</field>
+            <field name="type">consu</field>
+            <field name="list_price">500.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_indoor_vdsko_10g" model="product.template">
+            <field name="name">INDOOR švédsko 10g</field>
+            <field name="type">consu</field>
+            <field name="list_price">1300.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_origen_spain_10g" model="product.template">
+            <field name="name">ORIGEN Spain 10g</field>
+            <field name="type">consu</field>
+            <field name="list_price">1300.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_origen_spain_5g" model="product.template">
+            <field name="name">ORIGEN Spain 5g</field>
+            <field name="type">consu</field>
+            <field name="list_price">750.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_indoor_vdsko_3g" model="product.template">
+            <field name="name">INDOOR švédsko 3g</field>
+            <field name="type">consu</field>
+            <field name="list_price">500.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_cheese_10g" model="product.template">
+            <field name="name">Cheese 10g</field>
+            <field name="type">consu</field>
+            <field name="list_price">1300.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_joint_aroma_tiky_1ks" model="product.template">
+            <field name="name">"JOINT" Aroma Štiky 1ks</field>
+            <field name="type">consu</field>
+            <field name="list_price">130.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+    </data>
+</odoo>
