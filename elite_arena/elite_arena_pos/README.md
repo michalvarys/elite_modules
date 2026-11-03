@@ -6,8 +6,14 @@ a e-shopů.
 
 ## Co modul nastaví
 
-Všechno jen pro firmu Elite Arena. Firmu, název pokladny a seznam zboží s DPH 12 % určuje
+Pro firmu Elite Arena. Firmu, název pokladny a seznam zboží s DPH 12 % určuje
 [data/setup.xml](data/setup.xml), kód je v [models/setup.py](models/setup.py).
+
+**Elite Arena jako pobočka.** Na produkci je Elite Arena pobočkou (značkou) firmy Elite. Pobočka v Odoo
+nemá vlastní účetnictví, sdílí ho s mateřskou firmou. Účetní osnovu, ceny s DPH a daně proto modul
+nastaví **mateřské firmě Elite**; Odoo pak osnovu `cz` zapíše i jejím pobočkám (Elite Arena, Elite
+Trafika, Elite Vet). Sklad, zboží, platební metody, pokladní deník a pokladna patří pobočce Elite Arena;
+bankovní a prodejní deník jsou mateřské firmy. Když Elite Arena pobočkou není, platí všechno jen pro ni.
 
 | Oblast | Nastavení |
 |---|---|
@@ -23,18 +29,18 @@ prodej do mínusu pokladna nezablokuje, stejně jako dosud.
 
 ### Co modul nepřepíše
 
-- **Ostatní firmy.** Instalace účetnictví by jinak hlavní firmě (Elite) automaticky založila účetní
-  osnovu; modul to vypne. Osnovu lze hlavní firmě kdykoli zvolit v nastavení účetnictví.
-- **Existující nastavení Elite Arena.** Účetní osnovu, ceny s/bez DPH a výchozí daň nastaví jen firmě
-  bez účetnictví. Když firma už osnovu má, nechá ji být; když účtuje ceny bez DPH, založí si kopie
+- **Ostatní firmy.** Instalace účetnictví by jinak hlavní firmě databáze automaticky založila účetní
+  osnovu; modul to vypne. Firmy mimo Elite Arenu a její mateřskou firmu zůstanou bez účetnictví.
+- **Existující nastavení Elite Arena (a mateřské firmy).** Účetní osnovu, ceny s/bez DPH a výchozí daň
+  nastaví jen firmě bez účetnictví. Když firma už osnovu má, nechá ji být; když účtuje ceny bez DPH, založí si kopie
   daní 21 % a 12 % „cena s DPH“ (se stejnými řádky přiznání). Existující sklad, deníky a platební
   metody stejného jména použije beze změny. Pokladnu založí jen jednou; další aktualizace modulu
   ji nemění.
 - **Zboží po instalaci.** Zboží a skupiny se nahrávají jen při instalaci (`noupdate`), opravy v Odoo
   aktualizace nepřepíše. Výjimka: sazby DPH zboží z modulu se při aktualizaci nastaví podle
   `data/setup.xml`.
-- Když firma Elite Arena v databázi není (nebo je víckrát) nebo je pobočkou jiné firmy, instalace
-  skončí chybou dřív, než modul cokoli nastaví.
+- Když firma Elite Arena v databázi není (nebo je víckrát), instalace skončí chybou dřív, než modul
+  cokoli nastaví.
 
 Co při instalaci udělá samo Odoo (standard, jen přidává): modul Sklad založí sklad první firmě
 v databázi, pokud v databázi žádný sklad není.

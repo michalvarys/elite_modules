@@ -29,18 +29,24 @@ class EliteArenaPosSetup(models.AbstractModel):
     def ensure_setup(self, config):
         """Set up the till of one company; safe to call repeatedly.
 
-        Only adds what is missing: values the company already has (chart of accounts, taxes, price
-        settings, warehouse, journals, an existing till) are left as they are, and other companies
-        of the database are not touched."""
+        The company may be a branch (Elite Arena is a brand of Elite): the chart of accounts and the
+        taxes then belong to its root company, which a branch shares; the warehouse, the products,
+        the payment methods and the till belong to the branch.
+
+        Only adds what is missing: values the companies already have (chart of accounts, taxes, price
+        settings, warehouse, journals, an existing till) are left as they are; other branches of the
+        root company get no chart of their own."""
         company = self.target_company(config["company"])
+        root = company.root_id
         self = self.sudo().with_company(company)
         self._block_auto_chart()
         self._ensure_chart(company)
         self.env["res.lang"]._activate_lang("cs_CZ")
-        standard, reduced = self.sale_tax(company), self.sale_tax(company, REDUCED_VAT_RATE)
-        if not company.account_sale_tax_id:
-            company.account_sale_tax_id = standard
-        self._ensure_products(company, standard, reduced, set(config.get("reduced_vat") or ()))
+        standard, reduced = self.sale_tax(root), self.sale_tax(root, REDUCED_VAT_RATE)
+        for accounting_company in root | company:
+            if not accounting_company.account_sale_tax_id:
+                accounting_company.account_sale_tax_id = standard
+        self._ensure_products(company, root, standard, reduced, set(config.get("reduced_vat") or ()))
         self._ensure_pos(company, config.get("pos_name") or company.name)
 
     @api.model
@@ -49,15 +55,12 @@ class EliteArenaPosSetup(models.AbstractModel):
         if len(companies) != 1:
             raise UserError("Elite Arena – pokladna: firma „%s“ v databázi %s. Instalace nic nezměnila; "
                             "název firmy je v data/setup.xml." % (name, "není" if not companies else "je víckrát"))
-        if companies.parent_id:
-            raise UserError("Elite Arena – pokladna: firma „%s“ je pobočkou firmy „%s“. Pobočky sdílejí účetnictví "
-                            "mateřské firmy, to modul neumí. Instalace nic nezměnila."
-                            % (name, companies.parent_id.name))
         return companies
 
     @api.model
     def sale_tax(self, company, rate=VAT_RATE):
-        """Sale tax of `rate` % with the price including the tax.
+        """Sale tax of `rate` % with the price including the tax; `company` is the one that owns the
+        taxes, i.e. the root company of a branch.
 
         The tax of the Czech chart is used when the company has it with prices including tax. When the
         company keeps prices excluding tax, a copy of that tax including tax is created (the copy keeps
@@ -100,24 +103,30 @@ class EliteArenaPosSetup(models.AbstractModel):
             self.env.registry._auto_install_template = skip
 
     def _ensure_chart(self, company):
-        if company.chart_template:
-            if company.chart_template != CHART:
-                _logger.warning("Elite Arena: company %s keeps its chart %s (not the Czech one).",
-                                company.name, company.chart_template)
-            return
-        if company.currency_id != self.env.ref("base.CZK"):
-            _logger.warning("Elite Arena: company %s uses %s, not CZK; left as it is.",
-                            company.name, company.currency_id.name)
-        # A company without a chart has no accounting yet: these are its first accounting settings.
-        company.account_price_include = "tax_included"
-        self.env["account.chart.template"].sudo().try_loading(CHART, company, install_demo=False)
+        """Czech chart for the root company first (it holds the accounts and the taxes), then for the
+        branch itself (Odoo copies the root's accounting settings to it, as for a new branch)."""
+        root = company.root_id
+        for target in (root | company).sorted(lambda c: c != root):
+            if target.chart_template:
+                if target.chart_template != CHART:
+                    _logger.warning("Elite Arena: company %s keeps its chart %s (not the Czech one).",
+                                    target.name, target.chart_template)
+                continue
+            if target.currency_id != self.env.ref("base.CZK"):
+                _logger.warning("Elite Arena: company %s uses %s, not CZK; left as it is.",
+                                target.name, target.currency_id.name)
+            # A company without a chart has no accounting yet: these are its first accounting settings.
+            if not target.root_id._existing_accounting():
+                target.account_price_include = "tax_included"
+            _logger.info("Elite Arena: loading the Czech chart of accounts for %s", target.name)
+            self.env["account.chart.template"].sudo().try_loading(CHART, target, install_demo=False)
 
-    def _ensure_products(self, company, standard, reduced, reduced_ids):
+    def _ensure_products(self, company, tax_company, standard, reduced, reduced_ids):
         for template in self._module_products():
             if not template.company_id:
                 template.company_id = company
             tax = reduced if template.id in reduced_ids else standard
-            company_taxes = template.taxes_id.filtered(lambda t: t.company_id == company)
+            company_taxes = template.taxes_id.filtered(lambda t: t.company_id == tax_company)
             if company_taxes != tax:
                 template.taxes_id = [(3, t.id) for t in company_taxes - tax] + [(4, tax.id)]
 
@@ -128,7 +137,8 @@ class EliteArenaPosSetup(models.AbstractModel):
         if not warehouse.pos_type_id:
             raise UserError("Elite Arena – pokladna: sklad „%s“ nemá typ operace pro pokladnu." % warehouse.name)
         Journal = self.env["account.journal"].sudo().with_company(company)
-        bank_journal = Journal.search([("company_id", "=", company.id), ("type", "=", "bank")],
+        # journals of the root company serve its branches as well
+        bank_journal = Journal.search([("company_id", "parent_of", company.id), ("type", "=", "bank")],
                                       order="sequence, id", limit=1)
         if not bank_journal:
             bank_journal = Journal.create({"name": "Banka", "type": "bank", "code": "EABNK",
@@ -138,7 +148,7 @@ class EliteArenaPosSetup(models.AbstractModel):
         methods |= self._find_or_create("pos_payment_method_card", "pos.payment.method", company, "Kartou", lambda: {
             "name": "Kartou", "company_id": company.id, "journal_id": bank_journal.id,
             "payment_method_type": "none", "use_payment_terminal": False})
-        invoice_journal = Journal.search([("company_id", "=", company.id), ("type", "=", "sale")],
+        invoice_journal = Journal.search([("company_id", "parent_of", company.id), ("type", "=", "sale")],
                                          order="sequence, id", limit=1)
         categories = self.env["pos.category"].browse(
             [self.env.ref("%s.pos_category_%s" % (MODULE, name)).id for name in ROOT_POS_CATEGORIES])

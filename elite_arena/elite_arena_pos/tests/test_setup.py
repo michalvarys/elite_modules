@@ -4,27 +4,32 @@ from odoo.tests import TransactionCase, tagged
 
 @tagged("post_install", "-at_install")
 class TestArenaPosSetup(TransactionCase):
-    """Runs in a database with the company "Elite Arena" (see README, Testy)."""
+    """Runs in a database with the company "Elite Arena", alone or as a branch (see README, Testy)."""
 
     def setUp(self):
         super().setUp()
         self.setup = self.env["elite.arena.pos.setup"]
         self.company = self.setup.target_company("Elite Arena")
-        self.tax = self.setup.sale_tax(self.company)
-        self.tax_12 = self.setup.sale_tax(self.company, 12.0)
+        self.root = self.company.root_id  # the company itself, or the company of which it is a branch
+        self.tax = self.setup.sale_tax(self.root)
+        self.tax_12 = self.setup.sale_tax(self.root, 12.0)
         # food; every drink is 21 %, bottled water included
         self.reduced = {"16040", "16039", "16038", "16037", "16036", "16077", "16060", "16043", "16042",
                         "16076", "16062", "16069", "16078", "16075", "16041", "16061", "16068", "16067",
                         "16059", "16066"}
 
     def test_company_is_czech(self):
-        self.assertEqual(self.company.chart_template, "cz")
-        self.assertEqual(self.company.currency_id, self.env.ref("base.CZK"))
-        self.assertTrue(self.company.account_sale_tax_id)
+        for company in self.root | self.company:
+            self.assertEqual(company.chart_template, "cz", company.name)
+            self.assertEqual(company.currency_id, self.env.ref("base.CZK"), company.name)
+            self.assertTrue(company.account_sale_tax_id, company.name)
+        self.assertEqual(self.root.account_price_include, "tax_included")
 
     def test_other_companies_untouched(self):
-        others = self.env["res.company"].search([("id", "!=", self.company.id)])
-        self.assertTrue(others)
+        """Companies outside the till's company tree (root and its branches) get no accounting."""
+        others = self.env["res.company"].search([("id", "not in", self.root.child_ids.ids + self.root.ids)])
+        if not others:
+            self.skipTest("no other company in the database")
         for company in others:
             self.assertFalse(company.chart_template, company.name)
             self.assertFalse(self.env["account.journal"].search_count([("company_id", "=", company.id)]),
@@ -34,7 +39,7 @@ class TestArenaPosSetup(TransactionCase):
         for tax, rate in ((self.tax, 21.0), (self.tax_12, 12.0)):
             self.assertEqual(tax.amount, rate)
             self.assertEqual(tax.type_tax_use, "sale")
-            self.assertEqual(tax.company_id, self.company)
+            self.assertEqual(tax.company_id, self.root)
             self.assertTrue(tax.price_include)
 
     def test_products(self):
@@ -63,8 +68,9 @@ class TestArenaPosSetup(TransactionCase):
         config = self.env.ref("elite_arena_pos.pos_config_arena")
         self.assertEqual(config.company_id, self.company)
         self.assertEqual(set(config.payment_method_ids.mapped("name")), {"Hotově", "Kartou"})
-        self.assertEqual(config.payment_method_ids.journal_id.company_id, self.company)
-        self.assertEqual(config.invoice_journal_id.company_id, self.company)
+        self.assertEqual(config.payment_method_ids.company_id, self.company)
+        for journal in config.payment_method_ids.journal_id | config.invoice_journal_id:
+            self.assertIn(journal.company_id, self.root | self.company, journal.name)
         self.assertEqual(config.invoice_journal_id.type, "sale")
         self.assertEqual(config.picking_type_id.warehouse_id.company_id, self.company)
         self.assertTrue(config.limit_categories)
