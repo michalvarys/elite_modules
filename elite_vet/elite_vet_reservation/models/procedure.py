@@ -78,6 +78,11 @@ class VetProcedure(models.Model):
             names = rec.doctors_for_booking().mapped("name")
             rec.performed_by = ", ".join(names) or _("žádná lékařka – zkontrolujte specializace")
 
+    @api.model
+    def _other(self):
+        """Jiné: the procedure of a reservation booked without one (request 3. 11.)."""
+        return self.env.ref("elite_vet_reservation.procedure_other", raise_if_not_found=False) or self.browse()
+
     @api.constrains("duration")
     def _check_duration(self):
         for rec in self:

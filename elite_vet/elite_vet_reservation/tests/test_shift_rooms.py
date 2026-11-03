@@ -298,3 +298,20 @@ class TestShiftRooms(ReservationCase):
         self.assertEqual(at_ten.doctor_id, self.dr_a)
         at_ten.action_select()
         self.assertEqual(w.slot_doctor_id, self.dr_a)
+
+    # ---------- request 3. 11.: Smazat službu in the board's dialog ----------
+    def test_delete_shift_from_the_board_dialog(self):
+        shift = self.shift(room_id=self.room1.id)
+        assignment = self.Assignment.search([("shift_id", "=", shift.id)])
+        self.assertTrue(assignment)
+        action = shift.action_delete_from_board()
+        self.assertEqual(action["type"], "ir.actions.act_window_close")
+        self.assertFalse(shift.exists() or assignment.exists(), "the board's service goes with its shift")
+
+    def test_delete_manual_service_from_the_board_dialog(self):
+        manual = self.assign(self.dr_a, self.room2, self.day, 8.0, 12.0)
+        manual.action_delete_from_board()
+        self.assertFalse(manual.exists())
+        roster = self.Assignment.search([("shift_id", "=", self.shift(room_id=self.room1.id).id)])
+        with self.assertRaises(UserError, msg="a roster service is deleted with its shift"):
+            roster.action_delete_from_board()

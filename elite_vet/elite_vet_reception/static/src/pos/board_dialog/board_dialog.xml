@@ -126,6 +126,10 @@
             <div t-if="!detail" class="text-muted">Načítám…</div>
             <t t-else="">
                 <dl class="o_ev_board_facts mb-0">
+                    <t t-if="detail.title">
+                        <dt>Popis</dt>
+                        <dd class="o_ev_board_detail_title fw-bold" t-esc="detail.title"/>
+                    </t>
                     <dt>Klient</dt>
                     <dd class="o_ev_board_detail_owner"><t t-esc="detail.owner or 'bez jména'"/>
                         <span t-if="detail.phone" class="text-muted"> · <t t-esc="detail.phone"/></span></dd>

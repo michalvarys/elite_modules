@@ -126,8 +126,11 @@ class VetReservation(models.Model):
     contact_name = fields.Char(string="Jméno a příjmení")
     contact_email = fields.Char(string="E-mail")
     contact_phone = fields.Char(string="Telefon")
-    pet_name = fields.Char(string="Jméno mazlíčka")
-    pet_species = fields.Selection(SPECIES, string="Druh zvířete")
+    # Request 3. 11. (Lucie): with a pet selected, its card is the source (read-only on the form);
+    # without one they hold what the client typed (web, wizard).
+    pet_name = fields.Char(string="Jméno mazlíčka", compute="_compute_pet_details", store=True, readonly=False)
+    pet_species = fields.Selection(SPECIES, string="Druh zvířete", compute="_compute_pet_details", store=True,
+                                   readonly=False)
     # Request 1. 11. (Lucie): a short text of reception, e.g. for a reservation without a client;
     # it leads the name (board, till).
     title = fields.Char(string="Popis", help="Nepovinný krátký popis – ukáže se jako první v názvu rezervace "
@@ -212,6 +215,23 @@ class VetReservation(models.Model):
             parts = [rec.title or "", client or ("" if rec.title else loc.env._("Bez jména")),
                      rec.pet_id.name or rec.pet_name or "", loc.procedure_id.name or ""]
             rec.name = " / ".join(p for p in parts if p)
+
+    @api.model
+    def _drop_pet_details(self, vals, has_pet):
+        """With a pet the name and species come from its card (_compute_pet_details), never from vals."""
+        if has_pet:
+            vals.pop("pet_name", None)
+            vals.pop("pet_species", None)
+
+    @api.depends("pet_id.name", "pet_id.species")
+    def _compute_pet_details(self):
+        for rec in self:
+            if rec.pet_id:
+                rec.pet_name = rec.pet_id.name
+                rec.pet_species = rec.pet_id.species
+            else:
+                rec.pet_name = rec.pet_name
+                rec.pet_species = rec.pet_species
 
     @api.depends("kind", "room_id")
     def _compute_block_room_ids(self):
@@ -402,7 +422,12 @@ class VetReservation(models.Model):
         for vals in vals_list:
             self._check_block_rights({"kind": vals.get("kind", default_kind)})
         other_rooms = self._expand_block_rooms(vals_list, default_kind)
+        other = self.env["elite.vet.procedure"]._other()
         for vals in vals_list:
+            self._drop_pet_details(vals, bool(vals.get("pet_id")))
+            # Request 3. 11. (Lucie): the procedure is optional, an empty one is Jiné.
+            if vals.get("kind", default_kind or "reservation") == "reservation" and not vals.get("procedure_id"):
+                vals["procedure_id"] = other.id or False
             if vals.get("start") and not vals.get("stop"):
                 proc = self.env["elite.vet.procedure"].browse(vals.get("procedure_id"))
                 minutes = proc.duration if proc else 30
@@ -504,6 +529,7 @@ class VetReservation(models.Model):
     def write(self, vals):
         self._check_block_rights(vals)
         vals = dict(vals)
+        self._drop_pet_details(vals, bool(vals["pet_id"]) if "pet_id" in vals else bool(self) and all(self.mapped("pet_id")))
         room_cmds = vals.pop("block_room_ids", None)
         # From the block form (web_save, the form's Zrušit blokaci): the change applies to the
         # whole group; the board (dragging one block) changes only that block.
@@ -511,6 +537,12 @@ class VetReservation(models.Model):
         if self.env.context.get("ev_block_group") or room_cmds is not None:
             siblings = {rec: rec._block_group() - rec for rec in self if rec.kind == "block"}
         res = super().write(vals)
+        if {"procedure_id", "kind"} & set(vals):
+            # a procedure cleared in the form is Jiné too
+            missing = self.filtered(lambda r: r.kind == "reservation" and not r.procedure_id)
+            other = self.env["elite.vet.procedure"]._other()
+            if missing and other:
+                missing.write({"procedure_id": other.id})
         if {"start", "stop", "room_id", "state", "kind", "block_scope"} & set(vals):
             self._check_overlap()
         shared = {k: v for k, v in vals.items() if k != "room_id"}
@@ -695,6 +727,7 @@ class VetReservation(models.Model):
             ev_start, ev_end = A.utc_to_local_minutes(r.start, day), A.utc_to_local_minutes(r.stop, day)
             events.append({
                 "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
+                "title": (r.title or "") if r.kind == "reservation" else "",
                 "block_scope": r.block_scope if r.kind == "block" else False,
                 "room_id": r.room_id.id or False,
                 "start": ev_start, "end": ev_end,

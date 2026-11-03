@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Úkon Jiné: dosadí se do rezervace bez úkonu (požadavek 3. 11.). Úkony zadává klinika
+         sama; na existující databázi migrace 18.0.2.18.0 naváže tohle ID na její Jiné. -->
+    <data noupdate="1">
+        <record id="procedure_other" model="elite.vet.procedure">
+            <field name="name">Jiné</field>
+            <field name="duration">30</field>
+            <field name="symbol">?</field>
+            <field name="color">grey</field>
+            <field name="sequence">210</field>
+        </record>
+    </data>
+</odoo>

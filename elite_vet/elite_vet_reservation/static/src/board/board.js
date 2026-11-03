@@ -161,8 +161,10 @@ export class ReservationBoard extends Component {
     eventLabel(e) {
         if (e.kind === "block") return e.name;
         // WinVet calendar entry (elite_vet_winvet): pet (owner) from the card index, else the WinVet text.
-        if (e.pet && e.owner) return e.pet + " (" + e.owner + ")";
-        return e.pet || e.owner || e.name;
+        const who = e.pet && e.owner ? e.pet + " (" + e.owner + ")" : e.pet || e.owner;
+        // Popis of reception (request 1. 11.) leads, like in the reservation name.
+        if (e.title) return who ? e.title + " · " + who : e.title;
+        return who || e.name;
     }
     eventTitle(e) {
         if (e.kind === "block") return e.time_label + "\n" + e.name;

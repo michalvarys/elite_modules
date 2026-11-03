@@ -109,25 +109,42 @@ class ReservationWizard(models.TransientModel):
     summary = fields.Html(compute="_compute_summary", sanitize=False)
 
     # ---------- compute ----------
+    # Without a procedure the wizard behaves as with Jiné, which it gets when continuing.
     @api.depends("procedure_id")
     def _compute_allowed_doctors(self):
+        other = self.env["elite.vet.procedure"]._other()
         for w in self:
-            w.allowed_doctor_ids = w.procedure_id.doctors_for_booking() if w.procedure_id else False
+            procedure = w.procedure_id or other
+            w.allowed_doctor_ids = procedure.doctors_for_booking() if procedure else False
 
     @api.depends("procedure_id")
     def _compute_duration(self):
         # Changes only with the procedure; an extended duration survives doctor or date changes.
+        other = self.env["elite.vet.procedure"]._other()
         for w in self:
             if w.procedure_id:
                 w.duration = w.procedure_id.duration
             elif not w.duration:
-                w.duration = 0
+                w.duration = other.duration
 
     @api.constrains("duration", "procedure_id")
     def _check_duration(self):
         for w in self:
             if w.procedure_id and (w.duration < 5 or w.duration % 5 or w.duration > 480):
                 raise ValidationError(_("Délka musí být násobek 5 minut, nejméně 5 a nejvýše 480."))
+
+    def _ensure_procedure(self):
+        """Request 3. 11. (Lucie): the procedure is optional, an empty one is Jiné. A duration
+        typed before keeps winning over Jiné's own."""
+        if self.procedure_id:
+            return
+        other = self.env["elite.vet.procedure"]._other()
+        if not other:
+            raise UserError(_("Vyberte úkon."))
+        duration = self.duration
+        self.procedure_id = other
+        if duration:
+            self.duration = duration
 
     def _effective_duration(self):
         self.ensure_one()
@@ -360,8 +377,7 @@ class ReservationWizard(models.TransientModel):
         time does not.
         """
         self.ensure_one()
-        if not self.procedure_id:
-            raise UserError(_("Vyberte úkon."))
+        self._ensure_procedure()
         warning = False
         manual_vals = {"manual": False}
         if self.room_id:
@@ -393,8 +409,7 @@ class ReservationWizard(models.TransientModel):
         doctor need not be on duty at that time.
         """
         self.ensure_one()
-        if not self.procedure_id:
-            raise UserError(_("Vyberte úkon."))
+        self._ensure_procedure()
         if not (self.manual_room_id and self.manual_time):
             raise UserError(_("Vyberte ordinaci a čas."))
         hh, mm = (int(x) for x in self.manual_time.split(":"))
@@ -466,8 +481,9 @@ class ReservationWizard(models.TransientModel):
     # ---------- save ----------
     def action_save(self):
         self.ensure_one()
-        if not (self.procedure_id and self.room_id):
-            raise UserError(_("Chybí úkon nebo termín."))
+        self._ensure_procedure()
+        if not self.room_id:
+            raise UserError(_("Chybí termín."))
         env = self.with_context(clean_context(self.env.context)).env
         partner = self._selected_partner()
         pet = self._selected_pet()

@@ -37,6 +37,12 @@
                 <field name="accepts_bookings" invisible="1"/>
                 <field name="room_id" invisible="is_note or not accepts_bookings" options="{'no_create': True}"/>
             </field>
+            <xpath expr="//sheet" position="before">
+                <header invisible="not id">
+                    <button name="action_delete_from_board" type="object" string="Smazat službu" class="btn-danger"
+                            confirm="Smazat tuto službu? Zmizí z rozpisu, z kalendáře i z volných termínů na webu."/>
+                </header>
+            </xpath>
             <xpath expr="//sheet" position="inside">
                 <div class="alert alert-info" role="status" invisible="is_note or not room_id">
                     Směna s ordinací se sama propíše do rezervací (Rezervace → Rozpis lékařů, kalendář,

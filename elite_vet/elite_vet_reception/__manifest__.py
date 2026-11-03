@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Recepce",
-    "version": "18.0.1.20.1",
+    "version": "18.0.1.22.0",
     "category": "Sales/Point of Sale",
     "summary": "Recepce v pokladně: dnešní příchody, čekárna, účty k zaplacení a stavy návštěvy.",
     "description": """
