@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Skupiny zboží podle pokladny Elite Trafika (kategorie Dotykačky, export z 3. 11. 2026),
+             v pořadí záložek na pokladně. -->
+        <record id="product_category_trafika" model="product.category">
+            <field name="name">Elite Trafika</field>
+        </record>
+        <record id="product_category_cigarety" model="product.category">
+            <field name="name">Cigarety</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_pivo" model="product.category">
+            <field name="name">Pivo</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_energy" model="product.category">
+            <field name="name">Energy drinky</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_vapes" model="product.category">
+            <field name="name">VAPES</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_cbd_cartridge" model="product.category">
+            <field name="name">CBD cartridge</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_alcohol" model="product.category">
+            <field name="name">Alcohol</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_prislusenstvi" model="product.category">
+            <field name="name">Příslušenství a zboží</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_cokolada" model="product.category">
+            <field name="name">ČOKOLÁDA</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_zvykacky" model="product.category">
+            <field name="name">Žvýkačky-Bonbony-Chips</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_lizatka" model="product.category">
+            <field name="name">Lízátka - DROPS</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_canna_bloom" model="product.category">
+            <field name="name">Canna Bloom - Květy</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_oleje" model="product.category">
+            <field name="name">Oleje - kapky - Tea</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_hasish" model="product.category">
+            <field name="name">Hasish</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_gumies" model="product.category">
+            <field name="name">Gumies - Shots</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_pre_rolls" model="product.category">
+            <field name="name">Pree-Rolls</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_cookies" model="product.category">
+            <field name="name">COOKIES</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_tyson" model="product.category">
+            <field name="name">TYSON</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_veo" model="product.category">
+            <field name="name">VEO zah. Tabák</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_neo" model="product.category">
+            <field name="name">NEO</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_velo" model="product.category">
+            <field name="name">VELO</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_siberia" model="product.category">
+            <field name="name">SIBERIA</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_iqos" model="product.category">
+            <field name="name">IQOS</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_tabaky" model="product.category">
+            <field name="name">Tabáky-Dutinky-Papirky</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_vuse" model="product.category">
+            <field name="name">VUSE</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_syx_bar" model="product.category">
+            <field name="name">SYX Bar</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_dutinky" model="product.category">
+            <field name="name">Dutinky</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_zapalovace" model="product.category">
+            <field name="name">Zapalovače</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_doutniky" model="product.category">
+            <field name="name">Doutníky</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_syx_pod" model="product.category">
+            <field name="name">SYX POD</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_napoje" model="product.category">
+            <field name="name">Nápoje</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_pipe_bong" model="product.category">
+            <field name="name">PIPE a BONG</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_vahy" model="product.category">
+            <field name="name">VÁHY</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_kvety" model="product.category">
+            <field name="name">KVĚTY volné</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_kleaner" model="product.category">
+            <field name="name">KLEANER</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="product_category_pytliky" model="product.category">
+            <field name="name">PYTLÍKY</field>
+            <field name="parent_id" ref="product_category_trafika"/>
+        </record>
+        <record id="pos_category_cigarety" model="pos.category">
+            <field name="name">Cigarety</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="pos_category_pivo" model="pos.category">
+            <field name="name">Pivo</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="pos_category_energy" model="pos.category">
+            <field name="name">Energy drinky</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="pos_category_vapes" model="pos.category">
+            <field name="name">VAPES</field>
+            <field name="sequence">40</field>
+        </record>
+        <record id="pos_category_cbd_cartridge" model="pos.category">
+            <field name="name">CBD cartridge</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="pos_category_alcohol" model="pos.category">
+            <field name="name">Alcohol</field>
+            <field name="sequence">60</field>
+        </record>
+        <record id="pos_category_prislusenstvi" model="pos.category">
+            <field name="name">Příslušenství a zboží</field>
+            <field name="sequence">70</field>
+        </record>
+        <record id="pos_category_cokolada" model="pos.category">
+            <field name="name">ČOKOLÁDA</field>
+            <field name="sequence">80</field>
+        </record>
+        <record id="pos_category_zvykacky" model="pos.category">
+            <field name="name">Žvýkačky-Bonbony-Chips</field>
+            <field name="sequence">90</field>
+        </record>
+        <record id="pos_category_lizatka" model="pos.category">
+            <field name="name">Lízátka - DROPS</field>
+            <field name="sequence">100</field>
+        </record>
+        <record id="pos_category_canna_bloom" model="pos.category">
+            <field name="name">Canna Bloom - Květy</field>
+            <field name="sequence">110</field>
+        </record>
+        <record id="pos_category_oleje" model="pos.category">
+            <field name="name">Oleje - kapky - Tea</field>
+            <field name="sequence">120</field>
+        </record>
+        <record id="pos_category_hasish" model="pos.category">
+            <field name="name">Hasish</field>
+            <field name="sequence">130</field>
+        </record>
+        <record id="pos_category_gumies" model="pos.category">
+            <field name="name">Gumies - Shots</field>
+            <field name="sequence">140</field>
+        </record>
+        <record id="pos_category_pre_rolls" model="pos.category">
+            <field name="name">Pree-Rolls</field>
+            <field name="sequence">150</field>
+        </record>
+        <record id="pos_category_cookies" model="pos.category">
+            <field name="name">COOKIES</field>
+            <field name="sequence">160</field>
+        </record>
+        <record id="pos_category_tyson" model="pos.category">
+            <field name="name">TYSON</field>
+            <field name="sequence">170</field>
+        </record>
+        <record id="pos_category_veo" model="pos.category">
+            <field name="name">VEO zah. Tabák</field>
+            <field name="sequence">180</field>
+        </record>
+        <record id="pos_category_neo" model="pos.category">
+            <field name="name">NEO</field>
+            <field name="sequence">190</field>
+        </record>
+        <record id="pos_category_velo" model="pos.category">
+            <field name="name">VELO</field>
+            <field name="sequence">200</field>
+        </record>
+        <record id="pos_category_siberia" model="pos.category">
+            <field name="name">SIBERIA</field>
+            <field name="sequence">210</field>
+        </record>
+        <record id="pos_category_iqos" model="pos.category">
+            <field name="name">IQOS</field>
+            <field name="sequence">220</field>
+        </record>
+        <record id="pos_category_tabaky" model="pos.category">
+            <field name="name">Tabáky-Dutinky-Papirky</field>
+            <field name="sequence">230</field>
+        </record>
+        <record id="pos_category_vuse" model="pos.category">
+            <field name="name">VUSE</field>
+            <field name="sequence">240</field>
+        </record>
+        <record id="pos_category_syx_bar" model="pos.category">
+            <field name="name">SYX Bar</field>
+            <field name="sequence">250</field>
+        </record>
+        <record id="pos_category_dutinky" model="pos.category">
+            <field name="name">Dutinky</field>
+            <field name="sequence">260</field>
+        </record>
+        <record id="pos_category_zapalovace" model="pos.category">
+            <field name="name">Zapalovače</field>
+            <field name="sequence">270</field>
+        </record>
+        <record id="pos_category_doutniky" model="pos.category">
+            <field name="name">Doutníky</field>
+            <field name="sequence">280</field>
+        </record>
+        <record id="pos_category_syx_pod" model="pos.category">
+            <field name="name">SYX POD</field>
+            <field name="sequence">290</field>
+        </record>
+        <record id="pos_category_napoje" model="pos.category">
+            <field name="name">Nápoje</field>
+            <field name="sequence">300</field>
+        </record>
+        <record id="pos_category_pipe_bong" model="pos.category">
+            <field name="name">PIPE a BONG</field>
+            <field name="sequence">310</field>
+        </record>
+        <record id="pos_category_vahy" model="pos.category">
+            <field name="name">VÁHY</field>
+            <field name="sequence">320</field>
+        </record>
+        <record id="pos_category_kvety" model="pos.category">
+            <field name="name">KVĚTY volné</field>
+            <field name="sequence">330</field>
+        </record>
+        <record id="pos_category_kleaner" model="pos.category">
+            <field name="name">KLEANER</field>
+            <field name="sequence">340</field>
+        </record>
+        <record id="pos_category_pytliky" model="pos.category">
+            <field name="name">PYTLÍKY</field>
+            <field name="sequence">350</field>
+        </record>
+    </data>
+</odoo>

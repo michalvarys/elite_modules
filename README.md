@@ -14,8 +14,11 @@ elite_modules/
 │   ├── elite_vet_calendar/   Rozpis služeb lékařů
 │   ├── elite_vet_reservation/   Rezervační kalendář (nahrazuje WinVet)
 │   └── elite_vet_team/       Stránka Náš tým
-└── elite_arena/           herna Elite Arena
-    └── elite_arena_ggleap/   Data z ggLeapu a přehled herny
+├── elite_arena/           herna Elite Arena
+│   └── elite_arena_ggleap/   Data z ggLeapu a přehled herny
+└── elite_trafika/         trafika Elite Trafika
+    ├── elite_trafika_pos/    Pokladna: zboží z Dotykačky, sklad, DPH
+    └── elite_trafika_dotykacka/  Prodeje a sklad z Dotykačky
 ```
 
 Celý repozitář je v kontejneru namountovaný do `/mnt/modules`.
@@ -124,6 +127,26 @@ návštěvy, kdy se chodí a kdo odchází.
 adminu (Settings → API → Public API) → *Uložit a otestovat spojení*.
 
 Detaily v [elite_arena/elite_arena_ggleap/README.md](elite_arena/elite_arena_ggleap/README.md).
+
+
+## elite_trafika — trafika Elite Trafika
+
+### `elite_trafika_pos` — Pokladna trafiky
+
+Pokladna pro pobočku Elite Trafika: 506 položek ve 35 skupinách převzatých
+z Dotykačky, sklad, česká účetní osnova a DPH podle Dotykačky. Na serveru je potřeba
+přidat `/mnt/modules/elite_trafika` do `addons_path`.
+
+Detaily v [elite_trafika/elite_trafika_pos/README.md](elite_trafika/elite_trafika_pos/README.md).
+
+### `elite_trafika_dotykacka` — Historie z Dotykačky
+
+Prodeje trafiky z Dotykačky (od 5. 2. 2026, 6 141 účtenek) jako uzavřené směny
+a objednávky pokladny, aby byly ve výkazech pokladny; bez účetních zápisů a bez
+pohybů skladu. Nastaví počáteční stav skladu podle Dotykačky. Instalovat až při
+přechodu z Dotykačky na Odoo.
+
+Detaily v [elite_trafika/elite_trafika_dotykacka/README.md](elite_trafika/elite_trafika_dotykacka/README.md).
 
 
 dokumentace: 

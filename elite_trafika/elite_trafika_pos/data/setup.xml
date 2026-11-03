@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Nastavení pokladny pro jednu firmu. Ostatních firem v databázi se modul nedotkne a u cílové
+         firmy nic nepřepisuje: osnovu a daně založí jen firmě, která ještě nemá účetnictví,
+         jinak použije to, co firma má. Kód je v models/setup.py, běh je bezpečné opakovat.
+
+         company      firma (přesný název), pro kterou se pokladna zakládá; když v databázi není,
+                      instalace skončí chybou a nic se nezmění
+         pos_name     název pokladny
+         reduced_vat  zboží s DPH 12 %, ostatní 21 %. Sazby jsou převzaté z Dotykačky, kde má
+                      všechno zboží trafiky 21 % (i čokolády, sušenky a lízátka); zboží s 12 %
+                      stačí doplnit sem, např. ref('product_271606912178637'). -->
+    <function model="elite.trafika.pos.setup" name="ensure_setup">
+        <value eval="{
+            'company': 'Elite Trafika',
+            'pos_name': 'Elite Trafika',
+            'reduced_vat': [
+            ],
+        }"/>
+    </function>
+</odoo>

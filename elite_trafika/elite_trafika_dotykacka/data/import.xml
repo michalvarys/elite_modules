@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Jen při instalaci modulu (noupdate): aktualizace modulu historii ani sklad znovu nenahraje.
+         Data jsou v data/dotykacka/*.csv, kód v models/dotykacka_import.py. -->
+    <data noupdate="1">
+        <function model="elite.trafika.dotykacka.import" name="import_history"/>
+        <function model="elite.trafika.dotykacka.import" name="import_stock"/>
+    </data>
+</odoo>
