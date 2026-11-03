@@ -150,6 +150,9 @@
     .evm-summary { display: flex; gap: 16px; flex-wrap: wrap; margin: 6px 0 12px; }
 }
 
+// Odoo's .o_action hides the overflow; the planner is taller than the window, so it scrolls itself.
+html .o_web_client > .o_action_manager > .evp.o_action { overflow: auto; }
+
 @media (max-width: 700px) {
     .evp .evm-grid { gap: 3px; }
     .evp .evm-day { min-height: 64px; padding: 3px; font-size: 11px; }
