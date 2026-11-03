@@ -134,3 +134,14 @@ class TestPlanner(ReservationCase):
         self.P.add_shift(self.month, self.afternoon.id, self.day, self.dr_a.id)   # 12–20, touches the manual 8–12
         b = self.P.load_month(self.month)["balance"][self.dr_a.id]
         self.assertEqual(b["shift_hours"], 12)
+
+    def test_booking_status_says_why(self):
+        self.P.add_shift(self.month, self.morning.id, self.day, self.dr_a.id)
+        self.dr_b.write({"accepts_bookings": False, "staff_role": "doctor"})
+        self.P.add_shift(self.month, self.afternoon.id, self.day, self.dr_b.id)
+        self.P.add_shift(self.month, self.morning.id, self.day, self.nurse.id)
+        status = {v["member_id"]: v["booking"] for v in self.P.load_month(self.month)["shifts"] if v["id"] > 0}
+        self.assertTrue(status[self.dr_a.id]["ok"])
+        self.assertFalse(status[self.dr_b.id]["ok"])
+        self.assertIn("přijímá rezervace", status[self.dr_b.id]["text"])
+        self.assertIsNone(status[self.nurse.id]["ok"])

@@ -254,11 +254,13 @@ export class Planner extends Component {
     }
     get assignmentCount() { return this.state.data.shifts.filter((s) => s.assignment).length; }
     async adoptAssignments() { await this.call("adopt_assignments"); }
+    notBooked(shift) { return Boolean(shift.booking && shift.booking.ok === false); }
     chipTitle(shift) {
         const conflict = this.chipConflict(shift);
         const origin = shift.assignment ? "Služba zadaná v Rezervace › Rozpis lékařů"
             : shift.from_roster ? "Směna zadaná v Rozpisu služeb" : "";
-        return [origin, conflict].filter(Boolean).join(" · ") || null;
+        const booking = shift.booking && shift.booking.ok === false ? shift.booking.text : "";
+        return [origin, conflict, booking].filter(Boolean).join(" · ") || null;
     }
     async copyWeek(day, ev) {
         ev.stopPropagation();

@@ -124,7 +124,29 @@ class Planner(models.AbstractModel):
                 "row_id": slot.row_id.id or 0, "member_id": shift.doctor_id.id,
                 "helper_name": shift.helper_name or "", "hour_from": shift.hour_from, "hour_to": shift.hour_to,
                 "room": shift.room_id.name or "", "type": shift.type_id.name or "",
-                "from_roster": not shift.planning_slot_id}
+                "from_roster": not shift.planning_slot_id, "booking": self._booking_status(shift, slot)}
+
+    @api.model
+    def _booking_status(self, shift, slot):
+        """Does the shift reach the reservation calendar, and if not, why (shown in the cell dialog).
+        ok = True / False, or None for people who never go there (nurses, reception, helpers)."""
+        doctor = shift.doctor_id
+        if not doctor or (doctor.staff_role != "doctor" and not doctor.accepts_bookings):
+            return {"ok": None, "text": ""}
+        if not doctor.accepts_bookings:
+            return {"ok": False, "text": _("Nepropisuje se do rezervací: %s nemá v Lékařkách zaškrtnuto "
+                                           "„Lékařka – přijímá rezervace“.") % doctor.name}
+        if not shift.room_id:
+            if slot and not slot.row_id.room_id:
+                return {"ok": False, "text": _("Nepropisuje se do rezervací: úsek %s nemá v Úsecích plánu "
+                                               "vyplněnou ordinaci.") % slot.row_id.name}
+            return {"ok": False, "text": _("Nepropisuje se do rezervací: směna nemá ordinaci.")}
+        assignment = self.env["elite.vet.doctor.assignment"].sudo().search([
+            ("doctor_id", "=", doctor.id), ("date", "=", shift.date), ("room_id", "=", shift.room_id.id),
+            ("hour_from", "<=", shift.hour_from), ("hour_to", ">", shift.hour_from)], limit=1)
+        if not assignment:
+            return {"ok": False, "text": _("V kalendáři rezervací chybí. Uložte směnu znovu (změňte a vraťte čas).")}
+        return {"ok": True, "text": _("V kalendáři rezervací: %s") % assignment.display_name}
 
     @api.model
     def _roster_slot(self, shift, rows):
@@ -195,7 +217,8 @@ class Planner(models.AbstractModel):
             shift_vals.append({"id": -a.id, "date": fields.Date.to_string(a.date), "slot_id": slot.id or 0,
                                "row_id": slot.row_id.id or 0, "member_id": a.doctor_id.id, "helper_name": "",
                                "hour_from": a.hour_from, "hour_to": a.hour_to, "room": a.room_id.name or "",
-                               "type": _("Rozpis lékařů"), "from_roster": True, "assignment": True})
+                               "type": _("Rozpis lékařů"), "from_roster": True, "assignment": True,
+                               "booking": {"ok": True, "text": _("V kalendáři rezervací (zadáno v Rozpisu lékařů)")}})
         row_vals = [{"id": r.id, "name": r.name, "kind": r.kind, "room": r.room_id.name or "",
                      "preferred_roles": [x.strip() for x in (r.preferred_roles or "").split(",") if x.strip()],
                      "slots": [{"id": sl.id, "name": sl.name, "hour_from": sl.hour_from, "hour_to": sl.hour_to,
