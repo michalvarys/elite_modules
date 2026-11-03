@@ -33,7 +33,24 @@
 
                 <!-- ================= Rozpis místností ================= -->
                 <t t-if="state.tab === 'rooms'">
-                    <div class="evp-scroll">
+                    <!-- Požadavky na směny above the plan (Lucie, 3. 11.): resizable by the bottom edge,
+                         scrolls inside, day columns aligned and scrolled together with the plan. -->
+                    <div class="evp-req-panel">
+                        <div class="evp-req-panel-head">
+                            <button class="btn btn-sm btn-link" t-on-click="toggleRequests">
+                                <t t-esc="state.reqOpen ? '▾' : '▸'"/> Požadavky na směny
+                            </button>
+                            <small t-if="state.reqOpen" class="text-muted">Klik nebo písmeno v buňce (D, N, L, P, S, M, R, O, V, Del) · velikost změníte tažením za spodní okraj</small>
+                        </div>
+                        <t t-if="state.reqOpen">
+                            <div class="evp-scroll evp-req-scroll" t-ref="reqScroll" t-att-style="'height:' + state.reqHeight + 'px'"
+                                 t-on-scroll="onReqScroll">
+                                <t t-call="elite_vet_planning.PlannerRequestsTable"/>
+                            </div>
+                            <div class="evp-resize" title="Táhnutím zvětšíte nebo zmenšíte" t-on-pointerdown="startResize"/>
+                        </t>
+                    </div>
+                    <div class="evp-scroll" t-ref="gridScroll" t-on-scroll="onGridScroll">
                         <table class="evp-grid">
                             <thead>
                                 <tr>
@@ -139,54 +156,7 @@
                         Tečka u záznamu = zadal(a) si sám/sama v Moje dostupnost.
                     </p>
                     <div class="evp-scroll">
-                        <table class="evp-grid evp-requests">
-                            <thead>
-                                <tr>
-                                    <th class="evp-head-row">Jméno</th>
-                                    <t t-foreach="days" t-as="day" t-key="day.date">
-                                        <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
-                                            <div class="evp-day-num" t-esc="day.day"/>
-                                            <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
-                                        </th>
-                                    </t>
-                                    <th class="evp-sum">D</th>
-                                    <th class="evp-sum">NV</th>
-                                    <th class="evp-note-col">Poznámka k měsíci</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="staffGroups" t-as="group" t-key="group.key">
-                                    <t t-foreach="group.staff" t-as="m" t-key="m.id">
-                                        <tr t-attf-class="evp-role-#{m.role} #{m_first ? 'evp-row-first' : ''}">
-                                            <th class="evp-head-row">
-                                                <span class="evp-order">
-                                                    <button t-att-disabled="m_first" t-on-click="() => this.moveMember(m, -1)" title="Nahoru">▲</button>
-                                                    <button t-att-disabled="m_last" t-on-click="() => this.moveMember(m, 1)" title="Dolů">▼</button>
-                                                </span>
-                                                <span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/>
-                                                <span class="evp-member-name" t-esc="m.name"/>
-                                                <small t-if="m_first" class="evp-role-label" t-esc="group.label"/>
-                                            </th>
-                                            <t t-foreach="days" t-as="day" t-key="day.date">
-                                                <t t-set="req" t-value="request(m.id, day.date)"/>
-                                                <td t-att-class="requestClass(m, day)" tabindex="0" t-att-data-req="m.id + '|' + day.date"
-                                                    t-att-title="req and req.note or null"
-                                                    t-on-click="() => this.openPicker(m, day)"
-                                                    t-on-keydown="(ev) => this.onRequestKey(m, day, ev)">
-                                                    <t t-if="req"><t t-esc="req.short"/><i t-if="req.self" class="evp-self">•</i><i t-if="req.note" class="evp-has-note">✎</i></t>
-                                                </td>
-                                            </t>
-                                            <td class="evp-sum" t-esc="countCode(m, 'D')"/>
-                                            <td class="evp-sum" t-esc="countCode(m, 'NV')"/>
-                                            <td class="evp-note-col">
-                                                <input class="form-control form-control-sm" t-att-value="monthNote(m)"
-                                                       t-on-change="(ev) => this.saveMonthNote(m, ev)" placeholder="Poznámka…"/>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </t>
-                            </tbody>
-                        </table>
+                        <t t-call="elite_vet_planning.PlannerRequestsTable"/>
                     </div>
                 </t>
             </div>
@@ -277,5 +247,55 @@
                 </div>
             </div>
         </div>
+    </t>
+    <t t-name="elite_vet_planning.PlannerRequestsTable">
+        <table class="evp-grid evp-requests">
+            <thead>
+                <tr>
+                    <th class="evp-head-row">Jméno</th>
+                    <t t-foreach="days" t-as="day" t-key="day.date">
+                        <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
+                            <div class="evp-day-num" t-esc="day.day"/>
+                            <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
+                        </th>
+                    </t>
+                    <th class="evp-sum">D</th>
+                    <th class="evp-sum">NV</th>
+                    <th class="evp-note-col">Poznámka k měsíci</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="staffGroups" t-as="group" t-key="group.key">
+                    <t t-foreach="group.staff" t-as="m" t-key="m.id">
+                        <tr t-attf-class="evp-role-#{m.role} #{m_first ? 'evp-row-first' : ''}">
+                            <th class="evp-head-row">
+                                <span class="evp-order">
+                                    <button t-att-disabled="m_first" t-on-click="() => this.moveMember(m, -1)" title="Nahoru">▲</button>
+                                    <button t-att-disabled="m_last" t-on-click="() => this.moveMember(m, 1)" title="Dolů">▼</button>
+                                </span>
+                                <span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/>
+                                <span class="evp-member-name" t-esc="m.name"/>
+                                <small t-if="m_first" class="evp-role-label" t-esc="group.label"/>
+                            </th>
+                            <t t-foreach="days" t-as="day" t-key="day.date">
+                                <t t-set="req" t-value="request(m.id, day.date)"/>
+                                <td t-att-class="requestClass(m, day)" tabindex="0" t-att-data-req="m.id + '|' + day.date"
+                                    t-att-title="req and req.note or null"
+                                    t-on-click="() => this.openPicker(m, day)"
+                                    t-on-keydown="(ev) => this.onRequestKey(m, day, ev)">
+                                    <t t-if="req"><t t-esc="req.short"/><i t-if="req.self" class="evp-self">•</i><i t-if="req.note" class="evp-has-note">✎</i></t>
+                                </td>
+                            </t>
+                            <td class="evp-sum" t-esc="countCode(m, 'D')"/>
+                            <td class="evp-sum" t-esc="countCode(m, 'NV')"/>
+                            <td class="evp-note-col">
+                                <input class="form-control form-control-sm" t-att-value="monthNote(m)"
+                                       t-on-change="(ev) => this.saveMonthNote(m, ev)" placeholder="Poznámka…"/>
+                            </td>
+                        </tr>
+                    </t>
+                </t>
+            </tbody>
+        </table>
     </t>
 </templates>
