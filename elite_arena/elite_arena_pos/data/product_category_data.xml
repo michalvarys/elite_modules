@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Skupiny zboží podle pokladny Elite Arena (arena-pokladna/*.jpeg). -->
+        <record id="product_category_arena" model="product.category">
+            <field name="name">Elite Arena</field>
+        </record>
+        <record id="product_category_big_shock" model="product.category">
+            <field name="name">BIG Shock!</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="product_category_game" model="product.category">
+            <field name="name">GAME</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="product_category_nealko" model="product.category">
+            <field name="name">NEALKO NÁPOJE</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="product_category_pivo" model="product.category">
+            <field name="name">PIVO</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="product_category_service_fee" model="product.category">
+            <field name="name">Service fee</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="product_category_sladkosti" model="product.category">
+            <field name="name">SLADKOSTI A SLANOSTI</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="product_category_jidlo" model="product.category">
+            <field name="name">JÍDLO</field>
+            <field name="parent_id" ref="product_category_arena"/>
+        </record>
+        <record id="pos_category_big_shock" model="pos.category">
+            <field name="name">BIG Shock!</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="pos_category_big_shock_500" model="pos.category">
+            <field name="name">BIG SHOCK 500ML</field>
+            <field name="sequence">1</field>
+            <field name="parent_id" ref="pos_category_big_shock"/>
+        </record>
+        <record id="pos_category_big_shock_hroznovy" model="pos.category">
+            <field name="name">BIG SHOCK HROZNOVÝ Cukr</field>
+            <field name="sequence">2</field>
+            <field name="parent_id" ref="pos_category_big_shock"/>
+        </record>
+        <record id="pos_category_big_shock_smart" model="pos.category">
+            <field name="name">BIG SHOCK SMART 500ML</field>
+            <field name="sequence">3</field>
+            <field name="parent_id" ref="pos_category_big_shock"/>
+        </record>
+        <record id="pos_category_big_shock_tea" model="pos.category">
+            <field name="name">BIG SHOCK TEA 330ML</field>
+            <field name="sequence">4</field>
+            <field name="parent_id" ref="pos_category_big_shock"/>
+        </record>
+        <record id="pos_category_big_shock_tycinka" model="pos.category">
+            <field name="name">BIG SHOCK TYČINKA</field>
+            <field name="sequence">5</field>
+            <field name="parent_id" ref="pos_category_big_shock"/>
+        </record>
+        <record id="pos_category_big_shock_waio" model="pos.category">
+            <field name="name">WAIO HYPOTONIC DRINK</field>
+            <field name="sequence">6</field>
+            <field name="parent_id" ref="pos_category_big_shock"/>
+        </record>
+        <record id="pos_category_game" model="pos.category">
+            <field name="name">GAME</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="pos_category_nealko" model="pos.category">
+            <field name="name">NEALKO NÁPOJE</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="pos_category_nealko_voda" model="pos.category">
+            <field name="name">Voda</field>
+            <field name="sequence">1</field>
+            <field name="parent_id" ref="pos_category_nealko"/>
+        </record>
+        <record id="pos_category_pivo" model="pos.category">
+            <field name="name">PIVO</field>
+            <field name="sequence">40</field>
+        </record>
+        <record id="pos_category_service_fee" model="pos.category">
+            <field name="name">Service fee</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="pos_category_sladkosti" model="pos.category">
+            <field name="name">SLADKOSTI A SLANOSTI</field>
+            <field name="sequence">60</field>
+        </record>
+        <record id="pos_category_jidlo" model="pos.category">
+            <field name="name">JÍDLO</field>
+            <field name="sequence">70</field>
+        </record>
+    </data>
+</odoo>

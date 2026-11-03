@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Zboží z pokladny Elite Arena. Kód zboží (SKU) = interní reference.
+             Ceny jsou včetně DPH; sazbu doplní data/product_tax_setup.xml. -->
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16023" model="product.template">
+            <field name="name">BIG SHOCK APPLE 500ml</field>
+            <field name="default_code">16023</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16023.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16021" model="product.template">
+            <field name="name">BIG SHOCK EXOTIC 500ml</field>
+            <field name="default_code">16021</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16021.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16020" model="product.template">
+            <field name="name">BIG SHOCK GOLD 500ml</field>
+            <field name="default_code">16020</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16020.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16022" model="product.template">
+            <field name="name">BIG SHOCK MELONE 500ml</field>
+            <field name="default_code">16022</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16022.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16019" model="product.template">
+            <field name="name">BIG SHOCK ORIGINÁL 500ml</field>
+            <field name="default_code">16019</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16019.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16074" model="product.template">
+            <field name="name">Big Shock RASPBERRIES</field>
+            <field name="default_code">16074</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">45.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16074.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16079" model="product.template">
+            <field name="name">BigShock CHERRY</field>
+            <field name="default_code">16079</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16079.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- název na fotce useknutý, cena podle ostatních BIG SHOCK 500ml -->
+        <record id="product_16080" model="product.template">
+            <field name="name">BigShock MANGO-ORANGE</field>
+            <field name="default_code">16080</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16080.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_500')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16040" model="product.template">
+            <field name="name">BIG SHOCK HROZNOVÝ CUKR 16040</field>
+            <field name="default_code">16040</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">33.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_hroznovy')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16039" model="product.template">
+            <field name="name">BIG SHOCK HROZNOVÝ CUKR 16039</field>
+            <field name="default_code">16039</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">33.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_hroznovy')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16026" model="product.template">
+            <field name="name">BIG SHOCK SMART Mango &amp; Lychee 500ml</field>
+            <field name="default_code">16026</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16026.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_smart')])]"/>
+        </record>
+        <!-- DOPLNIT: cena chybí (název podle bigshock.cz / waio.cz) -->
+        <record id="product_16025" model="product.template">
+            <field name="name">BIG SHOCK SMART Ananas &amp; Passionfruit 500ml</field>
+            <field name="default_code">16025</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16025.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_smart')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16024" model="product.template">
+            <field name="name">BIG SHOCK SMART Wild Cherry 500ml</field>
+            <field name="default_code">16024</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16024.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_smart')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16027" model="product.template">
+            <field name="name">BIG SHOCK ICE TEA Green Tea Hruška 330ml</field>
+            <field name="default_code">16027</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">45.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16027.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_tea')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16038" model="product.template">
+            <field name="name">BIG SHOCK TYČINKA 16038</field>
+            <field name="default_code">16038</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">33.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_tycinka')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16037" model="product.template">
+            <field name="name">BIG SHOCK TYČINKA Koko</field>
+            <field name="default_code">16037</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">33.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16037.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_tycinka')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16036" model="product.template">
+            <field name="name">BIG SHOCK TYČINKA 16036</field>
+            <field name="default_code">16036</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">33.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_tycinka')])]"/>
+        </record>
+        <!-- DOPLNIT: název na fotce useknutý, cena chybí -->
+        <record id="product_16031" model="product.template">
+            <field name="name">BIG SHOCK WAIO 16031</field>
+            <field name="default_code">16031</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16031.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_waio')])]"/>
+        </record>
+        <!-- DOPLNIT: cena chybí (název podle bigshock.cz / waio.cz) -->
+        <record id="product_16032" model="product.template">
+            <field name="name">BIG SHOCK WAIO Mango &amp; Lavender</field>
+            <field name="default_code">16032</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16032.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_waio')])]"/>
+        </record>
+        <!-- DOPLNIT: cena chybí (název podle bigshock.cz / waio.cz) -->
+        <record id="product_16030" model="product.template">
+            <field name="name">BIG SHOCK WAIO Cucumber &amp; Lime</field>
+            <field name="default_code">16030</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_big_shock"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16030.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_big_shock_waio')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16052" model="product.template">
+            <field name="name">1 HODINA</field>
+            <field name="default_code">16052</field>
+            <field name="type">service</field>
+            <field name="list_price">75.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
+        <record id="product_16055" model="product.template">
+            <field name="name">10 HODIN</field>
+            <field name="default_code">16055</field>
+            <field name="type">service</field>
+            <field name="list_price">670.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16053" model="product.template">
+            <field name="name">3 HODINY</field>
+            <field name="default_code">16053</field>
+            <field name="type">service</field>
+            <field name="list_price">210.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16056" model="product.template">
+            <field name="name">5 HODIN</field>
+            <field name="default_code">16056</field>
+            <field name="type">service</field>
+            <field name="list_price">340.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16054" model="product.template">
+            <field name="name">8 HODIN</field>
+            <field name="default_code">16054</field>
+            <field name="type">service</field>
+            <field name="list_price">550.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16070" model="product.template">
+            <field name="name">DAY PASS 350 po-čt</field>
+            <field name="default_code">16070</field>
+            <field name="type">service</field>
+            <field name="list_price">350.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16057" model="product.template">
+            <field name="name">DAY PASS 700 víkend</field>
+            <field name="default_code">16057</field>
+            <field name="type">service</field>
+            <field name="list_price">700.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16073" model="product.template">
+            <field name="name">FREE Hodina !!!</field>
+            <field name="default_code">16073</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16058" model="product.template">
+            <field name="name">NIGHT PASS</field>
+            <field name="default_code">16058</field>
+            <field name="type">service</field>
+            <field name="list_price">400.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16064" model="product.template">
+            <field name="name">PLAY STATION 1H</field>
+            <field name="default_code">16064</field>
+            <field name="type">service</field>
+            <field name="list_price">130.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16065" model="product.template">
+            <field name="name">SIM RACING</field>
+            <field name="default_code">16065</field>
+            <field name="type">service</field>
+            <field name="list_price">250.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16071" model="product.template">
+            <field name="name">VOUCHER 1000 Kč</field>
+            <field name="default_code">16071</field>
+            <field name="type">service</field>
+            <field name="list_price">1000.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16072" model="product.template">
+            <field name="name">VOUCHER 500 Kč</field>
+            <field name="default_code">16072</field>
+            <field name="type">service</field>
+            <field name="list_price">500.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_game"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_game')])]"/>
+        </record>
+        <record id="product_16051" model="product.template">
+            <field name="name">Natura Citron&amp;Máta 500ml</field>
+            <field name="default_code">16051</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">40.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16051.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_voda')])]"/>
+        </record>
+        <record id="product_16049" model="product.template">
+            <field name="name">Natura Jemně perlivá 500ml</field>
+            <field name="default_code">16049</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">40.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16049.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_voda')])]"/>
+        </record>
+        <record id="product_16050" model="product.template">
+            <field name="name">Natura Malina 500ml</field>
+            <field name="default_code">16050</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">40.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16050.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_voda')])]"/>
+        </record>
+        <record id="product_16048" model="product.template">
+            <field name="name">Natura Neperlivá 500ml</field>
+            <field name="default_code">16048</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">40.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16048.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_voda')])]"/>
+        </record>
+        <record id="product_16015" model="product.template">
+            <field name="name">COCA - COLA 330ml</field>
+            <field name="default_code">16015</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">55.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16015.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko')])]"/>
+        </record>
+        <record id="product_16016" model="product.template">
+            <field name="name">FANTA 330ml</field>
+            <field name="default_code">16016</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">55.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16016.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko')])]"/>
+        </record>
+        <record id="product_16017" model="product.template">
+            <field name="name">SPRITE 330ml</field>
+            <field name="default_code">16017</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">55.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16017.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko')])]"/>
+        </record>
+        <record id="product_16034" model="product.template">
+            <field name="name">BUDVAR 33 0,5L</field>
+            <field name="default_code">16034</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_pivo"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16034.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_16035" model="product.template">
+            <field name="name">NEALKO PIVO SVĚTLÉ</field>
+            <field name="default_code">16035</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_pivo"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16035.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_16077" model="product.template">
+            <field name="name">KNOPPERS</field>
+            <field name="default_code">16077</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">19.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_service_fee"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16077.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_service_fee')])]"/>
+        </record>
+        <record id="product_16060" model="product.template">
+            <field name="name">7 DAYs Crissant</field>
+            <field name="default_code">16060</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">25.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16060.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16043" model="product.template">
+            <field name="name">ARAŠÍDY PRAŽENÉ SOLENÉ</field>
+            <field name="default_code">16043</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16043.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16042" model="product.template">
+            <field name="name">Bohemia TYČINKY</field>
+            <field name="default_code">16042</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16042.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16076" model="product.template">
+            <field name="name">Brumík :-)</field>
+            <field name="default_code">16076</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">22.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16076.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16062" model="product.template">
+            <field name="name">BRUSCHETE</field>
+            <field name="default_code">16062</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16062.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16069" model="product.template">
+            <field name="name">Kit Kat Tyčinka</field>
+            <field name="default_code">16069</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">25.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16069.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16078" model="product.template">
+            <field name="name">KNOPPERS</field>
+            <field name="default_code">16078</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">19.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16078.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16075" model="product.template">
+            <field name="name">LAYS Chips</field>
+            <field name="default_code">16075</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">40.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16075.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16041" model="product.template">
+            <field name="name">MANDLE PRAŽENÉ SOLENÉ</field>
+            <field name="default_code">16041</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16041.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16061" model="product.template">
+            <field name="name">PRINGLES</field>
+            <field name="default_code">16061</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">50.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16061.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16068" model="product.template">
+            <field name="name">Snickers Tyčinka</field>
+            <field name="default_code">16068</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">25.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16068.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16067" model="product.template">
+            <field name="name">PANINI Hovězí</field>
+            <field name="default_code">16067</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">130.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_jidlo"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16067.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_jidlo')])]"/>
+        </record>
+        <record id="product_16059" model="product.template">
+            <field name="name">PIZZA</field>
+            <field name="default_code">16059</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">180.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_jidlo"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16059.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_jidlo')])]"/>
+        </record>
+        <record id="product_16066" model="product.template">
+            <field name="name">WRAP Kuřecí</field>
+            <field name="default_code">16066</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">170.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_jidlo"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16066.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_jidlo')])]"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Nastavení pokladny pro jednu firmu. Ostatních firem v databázi se modul nedotkne a u cílové
+         firmy nic nepřepisuje: osnovu a daně založí jen firmě, která ještě nemá účetnictví,
+         jinak použije to, co firma má. Kód je v models/setup.py, běh je bezpečné opakovat.
+
+         company      firma (přesný název), pro kterou se pokladna zakládá; když v databázi není,
+                      instalace skončí chybou a nic se nezmění
+         pos_name     název pokladny
+         reduced_vat  zboží s DPH 12 % (zákon o DPH od 1. 1. 2024: potraviny kromě nápojů);
+                      vše ostatní 21 %: všechny nápoje včetně balené vody, pivo, herní čas, vouchery -->
+    <function model="elite.arena.pos.setup" name="ensure_setup">
+        <value eval="{
+            'company': 'Elite Arena',
+            'pos_name': 'Elite Arena',
+            'reduced_vat': [
+                ref('product_16040'), ref('product_16039'),
+                ref('product_16038'), ref('product_16037'), ref('product_16036'),
+                ref('product_16077'),
+                ref('product_16060'), ref('product_16043'), ref('product_16042'), ref('product_16076'),
+                ref('product_16062'), ref('product_16069'), ref('product_16078'), ref('product_16075'),
+                ref('product_16041'), ref('product_16061'), ref('product_16068'),
+                ref('product_16067'), ref('product_16059'), ref('product_16066'),
+            ],
+        }"/>
+    </function>
+</odoo>
