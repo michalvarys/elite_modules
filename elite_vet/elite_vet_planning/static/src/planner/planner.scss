@@ -54,6 +54,8 @@
         small { font-weight: normal; font-size: 9px; opacity: .9; }
     }
     .evp-cell .evp-chip { display: flex; overflow: hidden; }
+    .evp-chip-assign { outline: 1px dashed #334155; outline-offset: 1px; opacity: .85; }
+    .evp-day-note { font-size: 9px; color: #b91c1c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 44px; margin: 0 auto; }
     .evp-chip-warn { box-shadow: 0 0 0 2px #dc2626; }
     .evp-x {
         border: 0; background: transparent; color: inherit; padding: 0 0 0 1px; font-size: 12px;

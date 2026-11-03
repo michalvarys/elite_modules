@@ -17,6 +17,11 @@
                 <div class="evp-tools">
                     <span t-if="state.busy" class="text-muted evp-saving">Ukládání…</span>
                     <span t-else="" class="text-muted evp-saving">Všechny změny uloženy</span>
+                    <button t-if="state.data and state.tab === 'rooms' and assignmentCount" class="btn btn-warning"
+                            t-on-click="adoptAssignments"
+                            title="Služby zadané v Rezervace › Rozpis lékařů převede na směny v rozpisu, dál se plánují tady">
+                        Převzít služby z Rozpisu lékařů (<t t-esc="assignmentCount"/>)
+                    </button>
                     <button class="btn btn-secondary" t-on-click="openStaff">Personál</button>
                     <button class="btn btn-secondary" t-on-click="exportCsv" title="Stáhnout pro Excel">Export CSV</button>
                     <button class="btn btn-secondary" t-on-click="print">Tisk</button>
@@ -37,6 +42,7 @@
                                         <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
                                             <div class="evp-day-num" t-esc="day.day"/>
                                             <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
+                                            <div t-if="day.note" class="evp-day-note" t-att-title="day.note" t-esc="day.note"/>
                                             <button t-if="day.weekday === 0" class="evp-copy" title="Zkopírovat sem směny z předchozího týdne"
                                                     t-on-click="(ev) => this.copyWeek(day, ev)">⧉</button>
                                         </th>
@@ -58,8 +64,8 @@
                                                     t-on-click="() => this.openCell(row, slot, day)">
                                                     <t t-foreach="items" t-as="shift" t-key="shift.id">
                                                         <t t-set="conflict" t-value="chipConflict(shift)"/>
-                                                        <span t-attf-class="evp-chip #{conflict ? 'evp-chip-warn' : ''}" t-att-style="chipStyle(shift)"
-                                                              t-att-title="conflict or null">
+                                                        <span t-attf-class="evp-chip #{conflict ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''}" t-att-style="chipStyle(shift)"
+                                                              t-att-title="chipTitle(shift)">
                                                             <t t-esc="chipLabel(shift)"/>
                                                             <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
                                                             <button class="evp-x" title="Odebrat" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
