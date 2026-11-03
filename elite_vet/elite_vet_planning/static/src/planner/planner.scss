@@ -1,0 +1,169 @@
+// Plánování and Moje dostupnost share these styles.
+.evp {
+    --evp-line: #e2e8f0;
+    --evp-we: #f1f5f9;
+    --evp-hol: #fef3c7;
+    --evp-staff-bg: #f0f9ff;
+    height: 100%;
+    overflow: auto;
+    background: #fff;
+    font-size: 13px;
+
+    .evp-toolbar {
+        position: sticky; left: 0; top: 0; z-index: 5;
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--evp-line);
+    }
+    .evp-month { min-width: 130px; text-transform: capitalize; font-weight: 600; cursor: default; }
+    .evp-tools { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .evp-saving { font-size: 12px; margin-right: 6px; }
+    .evp-body { padding: 8px 12px 24px; }
+    .evp-print-title { display: none; }
+    .evp-h3 { font-size: 15px; margin: 18px 0 6px; }
+    .evp-help { font-size: 12px; margin: 8px 0; max-width: 1100px; }
+    .evp-scroll { overflow-x: auto; }
+
+    table.evp-grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+    .evp-grid th, .evp-grid td { border-right: 1px solid var(--evp-line); border-bottom: 1px solid var(--evp-line); }
+    .evp-head-row {
+        position: sticky; left: 0; z-index: 2; background: #fff;
+        width: 170px; min-width: 170px; text-align: left; padding: 3px 6px; font-weight: normal;
+    }
+    thead .evp-head-row { z-index: 3; }
+    .evp-row-name { display: block; font-weight: 600; }
+    .evp-slot-name small { color: #64748b; }
+    .evp-row-first > * { border-top: 2px solid #94a3b8; }
+    .evp-day { width: 46px; min-width: 46px; text-align: center; padding: 2px 0; font-weight: normal; position: relative; }
+    .evp-day-num { font-weight: 600; }
+    .evp-day-wd { font-size: 11px; color: #64748b; }
+    .evp-we { background: var(--evp-we); }
+    .evp-hol { background: var(--evp-hol); }
+    .evp-today .evp-day-num { color: #fff; background: #2b7870; border-radius: 10px; display: inline-block; padding: 0 6px; }
+    .evp-copy {
+        position: absolute; top: 0; right: 0; border: 0; background: transparent; color: #64748b;
+        font-size: 11px; line-height: 1; padding: 1px 2px; cursor: pointer;
+        &:hover { color: #2b7870; }
+    }
+
+    .evp-cell { vertical-align: top; padding: 2px; height: 30px; cursor: pointer; width: 46px; max-width: 46px; overflow: hidden;
+        &:hover { outline: 2px solid #2b7870; outline-offset: -2px; } }
+    .evp-off { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 4px, #eef2f7 4px, #eef2f7 8px); }
+    .evp-chip {
+        display: inline-flex; align-items: center; gap: 2px; border-radius: 4px; padding: 0 3px;
+        font-size: 11px; font-weight: 600; line-height: 17px; margin: 1px; white-space: nowrap;
+        small { font-weight: normal; font-size: 9px; opacity: .9; }
+    }
+    .evp-cell .evp-chip { display: flex; overflow: hidden; }
+    .evp-chip-warn { box-shadow: 0 0 0 2px #dc2626; }
+    .evp-x {
+        border: 0; background: transparent; color: inherit; padding: 0 0 0 1px; font-size: 12px;
+        line-height: 1; cursor: pointer; opacity: .6; margin-left: auto;
+        &:hover { opacity: 1; }
+    }
+    .evp-absences { cursor: default; &:hover { outline: 0; } }
+    .evp-abs { display: block; font-size: 10px; white-space: nowrap; color: #7c2d12; }
+
+    table.evp-balance {
+        border-collapse: collapse; font-size: 12.5px;
+        th, td { border: 1px solid var(--evp-line); padding: 3px 8px; white-space: nowrap; }
+        th { background: #f8fafc; font-weight: 600; }
+    }
+    .evp-plus { color: #15803d; font-weight: 600; }
+    .evp-minus { color: #b91c1c; font-weight: 600; }
+
+    // Požadavky na směny: doctors on white, the rest of the team on light blue.
+    .evp-requests {
+        tr:not(.evp-role-doctor) > * { background-color: var(--evp-staff-bg); }
+        tr:not(.evp-role-doctor) > .evp-we { background-color: #e0f2fe; }
+        .evp-head-row { width: 230px; min-width: 230px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    }
+    .evp-req {
+        text-align: center; font-weight: 600; cursor: pointer; height: 26px; position: relative;
+        &:focus { outline: 2px solid #2b7870; outline-offset: -2px; }
+    }
+    .evp-self { position: absolute; top: -3px; right: 2px; font-style: normal; color: #2b7870; }
+    .evp-has-note { position: absolute; bottom: -2px; right: 1px; font-style: normal; font-size: 9px; color: #64748b; }
+    .evp-code-can { color: #15803d; }
+    .evp-code-morning, .evp-code-afternoon { color: #1d4ed8; }
+    .evp-code-off { color: #64748b; }
+    .evp-code-D { background-color: #dcfce7 !important; color: #166534; }
+    .evp-code-NV { background-color: #e0e7ff !important; color: #3730a3; }
+    .evp-code-L { background-color: #fef9c3 !important; color: #854d0e; }
+    .evp-code-PN { background-color: #fee2e2 !important; color: #991b1b; }
+    .evp-code-S { background-color: #f3e8ff !important; color: #6b21a8; }
+    .evp-sum { width: 36px; text-align: center; font-weight: 600; }
+    .evp-note-col { min-width: 220px; padding: 1px 4px; }
+    .evp-order { display: inline-flex; flex-direction: column; vertical-align: middle; margin-right: 2px;
+        button { border: 0; background: transparent; font-size: 8px; line-height: 9px; padding: 0 2px; color: #64748b;
+            &:disabled { opacity: .25; } } }
+    .evp-role-label { color: #64748b; margin-left: 4px; }
+
+    // dialogs
+    .evp-modal-back {
+        position: fixed; inset: 0; z-index: 1050; background: rgba(15, 23, 42, .35);
+        display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow: auto;
+    }
+    .evp-modal {
+        background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+        width: 720px; max-width: 100%; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .evp-modal-sm { width: 460px; }
+    .evp-modal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 15px; }
+    .evp-modal-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .evp-current { border: 1px solid var(--evp-line); border-radius: 8px; padding: 6px 8px; }
+    .evp-current-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+    .evp-current-name { flex: 1; }
+    .evp-time { width: 64px; text-align: center; }
+    .evp-warn { color: #b91c1c; font-size: 12px; margin-left: 30px; }
+    .evp-times { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .evp-pick-group { margin-bottom: 6px; }
+    .evp-pick-label { font-size: 11px; text-transform: uppercase; color: #64748b; margin: 4px 0 2px; }
+    .evp-pick-btn {
+        display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--evp-line); border-radius: 6px;
+        background: #fff; padding: 3px 8px 3px 4px; margin: 2px; cursor: pointer; text-align: left;
+        &:hover { border-color: #2b7870; background: #f0fdfa; }
+    }
+    .evp-pick-yes { border-color: #86efac; }
+    .evp-pick-no { opacity: .55; border-style: dashed; }
+    .evp-hint { color: #64748b; }
+    .evp-helper { display: flex; gap: 6px; margin-top: 6px; }
+    .evp-codes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .evp-code-btn { text-align: left; border: 1px solid var(--evp-line); background: #fff; }
+
+    // Moje dostupnost
+    .evm-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; max-width: 980px; }
+    .evm-wd { text-align: center; font-size: 12px; color: #64748b; }
+    .evm-day {
+        min-height: 86px; border: 1px solid var(--evp-line); border-radius: 8px; padding: 6px; background: #fff;
+        cursor: pointer; display: flex; flex-direction: column; gap: 3px; text-align: left;
+        &:hover { border-color: #2b7870; }
+        &.evp-we { background: var(--evp-we); }
+        &.evp-hol { background: var(--evp-hol); }
+        &.evm-past { opacity: .55; cursor: default; }
+    }
+    .evm-num { font-weight: 600; }
+    .evm-code { font-weight: 600; border-radius: 4px; padding: 0 4px; align-self: flex-start; }
+    .evm-shift { font-size: 11px; background: #ecfeff; border-radius: 4px; padding: 1px 4px; }
+    .evm-note { font-size: 11px; color: #64748b; }
+    .evm-summary { display: flex; gap: 16px; flex-wrap: wrap; margin: 6px 0 12px; }
+}
+
+@media (max-width: 700px) {
+    .evp .evm-grid { gap: 3px; }
+    .evp .evm-day { min-height: 64px; padding: 3px; font-size: 11px; }
+}
+
+// Print: A4 landscape for the clinic's notice board, no buttons.
+@media print {
+    @page { size: A4 landscape; margin: 7mm; }
+    .o_main_navbar, .o_control_panel, .evp-toolbar, .evp-copy, .evp-x, .evp-modal-back, .evp-help, .evp-order,
+    .evp-note-col input { display: none !important; }
+    .o_action_manager, .o_action, .evp, .evp-scroll { overflow: visible !important; height: auto !important; }
+    .evp { font-size: 8px; }
+    .evp .evp-print-title { display: block; font-size: 13px; margin: 0 0 4px; }
+    .evp .evp-day { width: 22px; min-width: 22px; }
+    .evp .evp-head-row { position: static; width: 90px; min-width: 90px; }
+    .evp .evp-cell { height: auto; }
+    .evp .evp-chip { font-size: 7px; line-height: 10px; padding: 0 1px; }
+    .evp * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

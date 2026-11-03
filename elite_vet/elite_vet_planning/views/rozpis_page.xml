@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- /rozpis-lekaru lists every shift. With Plánování the roster also holds reception, nurses
+         and helpers; the page keeps only web_visible ones (models/shift.py). -->
+    <template id="rozpis_lekaru_planning" inherit_id="elite_vet_calendar.rozpis_lekaru"
+              name="Elite Vet - Rozpis lékařů: jen služby lékařek z plánu">
+        <xpath expr="//t[@t-set='ev_recs']" position="after">
+            <t t-set="ev_recs" t-value="ev_recs.filtered('web_visible') if ev_recs else ev_recs"/>
+        </xpath>
+    </template>
+</odoo>
