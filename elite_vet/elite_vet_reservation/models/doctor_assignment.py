@@ -74,6 +74,11 @@ class VetDoctorAssignment(models.Model):
         self._check_roster_owned()
         return super().unlink()
 
+    def action_delete_from_board(self):
+        """Smazat službu in the service dialog of the board (request 3. 11.)."""
+        self.unlink()
+        return {"type": "ir.actions.act_window_close"}
+
     def set_room(self, room_id):
         """Room picked in the Rozpis lékařů popover: a roster assignment changes it in its
         shift (the sync then moves the assignment), a manual one directly."""

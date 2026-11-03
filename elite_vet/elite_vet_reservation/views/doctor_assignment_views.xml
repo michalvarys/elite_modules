@@ -23,6 +23,11 @@
         <field name="model">elite.vet.doctor.assignment</field>
         <field name="arch" type="xml">
             <form string="Služba lékaře">
+                <!-- a roster service is deleted with its shift (the board opens the shift then) -->
+                <header invisible="not id or from_roster">
+                    <button name="action_delete_from_board" type="object" string="Smazat službu" class="btn-danger"
+                            confirm="Smazat tuto službu? Zmizí z kalendáře i z volných termínů na webu."/>
+                </header>
                 <sheet>
                     <div class="alert alert-info" role="status" invisible="not from_roster">
                         Tato služba je <b>z rozpisu služeb</b>. Lékařka, ordinace, datum a čas se mění

@@ -109,6 +109,11 @@ class VetShift(models.Model):
             self._sync_assignments()
         return res
 
+    def action_delete_from_board(self):
+        """Smazat službu in the shift dialog of the board (request 3. 11.)."""
+        self.unlink()
+        return {"type": "ir.actions.act_window_close"}
+
     def unlink(self):
         self.env["elite.vet.doctor.assignment"].sudo().with_context(**{ROSTER_SYNC: True}).search(
             [("shift_id", "in", self.ids)]).unlink()
