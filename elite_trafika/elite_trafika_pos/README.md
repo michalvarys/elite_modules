@@ -24,6 +24,14 @@ je použije. Sklad, zboží, platební metody, pokladní deník a pokladna patř
 | Zboží | 506 položek, všechno skladové zboží; čárový kód = EAN z Dotykačky (407 položek), všechny s obrázkem |
 | Pokladna | „Elite Trafika“: platba Hotově a Kartou, faktura z pokladny do prodejního deníku |
 
+### Obrázky
+
+Zboží i všech 35 skupin má obrázek ve `static/img/`. 136 položek má fotku (zdroj je ve
+`static/img/products/manifest.csv`, většina je spárovaná podle názvu, ne EAN). Ostatní mají dlaždici
+s názvem v barvách značky (černá a limetková `#9ce424` z loga elite-trafika.cz), skupiny dlaždici nebo
+typické zboží na ní. Dlaždice vytvoří znovu `scripts/gen_images.py`. Obrázky se doplní i při aktualizaci,
+ale jen tam, kde chybí; obrázek, který už v Odoo je, modul nepřepíše.
+
 ### Co modul nepřepíše
 
 Stejně jako `elite_arena_pos`: ostatní firmy nechá bez účetnictví, u Elite Trafika a mateřské firmy
