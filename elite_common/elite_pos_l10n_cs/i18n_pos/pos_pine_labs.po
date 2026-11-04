@@ -1,0 +1,183 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pos_pine_labs
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-29 18:37+0000\n"
+"PO-Revision-Date: 2025-12-29 18:37+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: cs_CZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment_method__pine_labs_client
+msgid "A client id issued directly to the merchant by Pine Labs."
+msgstr "ID klienta, které obchodníkovi vydává přímo Pine Labs."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment_method__pine_labs_merchant
+msgid "A merchant id issued directly to the merchant by Pine Labs."
+msgstr "ID obchodníka, které obchodníkovi vydává přímo Pine Labs."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment_method__pine_labs_security_token
+msgid "A security token issued directly to the merchant by Pine Labs."
+msgstr "Bezpečnostní token, který obchodníkovi vydává přímo Pine Labs."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment_method__pine_labs_store
+msgid "A store id issued directly to the merchant by Pine Labs."
+msgstr "ID obchodu, které obchodníkovi vydává přímo Pine Labs."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment_method__pine_labs_allowed_payment_mode
+msgid "Accepted payment modes by Pine Labs for transactions."
+msgstr "Platební režimy přijímané Pine Labs pro transakce."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields.selection,name:pos_pine_labs.selection__pos_payment_method__pine_labs_allowed_payment_mode__all
+msgid "All"
+msgstr "Vše"
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Cannot process transactions with negative amount."
+msgstr "Nelze zpracovat transakce se zápornou částkou."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields.selection,name:pos_pine_labs.selection__pos_payment_method__pine_labs_allowed_payment_mode__card
+msgid "Card"
+msgstr "Karta"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment_method__pine_labs_allowed_payment_mode
+msgid "Pine Labs Allowed Payment Modes"
+msgstr "Povolené platební režimy Pine Labs"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment_method__pine_labs_client
+msgid "Pine Labs Client ID"
+msgstr "ID klienta Pine Labs"
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Pine Labs Error"
+msgstr "Chyba Pine Labs"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment_method__pine_labs_merchant
+msgid "Pine Labs Merchant ID"
+msgstr "ID obchodníka Pine Labs"
+
+#. module: pos_pine_labs
+#. odoo-python
+#: code:addons/pos_pine_labs/models/pos_payment_method.py:0
+msgid ""
+"Pine Labs POS transaction cancelled. Retry again for collecting payment."
+msgstr "Transakce Pine Labs POS byla zrušena. Zkuste platbu přijmout znovu."
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment__pine_labs_plutus_transaction_ref
+msgid "Pine Labs PlutusTransactionReferenceID"
+msgstr "Pine Labs PlutusTransactionReferenceID"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment_method__pine_labs_security_token
+msgid "Pine Labs Security Token"
+msgstr "Bezpečnostní token Pine Labs"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment_method__pine_labs_store
+msgid "Pine Labs Store ID"
+msgstr "ID obchodu Pine Labs"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,field_description:pos_pine_labs.field_pos_payment_method__pine_labs_test_mode
+msgid "Pine Labs Test Mode"
+msgstr "Testovací režim Pine Labs"
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Pine Labs get payment status request failed"
+msgstr "Požadavek Pine Labs na zjištění stavu platby selhal"
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Pine Labs make payment request failed"
+msgstr "Požadavek Pine Labs na provedení platby selhal"
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Pine Labs payment cancellation request failed"
+msgstr "Požadavek Pine Labs na zrušení platby selhal"
+
+#. module: pos_pine_labs
+#: model:ir.model,name:pos_pine_labs.model_pos_payment_method
+msgid "Point of Sale Payment Methods"
+msgstr "Platební metody prodejního místa"
+
+#. module: pos_pine_labs
+#: model:ir.model,name:pos_pine_labs.model_pos_payment
+msgid "Point of Sale Payments"
+msgstr "Platby prodejního místa"
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Reference number mismatched"
+msgstr "Neshoda referenčního čísla"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment__pine_labs_plutus_transaction_ref
+msgid ""
+"Required during the refund order process: "
+"https://developer.pinelabs.com/in/instore/cloud-integration#Example-JSON-"
+"request-for-Void-ICB-on-UPI-transaction"
+msgstr ""
+"Vyžadováno při refundaci objednávky: "
+"https://developer.pinelabs.com/in/instore/cloud-integration#Example-JSON-"
+"request-for-Void-ICB-on-UPI-transaction"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields,help:pos_pine_labs.field_pos_payment_method__pine_labs_test_mode
+msgid "Test Pine Labs transaction process."
+msgstr "Otestovat proces transakce Pine Labs."
+
+#. module: pos_pine_labs
+#. odoo-python
+#: code:addons/pos_pine_labs/models/pos_payment_method.py:0
+msgid ""
+"The expected error code for the Pine Labs POS status request was not "
+"included in the response."
+msgstr ""
+"Odpověď na stavový požadavek Pine Labs POS neobsahovala očekávaný chybový "
+"kód."
+
+#. module: pos_pine_labs
+#. odoo-python
+#: code:addons/pos_pine_labs/models/pos_payment_method.py:0
+msgid "This Payment Terminal is only valid for INR Currency"
+msgstr "Tento platební terminál je platný pouze pro měnu INR."
+
+#. module: pos_pine_labs
+#. odoo-javascript
+#: code:addons/pos_pine_labs/static/src/app/utils/payment/payment_pine_labs.js:0
+msgid "Transaction failed due to inactivity"
+msgstr "Transakce selhala kvůli nečinnosti"
+
+#. module: pos_pine_labs
+#: model:ir.model.fields.selection,name:pos_pine_labs.selection__pos_payment_method__pine_labs_allowed_payment_mode__upi
+msgid "Upi"
+msgstr "UPI"
