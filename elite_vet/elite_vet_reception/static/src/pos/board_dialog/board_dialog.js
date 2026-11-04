@@ -37,17 +37,6 @@ function clinicNowMinute() {
     return now.hour * 60 + now.minute;
 }
 
-/** White text would be unreadable on a light colour (same rule as the backend board). */
-function textOn(hex) {
-    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
-    if (!m) {
-        return "#fff";
-    }
-    const n = parseInt(m[1], 16);
-    const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-    return lum > 0.62 ? "#1e293b" : "#fff";
-}
-
 // Task 24: Vše | Web | Klinika, remembered by the browser. WinVet entries only in "Vše",
 // blocks always (they are not bookings). Same rule as the backend board.
 const SOURCE_FILTER_KEY = "elite_vet_reception.board_source_filter";
@@ -354,6 +343,7 @@ export class BoardDialog extends Component {
             o_ev_board_block: e.kind === "block",
             o_ev_board_block_web: this.isWebBlock(e),
             o_ev_board_winvet: this.isWinvet(e),
+            o_ev_board_card: e.kind === "reservation",
             o_ev_board_from_web: this.isWeb(e),
             o_ev_board_muted: e.state === "done" || e.state === "no_show",
             o_ev_board_short: this.isShort(e),
@@ -379,10 +369,11 @@ export class BoardDialog extends Component {
             return `${style};left:${this.eventLeft(room)}px;border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
         }
         if (e.kind !== "block") {
-            style += `;left:${this.eventLeft(room)}px;background:${e.color_hex};color:${textOn(e.color_hex)}`;
+            // neutral card, procedure colour as the right stripe (board_dialog.scss)
+            style += `;left:${this.eventLeft(room)}px;border-right:7px solid ${e.color_hex}`;
             // stripe in the colour of the doctor the client is booked with
             if (e.doctor_color) {
-                style += `;border-left:7px solid ${e.doctor_color};box-shadow:inset 2px 0 0 #fff,0 1px 2px rgba(0,0,0,.15)`;
+                style += `;border-left:7px solid ${e.doctor_color}`;
             }
         }
         return style;

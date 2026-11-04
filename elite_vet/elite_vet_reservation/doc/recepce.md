@@ -38,7 +38,7 @@ a přepínačem **Vše | Web | Klinika**:
 
 | Štítek vlevo na kartě | Význam |
 |---|---|
-| Modrý **WEB** + modrý čárkovaný obrys karty | Rezervace z webu (i z chatu na webu) – objednal(a) se klient sám. Obrys je vidět na každé barvě úkonu. |
+| Modrý **WEB** + modrý čárkovaný obrys karty | Rezervace z webu (i z chatu na webu) – objednal(a) se klient sám. |
 | Bílý štítek s iniciálami, např. **JN** | Rezervaci založil(a) někdo z kliniky (průvodce Nová rezervace, pokladna). Po najetí myší: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
 | Šedý **WinVet** | Záznam z kalendáře WinVetu (viz níže). |
 
@@ -57,7 +57,7 @@ v obou sloupcích).
 | Světlé čárkované šrafování se štítkem „jen web“ | Blokace jen pro web: web tam nic nenabízí, vy tam objednat smíte. Klik do ní otevře průvodce, klik na štítek otevře blokaci. |
 | Barevný svislý proužek vlevo ve sloupci | Služba lékařky: iniciály a čas (např. „GC 8:15–14:00“). Každá lékařka má svou barvu, stejnou i ve štítku v hlavičce. |
 | Dva proužky vedle sebe | V ordinaci slouží současně dvě lékařky (viz níže). |
-| Barevná karta | Rezervace. Barva karty patří úkonu (např. vakcinace zelená, problém modrý). Proužek na levém okraji karty má barvu lékařky, ke které je klient objednaný – stejnou jako její služba a štítek. Rezervace bez lékařky proužek nemá. |
+| Bílá karta s proužky | Rezervace. Proužek na pravém okraji má barvu úkonu (např. vakcinace zelená, problém modrý). Proužek na levém okraji má barvu lékařky, ke které je klient objednaný – stejnou jako její služba a štítek. Rezervace bez lékařky levý proužek nemá. |
 | Písmeno vpravo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
 | Druhý řádek | Název úkonu (jen u delších karet). |

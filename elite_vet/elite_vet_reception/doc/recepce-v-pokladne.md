@@ -424,7 +424,7 @@ nepřepíná do jiné stránky.
   jsou jen ve **Vše**, blokace jsou vidět vždy. Volbu si pamatuje prohlížeč (pokladna zvlášť
   od backendové tabule). Když filtr něco skrývá, je vpravo „skryto: N“ – skrytý čas je pořád
   obsazený.
-- **Rezervace** mají barvu úkonu, proužek vlevo v barvě lékařky, štítek WEB / iniciály toho, kdo
+- **Rezervace** jsou bílé karty s proužkem vpravo v barvě úkonu, proužek vlevo v barvě lékařky, štítek WEB / iniciály toho, kdo
   ji založil, iniciály lékařky, čas,
   zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
   jsou bledé.

@@ -21,15 +21,6 @@ const WEEKDAY_NAMES = ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", 
 const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
 function weekdayIndex(d) { return (d.getDay() + 6) % 7; }   // 0 = Monday
 
-// White text would be unreadable on a light color (a doctor may pick e.g. yellow).
-function textOn(hex) {
-    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
-    if (!m) return "#fff";
-    const n = parseInt(m[1], 16);
-    const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-    return lum > 0.62 ? "#1e293b" : "#fff";
-}
-
 // Width of the "Waiting from web" panel: drag handle between panel and board, remembered by the browser.
 const PANEL_KEY = "elite_vet_reservation.panel_width";
 const PANEL_DEFAULT = 280, PANEL_MIN = 200, PANEL_MAX = 720;
@@ -277,10 +268,10 @@ export class ReservationBoard extends Component {
             return style + ";left:" + this.eventLeft(room) + "px;border-left:7px solid " + (e.winvet_color || "#94a3b8");
         }
         if (e.kind !== "block") {
-            style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex + ";color:" + textOn(e.color_hex);
+            // Request 4. 11.: neutral card, procedure color as the right stripe (styles in board.scss).
+            style += ";left:" + this.eventLeft(room) + "px;border-right:7px solid " + e.color_hex;
             // Left stripe in the color of the doctor the client is booked with.
-            // A white line separates it even when the procedure color is similar to the doctor's.
-            if (e.doctor_color) style += ";border-left:7px solid " + e.doctor_color + ";box-shadow:inset 2px 0 0 #fff,0 1px 2px rgba(0,0,0,.15)";
+            if (e.doctor_color) style += ";border-left:7px solid " + e.doctor_color;
         }
         return style;
     }
