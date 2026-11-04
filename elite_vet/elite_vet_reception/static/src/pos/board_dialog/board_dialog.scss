@@ -151,9 +151,10 @@ $ev-board-line: #e2e8f0;
     position: absolute;
     left: 0;
     right: 0;
-    border-top: 1px dashed #f1f5f9;
+    // one cell = one slot step from the settings (same as the backend board)
+    border-top: 1px solid $ev-board-line;
     &.o_ev_board_hour {
-        border-top: 1px solid $ev-board-line;
+        border-top: 1px solid #94a3b8;
     }
     // out of opening hours: a light tint with thin hairlines (same as the backend board)
     &.o_ev_board_closed {

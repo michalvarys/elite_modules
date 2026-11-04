@@ -797,6 +797,8 @@ class VetReservation(models.Model):
                 "date_label": "%s %d. %d. %s" % (WEEKDAY_ABBR[local.weekday()], local.day, local.month,
                                                  local.strftime("%H:%M")),
                 "phone": c.contact_phone or "", "email": c.contact_email or ""})
+        # Grid lines start at the axis, slots at multiples of the step: keep the two aligned.
+        axis_from -= axis_from % s.booking_slot_step
         return {"date": day_str, "step": s.booking_slot_step,
                 # Rozpis služeb managers edit shifts from the board (click on a doctor, + Služba)
                 "can_edit_shifts": self.env.user.has_group("elite_vet_calendar.group_calendar_manager"),
