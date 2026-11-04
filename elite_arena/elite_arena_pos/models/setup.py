@@ -1,8 +1,9 @@
+import base64
 import logging
 
 from odoo import api, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare
+from odoo.tools import file_open, float_compare
 
 _logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class EliteArenaPosSetup(models.AbstractModel):
             if not accounting_company.account_sale_tax_id:
                 accounting_company.account_sale_tax_id = standard
         self._ensure_products(company, root, standard, reduced, set(config.get("reduced_vat") or ()))
+        self._ensure_images()
         self._ensure_pos(company, config.get("pos_name") or company.name)
 
     @api.model
@@ -180,6 +182,29 @@ class EliteArenaPosSetup(models.AbstractModel):
                                           "company_id": company.id})
 
     # ------------------------------------------------------------------ helpers
+
+    def _ensure_images(self):
+        """Images of the module for products and POS categories without one. Runs on updates too, the
+        data files are noupdate; an image the record already has is kept."""
+        for template in self._module_products().filtered(lambda t: not t.image_1920):
+            image = self._module_image("products/%s.jpg" % template.default_code)
+            if image:
+                template.image_1920 = image
+        data = self.env["ir.model.data"].sudo().search(
+            [("module", "=", MODULE), ("model", "=", "pos.category")])
+        for entry in data:
+            category = self.env["pos.category"].sudo().browse(entry.res_id).exists()
+            if category and not category.image_128:
+                image = self._module_image("categories/%s.jpg" % entry.name.removeprefix("pos_category_"))
+                if image:
+                    category.image_128 = image
+
+    def _module_image(self, path):
+        try:
+            with file_open("%s/static/img/%s" % (MODULE, path), "rb") as image:
+                return base64.b64encode(image.read())
+        except FileNotFoundError:
+            return False
 
     def _module_products(self):
         ids = self.env["ir.model.data"].sudo().search(

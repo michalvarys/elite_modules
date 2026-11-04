@@ -21,7 +21,8 @@ bankovní a prodejní deník jsou mateřské firmy. Když Elite Arena pobočkou 
 | DPH | 12 % potraviny a jídlo (sladkosti, slanosti, Big Shock tyčinky a hroznový cukr, PANINI, PIZZA, WRAP); 21 % všechny nápoje včetně balené vody, pivo, herní čas a vouchery (GFŘ 916/24/7100-30116-050822) |
 | Sklad | sklad firmy; když žádný nemá, založí sklad „Elite Arena“ (zkratka ARENA) |
 | Skupiny | skupiny pokladny (BIG Shock!, GAME, NEALKO NÁPOJE, PIVO, Service fee, SLADKOSTI A SLANOSTI, JÍDLO) i podskupiny |
-| Zboží | 57 položek, 40 s obrázkem; kód zboží (SKU) je interní reference |
+| Zboží | 57 položek, všechny s obrázkem; kód zboží (SKU) je interní reference |
+| Obrázky | zboží i všech 14 skupin pokladny; doplní se i při aktualizaci, ale jen tam, kde obrázek chybí |
 | Pokladna | „Elite Arena“: platba Hotově a Kartou, faktura z pokladny do prodejního deníku firmy |
 
 Herní čas, passy a vouchery jsou služby (bez skladu). Nápoje, sladkosti a jídlo jsou skladové zboží;
@@ -78,17 +79,19 @@ Ceny označené „ggLeap“ jsou z katalogu ggLeapu, celé názvy Big Shock z b
 | 16025 | BIG SHOCK SMART Ananas & Passionfruit 500ml | **0** | doplnit cenu |
 | 16030, 16032 | BIG SHOCK WAIO Cucumber & Lime / Mango & Lavender | **0** | doplnit cenu |
 | 16031 | BIG SHOCK WAIO 16031 | **0** | doplnit cenu; podle waio.cz asi Currant Fusion, „HR…“ ale nesedí |
-| 16039, 16040 | BIG SHOCK HROZNOVÝ CUKR + SKU | 33 (ggLeap) | Original, nebo Orange? |
-| 16036, 16038 | BIG SHOCK TYČINKA + SKU | 33 (ggLeap) | Original, nebo Čoko? |
+| 16039, 16040 | BIG SHOCK HROZNOVÝ CUKR Original / Orange | 33 (ggLeap) | příchuť odvozená z řazení a SKU, ověřit |
+| 16036, 16038 | BIG SHOCK TYČINKA Original / Čoko | 33 (ggLeap) | příchuť odvozená z řazení a SKU, ověřit |
 | 16074 | Big Shock RASPBERRIES | 45 (ggLeap) | dnes se prodává jen Berries, obrázek je Berries |
 | 16079 | BigShock CHERRY | 49 (ggLeap) | obrázek je SMART Wild Cherry |
 | 16052, 16055 | 1 HODINA, 10 HODIN | 75, 670 (ggLeap) | ověřit |
 
-U hroznového cukru a tyčinek jsou obrázky obou příchutí ve `static/img/products/candidate-*.jpg`;
-po určení příchuti stačí soubor přejmenovat na `<SKU>.jpg` a v `data/product_data.xml` přidat
-`image_1920` jako u ostatních. Obrázek 16032 (WAIO Mango) je špatně oříznutý.
+Obrázek 16032 (WAIO Mango) je špatně oříznutý.
 
 ## Obrázky
+
+Herní čas, passy a vouchery nemají obal, proto mají nakreslené dlaždice v barvách značky (černá a zlatá `#f4c430` z elite-arena.cz). Skupiny mají
+obrázek typického zboží ze skupiny na černém podkladu (`static/img/categories/`), GAME a Service fee dlaždici. Dlaždice
+i obrázky skupin vytvoří znovu `scripts/gen_images.py`. Vlastní obrázek nahraný v Odoo modul nepřepíše.
 
 Zdroj každého obrázku je ve `static/img/products/manifest.csv`. Fotky jídla jsou z Wikimedia Commons:
 panini (16067) CC0, pizza (16059) CC BY-SA 4.0, wrap (16066) CC BY-SA 3.0. U CC BY-SA je při
