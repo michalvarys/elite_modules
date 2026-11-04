@@ -43,6 +43,27 @@ function loadPanelWidth() {
     }
 }
 
+// Request 4. 11.: the day survives a page reload. Per tab and only for the day it was chosen on:
+// a tab left open overnight starts on today, so nobody books into yesterday's view by mistake.
+const DAY_KEY = "elite_vet_reservation.board_day";
+
+function loadDay(today) {
+    try {
+        const saved = JSON.parse(sessionStorage.getItem(DAY_KEY));
+        return saved && saved.chosenOn === today && saved.day ? saved.day : today;
+    } catch {
+        return today;
+    }
+}
+
+function saveDay(day, today) {
+    try {
+        sessionStorage.setItem(DAY_KEY, JSON.stringify({ day, chosenOn: today }));
+    } catch {
+        // without storage the day lasts until a page reload
+    }
+}
+
 // Task 24: Vše | Web | Klinika on the board, remembered by the browser.
 // WinVet entries are shown in "Vše" only; blocks always (they are not bookings).
 const SOURCE_FILTER_KEY = "elite_vet_reservation.board_source_filter";
@@ -71,7 +92,7 @@ export class ReservationBoard extends Component {
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.state = useState({
-            date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
+            date: loadDay(isoDate(new Date())), today: isoDate(new Date()), now: nowMinute(),
             data: null, loading: true, drag: null, busy: false,
             preview: null,   // hover preview of a waiting request (see hoverWaiting)
             soundOn: isSoundOn(),
@@ -123,7 +144,11 @@ export class ReservationBoard extends Component {
         d.setDate(d.getDate() + delta);
         this.goTo(isoDate(d));
     }
-    goTo(iso) { this.state.date = iso; this.load(); }
+    goTo(iso) {
+        this.state.date = iso;
+        saveDay(iso, isoDate(new Date()));
+        this.load();
+    }
     today() { this.goTo(isoDate(new Date())); }
     onDateInput(ev) { if (ev.target.value) { this.goTo(ev.target.value); } }
 
