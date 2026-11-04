@@ -2,7 +2,7 @@
 
 Samostatný program v Pythonu, který **pouze čte** databázi WinVet (Firebird) a posílá data do Odoo
 (modul `elite_vet_winvet`). Formát dat a pravidla přenosu jsou závazně popsána v
-[`CONTRACT.md`](CONTRACT.md).
+[`CONTRACT.md`](CONTRACT.md). Aktuální verze mostu je 6.1.0 (kontrakt v6).
 
 Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje.
 
@@ -32,12 +32,14 @@ Tato složka **není Odoo modul** (nemá `__manifest__.py`) – Odoo ji ignoruje
 4. Upravte `config.ini`:
    - `[firebird] dsn` – cesta k databázi WinVet, např. `localhost/3050:C:\WinVet\Data\WINVET.FDB`
    - heslo: buď `password = …`, nebo (lépe) `password_env = WINVET_FB_PASSWORD` a heslo uložte do
-     systémové proměnné prostředí,
+     systémové proměnné prostředí. Vyplněné `password_env` má přednost: když ta proměnná neexistuje,
+     most skončí chybou konfigurace, i když je vyplněné `password`. Pro heslo přímo v souboru proto
+     řádek `password_env` vyprázdněte (ukázkový `config.ini` ho má vyplněný),
    - `fb_client_library` – cesta k `fbclient.dll` (instaluje se s Firebirdem, např.
      `C:\Program Files\Firebird\Firebird_3_0\fbclient.dll`). Pokud je prázdné, ovladač ji hledá sám.
      Bitová verze knihovny (32/64 bit) musí odpovídat Pythonu.
-   - `[odoo] url` a API klíč (vygenerujete v Odoo v nastavení modulu; doporučeno přes
-     `api_key_env`),
+   - `[odoo] url` a API klíč (vygenerujete v Odoo: **WinVet data → Konfigurace → API klíč →
+     Vygenerovat nový klíč**; doporučeno přes `api_key_env`, platí stejné pravidlo jako u hesla),
    - `[bridge] source = live` (produkční databáze) nebo `backup` (obnovená záloha).
 5. Ověření:
    ```
@@ -102,12 +104,13 @@ Most čte i kalendář WinVetu (`KALENDAR_NEW`, kalendáře `KALENDAR_NEW_KALEND
 
 | Příkaz | Co dělá |
 |---|---|
-| `py -m winvet_bridge check` | připojení, verze, otisky, blokované entity (návratový kód 2 = něco je blokováno) |
+| `py -m winvet_bridge check` | připojení, verze, otisky, blokované entity (návratový kód 2 = něco je blokováno; stejně i u `sync`; 1 = chyba, 3 = chyba konfigurace) |
 | `py -m winvet_bridge sync` | jeden běh: první běh plný, další jen změny podle žurnálu WinVetu |
 | `py -m winvet_bridge sync --full` | plná synchronizace všeho |
 | `py -m winvet_bridge sync --dry-run` | jen načíst a spočítat, nic neposílat |
-| `py -m winvet_bridge sync --only calendar` | jen kalendář WinVetu (okno včera … +60 dní), bez žurnálu; vhodné každých 5 minut |
+| `py -m winvet_bridge sync --only calendar` | jen kalendář WinVetu (okno včera … +60 dní), bez žurnálu; vhodné každých 5 minut. `--only` bere také názvy entit, které se posílají vždy celé (např. `stock_moves`); nejde kombinovat s `--full` |
 | `py -m winvet_bridge run` | služba: změny každých `interval_minutes` (15 min), mezi tím kalendář každých `calendar_interval_minutes` (5 min), plná synchronizace jednou denně v `full_sync_time` (03:00) |
+| `py -m winvet_bridge schema-diff` | vypíše všechny rozdíly struktury proti schválenému snímku (`--json` strojově) |
 | `py -m winvet_bridge approve --yes` | schválí aktuální verzi WinVetu (viz níže) |
 | `py -m winvet_bridge export --entity owners --out owners.json` | ladicí export jedné entity – **obsahuje osobní údaje**, po použití smažte |
 
@@ -166,6 +169,29 @@ a mezi běhy posílá kalendář každých `calendar_interval_minutes` (výchoz�
 - **Starší Odoo** (bez záloh) odpoví `unknown entity` – most zálohy přeskočí a pokračuje; nový klíč
   dokladu staré Odoo ignoruje.
 
+## Sklad (kontrakt v3, most 3.0.0; pohyby skladu kontrakt v6, most 6.0.0 a 6.1.0)
+
+- `stock_lots` – vrstvy skladu, jedna na řádek příjemky (`DOKLAD_POLOZKA_SK` se `ZNAMENKO = 1`):
+  položka, šarže, expirace, datum příjmu, zbývající množství (příjem minus navázané výdeje), cena
+  za MJ, sazba DPH a dodavatel (`DOKLAD.PARTNER_NAZEV`).
+- `stock_totals` – stav položky (`VARIANTA_SKLAD_STAV`).
+- `stock_moves` – všechny pohyby skladu (příjmy i výdeje ze `DOKLAD_POLOZKA_SK`), podklad pro Regletu
+  skladu v Odoo. Od 6.1.0 navíc `item_vat_rate`: nákupní sazba DPH položky (`VARIANTA.ID_DPH_NAKUP`
+  → `DPH.DPH`), když není, prodejní `DPH_PRODEJ`.
+- Žádná z těchto tabulek není v žurnálu → všechny tři se posílají při každém běhu celé.
+- **Kontrola verze:** 6.0.0 změnil otisk `stock`, 6.1.0 otisk `catalog` (do skupiny přibyla tabulka
+  `DPH`). Most se starým `verified.json` by blokoval dotčené entity – **`verified.json` vždy nahradit
+  spolu s mostem**.
+- **Starší Odoo** (bez pohybů skladu) odpoví `unknown entity` – most entitu přeskočí a pokračuje;
+  nový klíč `item_vat_rate` staré Odoo ignoruje.
+
+## Aktualizace mostu
+
+Při nové verzi nahraďte naráz balíček `winvet_bridge\`, `verified.json` a `schema_baseline.json`
+(a podle potřeby `requirements.txt`). `config.ini` a stavový soubor nechte, kde jsou, jinak by další
+běh byl plný. Pokud jste na tomto PC spouštěli `approve`, vaše schválení se výměnou souborů přepíše.
+Po výměně spusťte `py -m winvet_bridge check`; když něco blokuje, postupujte podle části níže.
+
 ## Kontrola verze WinVetu (guard)
 
 Program si u každého běhu přečte číslo verze WinVetu (`VERZE.VERZE`, nyní `2603`) a spočítá
@@ -176,11 +202,11 @@ neblokuje. Žádná data v otisku nejsou.
 
 | skupina | tabulky | entity, které na ní závisí |
 |---|---|---|
-| catalog | VARIANTA, VARIANTA_CENIK, KLASIFIKACE_VYROBKU, VARIANTA_TYP, UZIVATEL_NEW | users, items (vč. cen) |
+| catalog | VARIANTA, VARIANTA_CENIK, KLASIFIKACE_VYROBKU, VARIANTA_TYP, UZIVATEL_NEW, DPH | users, items (vč. cen), stock_moves (nákupní sazba položky) |
 | owners | PARTNER, PARTNER_KONTAKT, TYP_KONTAKTU | owners, contacts |
 | patients | PACIENT, VAKCINACE_ODCERVENI | patients, vaccinations |
 | clinical | PRIPAD, DENNI_ZAZNAM, DENNI_ZAZNAM_HODNOTA | visits, vitals, sale_lines (datum řádku) |
-| sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments, stock_lots (sloupec dodavatele) |
+| sales | DOKLAD, DOKLAD_POLOZKA_UM, PLATBA, TYP_DOKLADU, DRUH_DOKLADU | sale_documents, sale_lines, payments, stock_lots (sloupec dodavatele), stock_moves (číslo a datum dokladu) |
 | templates | SABLONA_VYKONU, SABLONA_VYKONU_POLOZKA, FRAZE | bundles, bundle_lines, phrases |
 | stock | DOKLAD_POLOZKA_SK, VARIANTA_SKLAD_STAV | stock_lots, stock_moves (obě také DOKLAD ze skupiny sales), stock_totals |
 | calendar | KALENDAR_NEW, KALENDAR_NEW_KALENDAR, ORD_CINNOST | calendar_resources, calendar_activities, calendar_events |
@@ -219,7 +245,8 @@ uloží nový snímek spolu s otisky.
    (viz `winvet_bridge/entities.py`) stále existují a mají stejný význam (`sync --dry-run`,
    případně testy).
 3. Teprve potom: `py -m winvet_bridge approve` (ukáže změny) a `py -m winvet_bridge approve --yes`
-   (zapíše je do `verified.json`). Další běh synchronizuje blokované entity znovu celé.
+   (zapíše je do `verified.json` a `schema_baseline.json`). Další běh synchronizuje blokované entity
+   znovu celé.
 
 Bez ověření `approve` nespouštějte – smyslem kontroly je, aby se do Odoo nikdy nedostala data
 přečtená ze změněné struktury.
@@ -233,8 +260,9 @@ Odoo (používejte HTTPS URL).
 ## Stavový soubor
 
 `state_file` (JSON) drží `journal_cursor` (poslední zpracované `ZURNAL.ID_ZURNAL`), datum posledního
-plného běhu a entity čekající na plnou synchronizaci. Kurzor se posune jen tehdy, když Odoo přijalo
-všechny dávky běhu. Smazání souboru = příští běh bude plný.
+plného běhu, čas posledního úspěšného běhu a entity čekající na plnou synchronizaci. Kurzor se posune
+jen tehdy, když Odoo přijalo všechny dávky běhu. Smazání souboru = příští běh bude plný. Plný je i běh,
+kdy je žurnál WinVetu kratší než kurzor (žurnál začal znovu).
 
 ## Vývoj a testy
 
@@ -244,7 +272,7 @@ LD_LIBRARY_PATH=/cesta/k/fbclient/lib python3 -m unittest discover -s tests -v
 ```
 
 Integrační testy používají lokální analytickou kopii WinVetu (proměnné `WINVET_TEST_DSN`,
-`WINVET_TEST_PASSWORD`, `WINVET_TEST_FBCLIENT`); když není dostupná, přeskočí se.
+`WINVET_TEST_USER`, `WINVET_TEST_PASSWORD`, `WINVET_TEST_FBCLIENT`); když není dostupná, přeskočí se.
 
 ## Denní příjem záloh přes SFTP na serveru Odoo
 

@@ -1,7 +1,7 @@
 # Rezervace – jak to funguje
 
 **K čemu je tento návod.** Vysvětluje, podle čeho systém nabízí volné termíny, kdy
-nabídne kterou lékařku, co se děje se žádostí z webu a proč nemůže dojít ke dvojímu
+nabídne kterou lékařku, co se děje se žádostí z webu a proč nedojde k nechtěnému dvojímu
 obsazení. Hodí se recepci i správci, když se diví, proč web nějaký termín (ne)nabízí.
 Postupy krok za krokem jsou v [Návodu pro recepci](recepce.md) a [Návodu pro správce](nastaveni.md).
 
@@ -21,32 +21,26 @@ a postupuje takto:
    - v nastavení je zapnuté **Online jen tam, kde slouží lékař**.
 
    Jinak stačí ordinační doba (úkon bez specializace se nabídne, i když rozpis chybí).
-3. **− obsazené** – odečtou se potvrzené a proběhlé rezervace a blokace
-   (na webu obě blokace, u recepce jen úplná – viz „Co blokuje termín“).
+3. **− obsazené** – odečtou se potvrzené a proběhlé rezervace, blokace a záznamy z kalendáře
+   WinVetu (na webu obě blokace, u recepce jen úplná – viz „Co blokuje termín“).
 4. **Krok** – ve zbylém volném čase se nabízejí začátky po **Krok slotů** (obvykle 15 min),
    zarovnané na celé kroky (8:15, 8:30…). Termín se nabídne, jen když se do volna
    vejde **celá délka úkonu**.
 5. **Minimální předstih** – na webu se nenabízí nic dřív než za **Nejdříve za (hodin)**.
-   Recepce (průvodce, návrhy na tabuli) tento limit nemá – může objednat i na teď.
+   Recepce (průvodce, návrhy v kalendáři) tento limit nemá – může objednat i na teď.
 6. **Horizont** – web nabízí dny nejvýš **Nejdál dopředu (dní)** od dneška.
    Recepce v průvodci až zhruba 400 dní.
 7. **Víkend a státní svátek** – web v takový den nenabídne nic, pokud je v nastavení
    zapnuté **Víkendy jen ručně** / **Státní svátky jen ručně** (výchozí obojí zapnuto).
-   Svátky se počítají v kódu: pevné (1. 1., 1. 5., 8. 5., 5. 7., 6. 7., 28. 9., 28. 10.,
+   Svátky se počítají samy: pevné (1. 1., 1. 5., 8. 5., 5. 7., 6. 7., 28. 9., 28. 10.,
    17. 11., 24.–26. 12.) a pohyblivé Velký pátek a Velikonoční pondělí podle data Velikonoc.
    Recepce tento krok nemá.
-   Kód svátků je v `elite_vet_calendar/models/holidays.py` (nejnižší modul, který svátky
-   ukazuje); `elite_vet_reservation/models/holidays.py` ho jen přebírá, staré importy platí.
-   Svátek se jen **ukazuje** – na tabuli (`board_data`: `holiday` = {name, label, web_closed},
-   `week_holidays` pro dny týdne), v průvodci (`holiday_warning`), v pokladně (`free_days`:
-   `holiday`, `today_data`: `holiday`), v kalendářích přes `js_class="elite_vet_holiday_calendar"`
-   (`elite.vet.shift.holiday_map`) a na webu: `/rezervace/api/days` s parametrem
-   `with_holidays` vrací `{days, holidays, holidays_closed}` (bez parametru dál jen seznam dní
-   – kvůli starším volajícím, např. chatu). Žádné záznamy se nezakládají.
+   Svátek se jen **ukazuje** (v kalendáři, v průvodci, u pokladny a na webu), nezakládá se
+   žádný záznam.
 
 Recepce může navíc v průvodci zadat **ruční čas**: kroky 1, 2, 5, 6 a 7 se pak
-neuplatní vůbec – kontroluje se jen, že termín nekoliduje s jinou rezervací nebo
-úplnou blokací.
+neuplatní vůbec. Brání jen úplná blokace; u jiné rezervace nebo záznamu z WinVetu se
+průvodce zeptá a nabídne **Přesto vytvořit**.
 
 Příklad: Ordinace 1 má 8:15–19:30, lékařka se stomatologií slouží 8:15–14:00, mezi 9:00
 a 9:30 je potvrzená rezervace. Stomatologické vyšetření (30 min) se nabídne v 8:15, 8:30,
@@ -82,39 +76,51 @@ Kde se pravidlo projeví:
 - **Web**: u úkonu se specializací se ukazuje „Dělá: …“; časy jen ve službách těchto lékařek;
   záložka **Podle lékaře** nabídne lékařce jen její úkony.
 - **Průvodce recepce**: pole Lékařka nabízí jen ty, které úkon dělají.
-- **Tabule**: návrhy „Potvrdit → Ordinace · lékařka“ jen s lékařkou, která úkon dělá
+- **Kalendář**: návrhy „Potvrdit → Ordinace · lékařka“ jen s lékařkou, která úkon dělá
   a v tu dobu v ordinaci slouží. Slouží-li jich víc, nabídne se ta s dřívějším začátkem
   služby (nebo ta, kterou si vybral klient).
 - **Úkony**: sloupec **Kdo dělá** ukazuje výsledek pravidla.
 
-Pravidlo se **nekontroluje**, když recepce přetáhne kartu na tabuli nebo ručně změní
+Při přetažení karty v kalendáři se pravidlo kontroluje, recepce ho ale může přebít tlačítkem
+**Přesto přesunout** nebo **Přesto potvrdit**. **Nekontroluje** se, když recepce ručně změní
 lékařku ve formuláři. Tam rozhoduje recepce.
 
 ![Web – výběr podle specializace](img/web-2-obor.png)
+
+*Starší snímek: první záložka se dnes jmenuje Podle úkonu.*
 
 ---
 
 ## 3. Cesta žádosti z webu
 
+Tato cesta platí, když je v nastavení **Rezervace na webu** = **Elite Vet (náš kalendář)**.
+Při **WinVet (podle adresy)** je na webu formulář WinVetu a žádosti do Odoo nechodí
+(viz [Návod pro správce](nastaveni.md)).
+
 ![Web – krok 1](img/web-1-problem.png)
 
-1. Klient na stránce `/rezervacni-system` projde 4 kroky: **Co potřebujete**
+*Starší snímek: první záložka se dnes jmenuje Podle úkonu.*
+
+1. Klient na stránce /rezervacni-system projde 4 kroky: **Co potřebujete**
    (podle úkonu, lékaře nebo specializace) → **Termín** → **Vaše údaje** → **Hotovo**.
 2. Při odeslání systém **znovu ověří**, že termín je pořád volný. Pokud ne, klient
    uvidí hlášku a vybere jiný čas.
 3. Vznikne rezervace ve stavu **Čekající z webu** – bez ordinace, se zdrojem „Web“.
    Termín zatím **neblokuje**.
 4. Odejdou dva e-maily: klientovi „žádost přijata“, klinice upozornění na
-   **E-mail pro upozornění**.
-5. Na tabuli všem přihlášeným s rezervacemi vyskočí upozornění a karta se objeví
-   v panelu **Čekající z webu**.
+   **E-mail pro upozornění** (je-li zapnuté **Posílat klinice upozornění**).
+5. Všem přihlášeným s rezervacemi vyskočí upozornění a karta se objeví
+   v panelu **Čekající z webu** v kalendáři.
 6. Recepce žádost **potvrdí** (návrh, přetažení, nebo formulář s vybranou ordinací),
    nebo **odmítne**.
 7. Při potvrzení se dohledá nebo založí klient a mazlíček, rezervace dostane ordinaci,
    stav **Potvrzená**, a klientovi odejde e-mail s potvrzením a odkazem na zrušení.
-8. Odmítnutí = stav **Zrušená**, klientovi odejde e-mail o zrušení.
+8. Odmítnutí = stav **Zrušená**, klientovi odejde e-mail o zrušení, i se zprávou od recepce,
+   pokud ji napsala.
 
 ![Web – údaje klienta](img/web-4-udaje.png)
+
+*Starší snímek: pole Popište problém se dnes jmenuje Upřesněte důvod návštěvy.*
 
 Ochrana proti spamu na webu: skryté pole pro roboty, kontrola údajů (jméno a příjmení,
 platný e-mail, telefon, souhlas) a nejvýš 5 odeslaných žádostí za 10 minut z jedné adresy.
@@ -123,14 +129,15 @@ Web funguje i na mobilu:
 
 ![Web na mobilu](img/web-mobil.png)
 
+*Starší snímek: první záložka se dnes jmenuje Podle úkonu.*
+
 ### Web, nebo klinika (Zdroj)
 
-Každá rezervace má **Zdroj**: **Web** (formulář `/rezervacni-system` i chat na webu – oba
-posílají žádost stejnou cestou `/rezervace/api/submit`), nebo **Klinika** (průvodce Nová
-rezervace, pokladna, druhá ordinace). Zdroj se nastaví při založení a nemění se – ani potvrzením
+Každá rezervace má **Zdroj**: **Web** (rezervační formulář i chat na webu), nebo **Klinika**
+(průvodce Nová rezervace, pokladna, druhá ordinace). Zdroj se nastaví při založení a nemění se – ani potvrzením
 žádosti z webu.
 
-- **Tabule** (Odoo i pokladna): modrý štítek **WEB** a modrý čárkovaný obrys u webových
+- **Kalendář** (Odoo i pokladna): modrý štítek **WEB** a modrý čárkovaný obrys u webových
   rezervací, bílý štítek s **iniciálami** toho, kdo rezervaci na klinice založil (uživatel, který
   ji vytvořil; najetím myší jméno a čas založení), šedý **WinVet** u záznamů z WinVetu. Přepínač
   **Vše | Web | Klinika** si pamatuje prohlížeč; záznamy z WinVetu jsou jen ve „Vše“.
@@ -140,16 +147,12 @@ rezervace, pokladna, druhá ordinace). Zdroj se nastaví při založení a nemě
   (zakládá ji veřejný uživatel webu).
 - Pokladna, **Dnes › Přicházejí**: štítek **WEB** u rezervací z webu.
 
-Technicky: `board_data` posílá u rezervací `source`, `created_by`, `created_by_initials`
-a `created_at` (čas kliniky, „26. 10. 2026 9:12“); pole `created_by_id` je `create_uid`
-jen pro interní uživatele.
-
 ### Stavy rezervace
 
-| Stav | Kdy | Blokuje termín? | Na tabuli |
+| Stav | Kdy | Blokuje termín? | V kalendáři |
 |---|---|---|---|
 | **Čekající z webu** | Přišla z webu, nikdo ji nepotvrdil | ne | jen v levém panelu |
-| **Potvrzená** | Potvrdila recepce nebo ji recepce založila | **ano** | barevná karta |
+| **Potvrzená** | Potvrdila recepce nebo ji recepce založila | **ano** | bílá karta s barevnými proužky |
 | **Proběhla** | Recepce označila po návštěvě | **ano** | bledší karta |
 | **Nedorazil** | Klient nepřišel | ne | bledší karta |
 | **Zrušená** | Zrušila klinika, klient nebo odmítnuto | ne | není vidět |
@@ -158,7 +161,8 @@ jen pro interní uživatele.
 
 ## 4. Co blokuje termín
 
-**Blokuje:** potvrzené rezervace, proběhlé rezervace, blokace (dokud nejsou zrušené).
+**Blokuje:** potvrzené rezervace, proběhlé rezervace, blokace (dokud nejsou zrušené)
+a záznamy z kalendáře WinVetu s časem (celodenní záznamy ne).
 Blokace bez ordinace blokuje **všechny ordinace**. Když se úplná blokace pro všechny
 ordinace zakládá přes čas, kde už některá ordinace úplnou blokaci má, rozdělí se
 po ordinacích a doplní jen volné úseky.
@@ -167,15 +171,15 @@ Záleží ale na druhu blokace a na tom, kdo objednává:
 
 | | Web (veřejné objednávání) | Recepce (průvodce, přetažení, návrhy, uložení) |
 |---|---|---|
-| Potvrzená / proběhlá rezervace | blokuje | blokuje |
-| Úplná blokace | blokuje | blokuje |
+| Potvrzená / proběhlá rezervace | blokuje | blokuje, po upozornění jde přes ni objednat (**Přesto…**) |
+| Záznam z kalendáře WinVetu s časem | blokuje | blokuje, po upozornění jde přes něj objednat (**Přesto…**) |
+| Úplná blokace | blokuje | blokuje, přes ni objednat nejde |
 | Blokace jen pro web | blokuje | **neblokuje** |
 | Nepotvrzená žádost z webu | drží jedno místo | **neblokuje** (vidíte ji v panelu) |
 | Víkend / státní svátek (podle nastavení) | blokuje celý den | neblokuje |
 | Mimo ordinační dobu / bez služby lékařky | nenabídne | nenabídne, ale ručním časem jde |
 
-Pravidlo „co je obsazené“ je v kódu na jednom místě (web a recepce se liší jen
-přepínačem), takže se web a recepce nemůžou rozejít. Úplnou blokaci nejde založit
+Pravidlo „co je obsazené“ je pro web i recepci společné, takže se nemůžou rozejít. Úplnou blokaci nejde založit
 přes potvrzenou rezervaci; blokaci jen pro web jde založit kdykoli.
 
 **Nepotvrzená žádost z webu drží místo.** Žádost ještě nemá ordinaci, proto si
@@ -187,7 +191,7 @@ po potvrzení ho drží už samotná rezervace.
 
 **Neblokuje:** čekající žádosti z webu, zrušené rezervace, Nedorazil.
 
-Důsledek: na stejný čas mohou přijít dvě žádosti z webu. Potvrdit jde jen první;
+Důsledek: na stejný čas mohou přijít dvě žádosti z webu. Po potvrzení první
 u druhé zmizí návrhy a recepce ji přeplánuje.
 
 ---
@@ -196,13 +200,18 @@ u druhé zmizí návrhy a recepce ji přeplánuje.
 
 Výpočet volných termínů jen **radí**, co nabídnout. Poslední slovo má kontrola
 při **uložení**: každá potvrzená rezervace a úplná blokace se před zápisem porovná
-s ostatními v téže ordinaci (s rezervacemi a úplnými blokacemi; blokace jen pro web se
-nepočítá a sama se nekontroluje). Když se překrývá, uložení se odmítne hláškou
-„Termín … v ordinaci … je obsazený: …“.
+s ostatními v téže ordinaci (s rezervacemi a úplnými blokacemi, u rezervací i se záznamy
+z WinVetu; blokace jen pro web se nepočítá a sama se nekontroluje). Když se překrývá, uložení
+se odmítne hláškou „Termín … v ordinaci … je obsazený: …“.
+
+Výjimka: rezervaci přes jinou rezervaci nebo záznam z WinVetu může recepce vědomě založit
+tlačítkem **Přesto vytvořit**, **Přesto přesunout**, **Přesto potvrdit** nebo u pokladny
+**Přesto objednat**. V historii rezervace zůstane poznámka a karty stojí v kalendáři vedle sebe.
+Přes úplnou blokaci to nejde a web obsazený čas nikdy nenabídne.
 
 Když dvě recepční (nebo recepční a web) ukládají stejný čas ve stejnou chvíli,
 systém ordinaci na okamžik „zamkne“. Druhý zápis počká, uvidí první rezervaci
-a skončí hláškou o obsazeném termínu. Dvojí obsazení tak nevznikne ani při souběhu.
+a skončí hláškou o obsazeném termínu. Nechtěné dvojí obsazení tak nevznikne ani při souběhu.
 
 Rozpis lékařů: jedna lékařka může sloužit naráz ve dvou ordinacích (překrývající se směny
 v různých ordinacích jsou v pořádku – volné časy se počítají po ordinacích, takže ji v tu dobu
@@ -214,11 +223,11 @@ byl by to jen duplikát (u směny z Rozpisu služeb hláška „Směnu … nejde
 ## 6. Živá aktualizace
 
 Každá změna rezervace, blokace nebo Rozpisu lékařů (založení, úprava, smazání) pošle
-zprávu všem přihlášeným ze skupiny Recepce (a tedy i správcům). Otevřená tabule se
-na ni hned tiše překreslí. Nová žádost z webu navíc zobrazí upozornění s jejím popisem.
+zprávu všem přihlášeným ze skupiny Recepce (a tedy i správcům). Otevřený kalendář se
+na ni hned tiše překreslí. Nová žádost z webu a žádost klienta o zrušení navíc zobrazí upozornění.
 
 Hromadné změny (kopírování rozpisu, opakovaná blokace) pošlou jen jednu zprávu.
-Pro případ výpadku spojení se tabule ještě sama obnovuje jednou za minutu.
+Pro případ výpadku spojení se kalendář ještě sám obnovuje jednou za minutu.
 
 ---
 
@@ -228,9 +237,13 @@ Pro případ výpadku spojení se tabule ještě sama obnovuje jednou za minutu.
   který si klient zvolí.
 - Názvy úkonů, instrukce pro klienta a texty z nastavení se zobrazí v jazyce klienta,
   pokud jsou přeložené (překládá je správce přímo v záznamu).
-- Jazyk se u rezervace uloží a **všechny e-maily klientovi** pak chodí v tomto jazyce.
-  U rezervací založených recepcí se použije jazyk z karty klienta.
-- Upozornění pro kliniku a tabule jsou vždy česky.
+- Jazyk se u rezervace uloží jako **Jazyk rezervace** a **všechny e-maily klientovi** pak chodí
+  v tomto jazyce.
+- V průvodci recepce je předvyplněný jazyk klienta, u nového klienta čeština. Změnit ho jde
+  v průvodci i ve formuláři rezervace.
+- Novému klientovi se jazyk zapíše do profilu, i když vznikl z žádosti z webu. Existujícímu se
+  profil nemění.
+- Upozornění pro kliniku a kalendář jsou vždy česky.
 
 ---
 
@@ -239,7 +252,9 @@ Pro případ výpadku spojení se tabule ještě sama obnovuje jednou za minutu.
 - **Online platba zálohy** – platební brána není napojená. Záloha se jen eviduje
   (Čeká na zálohu / Zaplaceno / Vráceno) a platební údaje posílá recepce.
 - **SMS** – připomínky a potvrzení chodí jen e-mailem.
-- **Import klientů z WinVetu** – pole ID ve WinVetu je připravené, import zatím není.
-- **Změna délky přetažením** na tabuli – délka se mění ve formuláři (pole Konec).
-- **Přetažení na jiný den** – jiný den se nastavuje ve formuláři (pole Začátek).
-- **Týdenní tabule** – tabule ukazuje jeden den; týdenní přehled je v Rezervace → kalendář.
+- **Změna délky přetažením** v kalendáři – délka se mění ve formuláři (pole Konec) nebo v okně
+  po přetažení (pole Do).
+- **Přetažení na jiný den** – jiný den se nastavuje v okně po přetažení (pole Datum) nebo ve formuláři
+  (pole Začátek).
+- **Týdenní mřížka v Kalendáři** – Kalendář ukazuje jeden den; týdenní přehled je v Rezervace →
+  zobrazení kalendáře.
