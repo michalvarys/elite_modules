@@ -120,6 +120,7 @@
                             <field name="contact_name" required="step == 'client' and partner_mode == 'new'"/>
                             <field name="contact_phone" widget="phone"/>
                             <field name="contact_email" widget="email"/>
+                            <field name="lang"/>
                         </group>
                         <group string="Mazlíček">
                             <field name="pet_id" invisible="partner_mode != 'existing' or not partner_id"

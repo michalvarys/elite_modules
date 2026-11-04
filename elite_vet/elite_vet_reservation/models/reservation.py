@@ -4,6 +4,7 @@ from datetime import timedelta
 import pytz
 
 from odoo import _, api, fields, models
+from odoo.addons.base.models.res_partner import _lang_get
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 from .holidays import holiday_name
@@ -180,7 +181,8 @@ class VetReservation(models.Model):
         help="Napište důvod nebo cokoli dalšího – vloží se do e-mailu o zrušení, který klient dostane.")
     deposit_state = fields.Selection([("none", "Bez zálohy"), ("pending", "Čeká na zálohu"), ("paid", "Zaplaceno"), ("refunded", "Vráceno")], default="none", string="Záloha")
     transaction_id = fields.Many2one("payment.transaction", string="Platba", ondelete="set null")
-    lang = fields.Char(string="Jazyk klienta", default="cs_CZ")
+    # Request 4. 11.: the language of the client's e-mails, chosen per reservation.
+    lang = fields.Selection(_lang_get, string="Jazyk rezervace", default="cs_CZ")
     color_hex = fields.Char(compute="_compute_color_hex")
     # Two-doctor procedure: a copy of the reservation in a second room (logic in second_room.py).
     linked_reservation_id = fields.Many2one("elite.vet.reservation", string="Společně s", copy=False, readonly=True,
@@ -687,7 +689,8 @@ class VetReservation(models.Model):
         Pet = self.env["elite.vet.pet"]
         for rec in self:
             if not rec.partner_id:
-                rec.partner_id = Partner.find_or_create_client(rec.contact_name, rec.contact_email, rec.contact_phone)
+                rec.partner_id = Partner.find_or_create_client(rec.contact_name, rec.contact_email, rec.contact_phone,
+                                                               lang=rec.lang)
             if not rec.pet_id and rec.pet_name:
                 rec.pet_id = Pet.find_or_create(rec.partner_id, rec.pet_name, rec.pet_species)
 

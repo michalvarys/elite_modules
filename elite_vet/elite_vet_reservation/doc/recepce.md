@@ -19,6 +19,8 @@ Tabule ukazuje **jeden den**. Každá ordinace má svůj sloupec, vlevo je časo
 
 ### Pohyb po dnech
 
+Vybraný den zůstane i po obnovení stránky, dokud je panel otevřený. Další den tabule začne na dnešku.
+
 - **‹** a **›** – předchozí / další den.
 - Políčko s datem – skok na libovolný den.
 - **Dnes** – návrat na dnešek.
@@ -272,11 +274,14 @@ vkládáte ručně“. Zkontrolujte čas a klikněte **Použít ruční čas**.
 3. Nový: vyplňte **Jméno a příjmení** a aspoň **Telefon** nebo **E-mail**.
    Pokud už klient se stejným e-mailem nebo telefonem v kartotéce je, použije se
    ten a nový se nezakládá.
-4. Nový mazlíček: **Nový mazlíček – jméno** a **Druh**.
-5. Volitelně **Důvod návštěvy** a **Interní poznámka** (klient ji nevidí).
-6. **Poslat klientovi potvrzení e-mailem** – zaškrtne se samo, když je vyplněný e-mail.
+4. **Jazyk rezervace** – v tomto jazyce klient dostane e-maily k rezervaci. Nabídne se jazyk
+   klienta, u nového čeština. Novému klientovi se jazyk zapíše do profilu, existujícímu se
+   profil nemění.
+5. Nový mazlíček: **Nový mazlíček – jméno** a **Druh**.
+6. Volitelně **Důvod návštěvy** a **Interní poznámka** (klient ji nevidí).
+7. **Poslat klientovi potvrzení e-mailem** – zaškrtne se samo, když je vyplněný e-mail.
    Odškrtněte, pokud klient e-mail nechce.
-7. Klikněte **Dále**.
+8. Klikněte **Dále**.
 
 ### Krok 4 – Shrnutí
 

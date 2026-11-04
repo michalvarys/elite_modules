@@ -114,6 +114,50 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.name, "Jana Popisová / %s" % self.vacc.name)
 
     # ---------- request 3. 11. (Lucie): the procedure is optional, an empty one is Jiné ----------
+    def booked(self, w):
+        w.action_step_time()
+        w.slot_ids.filtered(lambda ln: ln.minute == 9 * 60)[:1].action_select()
+        return w
+
+    def save_client(self, w, title):
+        w.action_step_summary()
+        w.action_save()
+        return self.env["elite.vet.reservation"].search([("title", "=", title)])
+
+    def test_language_of_a_new_client_goes_to_the_profile(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.booked(self.W.with_user(self.reception).create(
+            {"procedure_id": self.vacc.id, "date": self.day, "title": "Jazyk nový"}))
+        self.fill_new_client(w, contact_email="jazyk.novy@example.cz", contact_phone="+420 606 000 111")
+        self.assertEqual(w.lang, "cs_CZ")
+        w.lang = "de_DE"
+        r = self.save_client(w, "Jazyk nový")
+        self.assertEqual((r.lang, r.partner_id.lang), ("de_DE", "de_DE"))
+
+    def test_language_of_an_existing_client_stays_in_the_profile(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        partner = self.env["res.partner"].create({"name": "Klient EN", "lang": "en_US", "is_vet_client": True,
+                                                  "phone": "+420 606 000 222"})
+        w = self.booked(self.W.with_user(self.reception).create(
+            {"procedure_id": self.vacc.id, "date": self.day, "title": "Jazyk stálý"}))
+        w.write({"partner_mode": "existing", "partner_id": partner.id})
+        self.assertEqual(w.lang, "en_US", "offers the language of the client")
+        w.write({"lang": "de_DE", "pet_name": "Rex"})
+        r = self.save_client(w, "Jazyk stálý")
+        self.assertEqual((r.lang, partner.lang), ("de_DE", "en_US"))
+
+    def test_new_client_form_finding_a_card_keeps_its_language(self):
+        partner = self.env["res.partner"].create({"name": "Stálý", "lang": "en_US", "email": "stala.karta@example.cz"})
+        found = self.env["res.partner"].find_or_create_client("Stálý", "stala.karta@example.cz", False, lang="de_DE")
+        self.assertEqual((found, partner.lang), (partner, "en_US"))
+
+    def test_web_client_gets_the_language_of_the_reservation(self):
+        r = self.reservation(start=self.dt(self.day, 9, 0), lang="de_DE", contact_name="Web DE",
+                             contact_email="web.de.klient@example.cz", contact_phone="+420 606 000 333")
+        r.partner_id = False
+        r.action_match_client()
+        self.assertEqual(r.partner_id.lang, "de_DE")
+
     def test_wizard_without_procedure_books_other(self):
         other = self.env.ref("elite_vet_reservation.procedure_other")
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)

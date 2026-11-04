@@ -12,6 +12,7 @@ import pytz
 from markupsafe import Markup, escape
 
 from odoo import _, api, fields, models
+from odoo.addons.base.models.res_partner import _lang_get
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.misc import clean_context
 
@@ -90,6 +91,9 @@ class ReservationWizard(models.TransientModel):
     contact_name = fields.Char(string="Jméno a příjmení", compute="_compute_contact", store=True, readonly=False)
     contact_phone = fields.Char(string="Telefon", compute="_compute_contact", store=True, readonly=False)
     contact_email = fields.Char(string="E-mail", compute="_compute_contact", store=True, readonly=False)
+    # Request 4. 11.: e-mails of this reservation go in this language; a new client gets it in the profile.
+    lang = fields.Selection(_lang_get, string="Jazyk rezervace", compute="_compute_lang", store=True, readonly=False,
+                            help="V tomto jazyce klient dostane e-maily k rezervaci. Novému klientovi se zapíše do profilu.")
     pet_id = fields.Many2one("elite.vet.pet", string="Mazlíček", domain="[('partner_id', '=', partner_id)]")
     pet_name = fields.Char(string="Nový mazlíček – jméno")
     pet_species = fields.Selection(SPECIES, string="Druh", default="dog")
@@ -192,6 +196,13 @@ class ReservationWizard(models.TransientModel):
             elif not w.send_email_offered:
                 w.send_email = True
             w.send_email_offered = w.send_email_offered or bool(w.contact_email)
+
+    @api.depends("partner_mode", "partner_id")
+    def _compute_lang(self):
+        installed = dict(self.env["res.lang"].get_installed())
+        for w in self:
+            lang = w._selected_partner().lang
+            w.lang = lang if lang in installed else "cs_CZ" if "cs_CZ" in installed else self.env.lang
 
     @api.depends("partner_mode", "partner_id")
     def _compute_no_show_warning(self):
@@ -490,7 +501,7 @@ class ReservationWizard(models.TransientModel):
         no_client = self.partner_mode == "none"
         if not partner and not no_client:
             partner = env["res.partner"].find_or_create_client(
-                self.contact_name, self.contact_email, self.contact_phone)
+                self.contact_name, self.contact_email, self.contact_phone, lang=self.lang)
         if not pet and partner and (self.pet_name or "").strip():
             pet = env["elite.vet.pet"].find_or_create(partner, self.pet_name, self.pet_species)
         start = env["elite.vet.availability"].local_to_utc(self.date, self.minute)
@@ -510,7 +521,7 @@ class ReservationWizard(models.TransientModel):
             "pet_name": pet.name or (self.pet_name or "").strip() or False,
             "pet_species": pet.species or self.pet_species or False,
             "problem": self.problem or False, "note": self.note or False,
-            "lang": partner.lang or "cs_CZ",
+            "lang": self.lang or partner.lang or "cs_CZ",
         })
         return {
             "type": "ir.actions.client", "tag": "display_notification",
