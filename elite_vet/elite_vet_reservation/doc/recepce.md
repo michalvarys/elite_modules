@@ -198,6 +198,20 @@ E-mail mu přijde jako běžné potvrzení s novým časem.
 
 ---
 
+### Žádosti o zrušení od klienta
+
+Klient může rezervaci zrušit odkazem v e-mailu. U potvrzené rezervace to je jen **žádost**: rezervace
+zůstává a v panelu vlevo se ukáže **Žádosti o zrušení (počet)**. Karta na tabuli má červený obrys a štítek
+**ZRUŠIT?**. Přijde upozornění se zvukem, a pokud je to zapnuté, i e-mail klinice.
+
+- **Potvrdit zrušení** – rezervace se zruší a klient dostane e-mail. Můžete připsat zprávu.
+- **Ponechat** – rezervace zůstane a klient dostane e-mail, že nebyla zrušena.
+- **Upravit** – otevře rezervaci. Stejná tlačítka jsou i v jejím formuláři.
+
+Žádost z webu, kterou ještě nikdo nepotvrdil, se odkazem zruší rovnou. Klientovi s čekající žádostí o
+zrušení neodchází připomínka. U pokladny je žádost vidět v seznamu Dnes a červeným obrysem v Kalendáři,
+rozhoduje se v backendu.
+
 ## 3. Nová rezervace (průvodce)
 
 Rezervaci po telefonu nebo na místě zakládejte průvodcem. Otevřete ho:

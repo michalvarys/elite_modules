@@ -345,6 +345,7 @@ export class BoardDialog extends Component {
             o_ev_board_block_web: this.isWebBlock(e),
             o_ev_board_winvet: this.isWinvet(e),
             o_ev_board_card: e.kind === "reservation",
+            o_ev_board_cancel_requested: e.cancel_requested,
             o_ev_board_from_web: this.isWeb(e),
             o_ev_board_muted: e.state === "done" || e.state === "no_show",
             o_ev_board_short: this.isShort(e),

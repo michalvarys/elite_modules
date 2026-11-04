@@ -35,6 +35,13 @@
                     <!-- Three cancel variants: a block has nobody to notify, nor does a reservation without e-mail.
                          The e-mail warning is shown only where an e-mail is actually sent; with an e-mail
                          a dialog (cancel wizard) asks first and takes the message for the client. -->
+                    <field name="cancel_requested_at" invisible="1"/>
+                    <button name="action_confirm_cancel_request" type="object" string="Potvrdit zrušení" class="btn-danger"
+                            invisible="not cancel_requested_at or state != 'confirmed'"
+                            confirm="Zrušit rezervaci podle žádosti klienta? Klient dostane e-mail."/>
+                    <button name="action_keep_after_cancel_request" type="object" string="Ponechat rezervaci"
+                            invisible="not cancel_requested_at or state != 'confirmed'"
+                            confirm="Rezervace zůstane a klient dostane e-mail, že nebyla zrušena."/>
                     <button name="action_open_cancel_wizard" type="object" string="Zrušit"
                             invisible="kind == 'block' or not contact_email or state in ('cancelled','done','no_show')"/>
                     <button name="action_cancel" type="object" string="Zrušit"
@@ -205,6 +212,8 @@
                 <field name="partner_id"/>
                 <filter name="waiting" string="Čekající z webu" domain="[('state', '=', 'web_new')]"/>
                 <filter name="confirmed" string="Potvrzené" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="cancel_requested" string="Klient žádá o zrušení"
+                        domain="[('state', '=', 'confirmed'), ('cancel_requested_at', '!=', False)]"/>
                 <filter name="reservations" string="Jen rezervace" domain="[('kind', '=', 'reservation')]"/>
                 <filter name="blocks" string="Jen blokace" domain="[('kind', '=', 'block')]"/>
                 <filter name="blocks_web" string="Blokace jen pro web" domain="[('kind', '=', 'block'), ('block_scope', '=', 'web')]"/>

@@ -143,7 +143,11 @@
 body.evb-resizing, body.evb-resizing * { cursor: col-resize !important; user-select: none !important; }
 
 // ---------- reservation card: neutral, doctor stripe on the left, procedure stripe on the right ----------
-.evb-event.evb-card { background: #fff; color: #1e293b; border: 1px solid #cbd5e1; }
+.evb-event.evb-res { background: #fff; color: #1e293b; border: 1px solid #cbd5e1; }
+// The client asked to cancel (panel Žádosti o zrušení): the card stays until reception decides.
+.evb-event.evb-cancel-requested { outline: 2px solid #dc2626; outline-offset: -1px; }
+.evb-src-cancel { background: #dc2626; color: #fff; }
+.evb-card-cancel { border-left-color: #dc2626; cursor: default; }
 
 // ---------- WinVet calendar entries (elite_vet_winvet): read-only, plain light grey, WinVet colour stripe ----------
 // Not hatched: hatching means a block or time outside the opening hours.

@@ -214,11 +214,13 @@ class BookingController(http.Controller):
         status = "ask"
         if reservation.state in ("cancelled", "no_show", "done"):
             status = "already_cancelled"
+        elif reservation.cancel_requested_at:
+            status = "requested"
         elif not reservation.client_can_cancel():
             status = "too_late"
         elif request.httprequest.method == "POST" and post.get("confirm"):
-            reservation.action_cancel("client")
-            status = "cancelled"
+            reservation.action_client_cancel()
+            status = "requested" if reservation.state == "confirmed" else "cancelled"
         return request.render("elite_vet_reservation.cancel_page", {
             "reservation": reservation, "status": status, "phone": s.phone_display or s.phone or "",
         })

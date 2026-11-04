@@ -92,16 +92,18 @@ export const soundService = {
         };
         document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
         bus_service.subscribe("elite_vet_reservation/changed", (payload) => {
-            if (!payload?.new_web) return;
-            const ids = payload.web_ids || [];
-            const fresh = takeUnannounced(ids);
-            if (!fresh.length) return;
-            (payload.web || []).forEach((label, i) => {
-                if (fresh.includes(ids[i])) {
-                    notification.add("Nová žádost z webu: " + label, { type: "info", sticky: true });
-                }
-            });
-            if (isSoundOn()) playChime();
+            const announce = (labels, ids, prefix) => {
+                const fresh = takeUnannounced(ids || []);
+                (labels || []).forEach((label, i) => {
+                    if (fresh.includes(ids[i])) {
+                        notification.add(prefix + label, { type: "info", sticky: true });
+                    }
+                });
+                return fresh.length > 0;
+            };
+            const web = announce(payload?.web, payload?.web_ids, "Nová žádost z webu: ");
+            const cancel = announce(payload?.cancel, payload?.cancel_ids, "Klient žádá o zrušení: ");
+            if ((web || cancel) && isSoundOn()) playChime();
         });
         bus_service.start();
     },

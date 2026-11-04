@@ -54,6 +54,19 @@
             <div t-if="state.loading" class="p-4 text-muted">Načítám…</div>
             <div t-else="" class="evb-body">
                 <aside class="evb-waiting" t-att-style="panelStyle">
+                    <t t-if="state.data.cancel_requests.length">
+                        <h5 class="mb-1">Žádosti o zrušení (<t t-esc="state.data.cancel_requests.length"/>)</h5>
+                        <div t-foreach="state.data.cancel_requests" t-as="c" t-key="c.id" class="evb-card evb-card-cancel">
+                            <div class="evb-card-when"><a href="#" t-on-click.prevent="() => this.goTo(c.date)" t-esc="c.date_label"/></div>
+                            <strong t-esc="c.name"/>
+                            <div class="small text-muted"><t t-esc="c.phone"/><t t-if="c.phone and c.email"> · </t><t t-esc="c.email"/></div>
+                            <div class="evb-card-actions">
+                                <button class="btn btn-sm btn-danger" t-on-click="() => this.confirmCancelRequest(c)">Potvrdit zrušení</button>
+                                <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.keepAfterCancelRequest(c)">Ponechat</button>
+                                <button class="btn btn-sm btn-outline-primary" t-on-click="() => this.openForm(c.id)">Upravit</button>
+                            </div>
+                        </div>
+                    </t>
                     <h5 class="mb-1">Čekající z webu (<t t-esc="state.data.waiting.length"/>)</h5>
                     <p t-if="state.data.waiting.length" class="small text-muted mb-2">
                         Potvrďte návrhem, nebo přetáhněte kartu do sloupce ordinace na požadovaný čas.
@@ -162,7 +175,7 @@
                                       t-on-click.stop="() => this.openEvent(e)">jen web · <t t-esc="e.name"/></span>
                             </div>
                             <div t-foreach="otherEventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
-                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-card': e.kind === 'reservation', 'evb-from-web': isWeb(e), 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
+                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-res': e.kind === 'reservation', 'evb-cancel-requested': e.cancel_requested, 'evb-from-web': isWeb(e), 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
                                  t-att-style="eventStyle(room, e)"
                                  t-att-title="eventTitle(e)"
                                  t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
@@ -170,6 +183,7 @@
                                 <div class="evb-ev-line">
                                     <!-- Task 24: where it comes from first (WEB / creator's initials / WinVet),
                                          then the doctor initials next to her stripe, procedure abbreviation on the right. -->
+                                    <span t-if="e.cancel_requested" class="evb-src evb-src-cancel" title="Klient žádá o zrušení">ZRUŠIT?</span>
                                     <span t-if="isWinvet(e)" class="evb-src evb-src-winvet" title="Z WinVetu – jen pro čtení">WinVet</span>
                                     <span t-elif="isWeb(e)" class="evb-src evb-src-web" t-att-title="originTitle(e)">WEB</span>
                                     <span t-elif="e.kind === 'reservation'" class="evb-src evb-src-clinic" t-att-title="originTitle(e)"

@@ -18,15 +18,16 @@ BUS_MESSAGE = "elite_vet_reservation/changed"
 PRECOMMIT_KEY = "elite_vet_reservation.changes"
 
 
-def notify_board(env, new_web_requests=()):
+def notify_board(env, new_web_requests=(), cancel_requests=()):
     """Record a change; the message is sent once per transaction (precommit)."""
     data = env.cr.precommit.data
     if PRECOMMIT_KEY not in data:
-        data[PRECOMMIT_KEY] = []
+        data[PRECOMMIT_KEY] = {"web": [], "cancel": []}
 
         @env.cr.precommit.add
         def _send_notification():
-            new_requests = env.cr.precommit.data.pop(PRECOMMIT_KEY, [])
+            changes = env.cr.precommit.data.pop(PRECOMMIT_KEY, {"web": [], "cancel": []})
+            new_requests = changes["web"]
             group = env.ref("elite_vet_reservation.group_reservation_reception", raise_if_not_found=False)
             if not group:
                 return
@@ -34,8 +35,11 @@ def notify_board(env, new_web_requests=()):
             # a page load the bus re-delivers recent messages as well).
             env["bus.bus"].sudo()._sendone(group.sudo(), BUS_MESSAGE, {
                 "new_web": bool(new_requests), "web": [label for _id, label in new_requests],
-                "web_ids": [rid for rid, _label in new_requests]})
-    data[PRECOMMIT_KEY].extend(new_web_requests)
+                "web_ids": [rid for rid, _label in new_requests],
+                "cancel": [label for _id, label in changes["cancel"]],
+                "cancel_ids": ["cancel-%s" % rid for rid, _label in changes["cancel"]]})
+    data[PRECOMMIT_KEY]["web"].extend(new_web_requests)
+    data[PRECOMMIT_KEY]["cancel"].extend(cancel_requests)
 
 
 class VetReservationLive(models.Model):

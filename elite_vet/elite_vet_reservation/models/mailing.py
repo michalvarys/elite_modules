@@ -4,6 +4,7 @@ import pytz
 
 from odoo import _, api, fields, models
 from odoo.tools import formataddr
+from .live import notify_board
 
 SENDER_NAME = "Elite Vet Karlovy Vary"
 
@@ -66,6 +67,37 @@ class VetReservationMailing(models.Model):
             return False
         return self.start - timedelta(hours=hours) > fields.Datetime.now()
 
+    def action_client_cancel(self):
+        """The link in the e-mail. A confirmed reservation stays booked until reception decides on
+        the board; a request nobody has confirmed yet is simply withdrawn."""
+        self.ensure_one()
+        if self.state != "confirmed":
+            return self.action_cancel("client")
+        if self.cancel_requested_at:
+            return True
+        self.cancel_requested_at = fields.Datetime.now()
+        self._message_log(body=_("Klient požádal o zrušení."))
+        self._send_template("mail_cancel_requested")
+        notify = self._clinic_notify_email()
+        if notify:
+            self._send_template("mail_cancel_request_for_clinic", email_to=notify)
+        notify_board(self.env, cancel_requests=[(self.id, self._request_label())])
+        return True
+
+    def action_confirm_cancel_request(self, message=None):
+        """Reception agrees: cancelled at the client's wish. The client gets the usual e-mail."""
+        requested = self.filtered(lambda r: r.state == "confirmed" and r.cancel_requested_at)
+        return requested.with_context(ev_no_clinic_notify=True).action_cancel("client", message)
+
+    def action_keep_after_cancel_request(self):
+        """Reception refuses: the reservation stays and the client is told so."""
+        requested = self.filtered(lambda r: r.state == "confirmed" and r.cancel_requested_at)
+        requested.write({"cancel_requested_at": False})
+        requested._send_template("mail_cancel_kept")
+        for rec in requested:
+            rec._message_log(body=_("Žádost klienta o zrušení odmítnuta, rezervace zůstává."))
+        return True
+
     def _clinic_notify_email(self):
         """Address of the clinic's notifications, or False when Vedení switched them off."""
         s = self.env["elite.vet.setting"].nastaveni()
@@ -91,7 +123,7 @@ class VetReservationMailing(models.Model):
     def action_cancel(self, reason="clinic", message=None):
         res = super().action_cancel(reason, message)
         self.filtered(lambda r: r.kind == "reservation")._send_template("mail_cancelled")
-        if reason == "client":
+        if reason == "client" and not self.env.context.get("ev_no_clinic_notify"):
             notify = self._clinic_notify_email()
             if notify:
                 self._send_template("mail_cancelled", email_to=notify)
@@ -134,6 +166,7 @@ class VetReservationMailing(models.Model):
             return
         now = fields.Datetime.now()
         due = self.search([("kind", "=", "reservation"), ("state", "=", "confirmed"), ("reminder_sent", "=", False),
+                           ("cancel_requested_at", "=", False),
                            ("start", ">", now), ("start", "<=", now + timedelta(hours=s.booking_reminder_hours_before))])
         due._send_template("mail_reminder")
         due.write({"reminder_sent": True})

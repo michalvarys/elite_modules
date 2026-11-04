@@ -1882,3 +1882,28 @@ msgstr ""
 #: code:addons/elite_vet_reservation/models/mailing.py:0
 msgid "Klient nebyl o potvrzení informován."
 msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_requested
+msgid "<div style=\"font-family:system-ui,sans-serif;color:#1a2744;max-width:560px\">\n    <p>Hello <t t-out=\"object.contact_name\"/>,</p>\n    <p>we have received your request to cancel <b t-out=\"object.name\"/> on <b t-out=\"object.start_display\"/>. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked.</p>\n    <p>Elite Vet Karlovy Vary</p>\n</div>\n            "
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_kept
+msgid "<div style=\"font-family:system-ui,sans-serif;color:#1a2744;max-width:560px\">\n    <p>Hello <t t-out=\"object.contact_name\"/>,</p>\n    <p>your appointment <b t-out=\"object.name\"/> on <b t-out=\"object.start_display\"/> stays booked, the clinic has not cancelled it. If you have any questions, please call the reception.</p>\n    <p>Elite Vet Karlovy Vary</p>\n</div>\n            "
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,subject:elite_vet_reservation.mail_cancel_requested
+msgid "Cancellation request received – {{ object.start_display }}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,subject:elite_vet_reservation.mail_cancel_kept
+msgid "Appointment stays booked – {{ object.start_display }}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.cancel_page
+msgid "We have received your request. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked."
+msgstr ""
