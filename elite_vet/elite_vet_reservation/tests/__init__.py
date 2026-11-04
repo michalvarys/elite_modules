@@ -28,3 +28,4 @@ from . import test_web_booking_switch_followups
 from . import test_source_visible
 from . import test_move_end_time
 from . import test_block_recurrence
+from . import test_overlap

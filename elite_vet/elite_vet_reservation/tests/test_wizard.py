@@ -299,11 +299,12 @@ class TestReservationWizard(ReservationCase):
     def test_manual_time_uses_custom_duration(self):
         self.reservation(start=self.dt(self.day, 10, 30), room_id=self.room1.id)
         w = self.wizard(duration=45, manual=True, manual_room_id=self.room1.id, manual_time="10:00")
-        with self.assertRaises(UserError):
-            w.action_use_manual_time()
+        w.action_use_manual_time()
+        self.assertEqual(w.overlap_room_id, self.room1, "45 min reach the reservation")
         w.duration = 30
         w.action_use_manual_time()
         self.assertEqual(w.step, "client")
+        self.assertFalse(w.overlap_room_id)
 
     def test_public_slots_ignore_wizard_duration(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
@@ -372,7 +373,8 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(w.step, "time")
         self.assertFalse(w.room_id)
         self.assertTrue(w.slot_ids)
-        self.assertEqual(w.warning, "10:00 v Ordinace 1 není pro tento úkon volný – vyberte jiný čas.")
+        self.assertIn("10:00 v Ordinace 1 je obsazený", w.warning)
+        self.assertEqual(w.overlap_room_id, self.room1)
         w.slot_ids[0].action_select()
         w.action_back_to_time()
         self.assertFalse(w.warning)

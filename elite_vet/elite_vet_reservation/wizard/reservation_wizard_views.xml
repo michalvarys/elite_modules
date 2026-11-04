@@ -86,6 +86,9 @@
                     </div>
                     <div invisible="not warning" class="alert alert-warning" role="status">
                         <field name="warning" readonly="1" nolabel="1"/>
+                        <field name="overlap_room_id" invisible="1"/>
+                        <button name="action_force_overlap" type="object" string="Přesto vytvořit" class="btn-warning btn-sm ms-2"
+                                invisible="not overlap_room_id"/>
                     </div>
                     <div class="mb-2">
                         <field name="manual" widget="boolean_toggle" class="d-inline-block w-auto"/>

@@ -8,6 +8,7 @@
 import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
+import { laneStyle } from "@elite_vet_reservation/move_dialog/lanes";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
@@ -366,11 +367,11 @@ export class BoardDialog extends Component {
         let style = `top:${this.top(e.start)}px;height:${this.height(e.start, e.end)}px`;
         if (this.isWinvet(e)) {
             // plain light grey card, the WinVet colour as the left stripe (board_dialog.scss)
-            return `${style};left:${this.eventLeft(room)}px;border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
+            return `${style};${laneStyle(this.eventsFor(room), e, this.eventLeft(room))};border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
         }
         if (e.kind !== "block") {
             // neutral card, procedure colour as the right stripe (board_dialog.scss)
-            style += `;left:${this.eventLeft(room)}px;border-right:7px solid ${e.color_hex}`;
+            style += `;${laneStyle(this.eventsFor(room), e, this.eventLeft(room))};border-right:7px solid ${e.color_hex}`;
             // stripe in the colour of the doctor the client is booked with
             if (e.doctor_color) {
                 style += `;border-left:7px solid ${e.doctor_color}`;
@@ -531,7 +532,7 @@ export class BoardDialog extends Component {
     }
 
     /** move_reservation -> success toast; an error is thrown back to the dialog (stays open). */
-    async move(reservationId, { date, minute, endMinute, roomId, notify, force }) {
+    async move(reservationId, { date, minute, endMinute, roomId, notify, force, forceOverlap }) {
         this.state.moving = true;
         let result;
         try {
@@ -543,6 +544,7 @@ export class BoardDialog extends Component {
                 notify,
                 endMinute,
                 force,
+                forceOverlap,
             ]);
         } finally {
             this.state.moving = false;

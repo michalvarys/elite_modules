@@ -2,6 +2,7 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
+import { laneStyle } from "@elite_vet_reservation/move_dialog/lanes";
 import { CancelDialog } from "@elite_vet_reservation/cancel_dialog/cancel_dialog";
 import { setSoundOn, playChime, isSoundOn } from "@elite_vet_reservation/sound/sound";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
@@ -265,11 +266,11 @@ export class ReservationBoard extends Component {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
         if (this.isWinvet(e)) {
             // plain light grey card with the WinVet colour as the left stripe (styles in board.scss)
-            return style + ";left:" + this.eventLeft(room) + "px;border-left:7px solid " + (e.winvet_color || "#94a3b8");
+            return style + ";" + laneStyle(this.otherEventsFor(room), e, this.eventLeft(room)) + ";border-left:7px solid " + (e.winvet_color || "#94a3b8");
         }
         if (e.kind !== "block") {
             // Request 4. 11.: neutral card, procedure color as the right stripe (styles in board.scss).
-            style += ";left:" + this.eventLeft(room) + "px;border-right:7px solid " + e.color_hex;
+            style += ";" + laneStyle(this.otherEventsFor(room), e, this.eventLeft(room)) + ";border-right:7px solid " + e.color_hex;
             // Left stripe in the color of the doctor the client is booked with.
             if (e.doctor_color) style += ";border-left:7px solid " + e.doctor_color;
         }
@@ -416,9 +417,9 @@ export class ReservationBoard extends Component {
             origRoomId: event.room_id || false,
             mailText: "Klient dostane e-mail o změně termínu (" + (event.mail_on_move || "") + ").",
             mailLabel: "Poslat klientovi e-mail o změně",
-            onConfirm: async ({ date, minute, endMinute, roomId, notify, force }) => {
+            onConfirm: async ({ date, minute, endMinute, roomId, notify, force, forceOverlap }) => {
                 await this.orm.call("elite.vet.reservation", "board_move",
-                    [event.id, date, minute, roomId, notify, endMinute, force]);
+                    [event.id, date, minute, roomId, notify, endMinute, force, forceOverlap]);
                 await this.afterChange(date);
             },
         });
@@ -441,10 +442,10 @@ export class ReservationBoard extends Component {
             mailTo: w.email || false,
             mailText: "Klient dostane potvrzovací e-mail (" + (w.email || "") + ").",
             mailLabel: "Poslat klientovi potvrzení",
-            onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify, force }) => {
+            onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify, force, forceOverlap }) => {
                 const doctor = doctorId && chosen === roomId ? doctorId : null;
                 await this.orm.call("elite.vet.reservation", "board_confirm",
-                    [w.id, date, minute, chosen, doctor, notify, endMinute, force]);
+                    [w.id, date, minute, chosen, doctor, notify, endMinute, force, forceOverlap]);
                 const room = this.roomChoices.find((r) => r.id === chosen)?.name || "";
                 this.notification.add("Potvrzeno: " + shortDayLabel(date) + " · " + room, { type: "success" });
                 await this.afterChange(date);

@@ -451,6 +451,19 @@ Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodc
 
 Úplnou blokaci nejde založit přes již potvrzenou rezervaci – nejdřív rezervaci přesuňte.
 
+### Rezervace přes obsazený termín
+
+Rezervace se smí překrývat, ale jen po potvrzení upozornění. Přes úplnou blokaci to nejde.
+
+- **Nová rezervace:** klikněte do obsazeného času, nebo zadejte čas ručně. Průvodce napíše, co tam je,
+  a nabídne **Přesto vytvořit**.
+- **Přetažení na tabuli:** v dialogu přesunu se ukáže **Přesto přesunout**.
+- **Objednat u pokladny:** v kroku Čas vyplňte **Obsazený čas** a ordinaci, klikněte **Vybrat** a
+  potom Objednat. Pokladna se zeptá **Přesto objednat**.
+
+Překrývající se karty stojí na tabuli vedle sebe. Na web se obsazený termín dál nenabízí.
+V historii rezervace zůstane poznámka.
+
 Když je úplná blokace pro **všechny ordinace** a některá ordinace už v tu dobu úplnou
 blokaci má, nic se neodmítne. Blokace se rozdělí po ordinacích a doplní se jen tam,
 kde ještě není. Na tabuli pak místo jednoho pruhu přes všechny sloupce uvidíte

@@ -30,7 +30,7 @@ BLOCK_SCOPES = [("web", "Jen web"), ("full", "Úplná")]
 DOCTOR_COLORS = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
 # Blocks (kind "block") are created, moved, edited and deleted by Správce rezervací only (task 16);
 # reception and everyone above it (nurse, doctor, room accounts) only see them.
-BLOCK_GROUP = "elite_vet_reservation.group_reservation_reception"
+RECEPTION_GROUP = "elite_vet_reservation.group_reservation_reception"
 TITLES = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
@@ -93,6 +93,11 @@ class DoctorRuleError(UserError):
     """The board's doctor / room rule refused a move (nobody on duty who does the procedure, the
     procedure is not done in that room). Unlike a collision it can be overridden: the move dialog
     offers "Přesto přesunout" and calls again with force=True."""
+
+class OverlapRuleError(ValidationError):
+    """The time is taken by another reservation or a WinVet entry. Request 4. 11. (Lucie): unlike a
+    full block this can be overridden; the wizard, the move dialog and the till ask first and call
+    again with the context key ev_allow_overlap (Recepce and up only)."""
 
 class VetReservation(models.Model):
     """Reservations and blocks in one table so the board reads a single source.
@@ -378,6 +383,7 @@ class VetReservation(models.Model):
         return True
 
     def _check_overlap(self):
+        allowed = self.env.context.get("ev_allow_overlap") and self.env.user.has_group(RECEPTION_GROUP)
         for rec in self:
             if rec.state in INACTIVE_STATES:
                 continue
@@ -388,20 +394,28 @@ class VetReservation(models.Model):
             if rec.kind == "block" and rec.block_scope == "web":
                 continue   # a web-only block does not get in anyone's way; it can be created any time
             self._lock_rooms(rooms)
-            clash = self.search(self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id]), limit=1)
+            busy = self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id])
+            # A block first: nothing goes over it, so it must not hide behind a reservation.
+            clash = self.search(busy + [("kind", "=", "block")], limit=1) or self.search(busy, limit=1)
             if not clash and rec.kind == "reservation":
                 clash = self._busy_external(rooms, rec.start, rec.stop)[:1]
-            if clash:
-                raise ValidationError(_(
-                    "Termín %s–%s v ordinaci %s je obsazený: %s."
-                ) % (fields.Datetime.context_timestamp(rec, rec.start).strftime("%d.%m. %H:%M"),
-                     fields.Datetime.context_timestamp(rec, rec.stop).strftime("%H:%M"),
-                     rec.room_id.name or _("všechny"), clash.name))
+            if not clash:
+                continue
+            overridable = rec.kind == "reservation" and getattr(clash, "kind", False) != "block"
+            if overridable and allowed:
+                rec._message_log(body=_("Založeno přes obsazený termín: %s") % clash.name)
+                continue
+            error = OverlapRuleError if overridable else ValidationError
+            raise error(_(
+                "Termín %s–%s v ordinaci %s je obsazený: %s."
+            ) % (fields.Datetime.context_timestamp(rec, rec.start).strftime("%d.%m. %H:%M"),
+                 fields.Datetime.context_timestamp(rec, rec.stop).strftime("%H:%M"),
+                 rec.room_id.name or _("všechny"), clash.name))
 
     # ---------- block rights ----------
     @api.model
     def _can_edit_blocks(self):
-        return self.env.su or self.env.user.has_group(BLOCK_GROUP)
+        return self.env.su or self.env.user.has_group(RECEPTION_GROUP)
 
     def _check_block_rights(self, vals=None):
         """Request 4. 11. (Lucie): Recepce and the roles that imply it (Sestra, Lékařka, room accounts,
@@ -538,6 +552,8 @@ class VetReservation(models.Model):
         siblings = {}
         if self.env.context.get("ev_block_group") or room_cmds is not None:
             siblings = {rec: rec._block_group() - rec for rec in self if rec.kind == "block"}
+        # Overlapping reservations stay allowed: a state change checks only what starts to occupy the room.
+        arriving = self.filtered(lambda r: r.kind == "block" or r.state not in BUSY_STATES)
         res = super().write(vals)
         if {"procedure_id", "kind"} & set(vals):
             # a procedure cleared in the form is Jiné too
@@ -545,8 +561,10 @@ class VetReservation(models.Model):
             other = self.env["elite.vet.procedure"]._other()
             if missing and other:
                 missing.write({"procedure_id": other.id})
-        if {"start", "stop", "room_id", "state", "kind", "block_scope"} & set(vals):
+        if {"start", "stop", "room_id", "kind", "block_scope"} & set(vals):
             self._check_overlap()
+        elif "state" in vals:
+            arriving._check_overlap()
         shared = {k: v for k, v in vals.items() if k != "room_id"}
         for rec, others in siblings.items():
             others = others.with_context(ev_block_group=False)
@@ -908,14 +926,16 @@ class VetReservation(models.Model):
                 end_minute - minute)
 
     @api.model
-    def board_move(self, res_id, day_str, minute, room_id, notify=True, end_minute=None, force=False):
+    def board_move(self, res_id, day_str, minute, room_id, notify=True, end_minute=None, force=False,
+                   force_overlap=False):
         """Move on the board. A reservation only where a doctor who does the procedure is on duty
         (if the current doctor has no shift at the new place, she is replaced); a block anywhere.
         notify=False (task 25, the dialog's e-mail checkbox unticked): no e-mail about the new time,
         a chatter note instead. end_minute (task 28): the new end on that day; without it the
         duration is kept. The collision and on-duty rules apply to the whole new interval.
-        force=True: the on-duty / room rule (DoctorRuleError) is overridden, collisions are not."""
-        rec = self.browse(res_id)
+        force=True: the on-duty / room rule (DoctorRuleError) is overridden.
+        force_overlap=True: so is a collision with a reservation (OverlapRuleError), not with a block."""
+        rec = self.browse(res_id).with_context(ev_allow_overlap=bool(force_overlap))
         if not notify:
             rec = rec.with_context(ev_no_reschedule_mail=True)
         start, stop, duration = self._board_interval(day_str, minute, end_minute)
@@ -935,14 +955,14 @@ class VetReservation(models.Model):
 
     @api.model
     def board_confirm(self, res_id, day_str, minute, room_id, doctor_id=None, notify=True, end_minute=None,
-                      force=False):
+                      force=False, force_overlap=False):
         """doctor_id=None keeps the doctor; a number sets it (suggestion from the Waiting panel).
         Checks that a doctor who does the procedure (or the one the client chose) is on
         duty at that time and room; if only one is on duty, she is set.
         notify=False (task 25): no confirmation e-mail, a chatter note instead.
         end_minute (task 28): the end chosen in the dialog (otherwise the duration is kept).
-        force=True: as in board_move, the on-duty / room rule is overridden."""
-        rec = self.browse(res_id)
+        force, force_overlap: as in board_move."""
+        rec = self.browse(res_id).with_context(ev_allow_overlap=bool(force_overlap))
         if not notify:
             rec = rec.with_context(ev_no_mail=True, ev_no_confirm_mail_note=True)
         doctor = self.env["elite.vet.doctor"].browse(doctor_id) if doctor_id else rec.doctor_id

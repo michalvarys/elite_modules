@@ -15,7 +15,8 @@ from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
 from odoo.addons.elite_vet_clinic.models.readonly_mode import check_clinic_writable
 from odoo.addons.elite_vet_reservation.models.availability import intersect, subtract
 from odoo.addons.elite_vet_reservation.models.holidays import holiday_name
-from odoo.addons.elite_vet_reservation.models.reservation import RECEPTION_HORIZON_DAYS, minutes_label
+from odoo.addons.elite_vet_reservation.models.reservation import (
+    RECEPTION_HORIZON_DAYS, OverlapRuleError, minutes_label)
 
 FREQUENT_COUNT = 6
 FREQUENT_DAYS = 30
@@ -115,6 +116,19 @@ class ReceptionBooking(models.AbstractModel):
         return True
 
     @api.model
+    def _book_over_reservation(self, wizard, room, minute, force):
+        """The time is not offered: only another reservation can be overridden, and only after a yes."""
+        clash = wizard._collision(room, minute)
+        if wizard._block_collision(room, minute):
+            raise self._taken_error(minute)
+        if not clash:
+            raise UserError(_("Čas %s se pro tento úkon v této ordinaci nenabízí – vyberte jiný.") % minutes_label(minute))
+        if not force:
+            raise OverlapRuleError(_("%(time)s v %(room)s je obsazený: %(conflict)s.", time=minutes_label(minute),
+                                     room=room.name, conflict=clash.name))
+        wizard.write({"is_manual": True, "overlap_ok": True,
+                      "slot_doctor_id": wizard._manual_doctor(room, minute).id or False})
+
     def _taken_error(self, minute):
         return UserError(_("Termín %s už mezitím někdo obsadil – vyberte jiný.") % minutes_label(minute))
 
@@ -208,7 +222,8 @@ class ReceptionBooking(models.AbstractModel):
         return result
 
     @api.model
-    def book(self, pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None):
+    def book(self, pet_id, procedure_id, day, minute, room_id, doctor_id=False, note=None, force=False):
+        """force=True: "Přesto objednat" over another reservation (request 4. 11.), never over a full block."""
         check_clinic_writable(self.env)
         self._check_reception()
         pet = self.env["elite.vet.pet"].browse(self._to_id(pet_id)).exists()
@@ -227,9 +242,10 @@ class ReceptionBooking(models.AbstractModel):
                                       note=(note or "").strip() or False)
         # Still free? (another till may have booked it since the list was loaded)
         room_doctor = wizard._free_room_doctor()
-        if not room_doctor:
-            raise self._taken_error(minute)
-        wizard.slot_doctor_id = room_doctor[1] or wizard.doctor_id.id
+        if room_doctor:
+            wizard.slot_doctor_id = room_doctor[1] or wizard.doctor_id.id
+        else:
+            self._book_over_reservation(wizard, room, minute, force)
         try:
             with self.env.cr.savepoint():
                 wizard.action_save()
