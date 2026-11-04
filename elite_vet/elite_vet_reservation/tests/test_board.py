@@ -21,6 +21,12 @@ class TestBoard(ReservationCase):
         self.w = self.reservation(start=self.dt(self.future, 10, 0), state="web_new", source="web", room_id=False)
         self.R = self.env["elite.vet.reservation"]
 
+    def test_axis_starts_on_a_slot_step(self):
+        """The grid lines must sit on the times the slots use, also with an odd opening time."""
+        self.env["elite.vet.setting"].nastaveni().booking_slot_step = 20
+        self.hours(self.room2, 2, 7.75, 12.0)   # 7:45 is not a multiple of 20
+        self.assertEqual(self.R.board_data("2026-10-14")["axis"]["from"], 7 * 60 + 40)
+
     def test_board_data_shape(self):
         d = self.R.board_data("2026-10-14")
         self.assertEqual(d["date"], "2026-10-14")
