@@ -26,6 +26,17 @@ TAB_ORDER = [
     ("pytliky", "PYTLÍKY"),
 ]
 KEY = {name: key for key, name in TAB_ORDER}
+# Main groups of the till; the tabs of Dotykačka are their subcategories, TYSON stays on its own.
+GROUPS = [
+    ("tabak", "Tabák a cigarety", 10, ["cigarety", "tabaky", "dutinky", "doutniky"]),
+    ("nikotin", "Nikotin a IQOS", 20, ["velo", "siberia", "iqos", "veo", "neo"]),
+    ("vape", "Vape", 30, ["vapes", "vuse", "syx_bar", "syx_pod", "cbd_cartridge"]),
+    ("konopi", "Konopí a CBD", 40, ["kvety", "canna_bloom", "hasish", "oleje", "pre_rolls", "gumies"]),
+    ("sladke", "Sladké a snacky", 50, ["cokolada", "cookies", "lizatka", "zvykacky"]),
+    ("napoje_alkohol", "Nápoje a alkohol", 60, ["napoje", "energy", "pivo", "alcohol"]),
+    ("prislusenstvi_vse", "Příslušenství", 80, ["prislusenstvi", "zapalovace", "pipe_bong", "vahy", "kleaner",
+                                                 "pytliky"]),
+]
 REDUCED_VAT = 12.0
 
 
@@ -74,6 +85,11 @@ def categories_xml():
         out += ['        <record id="pos_category_%s" model="pos.category">' % key,
                 '            <field name="name">%s</field>' % escape(name),
                 '            <field name="sequence">%d</field>' % (seq * 10), "        </record>"]
+    out.append("        <!-- Hlavní skupiny; podskupiny k nim přiřadí category_groups v data/setup.xml. -->")
+    for key, name, seq, _children in GROUPS:
+        out += ['        <record id="pos_category_group_%s" model="pos.category">' % key,
+                '            <field name="name">%s</field>' % escape(name),
+                '            <field name="sequence">%d</field>' % seq, "        </record>"]
     out += ["    </data>", "</odoo>", ""]
     return "\n".join(out)
 
@@ -108,6 +124,7 @@ def products_xml():
 def setup_xml():
     reduced = [p["xmlid"] for p in products if p["vat"] == REDUCED_VAT]
     refs = "".join("\n                ref('%s')," % x for x in reduced)
+    groups = "".join("\n                'group_%s': %r," % (key, children) for key, _n, _s, children in GROUPS)
     return """<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Nastavení pokladny pro jednu firmu. Ostatních firem v databázi se modul nedotkne a u cílové
@@ -119,17 +136,21 @@ def setup_xml():
          pos_name     název pokladny
          reduced_vat  zboží s DPH 12 %%, ostatní 21 %%. Sazby jsou převzaté z Dotykačky, kde má
                       všechno zboží trafiky 21 %% (i čokolády, sušenky a lízátka); zboží s 12 %%
-                      stačí doplnit sem, např. ref('product_271606912178637'). -->
+                      stačí doplnit sem, např. ref('product_271606912178637').
+         category_groups  hlavní skupina pokladny a její podskupiny; skupinu, kterou někdo v Odoo
+                      přesunul jinam, modul nepřesouvá -->
     <function model="elite.trafika.pos.setup" name="ensure_setup">
         <value eval="{
             'company': 'Elite Trafika',
             'pos_name': 'Elite Trafika',
             'reduced_vat': [%s
             ],
+            'category_groups': {%s
+            },
         }"/>
     </function>
 </odoo>
-""" % refs
+""" % (refs, groups)
 
 
 with open(OUT + "/data/product_category_data.xml", "w") as f:

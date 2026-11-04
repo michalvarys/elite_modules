@@ -9,13 +9,24 @@
          pos_name     název pokladny
          reduced_vat  zboží s DPH 12 %, ostatní 21 %. Sazby jsou převzaté z Dotykačky, kde má
                       všechno zboží trafiky 21 % (i čokolády, sušenky a lízátka); zboží s 12 %
-                      stačí doplnit sem, např. ref('product_271606912178637'). -->
+                      stačí doplnit sem, např. ref('product_271606912178637').
+         category_groups  hlavní skupina pokladny a její podskupiny; skupinu, kterou někdo v Odoo
+                      přesunul jinam, modul nepřesouvá -->
     <function model="elite.trafika.pos.setup" name="ensure_setup">
         <value eval="{
             'company': 'Elite Trafika',
             'pos_name': 'Elite Trafika',
             'reduced_vat': [
             ],
+            'category_groups': {
+                'group_tabak': ['cigarety', 'tabaky', 'dutinky', 'doutniky'],
+                'group_nikotin': ['velo', 'siberia', 'iqos', 'veo', 'neo'],
+                'group_vape': ['vapes', 'vuse', 'syx_bar', 'syx_pod', 'cbd_cartridge'],
+                'group_konopi': ['kvety', 'canna_bloom', 'hasish', 'oleje', 'pre_rolls', 'gumies'],
+                'group_sladke': ['cokolada', 'cookies', 'lizatka', 'zvykacky'],
+                'group_napoje_alkohol': ['napoje', 'energy', 'pivo', 'alcohol'],
+                'group_prislusenstvi_vse': ['prislusenstvi', 'zapalovace', 'pipe_bong', 'vahy', 'kleaner', 'pytliky'],
+            },
         }"/>
     </function>
 </odoo>

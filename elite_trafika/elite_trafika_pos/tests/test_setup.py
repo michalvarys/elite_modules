@@ -1,4 +1,10 @@
+import base64
 import csv
+import hashlib
+import io
+from unittest.mock import patch
+
+from PIL import Image
 
 from odoo.exceptions import UserError
 from odoo.tools.misc import file_path
@@ -65,7 +71,22 @@ class TestTrafikaPosSetup(TransactionCase):
         self.assertEqual(config.invoice_journal_id.type, "sale")
         self.assertEqual(config.picking_type_id.warehouse_id.company_id, self.company)
         self.assertTrue(config.limit_categories)
-        self.assertEqual(len(config.iface_available_categ_ids), 35)
+        roots = config.iface_available_categ_ids.filtered(lambda c: not c.parent_id)
+        self.assertEqual(len(roots), 8)
+        self.assertIn(self.env.ref("elite_trafika_pos.pos_category_tyson"), roots)
+
+    def test_category_groups(self):
+        category = self.env.ref("elite_trafika_pos.pos_category_cigarety")
+        self.assertEqual(category.parent_id, self.env.ref("elite_trafika_pos.pos_category_group_tabak"))
+        roots = self.setup._module_records("pos.category").filtered(lambda c: not c.parent_id)
+        self.assertEqual(len(roots), 8)
+
+    def test_moved_category_stays(self):
+        category = self.env.ref("elite_trafika_pos.pos_category_cigarety")
+        other = self.env.ref("elite_trafika_pos.pos_category_group_vape")
+        category.parent_id = other
+        self.setup._ensure_category_groups({"group_tabak": ["cigarety"]})
+        self.assertEqual(category.parent_id, other)
 
     def test_setup_is_repeatable(self):
         models = ("pos.payment.method", "pos.config", "account.tax", "account.journal", "stock.warehouse")
@@ -90,13 +111,27 @@ class TestTrafikaPosSetup(TransactionCase):
         self.assertEqual(len(products), 506)
         self.assertFalse(products.filtered(lambda p: not p.image_1920).mapped("name"))
         categories = self.setup._module_records("pos.category")
-        self.assertEqual(len(categories), 35)
+        self.assertEqual(len(categories), 42)
         self.assertFalse(categories.filtered(lambda c: not c.image_128).mapped("name"))
+
+    def test_old_tile_is_replaced(self):
+        product = self.setup._module_products()[0]
+        expected = product.image_1920
+        tile = self.setup._module_records("pos.category")[0].image_128
+        product.image_1920 = tile
+        digest = hashlib.sha256(base64.b64decode(product.image_1920)).hexdigest()
+        with patch.object(type(self.setup), "_old_tiles", lambda _self: {digest}):
+            self.setup._ensure_images()
+        self.assertEqual(product.image_1920, expected)
 
     def test_existing_image_is_kept(self):
         product = self.setup._module_products()[0]
         category = self.setup._module_records("pos.category")[0]
-        product.image_1920 = category.image_128
+        buffer = io.BytesIO()
+        Image.new("RGB", (64, 64), "red").save(buffer, "PNG")
+        own_image = base64.b64encode(buffer.getvalue())
+        product.image_1920 = own_image
+        category.image_128 = own_image
         image, category_image = product.image_1920, category.image_128
         self.setup._ensure_images()
         self.assertEqual(product.image_1920, image)

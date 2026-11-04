@@ -1,12 +1,12 @@
 """Generates the images of the goods without a photo and of the POS categories; needs Pillow.
 
 Run from the module directory: python3 scripts/gen_images.py
-Photos are listed in static/img/products/manifest.csv and stay as they are; all other goods get
-a tile with the name in the brand colours of the shop (black and the lime of the elite-trafika.cz logo). A category
-gets a tile with its name, or a typical product of the group from PHOTO_CATEGORIES.
+Photos are listed in static/img/products/manifest.csv and stay as they are. Goods without a package
+get a photo of their kind (GENERIC), loose goods with the weight in the corner. The rest get a tile
+with the name in the brand colours of the shop (black and the lime of the elite-trafika.cz logo).
+Sources and licences of the kind photos and category images: static/img/generic/manifest.csv.
 """
 import csv
-import os
 import re
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -15,16 +15,30 @@ SIZE, SCALE = 320, 2
 S = SIZE * SCALE
 LIME, BLACK, WHITE = (156, 228, 36), (10, 10, 10), (255, 255, 255)
 FONT = "/usr/share/fonts/truetype/lato/Lato-Black.ttf"
-PRODUCTS, CATEGORIES = "static/img/products/", "static/img/categories/"
+PRODUCTS, CATEGORIES, GENERIC_PHOTOS = "static/img/products/", "static/img/categories/", "static/img/generic/"
 BAR, MARGIN = 14 * SCALE, 22 * SCALE
 SIZE_SUFFIX = re.compile(r"^(.*\S)\s+(\d+(?:[,.]\d+)?\s?(?:g|ml|l|ks|pcs|mg)|\d+\s?%)$", re.I)
-# category key -> id_dotykacka of a photo showing the group
-PHOTO_CATEGORIES = {
-    "energy": "1945892553900715", "alcohol": "3177298316807957", "veo": "1841524833115975",
-    "neo": "232423925605050", "velo": "341666418783346", "iqos": "3318370812691614",
-    "vuse": "2066374961007149", "syx_bar": "199653325149893", "syx_pod": "993578029816490",
-    "napoje": "2450942038331154", "dutinky": "4091490695778851",
-}
+# (group, text in the name or None for the whole group, image of static/img/generic or None for the
+# POS category image); the first match wins. Goods whose brand a generic photo would get wrong stay tiles.
+GENERIC = [
+    ("KVĚTY volné", "CHERRY", "bud-2"), ("KVĚTY volné", "PURPLE", "bud-2"), ("KVĚTY volné", "Royal", "bud-2"),
+    ("KVĚTY volné", "WHITE", "bud-3"), ("KVĚTY volné", "MoonRock", "bud-3"), ("KVĚTY volné", "SC Italy", "bud-3"),
+    ("KVĚTY volné", "AMNESIA", "bud-3"), ("KVĚTY volné", None, "bud-1"),
+    ("Canna Bloom - Květy", None, "bud-1"),
+    ("Hasish", "Black", "hash-dark"), ("Hasish", None, "hash-light"),
+    ("PIPE a BONG", "BONG", "bong"), ("PIPE a BONG", "Drtička", "grinder"), ("PIPE a BONG", None, "glass-pipe"),
+    ("VÁHY", None, "digital-scale"), ("PYTLÍKY", None, "zip-bags"),
+    ("Zapalovače", "plyn", "gas-refill"), ("Zapalovače", None, "lighter"),
+    ("Příslušenství a zboží", "plyn", "gas-refill"), ("Příslušenství a zboží", "drtička", "grinder"),
+    ("Příslušenství a zboží", "power", "power-bank"),
+    ("TYSON", "pre-roled", "joint"), ("TYSON", "Blunt", "joint"),
+    ("Tabáky-Dutinky-Papirky", "filters", "filter-tips"),
+    ("Tabáky-Dutinky-Papirky", None, "tabaky"), ("Dutinky", None, "dutinky"), ("Doutníky", None, "doutniky"),
+    ("ČOKOLÁDA", None, "cokolada"), ("COOKIES", None, "cookies"), ("Lízátka - DROPS", None, "lizatka"),
+    ("Gumies - Shots", None, "gumies"), ("Oleje - kapky - Tea", None, "oleje"), ("KLEANER", None, "kleaner"),
+]
+CATEGORY_IMAGES = {"tabaky", "dutinky", "doutniky", "cokolada", "cookies", "lizatka", "gumies", "oleje", "kleaner"}
+BADGE_GROUPS = ("KVĚTY volné", "Hasish", "Canna Bloom - Květy")
 
 
 def font(size):
@@ -92,47 +106,37 @@ def save(image, path, size=SIZE):
     image.resize((size, size), Image.LANCZOS).save(path, quality=82, optimize=True)
 
 
-def cut_out(product):
-    """Mask of a packshot: everything but the white background connected to the edges."""
-    framed = Image.new("RGB", (product.width + 2, product.height + 2), WHITE)
-    framed.paste(product, (1, 1))
-    ImageDraw.floodfill(framed, (0, 0), (255, 0, 255), thresh=28)
-    mask = Image.new("L", framed.size, 255)
-    mask.paste(0, mask=Image.eval(framed.split()[1], lambda g: 255 if g == 0 else 0))
-    return mask.crop((1, 1, product.width + 1, product.height + 1)).filter(ImageFilter.GaussianBlur(0.8))
+def generic_image(row):
+    for group, part, image in GENERIC:
+        if row["skupina"] == group and (part is None or part.lower() in row["název"].lower()):
+            return "%s%s.jpg" % (CATEGORIES if image in CATEGORY_IMAGES else GENERIC_PHOTOS, image)
+    return None
 
 
-def photo_category(path, product_id):
-    image = tile()
-    product = Image.open("%s%s.jpg" % (PRODUCTS, product_id)).convert("RGB")
-    mask = cut_out(product)
-    box = mask.point(lambda v: 255 if v > 128 else 0).getbbox()
-    product, mask = product.crop(box), mask.crop(box)
-    ratio = min((S - 2 * MARGIN) / product.width, (S - BAR - 2 * MARGIN) / product.height)
-    size = (round(product.width * ratio), round(product.height * ratio))
-    position = ((S - size[0]) // 2, (S - BAR - size[1]) // 2)
-    image.paste(product.resize(size, Image.LANCZOS), position, mask.resize(size, Image.LANCZOS))
-    save(image, path, 256)
+def generic_photo(path, row):
+    """A photo of the kind of goods; loose goods get the weight in the corner, it tells the items apart."""
+    image = Image.open(path).convert("RGB").resize((S, S), Image.LANCZOS)
+    match = re.search(r"(\d+)\s?g\b", row["název"], re.I)
+    if match and row["skupina"] in BADGE_GROUPS:
+        draw = ImageDraw.Draw(image)
+        label = match[1] + "g"
+        width = draw.textlength(label, font=font(62)) + 28 * SCALE
+        draw.rounded_rectangle([S - width - 8 * SCALE, S - 88 * SCALE, S - 8 * SCALE, S - 8 * SCALE],
+                               radius=12 * SCALE, fill=LIME)
+        draw.text((S - 8 * SCALE - width / 2, S - 48 * SCALE), label, font=font(62), fill=BLACK, anchor="mm")
+    return image
 
 
 def main():
-    photos = set()
-    if os.path.exists(PRODUCTS + "manifest.csv"):
-        with open(PRODUCTS + "manifest.csv", encoding="utf-8") as f:
-            photos = {row["id_dotykacka"] for row in csv.DictReader(f)}
+    with open(PRODUCTS + "manifest.csv", encoding="utf-8") as f:
+        photos = {row["id_dotykacka"] for row in csv.DictReader(f)}
     with open("zbozi.csv", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            if row["id_dotykacka"] not in photos:
-                save(name_tile(row["název"], row["skupina"]), "%s%s.jpg" % (PRODUCTS, row["id_dotykacka"]))
-    with open("data/product_category_data.xml", encoding="utf-8") as f:
-        data = f.read()
-    pattern = r'<record id="pos_category_(\w+)" model="pos.category">\s*<field name="name">(.*?)</field>'
-    for key, name in re.findall(pattern, data):
-        path = "%s%s.jpg" % (CATEGORIES, key)
-        if key in PHOTO_CATEGORIES:
-            photo_category(path, PHOTO_CATEGORIES[key])
-        else:
-            save(name_tile(name.replace("&amp;", "&")), path, 256)
+            if row["id_dotykacka"] in photos:
+                continue
+            path = generic_image(row)
+            image = generic_photo(path, row) if path else name_tile(row["název"], row["skupina"])
+            save(image, "%s%s.jpg" % (PRODUCTS, row["id_dotykacka"]))
 
 
 main()

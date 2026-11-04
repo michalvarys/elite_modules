@@ -286,5 +286,34 @@
             <field name="name">PYTLÍKY</field>
             <field name="sequence">350</field>
         </record>
+        <!-- Hlavní skupiny; podskupiny k nim přiřadí category_groups v data/setup.xml. -->
+        <record id="pos_category_group_tabak" model="pos.category">
+            <field name="name">Tabák a cigarety</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="pos_category_group_nikotin" model="pos.category">
+            <field name="name">Nikotin a IQOS</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="pos_category_group_vape" model="pos.category">
+            <field name="name">Vape</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="pos_category_group_konopi" model="pos.category">
+            <field name="name">Konopí a CBD</field>
+            <field name="sequence">40</field>
+        </record>
+        <record id="pos_category_group_sladke" model="pos.category">
+            <field name="name">Sladké a snacky</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="pos_category_group_napoje_alkohol" model="pos.category">
+            <field name="name">Nápoje a alkohol</field>
+            <field name="sequence">60</field>
+        </record>
+        <record id="pos_category_group_prislusenstvi_vse" model="pos.category">
+            <field name="name">Příslušenství</field>
+            <field name="sequence">80</field>
+        </record>
     </data>
 </odoo>

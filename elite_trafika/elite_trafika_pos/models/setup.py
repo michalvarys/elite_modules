@@ -1,5 +1,6 @@
 import base64
 import csv
+import hashlib
 import logging
 
 from odoo import api, models
@@ -51,7 +52,9 @@ class EliteTrafikaPosSetup(models.AbstractModel):
         self._ensure_products(company, root, standard, reduced, set(config.get("reduced_vat") or ()))
         self._ensure_barcodes()
         self._ensure_images()
+        self._ensure_category_groups(config.get("category_groups") or {})
         self._ensure_pos(company, config.get("pos_name") or company.name)
+        self._ensure_pos_groups()
 
     @api.model
     def target_company(self, name):
@@ -152,6 +155,30 @@ class EliteTrafikaPosSetup(models.AbstractModel):
                 continue
             variant.barcode = ean
 
+    def _ensure_category_groups(self, groups):
+        """Subcategories under the main groups. The categories load only at install (noupdate), so this
+        also moves them in a database installed before the groups; a category with a parent set in Odoo
+        stays where it is."""
+        for group, children in groups.items():
+            parent = self.env.ref("%s.pos_category_%s" % (MODULE, group))
+            for child in children:
+                category = self.env.ref("%s.pos_category_%s" % (MODULE, child))
+                if not category.parent_id:
+                    category.parent_id = parent
+
+    def _ensure_pos_groups(self):
+        """The till limited to a list of categories shows only the root ones of that list, so the main
+        groups must be in it. Odoo refuses this change on an open session unless told otherwise; an open
+        till shows the groups after a reload."""
+        config = self.env.ref("%s.pos_config_trafika" % MODULE, raise_if_not_found=False)
+        if not config or not config.limit_categories:
+            return
+        roots = self._module_records("pos.category").filtered(lambda c: not c.parent_id)
+        missing = roots - config.iface_available_categ_ids
+        if missing:
+            config.with_context(bypass_categories_forbidden_change=True).write(
+                {"iface_available_categ_ids": [(4, category.id) for category in missing]})
+
     def _ensure_pos(self, company, pos_name):
         if self.env.ref("%s.pos_config_trafika" % MODULE, raise_if_not_found=False):
             return  # the till exists; its settings belong to the staff now
@@ -203,20 +230,30 @@ class EliteTrafikaPosSetup(models.AbstractModel):
     # ------------------------------------------------------------------ helpers
 
     def _ensure_images(self):
-        """Images of the module for products and POS categories without one. Runs on updates too, the
-        data files are noupdate; an image the record already has is kept."""
+        """Images of the module for products and POS categories without one, or with a tile of an
+        earlier version of the module (data/old_tiles.txt). Runs on updates too, the data files are
+        noupdate; any other image the record already has is kept."""
+        old_tiles = self._old_tiles()
         data = self.env["ir.model.data"].sudo().search(
             [("module", "=", MODULE), ("model", "in", ("product.template", "pos.category"))])
         for entry in data:
             is_product = entry.model == "product.template"
             field = "image_1920" if is_product else "image_128"
             record = self.env[entry.model].sudo().with_context(active_test=False).browse(entry.res_id).exists()
-            if record and not record[field]:
-                path = "products/%s.jpg" % entry.name.removeprefix("product_") if is_product \
-                    else "categories/%s.jpg" % entry.name.removeprefix("pos_category_")
-                image = self._module_image(path)
-                if image:
-                    record[field] = image
+            if not record:
+                continue
+            current = record[field]
+            if current and hashlib.sha256(base64.b64decode(current)).hexdigest() not in old_tiles:
+                continue
+            path = "products/%s.jpg" % entry.name.removeprefix("product_") if is_product \
+                else "categories/%s.jpg" % entry.name.removeprefix("pos_category_")
+            image = self._module_image(path)
+            if image and image != current:
+                record[field] = image
+
+    def _old_tiles(self):
+        with file_open("%s/data/old_tiles.txt" % MODULE) as hashes:
+            return set(hashes.read().split())
 
     def _module_image(self, path):
         try:

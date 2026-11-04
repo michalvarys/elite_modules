@@ -20,17 +20,28 @@ je použije. Sklad, zboží, platební metody, pokladní deník a pokladna patř
 | Česká lokalizace | účetní osnova `l10n_cz` a ceny včetně DPH, jen když firma ještě nemá účetnictví; čeština |
 | DPH | sazby z Dotykačky: všechno zboží 21 %; zboží s 12 % se doplní do `data/setup.xml` |
 | Sklad | sklad firmy; když žádný nemá, založí sklad „Elite Trafika“ (zkratka TRAF) |
-| Skupiny | 35 kategorií Dotykačky, v pořadí záložek na pokladně (Cigarety … PYTLÍKY) |
+| Skupiny | 8 hlavních skupin (Tabák a cigarety, Nikotin a IQOS, Vape, Konopí a CBD, Sladké a snacky, Nápoje a alkohol, Příslušenství, TYSON); 34 kategorií Dotykačky je pod nimi jako podskupiny, rozdělení je v `data/setup.xml`. Do už nainstalované databáze se přesunou při aktualizaci, skupinu přesunutou ručně modul nechá být |
 | Zboží | 506 položek, všechno skladové zboží; čárový kód = EAN z Dotykačky (407 položek), všechny s obrázkem |
 | Pokladna | „Elite Trafika“: platba Hotově a Kartou, faktura z pokladny do prodejního deníku |
 
 ### Obrázky
 
-Zboží i všech 35 skupin má obrázek ve `static/img/`. 136 položek má fotku (zdroj je ve
-`static/img/products/manifest.csv`, většina je spárovaná podle názvu, ne EAN). Ostatní mají dlaždici
-s názvem v barvách značky (černá a limetková `#9ce424` z loga elite-trafika.cz), skupiny dlaždici nebo
-typické zboží na ní. Dlaždice vytvoří znovu `scripts/gen_images.py`. Obrázky se doplní i při aktualizaci,
-ale jen tam, kde chybí; obrázek, který už v Odoo je, modul nepřepíše.
+Zboží i všech 42 skupin má obrázek ve `static/img/`:
+
+- **333 položek má fotku výrobku** (zdroje ve `static/img/products/manifest.csv`; část je spárovaná podle
+  názvu, sdílená přes velikosti nebo s jinou příchutí téže řady, viz poznámky).
+- **133 položek bez obalu nebo bez dohledatelné fotky má fotku druhu zboží** (květy, hash, bong, váha…);
+  květy a hash mají v rohu gramáž. Přiřazení je v `GENERIC` ve `scripts/gen_images.py`.
+- **40 položek má dlaždici s názvem** v barvách značky (černá a limetková `#9ce424` z loga elite-trafika.cz).
+  Jsou to značkové položky, u kterých by obecná fotka ukázala cizí značku.
+- **Skupiny mají reálné fotky** čitelné ve velikosti tlačítka (asi 64 px).
+
+Fotky druhu zboží a skupin jsou z Wikimedia Commons a Openverse; autor a licence jsou ve
+`static/img/generic/manifest.csv`. Pro pokladnu to stačí; při zveřejnění (e-shop, web) je u CC BY a
+CC BY-SA potřeba uvést autora. Fotky výrobků z e-shopů jsou jen pro pokladnu.
+
+Obrázky se doplní i při aktualizaci modulu, jen tam, kde obrázek chybí nebo je tam dlaždice z dřívější
+verze (otisky v `data/old_tiles.txt`). Jiný obrázek, který už v Odoo je, modul nepřepíše.
 
 ### Co modul nepřepíše
 
