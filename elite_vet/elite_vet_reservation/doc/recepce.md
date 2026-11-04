@@ -478,6 +478,7 @@ Rezervace se smí překrývat, ale jen po potvrzení upozornění. Přes úplnou
 - **Nová rezervace:** klikněte do obsazeného času, nebo zadejte čas ručně. Průvodce napíše, co tam je,
   a nabídne **Přesto vytvořit**.
 - **Přetažení na tabuli:** v dialogu přesunu se ukáže **Přesto přesunout**.
+- **Formulář rezervace:** při změně času nebo ordinace se nahoře ukáže upozornění. Zaškrtněte **Přesto uložit přes tuto rezervaci** a uložte.
 - **Objednat u pokladny:** v kroku Čas vyplňte **Obsazený čas** a ordinaci, klikněte **Vybrat** a
   potom Objednat. Pokladna se zeptá **Přesto objednat**.
 
