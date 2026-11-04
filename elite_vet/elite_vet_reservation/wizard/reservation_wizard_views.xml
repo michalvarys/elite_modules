@@ -5,9 +5,26 @@
         <field name="model">elite.vet.reservation.wizard</field>
         <field name="arch" type="xml">
             <form string="Nová rezervace">
-                <header>
-                    <field name="step" widget="statusbar" readonly="1"/>
-                </header>
+                <!-- Request 4. 11.: a step reached before is a button, action_go_step checks the way there. -->
+                <field name="step" invisible="1"/>
+                <field name="reached_step" invisible="1"/>
+                <div class="d-flex flex-wrap gap-1 mb-3 o_ev_wizard_steps">
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'what'">1. Co a kdy</span>
+                    <button name="action_go_step" type="object" context="{'go_step': 'what'}" string="1. Co a kdy"
+                            class="btn-outline-primary btn-sm" invisible="step == 'what' or reached_step &lt; 0"/>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'time'">2. Volný čas</span>
+                    <button name="action_go_step" type="object" context="{'go_step': 'time'}" string="2. Volný čas"
+                            class="btn-outline-primary btn-sm" invisible="step == 'time' or reached_step &lt; 1"/>
+                    <span class="btn btn-light btn-sm disabled" invisible="reached_step &gt;= 1">2. Volný čas</span>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'client'">3. Klient</span>
+                    <button name="action_go_step" type="object" context="{'go_step': 'client'}" string="3. Klient"
+                            class="btn-outline-primary btn-sm" invisible="step == 'client' or reached_step &lt; 2"/>
+                    <span class="btn btn-light btn-sm disabled" invisible="reached_step &gt;= 2">3. Klient</span>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'summary'">4. Shrnutí</span>
+                    <button name="action_go_step" type="object" context="{'go_step': 'summary'}" string="4. Shrnutí"
+                            class="btn-outline-primary btn-sm" invisible="step == 'summary' or reached_step &lt; 3"/>
+                    <span class="btn btn-light btn-sm disabled" invisible="reached_step &gt;= 3">4. Shrnutí</span>
+                </div>
                 <field name="allowed_doctor_ids" invisible="1"/>
                 <field name="serving_doctor_ids" invisible="1"/>
                 <field name="has_multiple_serving" invisible="1"/>
@@ -48,7 +65,7 @@
                     </group>
                     <group invisible="not room_id">
                         <div class="text-muted" colspan="2">
-                            Předvyplněno z kalendáře: <field name="room_id" readonly="1" class="d-inline" options="{'no_open': True}"/> v <field name="time_label" class="d-inline"/>.
+                            Vybraný termín: <field name="room_id" readonly="1" class="d-inline" options="{'no_open': True}"/> v <field name="time_label" class="d-inline"/>.
                             Je-li čas volný, krok s výběrem času se přeskočí.
                         </div>
                     </group>
@@ -69,11 +86,14 @@
                     </div>
                     <div invisible="not warning" class="alert alert-warning" role="status">
                         <field name="warning" readonly="1" nolabel="1"/>
+                        <field name="overlap_room_id" invisible="1"/>
+                        <button name="action_force_overlap" type="object" string="Přesto vytvořit" class="btn-warning btn-sm ms-2"
+                                invisible="not overlap_room_id"/>
                     </div>
                     <div class="mb-2">
                         <field name="manual" widget="boolean_toggle" class="d-inline-block w-auto"/>
                         <label for="manual" string="Zadat čas ručně" class="ms-1"/>
-                        <span class="text-muted small ms-2">i mimo nabízené časy – brání jen jiná rezervace a úplná blokace</span>
+                        <span class="text-muted small ms-2">i mimo nabízené časy – brání jen úplná blokace, u jiné rezervace se průvodce zeptá</span>
                     </div>
                     <div invisible="not manual" class="border rounded p-2 mb-2">
                         <group>
@@ -120,6 +140,7 @@
                             <field name="contact_name" required="step == 'client' and partner_mode == 'new'"/>
                             <field name="contact_phone" widget="phone"/>
                             <field name="contact_email" widget="email"/>
+                            <field name="lang"/>
                         </group>
                         <group string="Mazlíček">
                             <field name="pet_id" invisible="partner_mode != 'existing' or not partner_id"
@@ -143,6 +164,8 @@
                 <footer>
                     <button name="action_step_time" type="object" string="Dále" class="btn-primary" invisible="step != 'what'"/>
                     <button name="action_back_to_what" type="object" string="Zpět" class="btn-secondary" invisible="step != 'time'"/>
+                    <button name="action_go_step" type="object" context="{'go_step': 'client'}" string="Dále" class="btn-primary"
+                            invisible="step != 'time' or not room_id"/>
                     <button name="action_back_to_time" type="object" string="Zpět" class="btn-secondary" invisible="step != 'client'"/>
                     <button name="action_step_summary" type="object" string="Dále" class="btn-primary" invisible="step != 'client'"/>
                     <button name="action_back_to_client" type="object" string="Zpět" class="btn-secondary" invisible="step != 'summary'"/>

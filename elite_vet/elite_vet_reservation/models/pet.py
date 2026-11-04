@@ -67,8 +67,9 @@ class ResPartner(models.Model):
         return domain
 
     @api.model
-    def find_or_create_client(self, name, email, phone):
-        """Matching from the website: e-mail, then phone, otherwise a new client."""
+    def find_or_create_client(self, name, email, phone, lang=None):
+        """Matching from the website: e-mail, then phone, otherwise a new client.
+        `lang` goes to a new client's profile only, a found client keeps theirs."""
         email = (email or "").strip()
         digits = normalize_phone(phone)
         partner = self.browse()
@@ -89,8 +90,11 @@ class ResPartner(models.Model):
             )
             partner = self.browse([r[0] for r in self.env.cr.fetchall()])
         if not partner:
-            partner = self.create({"name": (name or email or phone or "Klient").strip(),
-                                   "email": email or False, "phone": phone or False})
+            vals = {"name": (name or email or phone or "Klient").strip(),
+                    "email": email or False, "phone": phone or False}
+            if lang:
+                vals["lang"] = lang
+            partner = self.create(vals)
         if not partner.is_vet_client:
             # Task 25: the matched contact may be the partner of an Odoo user (a staff member booking
             # her own pet with her e-mail). Changing a user's partner needs the access-rights admin,

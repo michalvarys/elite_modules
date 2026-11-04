@@ -211,6 +211,16 @@
                                         </div>
                                     </div>
                                 </t>
+                                <!-- Request 4. 11.: a taken time, booked over the other reservation after a warning. -->
+                                <div t-if="!state.move" class="o_ev_manual_time d-flex flex-wrap align-items-center gap-2 mt-3">
+                                    <span class="text-muted">Obsazený čas:</span>
+                                    <input type="time" class="form-control w-auto" t-model="state.manualTime"/>
+                                    <select class="form-select w-auto" t-model="state.manualRoomId">
+                                        <option value="">Ordinace</option>
+                                        <option t-foreach="state.allRooms" t-as="room" t-key="room.id" t-att-value="room.id" t-esc="room.name"/>
+                                    </select>
+                                    <button class="btn btn-light" t-on-click="selectManualTime">Vybrat</button>
+                                </div>
                             </t>
                         </div>
                     </div>
@@ -232,7 +242,7 @@
                         <button t-if="state.move" class="btn btn-primary btn-lg o_ev_move" t-att-disabled="!state.selected or state.saving" t-on-click="moveReservation">
                             Přesunout
                         </button>
-                        <button t-else="" class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="book">
+                        <button t-else="" class="btn btn-primary btn-lg o_ev_book" t-att-disabled="!state.selected or !pet or state.saving" t-on-click="() => this.book()">
                             Objednat
                         </button>
                         <button class="btn btn-light btn-lg o_ev_open_board" t-on-click="openBoard"><i class="fa fa-calendar me-1"/>Kalendář</button>

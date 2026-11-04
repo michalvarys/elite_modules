@@ -114,6 +114,102 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.name, "Jana Popisová / %s" % self.vacc.name)
 
     # ---------- request 3. 11. (Lucie): the procedure is optional, an empty one is Jiné ----------
+    def test_steps_back_and_forth_keep_the_data(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.booked(self.wizard())
+        self.fill_new_client(w)
+        w.action_step_summary()
+        self.assertEqual(w.reached_step, 3)
+        chosen = (w.room_id, w.minute, w.slot_doctor_id)
+        for step in ("what", "time", "client"):
+            w.with_context(go_step=step).action_go_step()
+            self.assertEqual(w.step, step)
+            self.assertEqual((w.room_id, w.minute, w.slot_doctor_id), chosen)
+        w.with_context(go_step="what").action_go_step()
+        w.with_context(go_step="summary").action_go_step()
+        self.assertEqual(w.step, "summary")
+        self.assertEqual(w.contact_name, "Jana Průvodcová")
+        w.action_back_to_client()
+        w.action_back_to_time()
+        self.assertTrue(w.room_id, "Zpět keeps the chosen time")
+        w.action_back_to_what()
+        w.action_step_time()
+        self.assertEqual((w.step, w.room_id, w.minute), ("client", chosen[0], chosen[1]))
+
+    def test_step_not_reached_is_refused(self):
+        w = self.wizard()
+        with self.assertRaises(UserError):
+            w.with_context(go_step="client").action_go_step()
+        self.assertEqual(w.step, "what")
+
+    def test_changed_procedure_with_a_taken_time_returns_to_the_time_step(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        self.reservation(start=self.dt(self.day, 9, 15), room_id=self.room1.id, contact_phone="+420 606 000 444")
+        w = self.booked(self.wizard())
+        self.fill_new_client(w)
+        w.action_step_summary()
+        w.with_context(go_step="what").action_go_step()
+        w.duration = 45
+        w.with_context(go_step="summary").action_go_step()
+        self.assertEqual((w.step, w.reached_step), ("time", 1))
+        self.assertFalse(w.room_id)
+        self.assertEqual(w.warning, "Vybraný termín už pro tento úkon neplatí – vyberte jiný čas.")
+        with self.assertRaises(UserError):
+            w.with_context(go_step="client").action_go_step()
+
+    def test_manual_time_survives_the_steps(self):
+        w = self.wizard()
+        w.action_step_time()
+        w.write({"manual": True, "manual_room_id": self.room1.id, "manual_time": "20:00"})
+        w.action_use_manual_time()
+        w.with_context(go_step="what").action_go_step()
+        w.action_step_time()
+        self.assertEqual((w.step, w.is_manual, w.minute), ("client", True, 20 * 60))
+
+    def booked(self, w):
+        w.action_step_time()
+        w.slot_ids.filtered(lambda ln: ln.minute == 9 * 60)[:1].action_select()
+        return w
+
+    def save_client(self, w, title):
+        w.action_step_summary()
+        w.action_save()
+        return self.env["elite.vet.reservation"].search([("title", "=", title)])
+
+    def test_language_of_a_new_client_goes_to_the_profile(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.booked(self.W.with_user(self.reception).create(
+            {"procedure_id": self.vacc.id, "date": self.day, "title": "Jazyk nový"}))
+        self.fill_new_client(w, contact_email="jazyk.novy@example.cz", contact_phone="+420 606 000 111")
+        self.assertEqual(w.lang, "cs_CZ")
+        w.lang = "de_DE"
+        r = self.save_client(w, "Jazyk nový")
+        self.assertEqual((r.lang, r.partner_id.lang), ("de_DE", "de_DE"))
+
+    def test_language_of_an_existing_client_stays_in_the_profile(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        partner = self.env["res.partner"].create({"name": "Klient EN", "lang": "en_US", "is_vet_client": True,
+                                                  "phone": "+420 606 000 222"})
+        w = self.booked(self.W.with_user(self.reception).create(
+            {"procedure_id": self.vacc.id, "date": self.day, "title": "Jazyk stálý"}))
+        w.write({"partner_mode": "existing", "partner_id": partner.id})
+        self.assertEqual(w.lang, "en_US", "offers the language of the client")
+        w.write({"lang": "de_DE", "pet_name": "Rex"})
+        r = self.save_client(w, "Jazyk stálý")
+        self.assertEqual((r.lang, partner.lang), ("de_DE", "en_US"))
+
+    def test_new_client_form_finding_a_card_keeps_its_language(self):
+        partner = self.env["res.partner"].create({"name": "Stálý", "lang": "en_US", "email": "stala.karta@example.cz"})
+        found = self.env["res.partner"].find_or_create_client("Stálý", "stala.karta@example.cz", False, lang="de_DE")
+        self.assertEqual((found, partner.lang), (partner, "en_US"))
+
+    def test_web_client_gets_the_language_of_the_reservation(self):
+        r = self.reservation(start=self.dt(self.day, 9, 0), lang="de_DE", contact_name="Web DE",
+                             contact_email="web.de.klient@example.cz", contact_phone="+420 606 000 333")
+        r.partner_id = False
+        r.action_match_client()
+        self.assertEqual(r.partner_id.lang, "de_DE")
+
     def test_wizard_without_procedure_books_other(self):
         other = self.env.ref("elite_vet_reservation.procedure_other")
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
@@ -203,11 +299,12 @@ class TestReservationWizard(ReservationCase):
     def test_manual_time_uses_custom_duration(self):
         self.reservation(start=self.dt(self.day, 10, 30), room_id=self.room1.id)
         w = self.wizard(duration=45, manual=True, manual_room_id=self.room1.id, manual_time="10:00")
-        with self.assertRaises(UserError):
-            w.action_use_manual_time()
+        w.action_use_manual_time()
+        self.assertEqual(w.overlap_room_id, self.room1, "45 min reach the reservation")
         w.duration = 30
         w.action_use_manual_time()
         self.assertEqual(w.step, "client")
+        self.assertFalse(w.overlap_room_id)
 
     def test_public_slots_ignore_wizard_duration(self):
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
@@ -276,7 +373,8 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(w.step, "time")
         self.assertFalse(w.room_id)
         self.assertTrue(w.slot_ids)
-        self.assertEqual(w.warning, "10:00 v Ordinace 1 není pro tento úkon volný – vyberte jiný čas.")
+        self.assertIn("10:00 v Ordinace 1 je obsazený", w.warning)
+        self.assertEqual(w.overlap_room_id, self.room1)
         w.slot_ids[0].action_select()
         w.action_back_to_time()
         self.assertFalse(w.warning)

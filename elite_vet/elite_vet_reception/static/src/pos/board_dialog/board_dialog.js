@@ -8,6 +8,7 @@
 import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
+import { laneStyle } from "@elite_vet_reservation/move_dialog/lanes";
 import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
@@ -35,17 +36,6 @@ function hhmm(minute) {
 function clinicNowMinute() {
     const now = luxon.DateTime.now().setZone(CLINIC_TZ);
     return now.hour * 60 + now.minute;
-}
-
-/** White text would be unreadable on a light colour (same rule as the backend board). */
-function textOn(hex) {
-    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
-    if (!m) {
-        return "#fff";
-    }
-    const n = parseInt(m[1], 16);
-    const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-    return lum > 0.62 ? "#1e293b" : "#fff";
 }
 
 // Task 24: Vše | Web | Klinika, remembered by the browser. WinVet entries only in "Vše",
@@ -354,6 +344,7 @@ export class BoardDialog extends Component {
             o_ev_board_block: e.kind === "block",
             o_ev_board_block_web: this.isWebBlock(e),
             o_ev_board_winvet: this.isWinvet(e),
+            o_ev_board_card: e.kind === "reservation",
             o_ev_board_from_web: this.isWeb(e),
             o_ev_board_muted: e.state === "done" || e.state === "no_show",
             o_ev_board_short: this.isShort(e),
@@ -376,13 +367,14 @@ export class BoardDialog extends Component {
         let style = `top:${this.top(e.start)}px;height:${this.height(e.start, e.end)}px`;
         if (this.isWinvet(e)) {
             // plain light grey card, the WinVet colour as the left stripe (board_dialog.scss)
-            return `${style};left:${this.eventLeft(room)}px;border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
+            return `${style};${laneStyle(this.eventsFor(room), e, this.eventLeft(room))};border-left:7px solid ${e.winvet_color || "#94a3b8"}`;
         }
         if (e.kind !== "block") {
-            style += `;left:${this.eventLeft(room)}px;background:${e.color_hex};color:${textOn(e.color_hex)}`;
+            // neutral card, procedure colour as the right stripe (board_dialog.scss)
+            style += `;${laneStyle(this.eventsFor(room), e, this.eventLeft(room))};border-right:7px solid ${e.color_hex}`;
             // stripe in the colour of the doctor the client is booked with
             if (e.doctor_color) {
-                style += `;border-left:7px solid ${e.doctor_color};box-shadow:inset 2px 0 0 #fff,0 1px 2px rgba(0,0,0,.15)`;
+                style += `;border-left:7px solid ${e.doctor_color}`;
             }
         }
         return style;
@@ -540,7 +532,7 @@ export class BoardDialog extends Component {
     }
 
     /** move_reservation -> success toast; an error is thrown back to the dialog (stays open). */
-    async move(reservationId, { date, minute, endMinute, roomId, notify, force }) {
+    async move(reservationId, { date, minute, endMinute, roomId, notify, force, forceOverlap }) {
         this.state.moving = true;
         let result;
         try {
@@ -552,6 +544,7 @@ export class BoardDialog extends Component {
                 notify,
                 endMinute,
                 force,
+                forceOverlap,
             ]);
         } finally {
             this.state.moving = false;

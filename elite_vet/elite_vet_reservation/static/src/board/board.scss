@@ -21,7 +21,7 @@
 .evb-event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 2px 6px; color: #fff; font-size: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.15); z-index: 1; }
 .evb-event.evb-block { background: repeating-linear-gradient(135deg, #94a3b8 0 6px, #64748b 6px 12px) !important; left: 0; right: 0; border-radius: 0; }
 .evb-event.evb-muted { opacity: .55; }
-.evb-symbol { display: inline-block; flex-shrink: 0; min-width: 16px; margin-left: 4px; text-align: center; padding: 0 3px; border-radius: 3px; background: rgba(255,255,255,.3); font-weight: 700; }
+.evb-symbol { display: inline-block; flex-shrink: 0; min-width: 16px; margin-left: 4px; text-align: center; padding: 0 3px; border-radius: 3px; background: rgba(15,23,42,.08); font-weight: 700; }
 .evb-web { float: right; }
 
 // ---------- header: day title and weekdays ----------
@@ -51,7 +51,7 @@
 .evb-web { float: none; flex-shrink: 0; }
 .evb-initials {
     flex-shrink: 0; margin-right: 4px; padding: 0 4px; border-radius: 3px;
-    background: rgba(255,255,255,.3); font-size: 11px; font-weight: 700; letter-spacing: .02em;
+    background: rgba(15,23,42,.08); font-size: 11px; font-weight: 700; letter-spacing: .02em;
 }
 
 // ---------- "now" line ----------
@@ -141,6 +141,9 @@
     &:focus-visible { outline: none; }
 }
 body.evb-resizing, body.evb-resizing * { cursor: col-resize !important; user-select: none !important; }
+
+// ---------- reservation card: neutral, doctor stripe on the left, procedure stripe on the right ----------
+.evb-event.evb-card { background: #fff; color: #1e293b; border: 1px solid #cbd5e1; }
 
 // ---------- WinVet calendar entries (elite_vet_winvet): read-only, plain light grey, WinVet colour stripe ----------
 // Not hatched: hatching means a block or time outside the opening hours.

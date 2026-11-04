@@ -2,6 +2,7 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
+import { laneStyle } from "@elite_vet_reservation/move_dialog/lanes";
 import { CancelDialog } from "@elite_vet_reservation/cancel_dialog/cancel_dialog";
 import { setSoundOn, playChime, isSoundOn } from "@elite_vet_reservation/sound/sound";
 import { Component, useRef, useState, onWillStart, onWillUnmount } from "@odoo/owl";
@@ -21,15 +22,6 @@ const WEEKDAY_NAMES = ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", 
 const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
 function weekdayIndex(d) { return (d.getDay() + 6) % 7; }   // 0 = Monday
 
-// White text would be unreadable on a light color (a doctor may pick e.g. yellow).
-function textOn(hex) {
-    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
-    if (!m) return "#fff";
-    const n = parseInt(m[1], 16);
-    const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-    return lum > 0.62 ? "#1e293b" : "#fff";
-}
-
 // Width of the "Waiting from web" panel: drag handle between panel and board, remembered by the browser.
 const PANEL_KEY = "elite_vet_reservation.panel_width";
 const PANEL_DEFAULT = 280, PANEL_MIN = 200, PANEL_MAX = 720;
@@ -40,6 +32,27 @@ function loadPanelWidth() {
         return Number.isFinite(w) ? w : PANEL_DEFAULT;
     } catch {
         return PANEL_DEFAULT;
+    }
+}
+
+// Request 4. 11.: the day survives a page reload. Per tab and only for the day it was chosen on:
+// a tab left open overnight starts on today, so nobody books into yesterday's view by mistake.
+const DAY_KEY = "elite_vet_reservation.board_day";
+
+function loadDay(today) {
+    try {
+        const saved = JSON.parse(sessionStorage.getItem(DAY_KEY));
+        return saved && saved.chosenOn === today && saved.day ? saved.day : today;
+    } catch {
+        return today;
+    }
+}
+
+function saveDay(day, today) {
+    try {
+        sessionStorage.setItem(DAY_KEY, JSON.stringify({ day, chosenOn: today }));
+    } catch {
+        // without storage the day lasts until a page reload
     }
 }
 
@@ -71,7 +84,7 @@ export class ReservationBoard extends Component {
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.state = useState({
-            date: isoDate(new Date()), today: isoDate(new Date()), now: nowMinute(),
+            date: loadDay(isoDate(new Date())), today: isoDate(new Date()), now: nowMinute(),
             data: null, loading: true, drag: null, busy: false,
             preview: null,   // hover preview of a waiting request (see hoverWaiting)
             soundOn: isSoundOn(),
@@ -123,7 +136,11 @@ export class ReservationBoard extends Component {
         d.setDate(d.getDate() + delta);
         this.goTo(isoDate(d));
     }
-    goTo(iso) { this.state.date = iso; this.load(); }
+    goTo(iso) {
+        this.state.date = iso;
+        saveDay(iso, isoDate(new Date()));
+        this.load();
+    }
     today() { this.goTo(isoDate(new Date())); }
     onDateInput(ev) { if (ev.target.value) { this.goTo(ev.target.value); } }
 
@@ -249,13 +266,13 @@ export class ReservationBoard extends Component {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
         if (this.isWinvet(e)) {
             // plain light grey card with the WinVet colour as the left stripe (styles in board.scss)
-            return style + ";left:" + this.eventLeft(room) + "px;border-left:7px solid " + (e.winvet_color || "#94a3b8");
+            return style + ";" + laneStyle(this.otherEventsFor(room), e, this.eventLeft(room)) + ";border-left:7px solid " + (e.winvet_color || "#94a3b8");
         }
         if (e.kind !== "block") {
-            style += ";left:" + this.eventLeft(room) + "px;background:" + e.color_hex + ";color:" + textOn(e.color_hex);
+            // Request 4. 11.: neutral card, procedure color as the right stripe (styles in board.scss).
+            style += ";" + laneStyle(this.otherEventsFor(room), e, this.eventLeft(room)) + ";border-right:7px solid " + e.color_hex;
             // Left stripe in the color of the doctor the client is booked with.
-            // A white line separates it even when the procedure color is similar to the doctor's.
-            if (e.doctor_color) style += ";border-left:7px solid " + e.doctor_color + ";box-shadow:inset 2px 0 0 #fff,0 1px 2px rgba(0,0,0,.15)";
+            if (e.doctor_color) style += ";border-left:7px solid " + e.doctor_color;
         }
         return style;
     }
@@ -288,7 +305,7 @@ export class ReservationBoard extends Component {
         this.openWizard({ default_minute: min, default_room_id: room.id });
     }
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
-    // ---------- blocks: Správce rezervací only (can_edit_blocks) ----------
+    // ---------- blocks: Recepce and up (can_edit_blocks) ----------
     // Without the right blocks cannot be dragged and open read-only; clicks into the column
     // (also through web-only blocks) still book as before.
     get canEditBlocks() { return Boolean(this.state.data && this.state.data.can_edit_blocks); }
@@ -400,9 +417,9 @@ export class ReservationBoard extends Component {
             origRoomId: event.room_id || false,
             mailText: "Klient dostane e-mail o změně termínu (" + (event.mail_on_move || "") + ").",
             mailLabel: "Poslat klientovi e-mail o změně",
-            onConfirm: async ({ date, minute, endMinute, roomId, notify, force }) => {
+            onConfirm: async ({ date, minute, endMinute, roomId, notify, force, forceOverlap }) => {
                 await this.orm.call("elite.vet.reservation", "board_move",
-                    [event.id, date, minute, roomId, notify, endMinute, force]);
+                    [event.id, date, minute, roomId, notify, endMinute, force, forceOverlap]);
                 await this.afterChange(date);
             },
         });
@@ -425,10 +442,10 @@ export class ReservationBoard extends Component {
             mailTo: w.email || false,
             mailText: "Klient dostane potvrzovací e-mail (" + (w.email || "") + ").",
             mailLabel: "Poslat klientovi potvrzení",
-            onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify, force }) => {
+            onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify, force, forceOverlap }) => {
                 const doctor = doctorId && chosen === roomId ? doctorId : null;
                 await this.orm.call("elite.vet.reservation", "board_confirm",
-                    [w.id, date, minute, chosen, doctor, notify, endMinute, force]);
+                    [w.id, date, minute, chosen, doctor, notify, endMinute, force, forceOverlap]);
                 const room = this.roomChoices.find((r) => r.id === chosen)?.name || "";
                 this.notification.add("Potvrzeno: " + shortDayLabel(date) + " · " + room, { type: "success" });
                 await this.afterChange(date);

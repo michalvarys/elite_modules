@@ -9,7 +9,9 @@
  * `onConfirm({date, minute, endMinute, roomId, notify})` calls the server; an error (time not free,
  * no doctor on duty) is shown in the dialog, which stays open for another try. The doctor / room rule
  * (DoctorRuleError: nobody on duty who does the procedure, not done in that room) can be overridden:
- * "Přesto přesunout" calls onConfirm again with `force: true`. Used by the backend board
+ * "Přesto přesunout" calls onConfirm again with `force: true`. A taken time (OverlapRuleError,
+ * another reservation, request 4. 11.) likewise with `forceOverlap: true`; each is asked for on its
+ * own, a yes to one is not a yes to the other. A full block is final. Used by the backend board
  * (elite_vet_reservation) and the till's board (elite_vet_reception, POS assets).
  */
 import { Component, useState } from "@odoo/owl";
@@ -60,6 +62,11 @@ export function isDoctorRuleError(error) {
     return Boolean(error?.data?.name?.endsWith(".DoctorRuleError"));
 }
 
+/** Did the server refuse only because of another reservation (it can be overridden)? */
+export function isOverlapError(error) {
+    return Boolean(error?.data?.name?.endsWith(".OverlapRuleError"));
+}
+
 export class MoveConfirmDialog extends Component {
     static template = "elite_vet_reservation.MoveConfirmDialog";
     static components = { Dialog };
@@ -105,6 +112,8 @@ export class MoveConfirmDialog extends Component {
             busy: false,
             error: "",
             canForce: false,
+            force: false,
+            forceOverlap: false,
         });
     }
 
@@ -172,10 +181,17 @@ export class MoveConfirmDialog extends Component {
         );
     }
 
-    onDate(ev) {
-        this.state.date = ev.target.value;
+    /** The inputs changed: a refusal and a yes to it were about the previous ones. */
+    clearRefusal() {
         this.state.error = "";
         this.state.canForce = false;
+        this.state.force = false;
+        this.state.forceOverlap = false;
+    }
+
+    onDate(ev) {
+        this.state.date = ev.target.value;
+        this.clearRefusal();
     }
 
     /** A new start moves the end with it (the duration stays); the end can then be changed. */
@@ -183,8 +199,7 @@ export class MoveConfirmDialog extends Component {
         const before = this.minute;
         const end = this.endMinute;
         this.state.time = ev.target.value;
-        this.state.error = "";
-        this.state.canForce = false;
+        this.clearRefusal();
         const after = this.minute;
         if (before !== null && after !== null && end !== null && end > before) {
             this.state.endTime = timeValue(Math.min(after + (end - before), 1439));
@@ -193,14 +208,12 @@ export class MoveConfirmDialog extends Component {
 
     onEndTime(ev) {
         this.state.endTime = ev.target.value;
-        this.state.error = "";
-        this.state.canForce = false;
+        this.clearRefusal();
     }
 
     onRoom(ev) {
         this.state.roomId = Number(ev.target.value) || false;
-        this.state.error = "";
-        this.state.canForce = false;
+        this.clearRefusal();
     }
 
     onNotify(ev) {
@@ -232,6 +245,9 @@ export class MoveConfirmDialog extends Component {
             this.state.error = "Vyberte ordinaci.";
             return;
         }
+        if (force) {
+            this.state[this.overridable] = true;
+        }
         this.state.busy = true;
         this.state.error = "";
         this.state.canForce = false;
@@ -242,12 +258,14 @@ export class MoveConfirmDialog extends Component {
                 endMinute: this.endMinute,
                 roomId: this.state.roomId,
                 notify: this.mailApplies ? this.state.notify : true,
-                force,
+                force: this.state.force,
+                forceOverlap: this.state.forceOverlap,
             });
         } catch (error) {
             // time not free / no doctor on duty: the server's message, the dialog stays open
             this.state.error = errorText(error);
-            this.state.canForce = !force && isDoctorRuleError(error);
+            this.overridable = isDoctorRuleError(error) ? "force" : isOverlapError(error) ? "forceOverlap" : null;
+            this.state.canForce = Boolean(this.overridable);
             this.state.busy = false;
             return;
         }

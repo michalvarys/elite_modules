@@ -12,6 +12,7 @@ import pytz
 from markupsafe import Markup, escape
 
 from odoo import _, api, fields, models
+from odoo.addons.base.models.res_partner import _lang_get
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.misc import clean_context
 
@@ -40,6 +41,8 @@ class ReservationWizard(models.TransientModel):
     _description = "Průvodce novou rezervací"
 
     step = fields.Selection(STEPS, string="Krok", default="what", required=True)
+    # Request 4. 11.: the steps reached so far are clickable (index into STEPS).
+    reached_step = fields.Integer(compute="_compute_reached_step", store=True, readonly=False)
 
     # 1. What and when
     title = fields.Char(string="Popis", help="Nepovinné – ukáže se jako první v názvu rezervace v kalendáři. "
@@ -80,6 +83,9 @@ class ReservationWizard(models.TransientModel):
     manual_room_id = fields.Many2one("elite.vet.room", string="Ordinace (ručně)")
     manual_time = fields.Selection(MANUAL_TIMES, string="Čas (ručně)")
     is_manual = fields.Boolean(help="Termín byl zadán ručně (pro shrnutí).")
+    # Request 4. 11.: the taken time offered with "Přesto vytvořit", and the user's yes to it.
+    overlap_room_id = fields.Many2one("elite.vet.room")
+    overlap_ok = fields.Boolean(help="Recepce potvrdila rezervaci přes obsazený termín.")
 
     # 3. Client
     partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient"),
@@ -90,6 +96,9 @@ class ReservationWizard(models.TransientModel):
     contact_name = fields.Char(string="Jméno a příjmení", compute="_compute_contact", store=True, readonly=False)
     contact_phone = fields.Char(string="Telefon", compute="_compute_contact", store=True, readonly=False)
     contact_email = fields.Char(string="E-mail", compute="_compute_contact", store=True, readonly=False)
+    # Request 4. 11.: e-mails of this reservation go in this language; a new client gets it in the profile.
+    lang = fields.Selection(_lang_get, string="Jazyk rezervace", compute="_compute_lang", store=True, readonly=False,
+                            help="V tomto jazyce klient dostane e-maily k rezervaci. Novému klientovi se zapíše do profilu.")
     pet_id = fields.Many2one("elite.vet.pet", string="Mazlíček", domain="[('partner_id', '=', partner_id)]")
     pet_name = fields.Char(string="Nový mazlíček – jméno")
     pet_species = fields.Selection(SPECIES, string="Druh", default="dog")
@@ -194,6 +203,13 @@ class ReservationWizard(models.TransientModel):
             w.send_email_offered = w.send_email_offered or bool(w.contact_email)
 
     @api.depends("partner_mode", "partner_id")
+    def _compute_lang(self):
+        installed = dict(self.env["res.lang"].get_installed())
+        for w in self:
+            lang = w._selected_partner().lang
+            w.lang = lang if lang in installed else "cs_CZ" if "cs_CZ" in installed else self.env.lang
+
+    @api.depends("partner_mode", "partner_id")
     def _compute_no_show_warning(self):
         Reservation = self.env["elite.vet.reservation"]
         for w in self:
@@ -222,7 +238,7 @@ class ReservationWizard(models.TransientModel):
 
     @api.depends("title", "procedure_id", "date", "minute", "room_id", "slot_doctor_id", "doctor_id", "contact_name",
                  "contact_phone", "contact_email", "partner_mode", "partner_id", "pet_id", "pet_name",
-                 "pet_species", "send_email", "is_manual", "duration")
+                 "pet_species", "send_email", "is_manual", "duration", "overlap_ok")
     def _compute_summary(self):
         species = dict(SPECIES)
         for w in self:
@@ -237,6 +253,8 @@ class ReservationWizard(models.TransientModel):
             elif not w._selected_partner():
                 client += " (nový klient)"
             rows = [("Popis", w.title)] if w.title else []
+            if w.overlap_ok:
+                rows.append(("Překryv", "Termín se překrývá s jinou rezervací"))
             rows += [
                 ("Úkon", w.procedure_id.name or ""),
                 ("Termín", "%s %s–%s (%d min)%s" % (w.day_label, minutes_label(w.minute), minutes_label(w.minute + w._effective_duration()),
@@ -319,6 +337,12 @@ class ReservationWizard(models.TransientModel):
             self.pet_id = self.partner_id.pet_ids
 
     # ---------- helpers ----------
+    @api.depends("step")
+    def _compute_reached_step(self):
+        order = [key for key, _label in STEPS]
+        for w in self:
+            w.reached_step = max(w.reached_step or 0, order.index(w.step))
+
     def _reopen(self):
         """Action that keeps the wizard dialog open on the current step."""
         return {
@@ -358,6 +382,30 @@ class ReservationWizard(models.TransientModel):
                                     duration=self._effective_duration())
                      if p[0] == self.room_id.id), None)
 
+    @api.onchange("date", "duration", "procedure_id")
+    def _onchange_overlap(self):
+        self.overlap_ok = False   # the yes was for the time it warned about
+
+    def _block_collision(self, room, minute):
+        """Full block at the slot: unlike another reservation it cannot be overridden."""
+        A = self.env["elite.vet.availability"]
+        Res = self.env["elite.vet.reservation"]
+        start = A.local_to_utc(self.date, minute)
+        stop = start + timedelta(minutes=self._effective_duration())
+        return Res.search(Res._busy_domain([room.id], start, stop, scope="internal") + [("kind", "=", "block")], limit=1)
+
+    def _overlap_warning(self, room, minute, clash):
+        return _("%(time)s v %(room)s je obsazený: %(conflict)s. Vyberte jiný čas, nebo použijte „Přesto vytvořit“.",
+                 time=minutes_label(minute), room=room.name, conflict=clash.name)
+
+    def _manual_doctor(self, room, minute):
+        """The doctor chosen in step 1, otherwise the one serving in that room at that time."""
+        if self.doctor_id:
+            return self.doctor_id
+        serving_ids = self.env["elite.vet.availability"].serving_doctors(
+            self.procedure_id, self.date, room.id, minute, duration=self._effective_duration())
+        return self.env["elite.vet.doctor"].browse(serving_ids[:1])
+
     def _collision(self, room, minute):
         """Reservation, full block or timed WinVet calendar entry that would overlap the manual slot (empty otherwise).
         Same rule as _check_overlap on save, which has the final say."""
@@ -379,7 +427,11 @@ class ReservationWizard(models.TransientModel):
         self.ensure_one()
         self._ensure_procedure()
         warning = False
+        overlap_room = False
         manual_vals = {"manual": False}
+        if self.is_manual and self.room_id and self._chosen_time_free():
+            self.step = "client"
+            return self._reopen()
         if self.room_id:
             room_doctor = self._free_room_doctor()
             if room_doctor:
@@ -391,13 +443,16 @@ class ReservationWizard(models.TransientModel):
             if clash or not key:
                 warning = _("%(time)s v %(room)s není pro tento úkon volný – vyberte jiný čas.",
                                time=minutes_label(self.minute), room=self.room_id.name)
+                if clash and not self._block_collision(self.room_id, self.minute):
+                    overlap_room = self.room_id.id
+                    warning = self._overlap_warning(self.room_id, self.minute, clash)
             else:
                 manual_vals = {"manual": True, "manual_room_id": self.room_id.id, "manual_time": key}
                 warning = _("Mimo běžnou ordinační dobu – vkládáte ručně (%(time)s, %(room)s). "
                                "Zkontrolujte čas a pokračujte tlačítkem „Použít ruční čas“.",
                                time=minutes_label(self.minute), room=self.room_id.name)
         self.write(dict(manual_vals, room_id=False, slot_doctor_id=False, step="time", warning=warning,
-                        is_manual=False))
+                        is_manual=False, overlap_room_id=overlap_room))
         self._load_slots()
         return self._reopen()
 
@@ -405,8 +460,8 @@ class ReservationWizard(models.TransientModel):
         """Step 2 → 3 with a manually entered time and room.
 
         Opening hours, doctor shifts, web-only blocks, weekends and holidays do
-        not block it; only another reservation or a full block does. The chosen
-        doctor need not be on duty at that time.
+        not block it. A full block does; another reservation warns and offers
+        "Přesto vytvořit". The chosen doctor need not be on duty at that time.
         """
         self.ensure_one()
         self._ensure_procedure()
@@ -416,29 +471,75 @@ class ReservationWizard(models.TransientModel):
         minute = hh * 60 + mm
         clash = self._collision(self.manual_room_id, minute)
         if clash:
-            raise UserError(_("%(time)s v %(room)s je obsazený: %(conflict)s.",
-                              time=minutes_label(minute), room=self.manual_room_id.name, conflict=clash.name))
-        doc = self.doctor_id
-        if not doc:
-            serving_ids = self.env["elite.vet.availability"].serving_doctors(
-                self.procedure_id, self.date, self.manual_room_id.id, minute, duration=self._effective_duration())
-            doc = self.env["elite.vet.doctor"].browse(serving_ids[:1])
+            block = self._block_collision(self.manual_room_id, minute)
+            if block:
+                raise UserError(_("%(time)s v %(room)s je obsazený: %(conflict)s.",
+                                  time=minutes_label(minute), room=self.manual_room_id.name, conflict=block.name))
+            self.write({"minute": minute, "overlap_room_id": self.manual_room_id.id,
+                        "warning": self._overlap_warning(self.manual_room_id, minute, clash)})
+            return self._reopen()
+        doc = self._manual_doctor(self.manual_room_id, minute)
         self.write({"minute": minute, "room_id": self.manual_room_id.id, "slot_doctor_id": doc.id or False,
-                    "step": "client", "warning": False, "is_manual": True})
+                    "step": "client", "warning": False, "is_manual": True, "overlap_ok": False,
+                    "overlap_room_id": False})
+        return self._reopen()
+
+    def action_force_overlap(self):
+        """"Přesto vytvořit": the taken time warned about in step 2, over the other reservation."""
+        self.ensure_one()
+        room = self.overlap_room_id
+        if not room:
+            raise UserError(_("Vyberte ordinaci a čas."))
+        doc = self._manual_doctor(room, self.minute)
+        self.write({"room_id": room.id, "slot_doctor_id": doc.id or False, "step": "client", "warning": False,
+                    "is_manual": True, "overlap_ok": True, "overlap_room_id": False})
         return self._reopen()
 
     def action_back_to_what(self):
-        self.write({"step": "what", "room_id": False, "slot_doctor_id": False, "minute": 0, "warning": False,
-                    "manual": False, "is_manual": False})
+        self.write({"step": "what", "warning": False})
         return self._reopen()
 
     def action_back_to_time(self):
-        self.write({"step": "time", "room_id": False, "slot_doctor_id": False, "warning": False, "is_manual": False})
+        self.write({"step": "time", "warning": False})
         self._load_slots()
         return self._reopen()
 
+    def _chosen_time_free(self):
+        """Is the chosen time still bookable after a change in an earlier step?"""
+        if self.is_manual:
+            collision = self._block_collision if self.overlap_ok else self._collision
+            return not collision(self.room_id, self.minute)
+        return bool(self._free_room_doctor())
+
+    def _keep_chosen_time(self):
+        """True when the chosen time still holds; otherwise back to step 2 with a warning."""
+        self._ensure_procedure()
+        if self.room_id and self._chosen_time_free():
+            return True
+        self.write({"step": "time", "reached_step": 1, "room_id": False, "slot_doctor_id": False, "is_manual": False,
+                    "overlap_ok": False, "warning": _("Vybraný termín už pro tento úkon neplatí – vyberte jiný čas.")})
+        self._load_slots()
+        return False
+
+    def action_go_step(self):
+        """A click on a step reached before: the steps in between keep their data."""
+        self.ensure_one()
+        target = self.env.context.get("go_step")
+        index = [key for key, _label in STEPS].index(target)
+        if index > self.reached_step:
+            raise UserError(_("Do tohoto kroku se ještě nedá přejít."))
+        if index >= 2 and not self._keep_chosen_time():
+            return self._reopen()
+        if target == "summary":
+            return self.action_step_summary()
+        if target == "time":
+            self._ensure_procedure()
+            self._load_slots()
+        self.write({"step": target, "warning": False})
+        return self._reopen()
+
     def _shift_day(self, delta):
-        self.write({"date": self.date + timedelta(days=delta)})
+        self.write({"date": self.date + timedelta(days=delta), "overlap_ok": False, "overlap_room_id": False})
         self._load_slots()
         return self._reopen()
 
@@ -490,11 +591,11 @@ class ReservationWizard(models.TransientModel):
         no_client = self.partner_mode == "none"
         if not partner and not no_client:
             partner = env["res.partner"].find_or_create_client(
-                self.contact_name, self.contact_email, self.contact_phone)
+                self.contact_name, self.contact_email, self.contact_phone, lang=self.lang)
         if not pet and partner and (self.pet_name or "").strip():
             pet = env["elite.vet.pet"].find_or_create(partner, self.pet_name, self.pet_species)
         start = env["elite.vet.availability"].local_to_utc(self.date, self.minute)
-        Res = env["elite.vet.reservation"]
+        Res = env["elite.vet.reservation"].with_context(ev_allow_overlap=self.overlap_ok)
         if not self.send_email or no_client:
             Res = Res.with_context(ev_no_mail=True)
         rec = Res.create({
@@ -510,7 +611,7 @@ class ReservationWizard(models.TransientModel):
             "pet_name": pet.name or (self.pet_name or "").strip() or False,
             "pet_species": pet.species or self.pet_species or False,
             "problem": self.problem or False, "note": self.note or False,
-            "lang": partner.lang or "cs_CZ",
+            "lang": self.lang or partner.lang or "cs_CZ",
         })
         return {
             "type": "ir.actions.client", "tag": "display_notification",
@@ -539,5 +640,6 @@ class ReservationWizardSlot(models.TransientModel):
         self.ensure_one()
         w = self.wizard_id
         w.write({"minute": self.minute, "room_id": self.room_id.id,
-                 "slot_doctor_id": self.doctor_id.id or w.doctor_id.id, "step": "client", "is_manual": False})
+                 "slot_doctor_id": self.doctor_id.id or w.doctor_id.id, "step": "client", "is_manual": False,
+                 "overlap_ok": False, "overlap_room_id": False})
         return w._reopen()

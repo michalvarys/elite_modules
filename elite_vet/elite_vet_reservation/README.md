@@ -23,10 +23,10 @@ Snímky obrazovek jsou v `doc/img/`.
   **Rezervace**, **Rozpis lékařů**, **Klienti**, **Mazlíčci**, **Konfigurace**
   (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy).
 - Skupiny: **Recepce** (denní práce) a **Správce rezervací** (konfigurace).
-  **Blokace** (`kind = "block"`) zakládá, přesouvá, upravuje a maže jen Správce rezervací:
-  pravidla záznamů v `security/rules.xml` (Recepce zapisuje jen `kind != "block"`, čtení beze
-  změny) a kontrola v `create` / `write` / `unlink` s hláškou „Blokace může měnit jen správce
-  rezervací.“. `board_data` vrací `can_edit_blocks`; bez něj tabule skryje **Nová blokace**,
+  **Blokace** (`kind = "block"`) zakládá, přesouvá, upravuje a maže Recepce a role, které ji
+  dědí (Sestra, Lékařka, účty ordinací, Správce rezervací): kontrola v `create` / `write` /
+  `unlink` s hláškou „Blokace může měnit jen recepce nebo správce rezervací.“.
+  `board_data` vrací `can_edit_blocks`; bez něj tabule skryje **Nová blokace**,
   blokace nejdou přetáhnout a otevřou se ve formuláři jen ke čtení
   (`view_reservation_block_readonly_form`). Cesty přes `sudo` (web, cron) se to netýká.
 - **Nastavení** (`elite.vet.setting` z `elite_vet_web`) ukládá jen Správce rezervací:

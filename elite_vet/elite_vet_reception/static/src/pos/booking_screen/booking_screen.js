@@ -19,11 +19,14 @@ import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/store/pos_hook";
 import { CardIndexDialog } from "@elite_vet_reception/pos/card_index_dialog/card_index_dialog";
 import { BoardDialog } from "@elite_vet_reception/pos/board_dialog/board_dialog";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { isOverlapError, parseTime, timeLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
 import {
     BOOKING_SCREEN,
     callReception,
     clinicToday,
     dayLabel,
+    errorMessage,
     shiftDay,
 } from "@elite_vet_reception/pos/reception_api";
 
@@ -80,6 +83,9 @@ export class ReceptionBookingScreen extends Component {
             nextFreeDay: null,
             roomId: null, // chosen room (kept over day changes; shown only while it has free times)
             selected: null,
+            manualTime: "", // a taken time typed by hand (request 4. 11.), with manualRoomId
+            manualRoomId: "",
+            allRooms: [],
             note: "",
             loading: false,
             saving: false,
@@ -104,6 +110,7 @@ export class ReceptionBookingScreen extends Component {
             if (options) {
                 this.state.procedures = options.procedures;
                 this.state.doctors = options.doctors;
+                this.state.allRooms = options.rooms;
                 this.state.frequent = options.frequent || [];
             }
             await this.applyBoardProps(this.props);
@@ -660,6 +667,17 @@ export class ReceptionBookingScreen extends Component {
         this.state.moved = null;
     }
 
+    /** The offered list has free times only: a taken time is typed; `book` then asks before going over it. */
+    selectManualTime() {
+        const minute = parseTime(this.state.manualTime);
+        const room = this.state.allRooms.find((r) => r.id === Number(this.state.manualRoomId));
+        if (minute === null || !room) {
+            this.notification.add("Vyplňte čas a ordinaci.", { type: "warning" });
+            return;
+        }
+        this.selectSlot({ minute, time: timeLabel(minute), room_id: room.id, room: room.name });
+    }
+
     async moveReservation() {
         const slot = this.state.selected;
         const move = this.state.move;
@@ -688,14 +706,26 @@ export class ReceptionBookingScreen extends Component {
         await this.reloadAll();
     }
 
-    async book() {
+    /** The server refused only because of another reservation: "Přesto objednat" repeats it with force. */
+    askBookOver(error) {
+        this.dialog.add(ConfirmationDialog, {
+            title: "Termín je obsazený",
+            body: error.data?.message || "",
+            confirmLabel: "Přesto objednat",
+            cancelLabel: "Zpět",
+            confirm: () => this.book(true),
+            cancel: () => {},
+        });
+    }
+
+    async book(force = false) {
         const slot = this.state.selected;
         if (!slot || !this.pet || this.state.saving) {
             return;
         }
         this.state.saving = true;
         try {
-            const result = await callReception(this.orm, this.notification, "book", [
+            const result = await this.orm.call("elite.vet.reception", "book", [
                 this.pet.id,
                 Number(this.state.procedureId),
                 this.state.day,
@@ -703,6 +733,7 @@ export class ReceptionBookingScreen extends Component {
                 slot.room_id,
                 Number(this.state.doctorId) || false,
                 this.state.note,
+                force,
             ]);
             if (result) {
                 const text = `${dayLabel(this.state.day)} ${slot.time} · ${this.pet.name}`;
@@ -711,6 +742,12 @@ export class ReceptionBookingScreen extends Component {
                 this.notification.add(`Objednáno: ${text}`, { type: "success" });
                 return;
             }
+        } catch (error) {
+            if (isOverlapError(error)) {
+                this.askBookOver(error);
+                return;
+            }
+            this.notification.add(errorMessage(error), { type: "danger", sticky: false });
         } finally {
             this.state.saving = false;
         }

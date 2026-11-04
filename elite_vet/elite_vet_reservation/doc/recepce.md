@@ -19,6 +19,8 @@ Tabule ukazuje **jeden den**. Každá ordinace má svůj sloupec, vlevo je časo
 
 ### Pohyb po dnech
 
+Vybraný den zůstane i po obnovení stránky, dokud je panel otevřený. Další den tabule začne na dnešku.
+
 - **‹** a **›** – předchozí / další den.
 - Políčko s datem – skok na libovolný den.
 - **Dnes** – návrat na dnešek.
@@ -36,7 +38,7 @@ a přepínačem **Vše | Web | Klinika**:
 
 | Štítek vlevo na kartě | Význam |
 |---|---|
-| Modrý **WEB** + modrý čárkovaný obrys karty | Rezervace z webu (i z chatu na webu) – objednal(a) se klient sám. Obrys je vidět na každé barvě úkonu. |
+| Modrý **WEB** + modrý čárkovaný obrys karty | Rezervace z webu (i z chatu na webu) – objednal(a) se klient sám. |
 | Bílý štítek s iniciálami, např. **JN** | Rezervaci založil(a) někdo z kliniky (průvodce Nová rezervace, pokladna). Po najetí myší: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
 | Šedý **WinVet** | Záznam z kalendáře WinVetu (viz níže). |
 
@@ -55,7 +57,7 @@ v obou sloupcích).
 | Světlé čárkované šrafování se štítkem „jen web“ | Blokace jen pro web: web tam nic nenabízí, vy tam objednat smíte. Klik do ní otevře průvodce, klik na štítek otevře blokaci. |
 | Barevný svislý proužek vlevo ve sloupci | Služba lékařky: iniciály a čas (např. „GC 8:15–14:00“). Každá lékařka má svou barvu, stejnou i ve štítku v hlavičce. |
 | Dva proužky vedle sebe | V ordinaci slouží současně dvě lékařky (viz níže). |
-| Barevná karta | Rezervace. Barva karty patří úkonu (např. vakcinace zelená, problém modrý). Proužek na levém okraji karty má barvu lékařky, ke které je klient objednaný – stejnou jako její služba a štítek. Rezervace bez lékařky proužek nemá. |
+| Bílá karta s proužky | Rezervace. Proužek na pravém okraji má barvu úkonu (např. vakcinace zelená, problém modrý). Proužek na levém okraji má barvu lékařky, ke které je klient objednaný – stejnou jako její služba a štítek. Rezervace bez lékařky levý proužek nemá. |
 | Písmeno vpravo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). |
 | Druhý řádek | Název úkonu (jen u delších karet). |
@@ -204,7 +206,7 @@ Rezervaci po telefonu nebo na místě zakládejte průvodcem. Otevřete ho:
 - **kliknutím do prázdného místa ve sloupci** tabule – pak je předvyplněná ordinace a čas.
 
 Průvodce má 4 kroky: **Co a kdy → Volný čas → Klient → Shrnutí**.
-Mezi kroky se pohybujete tlačítky **Dále** a **Zpět**, **Zavřít** průvodce zruší.
+Mezi kroky se pohybujete tlačítky **Dále** a **Zpět**, nebo klikem na krok v řádku nahoře: krok, kterým jste už prošli, je klikací tam i zpět a vyplněné údaje zůstanou. Když po změně úkonu nebo délky vybraný termín přestane platit, průvodce vás vrátí na krok 2 a upozorní vás. **Zavřít** průvodce zruší.
 
 ### Krok 1 – Co a kdy
 
@@ -272,11 +274,14 @@ vkládáte ručně“. Zkontrolujte čas a klikněte **Použít ruční čas**.
 3. Nový: vyplňte **Jméno a příjmení** a aspoň **Telefon** nebo **E-mail**.
    Pokud už klient se stejným e-mailem nebo telefonem v kartotéce je, použije se
    ten a nový se nezakládá.
-4. Nový mazlíček: **Nový mazlíček – jméno** a **Druh**.
-5. Volitelně **Důvod návštěvy** a **Interní poznámka** (klient ji nevidí).
-6. **Poslat klientovi potvrzení e-mailem** – zaškrtne se samo, když je vyplněný e-mail.
+4. **Jazyk rezervace** – v tomto jazyce klient dostane e-maily k rezervaci. Nabídne se jazyk
+   klienta, u nového čeština. Novému klientovi se jazyk zapíše do profilu, existujícímu se
+   profil nemění.
+5. Nový mazlíček: **Nový mazlíček – jméno** a **Druh**.
+6. Volitelně **Důvod návštěvy** a **Interní poznámka** (klient ji nevidí).
+7. **Poslat klientovi potvrzení e-mailem** – zaškrtne se samo, když je vyplněný e-mail.
    Odškrtněte, pokud klient e-mail nechce.
-7. Klikněte **Dále**.
+8. Klikněte **Dále**.
 
 ### Krok 4 – Shrnutí
 
@@ -429,11 +434,10 @@ Blokace zabere čas v ordinaci. Jsou dva druhy:
 Úplnou blokaci nejde založit přes potvrzenou rezervaci. Blokaci jen pro web založíte
 kdykoli, i přes existující rezervace – ty zůstanou, jak jsou.
 
-Blokace zakládá, přesouvá, upravuje a ruší jen **Správce rezervací** (vedení). Recepce,
-sestry a lékařky blokace na tabuli vidí, klik na ni ji otevře jen ke čtení a nejde přetáhnout.
+Blokace zakládá, přesouvá, upravuje a ruší **recepce, sestry, lékařky i vedení**.
 Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodce novou rezervací.
 
-### Nová blokace (správce rezervací)
+### Nová blokace
 
 1. Na tabuli klikněte **Nová blokace**.
 2. Vyplňte **Důvod blokace** (např. „Oběd“). Důvod se nepřekládá: napíšete-li ho s profilem
@@ -447,12 +451,25 @@ Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodc
 
 Úplnou blokaci nejde založit přes již potvrzenou rezervaci – nejdřív rezervaci přesuňte.
 
+### Rezervace přes obsazený termín
+
+Rezervace se smí překrývat, ale jen po potvrzení upozornění. Přes úplnou blokaci to nejde.
+
+- **Nová rezervace:** klikněte do obsazeného času, nebo zadejte čas ručně. Průvodce napíše, co tam je,
+  a nabídne **Přesto vytvořit**.
+- **Přetažení na tabuli:** v dialogu přesunu se ukáže **Přesto přesunout**.
+- **Objednat u pokladny:** v kroku Čas vyplňte **Obsazený čas** a ordinaci, klikněte **Vybrat** a
+  potom Objednat. Pokladna se zeptá **Přesto objednat**.
+
+Překrývající se karty stojí na tabuli vedle sebe. Na web se obsazený termín dál nenabízí.
+V historii rezervace zůstane poznámka.
+
 Když je úplná blokace pro **všechny ordinace** a některá ordinace už v tu dobu úplnou
 blokaci má, nic se neodmítne. Blokace se rozdělí po ordinacích a doplní se jen tam,
 kde ještě není. Na tabuli pak místo jednoho pruhu přes všechny sloupce uvidíte
 blokaci v každé ordinaci zvlášť.
 
-### Zrušení blokace (správce rezervací)
+### Zrušení blokace
 
 1. Klikněte na blokaci na tabuli (u blokace jen pro web na štítek „jen web“).
 2. Klikněte **Zrušit blokaci**.

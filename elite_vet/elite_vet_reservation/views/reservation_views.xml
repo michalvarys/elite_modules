@@ -114,7 +114,7 @@
                             <!-- with a pet selected: from its card, read-only -->
                             <field name="pet_name" readonly="pet_id" force_save="1"/>
                             <field name="pet_species" readonly="pet_id" force_save="1"/>
-                            <field name="lang" invisible="1"/>
+                            <field name="lang" invisible="kind == 'block'"/>
                         </group>
                     </group>
                     <group invisible="kind == 'block'">
@@ -153,7 +153,7 @@
             </xpath>
             <xpath expr="/form/header" position="replace">
                 <header>
-                    <span class="text-muted">Blokace může měnit jen správce rezervací.</span>
+                    <span class="text-muted">Blokace může měnit jen recepce nebo správce rezervací.</span>
                 </header>
             </xpath>
         </field>

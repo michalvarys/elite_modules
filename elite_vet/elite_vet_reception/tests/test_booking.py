@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from odoo.exceptions import AccessError, UserError
+from odoo.addons.elite_vet_reservation.models.reservation import OverlapRuleError
 from odoo.tests import tagged
 
 from odoo.addons.elite_vet_clinic.models.patient_card import clinic_today
@@ -345,14 +346,26 @@ class TestBooking(ReceptionCase):
         self.assertEqual((res.partner_id, res.pet_id, res.contact_phone), (owner, pet, "+420 731 000 222"))
         self.assertFalse(res.contact_email)
 
-    def test_double_booking_raises_clear_error(self):
-        """Review Focus 4: a slot taken in the meantime -> Czech UserError with the time."""
+    def test_double_booking_asks_and_goes_over_after_a_yes(self):
+        """Request 4. 11.: a taken time is refused with a question, "Přesto objednat" books it."""
         reception = self.api(self.reception)
-        reception.book(self.pet.id, self.book_proc.id, self.day.isoformat(), 540, self.room.id)
+        day = self.day.isoformat()
+        reception.book(self.pet.id, self.book_proc.id, day, 540, self.room.id)
         other = self.new_pet("Druhý objednaný")
-        with self.assertRaisesRegex(UserError, "Termín 9:00 už mezitím někdo obsadil – vyberte jiný."):
-            reception.book(other.id, self.book_proc.id, self.day.isoformat(), 540, self.room.id)
+        with self.assertRaisesRegex(OverlapRuleError, "9:00 v .* je obsazený"):
+            reception.book(other.id, self.book_proc.id, day, 540, self.room.id)
         self.assertEqual(len(self.booked(self.owner)), 1)
+        reception.book(other.id, self.book_proc.id, day, 540, self.room.id, False, None, True)
+        self.assertEqual(len(self.booked(self.owner)), 2)
+
+    def test_book_never_goes_over_a_full_block(self):
+        start = self.env["elite.vet.availability"].local_to_utc(self.day, 600)
+        self.env["elite.vet.reservation"].create({
+            "kind": "block", "state": "confirmed", "block_reason": "Oběd", "block_scope": "full",
+            "room_id": self.room.id, "start": start, "stop": start + timedelta(hours=1)})
+        with self.assertRaisesRegex(UserError, "už mezitím někdo obsadil"):
+            self.api(self.reception).book(self.pet.id, self.book_proc.id, self.day.isoformat(), 600, self.room.id,
+                                          False, None, True)
 
     def test_overlap_at_save_time_is_converted(self):
         """The slot looked free, but the reservation's overlap check refused it at save time."""
