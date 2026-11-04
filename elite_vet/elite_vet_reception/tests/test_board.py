@@ -110,9 +110,9 @@ class TestBoard(ReceptionCase):
         with self.assertRaises(UserError):
             self.api(self.reception).board_reservation(block.id)
 
-    def test_blocks_on_the_till_board_are_for_the_manager_only(self):
-        """Task 16: the till does not move or cancel a block, the board says who may edit blocks,
-        and the backend board_move refuses a block for every role below Vedení."""
+    def test_till_leaves_blocks_to_the_backend_board(self):
+        """The till does not move or cancel a block; Recepce and up do it on the backend board
+        (request 4. 11.)."""
         block = self.env["elite.vet.reservation"].create({
             "kind": "block", "state": "confirmed", "room_id": self.room.id, "block_reason": "Úklid T16",
             "start": self.today_utc(11, 0), "stop": self.today_utc(11, 30)})
@@ -121,16 +121,12 @@ class TestBoard(ReceptionCase):
                 self.api(user).move_reservation(block.id, str(clinic_today()), 12 * 60, self.room2.id)
             with self.assertRaises(UserError):
                 self.api(user).cancel_reservation(block.id)
-            with self.assertRaisesRegex(AccessError, "Blokace může měnit jen správce rezervací."):
-                self.env["elite.vet.reservation"].with_user(user).board_move(
-                    block.id, str(clinic_today()), 12 * 60, self.room2.id)
             data = self.env["elite.vet.reservation"].with_user(user).board_data(str(clinic_today()))
-            self.assertFalse(data["can_edit_blocks"], user.login)
+            self.assertTrue(data["can_edit_blocks"], user.login)
             self.assertIn(block.id, [e["id"] for e in data["events"]])
         self.assertEqual((block.room_id, block.start, block.state), (self.room, self.today_utc(11, 0), "confirmed"))
-        Rm = self.env["elite.vet.reservation"].with_user(self.manager)
-        self.assertTrue(Rm.board_data(str(clinic_today()))["can_edit_blocks"])
-        Rm.board_move(block.id, str(clinic_today()), 12 * 60, self.room2.id)
+        self.env["elite.vet.reservation"].with_user(self.reception).board_move(
+            block.id, str(clinic_today()), 12 * 60, self.room2.id)
         self.assertEqual(block.room_id, self.room2)
 
     # ---------------------------------------------------------------- move

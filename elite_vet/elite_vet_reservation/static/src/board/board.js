@@ -288,7 +288,7 @@ export class ReservationBoard extends Component {
         this.openWizard({ default_minute: min, default_room_id: room.id });
     }
     newBlock() { this.openForm(false, { default_kind: "block", default_state: "confirmed" }); }
-    // ---------- blocks: Správce rezervací only (can_edit_blocks) ----------
+    // ---------- blocks: Recepce and up (can_edit_blocks) ----------
     // Without the right blocks cannot be dragged and open read-only; clicks into the column
     // (also through web-only blocks) still book as before.
     get canEditBlocks() { return Boolean(this.state.data && this.state.data.can_edit_blocks); }

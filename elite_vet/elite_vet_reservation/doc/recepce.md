@@ -429,11 +429,10 @@ Blokace zabere čas v ordinaci. Jsou dva druhy:
 Úplnou blokaci nejde založit přes potvrzenou rezervaci. Blokaci jen pro web založíte
 kdykoli, i přes existující rezervace – ty zůstanou, jak jsou.
 
-Blokace zakládá, přesouvá, upravuje a ruší jen **Správce rezervací** (vedení). Recepce,
-sestry a lékařky blokace na tabuli vidí, klik na ni ji otevře jen ke čtení a nejde přetáhnout.
+Blokace zakládá, přesouvá, upravuje a ruší **recepce, sestry, lékařky i vedení**.
 Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodce novou rezervací.
 
-### Nová blokace (správce rezervací)
+### Nová blokace
 
 1. Na tabuli klikněte **Nová blokace**.
 2. Vyplňte **Důvod blokace** (např. „Oběd“). Důvod se nepřekládá: napíšete-li ho s profilem
@@ -452,7 +451,7 @@ blokaci má, nic se neodmítne. Blokace se rozdělí po ordinacích a doplní se
 kde ještě není. Na tabuli pak místo jednoho pruhu přes všechny sloupce uvidíte
 blokaci v každé ordinaci zvlášť.
 
-### Zrušení blokace (správce rezervací)
+### Zrušení blokace
 
 1. Klikněte na blokaci na tabuli (u blokace jen pro web na štítek „jen web“).
 2. Klikněte **Zrušit blokaci**.

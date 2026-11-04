@@ -29,7 +29,7 @@ BLOCK_SCOPES = [("web", "Jen web"), ("full", "Úplná")]
 DOCTOR_COLORS = ["#7c3aed", "#db2777", "#ea580c", "#0891b2", "#4d7c0f", "#b45309", "#2563eb", "#be123c"]
 # Blocks (kind "block") are created, moved, edited and deleted by Správce rezervací only (task 16);
 # reception and everyone above it (nurse, doctor, room accounts) only see them.
-BLOCK_MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
+BLOCK_GROUP = "elite_vet_reservation.group_reservation_reception"
 TITLES = {"mvdr.", "mudr.", "dr.", "ing.", "bc.", "mgr.", "phd.", "dipl.", "ph.d."}
 
 
@@ -399,15 +399,15 @@ class VetReservation(models.Model):
     # ---------- block rights ----------
     @api.model
     def _can_edit_blocks(self):
-        return self.env.su or self.env.user.has_group(BLOCK_MANAGER_GROUP)
+        return self.env.su or self.env.user.has_group(BLOCK_GROUP)
 
     def _check_block_rights(self, vals=None):
-        """Only Správce rezervací changes blocks. The record rules (security/rules.xml) say the same;
-        this check runs first so the user gets a clear message instead of the generic one."""
+        """Request 4. 11. (Lucie): Recepce and the roles that imply it (Sestra, Lékařka, room accounts,
+        Správce rezervací) change blocks; anyone else gets this clear message."""
         if self._can_edit_blocks():
             return
         if (vals and vals.get("kind") == "block") or any(rec.kind == "block" for rec in self):
-            raise AccessError(_("Blokace může měnit jen správce rezervací."))
+            raise AccessError(_("Blokace může měnit jen recepce nebo správce rezervací."))
 
     # ---------- create / write ----------
     @api.model_create_multi

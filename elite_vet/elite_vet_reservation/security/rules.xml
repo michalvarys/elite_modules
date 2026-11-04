@@ -1,31 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Task 16: blocks and the settings are for Správce rezervací only. Reading stays as it was
-         (the rules have perm_read off). Group rules of one model are OR-ed: a user in both groups
-         gets the wider one. sudo paths (website booking, cron) are not affected. -->
-
-    <!-- Blocks: Recepce (and Sestra, Lékařka, room accounts, which imply it) creates, changes and
-         deletes reservations only. The Python check in models/reservation.py gives the clear message. -->
-    <record id="rule_reservation_reception_no_blocks" model="ir.rule">
-        <field name="name">Rezervace: recepce nemění blokace</field>
-        <field name="model_id" ref="model_elite_vet_reservation"/>
-        <field name="groups" eval="[(6, 0, [ref('group_reservation_reception')])]"/>
-        <field name="domain_force">[('kind', '!=', 'block')]</field>
-        <field name="perm_read" eval="False"/>
-        <field name="perm_write" eval="True"/>
-        <field name="perm_create" eval="True"/>
-        <field name="perm_unlink" eval="True"/>
-    </record>
-    <record id="rule_reservation_manager_all" model="ir.rule">
-        <field name="name">Rezervace: správce mění vše</field>
-        <field name="model_id" ref="model_elite_vet_reservation"/>
-        <field name="groups" eval="[(6, 0, [ref('group_reservation_manager')])]"/>
-        <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="perm_read" eval="False"/>
-        <field name="perm_write" eval="True"/>
-        <field name="perm_create" eval="True"/>
-        <field name="perm_unlink" eval="True"/>
-    </record>
+    <!-- Task 16: the settings are for Správce rezervací only. Reading stays as it was (the rules have
+         perm_read off). Group rules of one model are OR-ed: a user in both groups gets the wider one.
+         sudo paths (website booking, cron) are not affected. Blocks are not limited by a rule any more
+         (request 4. 11.): Recepce and up change them, see _check_block_rights in models/reservation.py. -->
 
     <!-- Settings (elite.vet.setting of elite_vet_web, one record): elite_vet_web gives the calendar
          manager full access (ACL). An ACL cannot be taken away by another ACL, so a rule here limits

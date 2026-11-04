@@ -6,13 +6,13 @@ from odoo.tests import tagged
 from .common import ReservationCase
 
 WED = date(2026, 10, 14)
-BLOCK_MSG = "Blokace může měnit jen správce rezervací."
+BLOCK_MSG = "Blokace může měnit jen recepce nebo správce rezervací."
 SETTING_MSG = "Nastavení může měnit jen správce rezervací."
 
 
 @tagged("post_install", "-at_install")
 class TestManagerOnly(ReservationCase):
-    """Task 16: blocks and the settings are for Správce rezervací only."""
+    """Task 16: the settings are for Správce rezervací only; blocks for Recepce and up (request 4. 11.)."""
 
     @classmethod
     def setUpClass(cls):
@@ -40,54 +40,32 @@ class TestManagerOnly(ReservationCase):
         return self.env["elite.vet.reservation"].with_user(user)
 
     # ------------------------------------------------------------------ blocks: reception
-    def test_reception_cannot_create_block(self):
-        vals = {"kind": "block", "state": "confirmed", "block_reason": "Porada", "block_scope": "full",
+    def test_reception_creates_and_repeats_block(self):
+        vals = {"state": "confirmed", "block_reason": "Porada", "block_scope": "full",
                 "room_id": self.room1.id, "start": self.dt(WED, 14), "stop": self.dt(WED, 15)}
-        with self.assertRaisesRegex(AccessError, BLOCK_MSG):
-            self.R(self.reception).create(vals)
         # "Nová blokace" fills the kind from the context, not the values
-        vals.pop("kind")
-        with self.assertRaisesRegex(AccessError, BLOCK_MSG):
-            self.R(self.reception).with_context(default_kind="block").create(vals)
+        block = self.R(self.reception).with_context(default_kind="block").create(vals)
+        self.assertEqual(block.kind, "block")
+        self.R(self.reception).create(dict(vals, kind="block", block_reason="Týdně recepce",
+                                           start=self.dt(WED, 16), stop=self.dt(WED, 17), repeat_rule="weekly", repeat_interval=1, repeat_end="count", repeat_count=3))
+        self.assertEqual(self.env["elite.vet.reservation"].search_count([("block_reason", "=", "Týdně recepce")]), 3)
         # web-only block and a clinic-wide one as well
-        with self.assertRaisesRegex(AccessError, BLOCK_MSG):
-            self.R(self.reception).create(dict(vals, kind="block", block_scope="web", room_id=False))
-        self.assertFalse(self.env["elite.vet.reservation"].search([("block_reason", "=", "Porada")]))
+        self.R(self.reception).create(dict(vals, kind="block", block_reason="Celá klinika", block_scope="web", room_id=False))
+        self.assertTrue(self.env["elite.vet.reservation"].search([("block_reason", "=", "Celá klinika")]))
 
-    def test_reception_cannot_edit_move_cancel_delete_block(self):
+    def test_reception_edits_moves_cancels_deletes_block(self):
         block = self.block()
         mine = block.with_user(self.reception)
-        for change in (lambda: mine.write({"block_reason": "Jiný"}),
-                       lambda: mine.write({"start": self.dt(WED, 13), "stop": self.dt(WED, 14)}),
-                       lambda: mine.action_reschedule(self.dt(WED, 15), room_id=self.room2.id),
-                       lambda: self.R(self.reception).board_move(block.id, "2026-10-14", 900, self.room2.id),
-                       lambda: mine.action_cancel(),
-                       lambda: mine.unlink()):
-            with self.assertRaisesRegex(AccessError, BLOCK_MSG):
-                change()
-        self.assertEqual((block.block_reason, block.start, block.room_id, block.state),
-                         ("Oběd T16", self.dt(WED, 12), self.room1, "confirmed"))
-        # reading stays
-        self.assertEqual(mine.read(["name"])[0]["name"], block.name)
+        mine.write({"block_reason": "Jiný"})
+        self.R(self.reception).board_move(block.id, "2026-10-14", 900, self.room2.id)
+        self.assertEqual((block.block_reason, block.start, block.room_id), ("Jiný", self.dt(WED, 15), self.room2))
+        mine.action_cancel()
+        self.assertEqual(block.state, "cancelled")
+        mine.unlink()
+        self.assertFalse(block.exists())
 
-    def test_reception_cannot_turn_reservation_into_block(self):
-        r = self.reservation(start=self.dt(WED, 9, 0))
-        with self.assertRaisesRegex(AccessError, BLOCK_MSG):
-            r.with_user(self.reception).write({"kind": "block", "block_reason": "X"})
-        self.assertEqual(r.kind, "reservation")
-
-    def test_record_rules_without_the_python_check(self):
-        """The record rules alone refuse it too (e.g. a path that skips write())."""
-        block, res = self.block(), self.reservation(start=self.dt(WED, 9, 0))
-        for operation in ("write", "unlink"):
-            with self.assertRaises(AccessError):
-                block.with_user(self.reception).check_access(operation)
-            res.with_user(self.reception).check_access(operation)
-            block.with_user(self.manager).check_access(operation)
-        block.with_user(self.reception).check_access("read")
-
-    def test_nurse_and_doctor_cannot_change_blocks(self):
-        """Roles above reception (they imply it) are not managers either."""
+    def test_nurse_and_doctor_change_blocks(self):
+        """Roles above reception imply it."""
         for hour, xmlid in ((7, "elite_vet_clinic.group_clinic_nurse"), (9, "elite_vet_clinic.group_clinic_doctor")):
             group = self.env.ref(xmlid, raise_if_not_found=False)
             if not group:
@@ -95,8 +73,21 @@ class TestManagerOnly(ReservationCase):
             u = self.env["res.users"].with_context(no_reset_password=True).create({
                 "name": "T16 %s" % xmlid, "login": "t16_%s" % xmlid.split(".")[1],
                 "groups_id": [(6, 0, [self.env.ref("base.group_user").id, group.id])]})
-            with self.assertRaisesRegex(AccessError, BLOCK_MSG):
-                self.block(hour, hour + 1).with_user(u).write({"block_reason": "Jiný"})
+            block = self.block(hour, hour + 1)
+            block.with_user(u).write({"block_reason": "Jiný"})
+            self.assertEqual(block.block_reason, "Jiný")
+
+    def test_without_reception_blocks_stay_closed(self):
+        block = self.block()
+        for user in (self.plain, self.calendar_manager):
+            with self.assertRaises(AccessError):
+                block.with_user(user).write({"block_reason": "Jiný"})
+            with self.assertRaises(AccessError):
+                block.with_user(user).unlink()
+            with self.assertRaises(AccessError):
+                self.R(user).create({"kind": "block", "state": "confirmed", "block_reason": "X", "block_scope": "full",
+                                     "room_id": self.room1.id, "start": self.dt(WED, 14), "stop": self.dt(WED, 15)})
+        self.assertEqual(block.block_reason, "Oběd T16")
 
     # ------------------------------------------------------------------ blocks: manager
     def test_manager_creates_moves_edits_deletes_block(self):
@@ -146,7 +137,7 @@ class TestManagerOnly(ReservationCase):
     # ------------------------------------------------------------------ board flag + read-only view
     def test_board_can_edit_blocks(self):
         self.block()
-        self.assertFalse(self.R(self.reception).board_data("2026-10-14")["can_edit_blocks"])
+        self.assertTrue(self.R(self.reception).board_data("2026-10-14")["can_edit_blocks"])
         self.assertTrue(self.R(self.manager).board_data("2026-10-14")["can_edit_blocks"])
         self.assertTrue(self.env["elite.vet.reservation"].board_data("2026-10-14")["can_edit_blocks"])
 
