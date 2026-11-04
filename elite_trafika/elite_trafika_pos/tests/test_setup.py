@@ -74,6 +74,17 @@ class TestTrafikaPosSetup(TransactionCase):
         self.setup.ensure_setup({"company": "Elite Trafika", "pos_name": "Elite Trafika", "reduced_vat": reduced})
         self.assertEqual([self.env[m].search_count([]) for m in models], counts)
 
+    def test_missing_barcodes_are_added(self):
+        """A product installed without its EAN gets it on the next run; a barcode set in Odoo stays."""
+        coke = self.env.ref("elite_trafika_pos.product_3247546801968706").product_variant_id
+        other = self.env.ref("elite_trafika_pos.product_3216940881868041").product_variant_id
+        ean = coke.barcode
+        coke.barcode = False
+        other.barcode = "1234567890128"
+        self.setup.ensure_setup({"company": "Elite Trafika", "pos_name": "Elite Trafika"})
+        self.assertEqual(coke.barcode, ean)
+        self.assertEqual(other.barcode, "1234567890128")
+
     def test_unknown_company_stops(self):
         with self.assertRaises(UserError):
             self.setup.ensure_setup({"company": "Neexistující firma"})

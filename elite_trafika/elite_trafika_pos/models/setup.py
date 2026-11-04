@@ -1,8 +1,10 @@
+import csv
 import logging
 
 from odoo import api, models
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
+from odoo.tools.misc import file_path
 
 _logger = logging.getLogger(__name__)
 
@@ -46,6 +48,7 @@ class EliteTrafikaPosSetup(models.AbstractModel):
             if not accounting_company.account_sale_tax_id:
                 accounting_company.account_sale_tax_id = standard
         self._ensure_products(company, root, standard, reduced, set(config.get("reduced_vat") or ()))
+        self._ensure_barcodes()
         self._ensure_pos(company, config.get("pos_name") or company.name)
 
     @api.model
@@ -128,6 +131,24 @@ class EliteTrafikaPosSetup(models.AbstractModel):
             company_taxes = template.taxes_id.filtered(lambda t: t.company_id == tax_company)
             if company_taxes != tax:
                 template.taxes_id = [(3, t.id) for t in company_taxes - tax] + [(4, tax.id)]
+
+    def _ensure_barcodes(self):
+        """EAN of zbozi.csv on module products without a barcode. The products load only at install
+        (noupdate), so a database installed without the barcodes gets them on the module update; a
+        barcode set in Odoo is kept, and an EAN another product already has is left out (Odoo allows a
+        barcode on one product only)."""
+        with open(file_path("%s/zbozi.csv" % MODULE), encoding="utf-8") as f:
+            eans = {row["xmlid"]: row["ean"] for row in csv.DictReader(f) if row["ean"]}
+        Product = self.env["product.product"].sudo().with_context(active_test=False)
+        for xmlid, ean in eans.items():
+            template = self.env.ref("%s.%s" % (MODULE, xmlid), raise_if_not_found=False)
+            variant = template and template.product_variant_ids[:1]
+            if not variant or variant.barcode:
+                continue
+            if Product.search_count([("barcode", "=", ean)]):
+                _logger.warning("Elite Trafika: EAN %s of %s is on another product; left out", ean, variant.name)
+                continue
+            variant.barcode = ean
 
     def _ensure_pos(self, company, pos_name):
         if self.env.ref("%s.pos_config_trafika" % MODULE, raise_if_not_found=False):
