@@ -724,6 +724,8 @@ class VetReservation(models.Model):
         rooms = self.env["elite.vet.room"].search([])
         start, stop = A.local_to_utc(day, 0), A.local_to_utc(day, 1440)
         assignments = self.env["elite.vet.doctor.assignment"].search([("date", "=", day)])
+        # sudo: the till's board reads the day without the Reception group
+        room_notes = self.env["elite.vet.room.note"].sudo().search([("date", "=", day)])
         rooms_out, axis_from, axis_to = [], 8 * 60, 20 * 60
         for room in rooms:
             open_iv = A.open_minutes(room, day)
@@ -742,6 +744,7 @@ class VetReservation(models.Model):
                 "id": room.id, "name": room.name, "color_hex": room.color_hex, "online": room.online,
                 "open": [[f, t] for f, t in open_iv],
                 "doctors": shifts, "lanes": lanes, "overlaps": overlaps,
+                "notes": [{"id": n.id, "text": n.text} for n in room_notes if n.room_id == room],
             })
         events = []
         for r in self.search([("start", "<", stop), ("stop", ">", start),

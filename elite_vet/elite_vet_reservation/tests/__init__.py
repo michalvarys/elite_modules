@@ -29,3 +29,4 @@ from . import test_source_visible
 from . import test_move_end_time
 from . import test_block_recurrence
 from . import test_overlap
+from . import test_room_note

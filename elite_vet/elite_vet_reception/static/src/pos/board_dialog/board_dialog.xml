@@ -59,6 +59,8 @@
                     <div t-foreach="state.data.rooms" t-as="room" t-key="room.id" class="o_ev_board_col" t-att-data-room-id="room.id">
                         <div class="o_ev_board_head" t-att-style="'border-top: 4px solid ' + (room.color_hex or '#94a3b8')">
                             <div class="o_ev_board_room"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></div>
+                            <div t-foreach="room.notes or []" t-as="n" t-key="n.id" class="o_ev_board_room_note"
+                                 t-att-title="n.text" t-esc="n.text"/>
                             <div class="o_ev_board_doctors">
                                 <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge o_ev_board_overlap" t-esc="o.label"/>
                                 <span t-foreach="room.winvet_notes or []" t-as="n" t-key="'wn' + n.id" class="badge o_ev_board_wv_note"
