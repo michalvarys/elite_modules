@@ -206,7 +206,7 @@ Rezervaci po telefonu nebo na místě zakládejte průvodcem. Otevřete ho:
 - **kliknutím do prázdného místa ve sloupci** tabule – pak je předvyplněná ordinace a čas.
 
 Průvodce má 4 kroky: **Co a kdy → Volný čas → Klient → Shrnutí**.
-Mezi kroky se pohybujete tlačítky **Dále** a **Zpět**, **Zavřít** průvodce zruší.
+Mezi kroky se pohybujete tlačítky **Dále** a **Zpět**, nebo klikem na krok v řádku nahoře: krok, kterým jste už prošli, je klikací tam i zpět a vyplněné údaje zůstanou. Když po změně úkonu nebo délky vybraný termín přestane platit, průvodce vás vrátí na krok 2 a upozorní vás. **Zavřít** průvodce zruší.
 
 ### Krok 1 – Co a kdy
 

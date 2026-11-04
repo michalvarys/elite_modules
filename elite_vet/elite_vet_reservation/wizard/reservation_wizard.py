@@ -41,6 +41,8 @@ class ReservationWizard(models.TransientModel):
     _description = "Průvodce novou rezervací"
 
     step = fields.Selection(STEPS, string="Krok", default="what", required=True)
+    # Request 4. 11.: the steps reached so far are clickable (index into STEPS).
+    reached_step = fields.Integer(compute="_compute_reached_step", store=True, readonly=False)
 
     # 1. What and when
     title = fields.Char(string="Popis", help="Nepovinné – ukáže se jako první v názvu rezervace v kalendáři. "
@@ -330,6 +332,12 @@ class ReservationWizard(models.TransientModel):
             self.pet_id = self.partner_id.pet_ids
 
     # ---------- helpers ----------
+    @api.depends("step")
+    def _compute_reached_step(self):
+        order = [key for key, _label in STEPS]
+        for w in self:
+            w.reached_step = max(w.reached_step or 0, order.index(w.step))
+
     def _reopen(self):
         """Action that keeps the wizard dialog open on the current step."""
         return {
@@ -391,6 +399,9 @@ class ReservationWizard(models.TransientModel):
         self._ensure_procedure()
         warning = False
         manual_vals = {"manual": False}
+        if self.is_manual and self.room_id and self._chosen_time_free():
+            self.step = "client"
+            return self._reopen()
         if self.room_id:
             room_doctor = self._free_room_doctor()
             if room_doctor:
@@ -439,13 +450,45 @@ class ReservationWizard(models.TransientModel):
         return self._reopen()
 
     def action_back_to_what(self):
-        self.write({"step": "what", "room_id": False, "slot_doctor_id": False, "minute": 0, "warning": False,
-                    "manual": False, "is_manual": False})
+        self.write({"step": "what", "warning": False})
         return self._reopen()
 
     def action_back_to_time(self):
-        self.write({"step": "time", "room_id": False, "slot_doctor_id": False, "warning": False, "is_manual": False})
+        self.write({"step": "time", "warning": False})
         self._load_slots()
+        return self._reopen()
+
+    def _chosen_time_free(self):
+        """Is the chosen time still bookable after a change in an earlier step?"""
+        if self.is_manual:
+            return not self._collision(self.room_id, self.minute)
+        return bool(self._free_room_doctor())
+
+    def _keep_chosen_time(self):
+        """True when the chosen time still holds; otherwise back to step 2 with a warning."""
+        self._ensure_procedure()
+        if self.room_id and self._chosen_time_free():
+            return True
+        self.write({"step": "time", "reached_step": 1, "room_id": False, "slot_doctor_id": False, "is_manual": False,
+                    "warning": _("Vybraný termín už pro tento úkon neplatí – vyberte jiný čas.")})
+        self._load_slots()
+        return False
+
+    def action_go_step(self):
+        """A click on a step reached before: the steps in between keep their data."""
+        self.ensure_one()
+        target = self.env.context.get("go_step")
+        index = [key for key, _label in STEPS].index(target)
+        if index > self.reached_step:
+            raise UserError(_("Do tohoto kroku se ještě nedá přejít."))
+        if index >= 2 and not self._keep_chosen_time():
+            return self._reopen()
+        if target == "summary":
+            return self.action_step_summary()
+        if target == "time":
+            self._ensure_procedure()
+            self._load_slots()
+        self.write({"step": target, "warning": False})
         return self._reopen()
 
     def _shift_day(self, delta):

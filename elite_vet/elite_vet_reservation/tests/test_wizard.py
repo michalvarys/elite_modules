@@ -114,6 +114,58 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.name, "Jana Popisová / %s" % self.vacc.name)
 
     # ---------- request 3. 11. (Lucie): the procedure is optional, an empty one is Jiné ----------
+    def test_steps_back_and_forth_keep_the_data(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.booked(self.wizard())
+        self.fill_new_client(w)
+        w.action_step_summary()
+        self.assertEqual(w.reached_step, 3)
+        chosen = (w.room_id, w.minute, w.slot_doctor_id)
+        for step in ("what", "time", "client"):
+            w.with_context(go_step=step).action_go_step()
+            self.assertEqual(w.step, step)
+            self.assertEqual((w.room_id, w.minute, w.slot_doctor_id), chosen)
+        w.with_context(go_step="what").action_go_step()
+        w.with_context(go_step="summary").action_go_step()
+        self.assertEqual(w.step, "summary")
+        self.assertEqual(w.contact_name, "Jana Průvodcová")
+        w.action_back_to_client()
+        w.action_back_to_time()
+        self.assertTrue(w.room_id, "Zpět keeps the chosen time")
+        w.action_back_to_what()
+        w.action_step_time()
+        self.assertEqual((w.step, w.room_id, w.minute), ("client", chosen[0], chosen[1]))
+
+    def test_step_not_reached_is_refused(self):
+        w = self.wizard()
+        with self.assertRaises(UserError):
+            w.with_context(go_step="client").action_go_step()
+        self.assertEqual(w.step, "what")
+
+    def test_changed_procedure_with_a_taken_time_returns_to_the_time_step(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        self.reservation(start=self.dt(self.day, 9, 15), room_id=self.room1.id, contact_phone="+420 606 000 444")
+        w = self.booked(self.wizard())
+        self.fill_new_client(w)
+        w.action_step_summary()
+        w.with_context(go_step="what").action_go_step()
+        w.duration = 45
+        w.with_context(go_step="summary").action_go_step()
+        self.assertEqual((w.step, w.reached_step), ("time", 1))
+        self.assertFalse(w.room_id)
+        self.assertEqual(w.warning, "Vybraný termín už pro tento úkon neplatí – vyberte jiný čas.")
+        with self.assertRaises(UserError):
+            w.with_context(go_step="client").action_go_step()
+
+    def test_manual_time_survives_the_steps(self):
+        w = self.wizard()
+        w.action_step_time()
+        w.write({"manual": True, "manual_room_id": self.room1.id, "manual_time": "20:00"})
+        w.action_use_manual_time()
+        w.with_context(go_step="what").action_go_step()
+        w.action_step_time()
+        self.assertEqual((w.step, w.is_manual, w.minute), ("client", True, 20 * 60))
+
     def booked(self, w):
         w.action_step_time()
         w.slot_ids.filtered(lambda ln: ln.minute == 9 * 60)[:1].action_select()
