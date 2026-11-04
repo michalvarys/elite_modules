@@ -4,42 +4,55 @@ sku,file,source_url,note
 16020,16020.jpg,https://www.bigshock.cz/upload/image/cache/f/1/b/f1bf5327f85b1978b426146c380ba00c/orig-13010-gold330-400x400-1.png,Big Shock! Gold 500 ml (bigshock.cz)
 16022,16022.jpg,https://www.bigshock.cz/upload/image/cache/a/3/b/a3b2680393e6c76f4573b3554b6ce17c/orig-32997-watermelon-400x400-1.png,Big Shock! Watermelon 500 ml (bigshock.cz)
 16019,16019.jpg,https://www.bigshock.cz/upload/image/cache/2/4/f/24f7c1c95123264845d6710354909a03/orig-57233-original-400x400-1.png,Big Shock! Original 500 ml (bigshock.cz)
-16074,16074.jpg,https://www.bigshock.cz/upload/image/cache/5/c/3/5c38593bd8f6940c5628e9b09645c830/orig-62877-berries-400x400-1.png,"ASSUMPTION: 'Raspberries' not in current range; used Big Shock! Berries 500 ml (blueberry+raspberry)"
-16079,16079.jpg,https://www.bigshock.cz/upload/image/cache/3/7/c/37cbb09564ee9aef3fede6acb5c72c3d/orig-27539-cherry-400x400-1.png,"ASSUMPTION: only cherry in current range is SMART Wild Cherry 500 ml (same image as 16024); old classic Big Shock Cherry is discontinued"
+16074,16074.jpg,https://www.bigshock.cz/upload/image/cache/5/c/3/5c38593bd8f6940c5628e9b09645c830/orig-62877-berries-400x400-1.png,ASSUMPTION: 'Raspberries' not in current range; used Big Shock! Berries 500 ml (blueberry+raspberry)
+16079,16079.jpg,https://www.bigshock.cz/upload/image/cache/3/7/c/37cbb09564ee9aef3fede6acb5c72c3d/orig-27539-cherry-400x400-1.png,ASSUMPTION: only cherry in current range is SMART Wild Cherry 500 ml (same image as 16024); old classic Big Shock Cherry is discontinued
 16080,16080.jpg,https://www.bigshock.cz/upload/image/cache/3/7/9/379c2f6bc3f4f392b2d5aa1d15df989b/orig-47307-mango-orange-400x400-1.png,Big Shock! Mango & Orange 500 ml (bigshock.cz)
 16026,16026.jpg,https://www.bigshock.cz/upload/image/cache/7/8/6/786a83d7fe6103ac15a84194cd0b718e/orig-32874-mango-400x400-1.png,Big Shock! SMART Mango & Lychee 500 ml
 16025,16025.jpg,https://www.bigshock.cz/upload/image/cache/9/9/4/9944b227e2d0f5851a08f08c80e754fb/orig-82822-pineapple-400x400-1.png,Big Shock! SMART Pineapple (Ananas) & Passionfruit 500 ml
 16024,16024.jpg,https://www.bigshock.cz/upload/image/cache/3/7/c/37cbb09564ee9aef3fede6acb5c72c3d/orig-27539-cherry-400x400-1.png,Big Shock! SMART Wild Cherry 500 ml
-16027,16027.jpg,https://www.bigshock.cz/upload/image/cache/2/1/1/21139d2a8919545e693d5434fd040103/orig-95963-icetea-pear-330ml-400x400-1.png,"Big Shock! Ice Tea Green Tea Pear (Hruška) 330 ml; only Ice Tea flavour starting with H"
-16037,16037.jpg,https://www.bigshock.cz/upload/image/cache/3/7/e/37ef288ef90656c5c6ef7168905e3b5a/orig-80501-tycinka-koko-400x400-1.png,"Big Shock! tyčinka Koko 55 g (prefix K)"
-,candidate-bs-tycinka-original.jpg,https://www.bigshock.cz/upload/image/cache/6/1/c/61ce2b12e1595b716272ed4454462756/orig-52522-tycinka-original-400x400-1.png,"Big Shock! tyčinka Original 65 g - candidate for 16036 or 16038"
-,candidate-bs-tycinka-coko.jpg,https://www.bigshock.cz/upload/image/cache/6/4/f/64f1bb53bf2b1fbe3e40a6fa8c3ef3d3/orig-79292-tycinka-coko-400x400-1.png,"Big Shock! tyčinka Čoko 65 g - candidate for 16036 or 16038"
-,candidate-bs-hroznovy-cukr-original.jpg,https://www.bigshock.cz/upload/image/cache/d/d/d/ddd66ded6f95d9464a9335b9a301f33f/orig-82341-cukr-original-400x400-1.png,"Big Shock! hroznový cukr Original 17 tablet - candidate for 16039 or 16040"
-,candidate-bs-hroznovy-cukr-orange.jpg,https://www.bigshock.cz/upload/image/cache/f/a/2/fa2aecbbbe738d6ed33fa8adccfb05d4/orig-97702-cukr-orange-400x400-1.png,"Big Shock! hroznový cukr Orange 17 tablet - candidate for 16039 or 16040"
-16031,16031.jpg,https://waio.cz/images/plechovky.webp,"WAIO Hydration Currant Fusion 500 ml (HR = rybíz? mapped by elimination); cropped middle can from group shot"
+16027,16027.jpg,https://www.bigshock.cz/upload/image/cache/2/1/1/21139d2a8919545e693d5434fd040103/orig-95963-icetea-pear-330ml-400x400-1.png,Big Shock! Ice Tea Green Tea Pear (Hruška) 330 ml; only Ice Tea flavour starting with H
+16037,16037.jpg,https://www.bigshock.cz/upload/image/cache/3/7/e/37ef288ef90656c5c6ef7168905e3b5a/orig-80501-tycinka-koko-400x400-1.png,Big Shock! tyčinka Koko 55 g (prefix K)
+16036,16036.jpg,https://www.bigshock.cz/upload/image/cache/6/1/c/61ce2b12e1595b716272ed4454462756/orig-52522-tycinka-original-400x400-1.png,Big Shock! tyčinka Original 65 g - candidate for 16036 or 16038; flavour deduced from till sort order and SKU order
+16038,16038.jpg,https://www.bigshock.cz/upload/image/cache/6/4/f/64f1bb53bf2b1fbe3e40a6fa8c3ef3d3/orig-79292-tycinka-coko-400x400-1.png,Big Shock! tyčinka Čoko 65 g - candidate for 16036 or 16038; flavour deduced from till sort order and SKU order
+16039,16039.jpg,https://www.bigshock.cz/upload/image/cache/d/d/d/ddd66ded6f95d9464a9335b9a301f33f/orig-82341-cukr-original-400x400-1.png,Big Shock! hroznový cukr Original 17 tablet - candidate for 16039 or 16040; flavour deduced from till sort order and SKU order
+16040,16040.jpg,https://www.bigshock.cz/upload/image/cache/f/a/2/fa2aecbbbe738d6ed33fa8adccfb05d4/orig-97702-cukr-orange-400x400-1.png,Big Shock! hroznový cukr Orange 17 tablet - candidate for 16039 or 16040; flavour deduced from till sort order and SKU order
+16031,16031.jpg,https://waio.cz/images/plechovky.webp,WAIO Hydration Currant Fusion 500 ml (HR = rybíz? mapped by elimination); cropped middle can from group shot
 16030,16030.jpg,https://waio.cz/images/waio-cucumber-drink.webp,"WAIO Hydration Cucumber & Lime (okurka) 500 ml; lifestyle shot with hand, no packshot found"
 16032,16032.jpg,https://waio.cz/images/plechovky.webp,"WAIO Hydration Mango & Lavender 500 ml; LOW QUALITY crop, can partly hidden - replace with packshot if possible"
-16051,16051.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/cz_natura_prod_Lemon-Mint_750x750_v1.jpg,"Natura citron & máta; image shows 1.5 l bottle"
-16050,16050.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/cz_natura_prod_Malina_750x750_v1.jpg,"Natura malina; image shows 1.5 l bottle"
-16049,16049.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/tile-natura-mid-cz.jpg,"Natura jemně perlivá; small bottle cropped from range shot"
-16048,16048.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/tile-natura-nesycena-cz.jpg,"Natura neperlivá; small bottle cropped from range shot"
+16051,16051.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/cz_natura_prod_Lemon-Mint_750x750_v1.jpg,Natura citron & máta; image shows 1.5 l bottle
+16050,16050.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/cz_natura_prod_Malina_750x750_v1.jpg,Natura malina; image shows 1.5 l bottle
+16049,16049.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/tile-natura-mid-cz.jpg,Natura jemně perlivá; small bottle cropped from range shot
+16048,16048.jpg,https://www.coca-cola.com/content/dam/onexp/cz/cs/brands/natura/tile-natura-nesycena-cz.jpg,Natura neperlivá; small bottle cropped from range shot
 16015,16015.jpg,https://cdn.rohlik.cz/images/grocery/products/1421956/1421956-1708506946132.jpeg,"Coca-Cola 0,33 l plech - image shows CZ 6-pack (no clean single-can CZ packshot)"
 16016,16016.jpg,https://cdn.rohlik.cz/images/grocery/products/1311877/1311877-1708507017760.jpeg,"Fanta Pomeranč 0,33 l plech - image shows CZ 4-pack"
 16017,16017.jpg,https://cdn.rohlik.cz/images/grocery/products/1410816/1410816-1790335424660186500.png,Sprite plech 330 ml (rohlik.cz)
 16034,16034.jpg,https://cdn.rohlik.cz/images/grocery/products/1374861/1374861-1584378147.jpg,Budvar 33 světlý ležák 0.5 l sklo (rohlik.cz)
 16035,16035.jpg,https://cdn.rohlik.cz/images/grocery/products/1406100/1406100-1612394709570.jpg,Budvar Nealkoholický 0.5 l sklo (rohlik.cz)
-16077,16077.jpg,https://cdn.rohlik.cz/images/grocery/products/1482610/1482610-1782819512562864627.png,"Knoppers - image shows 5-pack"
-16078,16078.jpg,https://cdn.rohlik.cz/images/grocery/products/1482610/1482610-1782819512562864627.png,"Knoppers - same image as 16077"
-16060,16060.jpg,https://cdn.rohlik.cz/images/grocery/products/720941/720941-1788340525421940960.jpeg,"7Days Croissant (kakao variant shown)"
-16043,16043.jpg,https://cdn.rohlik.cz/images/grocery/products/1426407/1426407-1666124424531.jpg,"Generic: Yutto pražené arašídy solené 100 g (brand of till item unknown)"
+16077,16077.jpg,https://cdn.rohlik.cz/images/grocery/products/1482610/1482610-1782819512562864627.png,Knoppers - image shows 5-pack
+16078,16078.jpg,https://cdn.rohlik.cz/images/grocery/products/1482610/1482610-1782819512562864627.png,Knoppers - same image as 16077
+16060,16060.jpg,https://cdn.rohlik.cz/images/grocery/products/720941/720941-1788340525421940960.jpeg,7Days Croissant (kakao variant shown)
+16043,16043.jpg,https://cdn.rohlik.cz/images/grocery/products/1426407/1426407-1666124424531.jpg,Generic: Yutto pražené arašídy solené 100 g (brand of till item unknown)
 16042,16042.jpg,https://cdn.rohlik.cz/images/grocery/products/729323/729323-1610978474648.jpg,Bohemia Tyčinky slané 80 g
-16076,16076.jpg,https://cdn.rohlik.cz/images/grocery/products/1306463/1306463-1782469220669725954.jpg,"Opavia Brumík čokoládový - image shows 5-pack box"
-16062,16062.jpg,https://cdn.rohlik.cz/images/grocery/products/1481484/1481484-1778774147547115167.png,"Maretti Bruschette mořská sůl 140 g (flavour assumed)"
+16076,16076.jpg,https://cdn.rohlik.cz/images/grocery/products/1306463/1306463-1782469220669725954.jpg,Opavia Brumík čokoládový - image shows 5-pack box
+16062,16062.jpg,https://cdn.rohlik.cz/images/grocery/products/1481484/1481484-1778774147547115167.png,Maretti Bruschette mořská sůl 140 g (flavour assumed)
 16069,16069.jpg,https://cdn.rohlik.cz/images/grocery/products/719799/719799-1787496940739858779.jpg,KitKat 4 Fingers 42 g
-16075,16075.jpg,https://cdn.rohlik.cz/images/grocery/products/1406922/1406922-1790886637943151866.png,"Lay's solené 60 g (flavour assumed)"
-16041,16041.jpg,https://cdn.rohlik.cz/images/grocery/products/1426404/1426404-1666115298710.jpg,"Generic: Yutto pražené mandle solené 150 g (brand of till item unknown)"
-16061,16061.jpg,https://cdn.rohlik.cz/images/grocery/products/1294001/1294001-1780334003560553252.png,"Pringles Original 165 g (flavour assumed)"
+16075,16075.jpg,https://cdn.rohlik.cz/images/grocery/products/1406922/1406922-1790886637943151866.png,Lay's solené 60 g (flavour assumed)
+16041,16041.jpg,https://cdn.rohlik.cz/images/grocery/products/1426404/1426404-1666115298710.jpg,Generic: Yutto pražené mandle solené 150 g (brand of till item unknown)
+16061,16061.jpg,https://cdn.rohlik.cz/images/grocery/products/1294001/1294001-1780334003560553252.png,Pringles Original 165 g (flavour assumed)
 16068,16068.jpg,https://cdn.rohlik.cz/images/grocery/products/720639/720639-1637924700892.jpg,Snickers 50 g
 16067,16067.jpg,https://commons.wikimedia.org/wiki/File:Panini_with_Ham%2C_Red_Onion_%26_Cheese_-_Rotunda_Cafe_2023-12-16.jpg,"Generic panini photo, Wikimedia Commons CC0; center-cropped"
 16059,16059.jpg,https://commons.wikimedia.org/wiki/File:Pizza-napoletana.jpg,"Generic pizza photo, Wikimedia Commons CC BY-SA 4.0 (attribution required); center-cropped"
 16066,16066.jpg,https://commons.wikimedia.org/wiki/File:Smoked_chicken_and_avocado_wrap.jpg,"Generic chicken wrap photo, Wikimedia Commons CC BY-SA 3.0 (attribution required); center-cropped"
+16052,16052.jpg,,drawn by scripts/gen_images.py
+16053,16053.jpg,,drawn by scripts/gen_images.py
+16056,16056.jpg,,drawn by scripts/gen_images.py
+16054,16054.jpg,,drawn by scripts/gen_images.py
+16055,16055.jpg,,drawn by scripts/gen_images.py
+16070,16070.jpg,,drawn by scripts/gen_images.py
+16057,16057.jpg,,drawn by scripts/gen_images.py
+16058,16058.jpg,,drawn by scripts/gen_images.py
+16073,16073.jpg,,drawn by scripts/gen_images.py
+16064,16064.jpg,,drawn by scripts/gen_images.py
+16065,16065.jpg,,drawn by scripts/gen_images.py
+16071,16071.jpg,,drawn by scripts/gen_images.py
+16072,16072.jpg,,drawn by scripts/gen_images.py

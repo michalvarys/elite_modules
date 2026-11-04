@@ -57,6 +57,25 @@ class TestArenaPosSetup(TransactionCase):
         self.assertTrue(coke.image_1920)
         self.assertEqual(self.env.ref("elite_arena_pos.product_16052").type, "service")
 
+    def test_images(self):
+        for product in self.setup._module_products():
+            self.assertTrue(product.image_1920, product.name)
+        categories = self.env["ir.model.data"].search(
+            [("module", "=", "elite_arena_pos"), ("model", "=", "pos.category")]).mapped("res_id")
+        self.assertEqual(len(categories), 14)
+        for category in self.env["pos.category"].browse(categories):
+            self.assertTrue(category.image_128, category.name)
+
+    def test_existing_image_is_kept(self):
+        product = self.env.ref("elite_arena_pos.product_16052")
+        category = self.env.ref("elite_arena_pos.pos_category_game")
+        product.image_1920 = category.image_128
+        image = product.image_1920
+        category_image = category.image_128
+        self.setup._ensure_images()
+        self.assertEqual(product.image_1920, image)
+        self.assertEqual(category.image_128, category_image)
+
     def test_price_is_final_price(self):
         """55 Kč at the till = 55 Kč total, of which the 21 % VAT is included."""
         coke = self.env.ref("elite_arena_pos.product_16015")

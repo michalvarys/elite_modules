@@ -117,7 +117,7 @@
         </record>
         <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
         <record id="product_16040" model="product.template">
-            <field name="name">BIG SHOCK HROZNOVÝ CUKR 16040</field>
+            <field name="name">BIG SHOCK HROZNOVÝ CUKR Orange</field>
             <field name="default_code">16040</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
@@ -130,7 +130,7 @@
         </record>
         <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
         <record id="product_16039" model="product.template">
-            <field name="name">BIG SHOCK HROZNOVÝ CUKR 16039</field>
+            <field name="name">BIG SHOCK HROZNOVÝ CUKR Original</field>
             <field name="default_code">16039</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
@@ -199,7 +199,7 @@
         </record>
         <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
         <record id="product_16038" model="product.template">
-            <field name="name">BIG SHOCK TYČINKA 16038</field>
+            <field name="name">BIG SHOCK TYČINKA Čoko</field>
             <field name="default_code">16038</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
@@ -226,7 +226,7 @@
         </record>
         <!-- cena z katalogu ggLeapu, na fotce pokladny není -->
         <record id="product_16036" model="product.template">
-            <field name="name">BIG SHOCK TYČINKA 16036</field>
+            <field name="name">BIG SHOCK TYČINKA Original</field>
             <field name="default_code">16036</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
