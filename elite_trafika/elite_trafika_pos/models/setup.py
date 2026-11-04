@@ -1,9 +1,10 @@
+import base64
 import csv
 import logging
 
 from odoo import api, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare
+from odoo.tools import file_open, float_compare
 from odoo.tools.misc import file_path
 
 _logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class EliteTrafikaPosSetup(models.AbstractModel):
                 accounting_company.account_sale_tax_id = standard
         self._ensure_products(company, root, standard, reduced, set(config.get("reduced_vat") or ()))
         self._ensure_barcodes()
+        self._ensure_images()
         self._ensure_pos(company, config.get("pos_name") or company.name)
 
     @api.model
@@ -199,6 +201,29 @@ class EliteTrafikaPosSetup(models.AbstractModel):
                                           "company_id": company.id})
 
     # ------------------------------------------------------------------ helpers
+
+    def _ensure_images(self):
+        """Images of the module for products and POS categories without one. Runs on updates too, the
+        data files are noupdate; an image the record already has is kept."""
+        data = self.env["ir.model.data"].sudo().search(
+            [("module", "=", MODULE), ("model", "in", ("product.template", "pos.category"))])
+        for entry in data:
+            is_product = entry.model == "product.template"
+            field = "image_1920" if is_product else "image_128"
+            record = self.env[entry.model].sudo().with_context(active_test=False).browse(entry.res_id).exists()
+            if record and not record[field]:
+                path = "products/%s.jpg" % entry.name.removeprefix("product_") if is_product \
+                    else "categories/%s.jpg" % entry.name.removeprefix("pos_category_")
+                image = self._module_image(path)
+                if image:
+                    record[field] = image
+
+    def _module_image(self, path):
+        try:
+            with file_open("%s/static/img/%s" % (MODULE, path), "rb") as image:
+                return base64.b64encode(image.read())
+        except FileNotFoundError:
+            return False
 
     def _module_products(self):
         return self._module_records("product.template")
