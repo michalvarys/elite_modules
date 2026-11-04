@@ -21,7 +21,7 @@ je použije. Sklad, zboží, platební metody, pokladní deník a pokladna patř
 | DPH | sazby z Dotykačky: všechno zboží 21 %; zboží s 12 % se doplní do `data/setup.xml` |
 | Sklad | sklad firmy; když žádný nemá, založí sklad „Elite Trafika“ (zkratka TRAF) |
 | Skupiny | 35 kategorií Dotykačky, v pořadí záložek na pokladně (Cigarety … PYTLÍKY) |
-| Zboží | 506 položek, všechno skladové zboží; čárový kód = EAN z Dotykačky (407 položek), bez obrázků |
+| Zboží | 506 položek, všechno skladové zboží; čárový kód = EAN z Dotykačky (407 položek), všechny s obrázkem |
 | Pokladna | „Elite Trafika“: platba Hotově a Kartou, faktura z pokladny do prodejního deníku |
 
 ### Co modul nepřepíše

@@ -85,6 +85,23 @@ class TestTrafikaPosSetup(TransactionCase):
         self.assertEqual(coke.barcode, ean)
         self.assertEqual(other.barcode, "1234567890128")
 
+    def test_images(self):
+        products = self.setup._module_products()
+        self.assertEqual(len(products), 506)
+        self.assertFalse(products.filtered(lambda p: not p.image_1920).mapped("name"))
+        categories = self.setup._module_records("pos.category")
+        self.assertEqual(len(categories), 35)
+        self.assertFalse(categories.filtered(lambda c: not c.image_128).mapped("name"))
+
+    def test_existing_image_is_kept(self):
+        product = self.setup._module_products()[0]
+        category = self.setup._module_records("pos.category")[0]
+        product.image_1920 = category.image_128
+        image, category_image = product.image_1920, category.image_128
+        self.setup._ensure_images()
+        self.assertEqual(product.image_1920, image)
+        self.assertEqual(category.image_128, category_image)
+
     def test_unknown_company_stops(self):
         with self.assertRaises(UserError):
             self.setup.ensure_setup({"company": "Neexistující firma"})
