@@ -9,18 +9,18 @@
                 <field name="step" invisible="1"/>
                 <field name="reached_step" invisible="1"/>
                 <div class="d-flex flex-wrap gap-1 mb-3 o_ev_wizard_steps">
-                    <span class="btn btn-primary btn-sm disabled" invisible="step != 'what'">1. Co a kdy</span>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'what'">1. Co a kdy</span>
                     <button name="action_go_step" type="object" context="{'go_step': 'what'}" string="1. Co a kdy"
                             class="btn-outline-primary btn-sm" invisible="step == 'what' or reached_step &lt; 0"/>
-                    <span class="btn btn-primary btn-sm disabled" invisible="step != 'time'">2. Volný čas</span>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'time'">2. Volný čas</span>
                     <button name="action_go_step" type="object" context="{'go_step': 'time'}" string="2. Volný čas"
                             class="btn-outline-primary btn-sm" invisible="step == 'time' or reached_step &lt; 1"/>
                     <span class="btn btn-light btn-sm disabled" invisible="reached_step &gt;= 1">2. Volný čas</span>
-                    <span class="btn btn-primary btn-sm disabled" invisible="step != 'client'">3. Klient</span>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'client'">3. Klient</span>
                     <button name="action_go_step" type="object" context="{'go_step': 'client'}" string="3. Klient"
                             class="btn-outline-primary btn-sm" invisible="step == 'client' or reached_step &lt; 2"/>
                     <span class="btn btn-light btn-sm disabled" invisible="reached_step &gt;= 2">3. Klient</span>
-                    <span class="btn btn-primary btn-sm disabled" invisible="step != 'summary'">4. Shrnutí</span>
+                    <span class="btn btn-primary btn-sm pe-none" invisible="step != 'summary'">4. Shrnutí</span>
                     <button name="action_go_step" type="object" context="{'go_step': 'summary'}" string="4. Shrnutí"
                             class="btn-outline-primary btn-sm" invisible="step == 'summary' or reached_step &lt; 3"/>
                     <span class="btn btn-light btn-sm disabled" invisible="reached_step &gt;= 3">4. Shrnutí</span>
@@ -93,7 +93,7 @@
                     <div class="mb-2">
                         <field name="manual" widget="boolean_toggle" class="d-inline-block w-auto"/>
                         <label for="manual" string="Zadat čas ručně" class="ms-1"/>
-                        <span class="text-muted small ms-2">i mimo nabízené časy – brání jen jiná rezervace a úplná blokace</span>
+                        <span class="text-muted small ms-2">i mimo nabízené časy – brání jen úplná blokace, u jiné rezervace se průvodce zeptá</span>
                     </div>
                     <div invisible="not manual" class="border rounded p-2 mb-2">
                         <group>
