@@ -428,7 +428,8 @@ class TestManualTime(ReservationCase):
         w.action_step_time()
         self.assertEqual(w.step, "time")
         self.assertFalse(w.manual)
-        self.assertIn("není pro tento úkon volný", w.warning)
+        self.assertIn("je obsazený", w.warning)
+        self.assertEqual(w.overlap_room_id, self.room1)
 
     def test_manual_collisions(self):
         self.reservation(start=self.dt(self.day, 19, 0))
@@ -441,10 +442,12 @@ class TestManualTime(ReservationCase):
         w.write({"manual": True, "manual_room_id": self.room1.id})
         with self.assertRaises(UserError):
             w.action_use_manual_time()                     # without a time
-        for time_str in ("19:00", "20:15"):
-            w.manual_time = time_str
-            with self.assertRaises(UserError):
-                w.action_use_manual_time()
+        w.manual_time = "19:00"                      # a reservation asks first
+        w.action_use_manual_time()
+        self.assertEqual((w.step, w.overlap_room_id), ("time", self.room1))
+        w.manual_time = "20:15"                      # a full block does not
+        with self.assertRaises(UserError):
+            w.action_use_manual_time()
         w.manual_time = "21:00"                      # a web-only block does not prevent it
         w.action_use_manual_time()
         self.assertEqual(self.save_wizard(w).start, self.dt(self.day, 21, 0))
