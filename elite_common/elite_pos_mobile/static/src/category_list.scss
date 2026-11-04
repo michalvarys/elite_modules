@@ -1,0 +1,29 @@
+// Without this the pane grows with the row of categories instead of letting it scroll.
+.product-screen .rightpane {
+    min-width: 0;
+}
+
+// The category list keeps its own scroll, whatever the build of Odoo: older 18.0 builds have no
+// .category-list class, there the list pushes the products out of the overflow-hidden pane.
+.product-screen .rightpane .product-list:has(> .category-button) {
+    flex-shrink: 0;
+    max-height: 13.5rem;
+    overflow-y: auto;
+
+    // Phone: two rows swiped sideways, the products stay below.
+    @media (max-width: 767.98px) {
+        grid-auto-flow: column;
+        grid-template-columns: none;
+        grid-template-rows: repeat(2, 4rem);
+        grid-auto-columns: 7.5rem;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+
+        // A selected group shows only itself and its subcategories; tapping it again goes back.
+        > .category-button.opacity-50 {
+            display: none !important;
+        }
+    }
+}

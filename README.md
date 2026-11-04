@@ -10,6 +10,9 @@ po projektech.
 elite_modules/
 ├── docker-compose.yml     Odoo 18 + PostgreSQL
 ├── config/odoo.conf       addons_path, připojení k databázi
+├── elite_common/          společné moduly všech poboček
+│   ├── elite_pos_l10n_cs/    Úplný český překlad pokladny
+│   └── elite_pos_mobile/     Kategorie pokladny na mobilu
 ├── elite_vet/             klinika Elite Vet
 │   ├── elite_vet_calendar/   Rozpis služeb lékařů
 │   ├── elite_vet_reservation/   Rezervační kalendář (nahrazuje WinVet)
@@ -127,6 +130,21 @@ návštěvy, kdy se chodí a kdo odchází.
 adminu (Settings → API → Public API) → *Uložit a otestovat spojení*.
 
 Detaily v [elite_arena/elite_arena_ggleap/README.md](elite_arena/elite_arena_ggleap/README.md).
+
+
+## elite_common — společné moduly
+
+### `elite_pos_l10n_cs` — Čeština pokladny
+
+Úplný český překlad `point_of_sale` a modulů `pos_*` pro Arenu, Trafiku i Vet. Na serveru je potřeba
+přidat `/mnt/modules/elite_common` do `addons_path`.
+
+Detaily v [elite_common/elite_pos_l10n_cs/README.md](elite_common/elite_pos_l10n_cs/README.md).
+
+### `elite_pos_mobile` — Pokladna na mobilu
+
+Kategorie se dají posouvat a na telefonu nezakryjí produkty. Detaily v
+[elite_common/elite_pos_mobile/README.md](elite_common/elite_pos_mobile/README.md).
 
 
 ## elite_trafika — trafika Elite Trafika
