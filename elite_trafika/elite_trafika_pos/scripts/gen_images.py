@@ -19,7 +19,12 @@ PRODUCTS, CATEGORIES = "static/img/products/", "static/img/categories/"
 BAR, MARGIN = 14 * SCALE, 22 * SCALE
 SIZE_SUFFIX = re.compile(r"^(.*\S)\s+(\d+(?:[,.]\d+)?\s?(?:g|ml|l|ks|pcs|mg)|\d+\s?%)$", re.I)
 # category key -> id_dotykacka of a photo showing the group
-PHOTO_CATEGORIES = {}
+PHOTO_CATEGORIES = {
+    "energy": "1945892553900715", "alcohol": "3177298316807957", "veo": "1841524833115975",
+    "neo": "232423925605050", "velo": "341666418783346", "iqos": "3318370812691614",
+    "vuse": "2066374961007149", "syx_bar": "199653325149893", "syx_pod": "993578029816490",
+    "napoje": "2450942038331154", "dutinky": "4091490695778851",
+}
 
 
 def font(size):
