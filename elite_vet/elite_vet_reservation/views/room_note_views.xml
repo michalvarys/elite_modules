@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_room_note_form" model="ir.ui.view">
+        <field name="name">elite.vet.room.note.form</field>
+        <field name="model">elite.vet.room.note</field>
+        <field name="arch" type="xml">
+            <form string="Poznámka k ordinaci">
+                <sheet>
+                    <group>
+                        <field name="text" placeholder="Např. dopoledne jen očkování"/>
+                        <field name="room_id" options="{'no_create': true, 'no_open': true}"/>
+                        <field name="date"/>
+                    </group>
+                    <div class="text-muted" invisible="not in_series">
+                        Opakovaná poznámka: úprava platí jen pro tento den.
+                    </div>
+                    <group string="Opakování" invisible="id">
+                        <field name="repeat_rule" widget="radio" options="{'horizontal': true}" nolabel="1" colspan="2"/>
+                        <label for="repeat_interval" invisible="repeat_rule == 'none'"/>
+                        <div class="o_row" invisible="repeat_rule == 'none'">
+                            <field name="repeat_interval" class="oe_inline" style="max-width: 4rem"
+                                   required="repeat_rule != 'none'"/>
+                            <span invisible="repeat_rule != 'daily'">den / dní</span>
+                            <span invisible="repeat_rule != 'weekly'">týden / týdnů (2 = každý druhý, sudý / lichý)</span>
+                            <span invisible="repeat_rule != 'monthly'">měsíc / měsíců, stejný den v měsíci</span>
+                            <span invisible="repeat_rule != 'yearly'">rok / let, stejné datum</span>
+                        </div>
+                        <label string="Dny v týdnu" for="repeat_mon" invisible="repeat_rule != 'weekly'"/>
+                        <div class="d-flex flex-wrap gap-3" invisible="repeat_rule != 'weekly'">
+                            <span><field name="repeat_mon" nolabel="1"/> po</span>
+                            <span><field name="repeat_tue" nolabel="1"/> út</span>
+                            <span><field name="repeat_wed" nolabel="1"/> st</span>
+                            <span><field name="repeat_thu" nolabel="1"/> čt</span>
+                            <span><field name="repeat_fri" nolabel="1"/> pá</span>
+                            <span><field name="repeat_sat" nolabel="1"/> so</span>
+                            <span><field name="repeat_sun" nolabel="1"/> ne</span>
+                        </div>
+                        <field name="repeat_end" widget="radio" invisible="repeat_rule == 'none'"/>
+                        <label for="repeat_count" invisible="repeat_rule == 'none' or repeat_end != 'count'"/>
+                        <div class="o_row" invisible="repeat_rule == 'none' or repeat_end != 'count'">
+                            <field name="repeat_count" class="oe_inline" style="max-width: 4rem"
+                                   required="repeat_rule != 'none' and repeat_end == 'count'"/>
+                            <span>opakováních (včetně této poznámky)</span>
+                        </div>
+                        <field name="repeat_until" invisible="repeat_rule == 'none' or repeat_end != 'until'"
+                               required="repeat_rule != 'none' and repeat_end == 'until'"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Uložit" special="save" class="btn-primary"/>
+                    <button string="Zavřít" special="cancel" class="btn-secondary"/>
+                    <button name="action_delete" type="object" string="Smazat" class="btn-outline-danger" invisible="not id"/>
+                    <button name="action_delete_following" type="object" string="Smazat i další opakování"
+                            class="btn-outline-danger" invisible="not in_series"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

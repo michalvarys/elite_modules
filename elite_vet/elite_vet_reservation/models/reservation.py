@@ -150,6 +150,11 @@ class VetReservation(models.Model):
         BLOCK_SCOPES, string="Druh blokace", default="full",
         help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
              "Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí.")
+    # The reservation form's yes to a taken time: never stored, create() and write() turn it into
+    # the context key ev_allow_overlap.
+    allow_overlap = fields.Boolean(string="Přesto uložit", store=False)
+    overlap_warning = fields.Char(string="Upozornění na obsazený termín", compute="_compute_overlap_warning")
+    overlap_can_override = fields.Boolean(compute="_compute_overlap_warning")
     repeat_weekly_until = fields.Date(string="Opakovat týdně do", help="Jen u blokace: založí kopie na stejný den v týdnu až do tohoto data.")
     # Repetition of a new block as in WinVet (B1, 31. 10.): used once in create() and cleared,
     # the copies are ordinary blocks (models/recurrence.py).
@@ -384,28 +389,56 @@ class VetReservation(models.Model):
         """Hook for e-mails after a web submission; implemented by task 11."""
         return True
 
+    def _overlap_rooms(self):
+        """Ids of the rooms the record occupies; empty when it cannot collide."""
+        self.ensure_one()
+        if self.state in INACTIVE_STATES:
+            return []
+        if not self.room_id and self.kind == "reservation":
+            return []   # a pending web request without a room is not placed anywhere yet
+        if self.kind == "block" and self.block_scope == "web":
+            return []   # a web-only block does not get in anyone's way; it can be created any time
+        return [self.room_id.id] if self.room_id else self.env["elite.vet.room"].search([]).ids
+
+    def _overlap_clash(self, rooms):
+        """What occupies `rooms` at the time of the record (empty if nothing)."""
+        self.ensure_one()
+        busy = self._busy_domain(rooms, self.start, self.stop, exclude_ids=[self._origin.id or 0])
+        # A block first: nothing goes over it, so it must not hide behind a reservation.
+        clash = self.search(busy + [("kind", "=", "block")], limit=1) or self.search(busy, limit=1)
+        if not clash and self.kind == "reservation":
+            clash = self._busy_external(rooms, self.start, self.stop)[:1]
+        return clash
+
+    def _overlap_overridable(self, clash):
+        return self.kind == "reservation" and getattr(clash, "kind", False) != "block"
+
+    @api.depends("kind", "state", "block_scope", "room_id", "start", "stop")
+    def _compute_overlap_warning(self):
+        """Live warning in the form, only while the time or the room is being changed."""
+        for rec in self:
+            rec.overlap_warning, rec.overlap_can_override = False, False
+            origin = rec._origin
+            moved = (rec.start, rec.stop, rec.room_id) != (origin.start, origin.stop, origin.room_id)
+            rooms = rec._overlap_rooms() if rec.kind == "reservation" and moved and rec.start and rec.stop else []
+            clash = rec._overlap_clash(rooms) if rooms else False
+            if clash:
+                rec.overlap_can_override = rec._overlap_overridable(clash)
+                rec.overlap_warning = _("Termín je obsazený: %s.") % clash.name
+
     def _check_overlap(self):
         allowed = self.env.context.get("ev_allow_overlap") and self.env.user.has_group(RECEPTION_GROUP)
         for rec in self:
-            if rec.state in INACTIVE_STATES:
+            rooms = rec._overlap_rooms()
+            if not rooms:
                 continue
-            all_rooms = self.env["elite.vet.room"].search([]).ids
-            rooms = [rec.room_id.id] if rec.room_id else all_rooms
-            if not rec.room_id and rec.kind == "reservation":
-                continue   # a pending web request without a room is not placed anywhere yet
-            if rec.kind == "block" and rec.block_scope == "web":
-                continue   # a web-only block does not get in anyone's way; it can be created any time
             self._lock_rooms(rooms)
-            busy = self._busy_domain(rooms, rec.start, rec.stop, exclude_ids=[rec.id])
-            # A block first: nothing goes over it, so it must not hide behind a reservation.
-            clash = self.search(busy + [("kind", "=", "block")], limit=1) or self.search(busy, limit=1)
-            if not clash and rec.kind == "reservation":
-                clash = self._busy_external(rooms, rec.start, rec.stop)[:1]
+            clash = rec._overlap_clash(rooms)
             if not clash:
                 continue
-            overridable = rec.kind == "reservation" and getattr(clash, "kind", False) != "block"
+            overridable = rec._overlap_overridable(clash)
             if overridable and allowed:
-                rec._message_log(body=_("Založeno přes obsazený termín: %s") % clash.name)
+                rec._message_log(body=_("Uloženo přes obsazený termín: %s") % clash.name)
                 continue
             error = OverlapRuleError if overridable else ValidationError
             raise error(_(
@@ -430,6 +463,8 @@ class VetReservation(models.Model):
     # ---------- create / write ----------
     @api.model_create_multi
     def create(self, vals_list):
+        if any([vals.pop("allow_overlap", False) for vals in vals_list]):
+            self = self.with_context(ev_allow_overlap=True)
         # Before super(): its record rule check would answer first, with the generic message.
         # The group flag of the form (web_save) is for editing; the writes of a new block's
         # splitting and repetition below concern only the new blocks.
@@ -545,8 +580,10 @@ class VetReservation(models.Model):
                     "room_id": r.id, "start": s, "stop": e} for r, s, e in rest])
 
     def write(self, vals):
-        self._check_block_rights(vals)
         vals = dict(vals)
+        if vals.pop("allow_overlap", False):
+            self = self.with_context(ev_allow_overlap=True)
+        self._check_block_rights(vals)
         self._drop_pet_details(vals, bool(vals["pet_id"]) if "pet_id" in vals else bool(self) and all(self.mapped("pet_id")))
         room_cmds = vals.pop("block_room_ids", None)
         # From the block form (web_save, the form's Zrušit blokaci): the change applies to the
@@ -724,6 +761,8 @@ class VetReservation(models.Model):
         rooms = self.env["elite.vet.room"].search([])
         start, stop = A.local_to_utc(day, 0), A.local_to_utc(day, 1440)
         assignments = self.env["elite.vet.doctor.assignment"].search([("date", "=", day)])
+        # sudo: the till's board reads the day without the Reception group
+        room_notes = self.env["elite.vet.room.note"].sudo().search([("date", "=", day)])
         rooms_out, axis_from, axis_to = [], 8 * 60, 20 * 60
         for room in rooms:
             open_iv = A.open_minutes(room, day)
@@ -742,6 +781,7 @@ class VetReservation(models.Model):
                 "id": room.id, "name": room.name, "color_hex": room.color_hex, "online": room.online,
                 "open": [[f, t] for f, t in open_iv],
                 "doctors": shifts, "lanes": lanes, "overlaps": overlaps,
+                "notes": [{"id": n.id, "text": n.text} for n in room_notes if n.room_id == room],
             })
         events = []
         for r in self.search([("start", "<", stop), ("stop", ">", start),

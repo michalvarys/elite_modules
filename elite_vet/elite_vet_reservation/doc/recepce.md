@@ -436,6 +436,12 @@ Rezervaci v minulosti obnovit nejde (nastavte nový začátek), stejně jako kop
 
 ---
 
+### Poznámka k ordinaci na den
+
+Tlačítkem **+ poznámka** v hlavičce ordinace zapíšete poznámku k vybranému dni. Zobrazí se žlutě nad službami, v Kalendáři i u pokladny. Klientům ani na webu se neukazuje.
+
+Poznámka se může opakovat stejně jako blokace (denně, týdně, měsíčně, ročně). Klikem na poznámku ji upravíte nebo smažete. U opakované poznámky platí úprava jen pro ten den, **Smazat i další opakování** odstraní tento den a všechny další. Přidávat a měnit poznámky může Recepce a vyšší role, u pokladny jsou jen ke čtení.
+
 ## 6. Blokace (oběd, porada, zavřená ordinace)
 
 Blokace zabere čas v ordinaci. Jsou dva druhy:
@@ -472,6 +478,7 @@ Rezervace se smí překrývat, ale jen po potvrzení upozornění. Přes úplnou
 - **Nová rezervace:** klikněte do obsazeného času, nebo zadejte čas ručně. Průvodce napíše, co tam je,
   a nabídne **Přesto vytvořit**.
 - **Přetažení na tabuli:** v dialogu přesunu se ukáže **Přesto přesunout**.
+- **Formulář rezervace:** při změně času nebo ordinace se nahoře ukáže upozornění. Zaškrtněte **Přesto uložit přes tuto rezervaci** a uložte.
 - **Objednat u pokladny:** v kroku Čas vyplňte **Obsazený čas** a ordinaci, klikněte **Vybrat** a
   potom Objednat. Pokladna se zeptá **Přesto objednat**.
 

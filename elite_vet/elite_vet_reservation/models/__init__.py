@@ -10,5 +10,6 @@ from . import second_room
 from . import availability
 from . import setting
 from . import live
+from . import room_note
 from . import history
 from . import no_show

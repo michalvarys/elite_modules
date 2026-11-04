@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from odoo import fields
 from odoo.exceptions import UserError, ValidationError
-from odoo.tests import tagged
+from odoo.tests import Form, tagged
 
 from odoo.addons.elite_vet_reservation.models.reservation import OverlapRuleError
 
@@ -59,7 +59,48 @@ class TestOverlap(ReservationCase):
     def test_allowed_after_the_yes_and_noted(self):
         second = self.over_first()
         self.assertEqual(second.start, self.first.start)
-        self.assertIn("Založeno přes obsazený termín", second.message_ids[0].body)
+        self.assertIn("Uloženo přes obsazený termín", second.message_ids[0].body)
+
+    # ------------------------------------------------------------------ the reservation form
+    def moved_to_first(self):
+        return self.R.create(self.vals(start=self.dt(self.day, 11, 0), contact_name="Přesouvaný"))
+
+    def test_form_save_refused_without_the_tick(self):
+        other = self.moved_to_first()
+        with self.assertRaises(OverlapRuleError):
+            other.write({"start": self.dt(self.day, 9, 0), "stop": self.dt(self.day, 9, 15), "allow_overlap": False})
+
+    def test_form_save_over_a_reservation_with_the_tick(self):
+        other = self.moved_to_first()
+        other.write({"start": self.dt(self.day, 9, 0), "stop": self.dt(self.day, 9, 15), "allow_overlap": True})
+        self.assertEqual(other.start, self.dt(self.day, 9, 0))
+        self.assertIn("Uloženo přes obsazený termín", other.message_ids[0].body)
+
+    def test_form_tick_does_not_go_over_a_block(self):
+        other = self.moved_to_first()
+        self.block(self.room1)
+        with self.assertRaisesRegex(ValidationError, "obsazený") as caught:
+            other.write({"start": self.dt(self.day, 12, 0), "stop": self.dt(self.day, 12, 15), "allow_overlap": True})
+        self.assertNotIsInstance(caught.exception, OverlapRuleError)
+
+    def test_form_warns_while_changing_the_time(self):
+        form = Form(self.moved_to_first())
+        self.assertFalse(form.overlap_warning)
+        form.start = self.dt(self.day, 9, 0)
+        form.stop = self.dt(self.day, 9, 15)
+        self.assertIn("Termín je obsazený", form.overlap_warning)
+        self.assertTrue(form.overlap_can_override)
+        form.allow_overlap = True
+        record = form.save()
+        self.assertEqual(record.start, self.dt(self.day, 9, 0))
+
+    def test_form_warning_says_a_block_cannot_be_overridden(self):
+        self.block(self.room1)
+        form = Form(self.moved_to_first())
+        form.start = self.dt(self.day, 12, 0)
+        form.stop = self.dt(self.day, 12, 15)
+        self.assertTrue(form.overlap_warning)
+        self.assertFalse(form.overlap_can_override)
 
     def test_context_key_needs_reception(self):
         """A user outside Recepce cannot use the key (the public website goes through sudo with no key)."""

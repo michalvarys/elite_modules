@@ -346,6 +346,20 @@ export class ReservationBoard extends Component {
         ev.stopPropagation();
         this.editShift(d);
     }
+    // ---------- room notes: same right as blocks ----------
+    openNoteForm(resId, context = {}) {
+        this.action.doAction({
+            type: "ir.actions.act_window", name: resId ? "Poznámka k ordinaci" : "Nová poznámka k ordinaci",
+            res_model: "elite.vet.room.note", res_id: resId || false,
+            views: [[false, "form"]], target: "new", context,
+        }, { onClose: () => this.load(true) });
+    }
+    addNote(room) {
+        this.openNoteForm(false, { default_date: this.state.date, default_room_id: room.id });
+    }
+    editNote(n) {
+        if (this.canEditBlocks) this.openNoteForm(n.id);
+    }
     addShift(room) {
         this.openShiftForm("elite.vet.shift", false,
             { default_date: this.state.date, default_room_id: room.id, ev_keep_room: true });

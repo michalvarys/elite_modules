@@ -123,9 +123,16 @@
                         <div class="evb-head" t-att-style="'border-top: 4px solid ' + room.color_hex">
                             <div class="evb-room">
                                 <span class="evb-room-name"><t t-esc="room.name"/> <span t-if="!room.online" class="badge text-bg-secondary">interní</span></span>
+                                <button t-if="canEditBlocks" type="button" class="btn btn-link btn-sm p-0 evb-add-shift"
+                                        title="Přidat poznámku k ordinaci na tento den, může se opakovat"
+                                        t-on-click="() => this.addNote(room)">+ poznámka</button>
                                 <button t-if="state.data.can_edit_shifts" type="button" class="btn btn-link btn-sm p-0 evb-add-shift"
                                         title="Přidat službu do Rozpisu služeb (den a ordinace jsou předvyplněné)"
                                         t-on-click="() => this.addShift(room)">+ služba</button>
+                            </div>
+                            <div t-foreach="room.notes" t-as="n" t-key="n.id" class="evb-room-note" t-att-title="n.text"
+                                 t-att-class="{'evb-editable': canEditBlocks}" t-on-click="() => this.editNote(n)">
+                                <t t-esc="n.text"/>
                             </div>
                             <div class="evb-doctors">
                                 <span t-foreach="room.overlaps" t-as="o" t-key="o.from" class="badge evb-overlap"
