@@ -179,6 +179,8 @@ class VetReservation(models.Model):
         compute="_compute_block_room_ids",
         help="Blokace platí v každé zaškrtnuté ordinaci. Všechny zaškrtnuté = blokace celé kliniky.")
     cancel_token = fields.Char(default=lambda self: uuid.uuid4().hex, index=True, copy=False)
+    # Request of Lucie: the link in the e-mail only asks, reception decides on the board (models/mailing.py).
+    cancel_requested_at = fields.Datetime(string="Klient žádá o zrušení", readonly=True, copy=False)
     cancel_reason = fields.Selection([("client", "Klient"), ("clinic", "Klinika"), ("no_show", "Nedorazil")], string="Důvod zrušení")
     # Request 1. 11. (Lucie): the clinic's own words to the client, added to the cancellation e-mail.
     cancel_message = fields.Text(
@@ -749,6 +751,7 @@ class VetReservation(models.Model):
             events.append({
                 "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
                 "title": (r.title or "") if r.kind == "reservation" else "",
+                "cancel_requested": r.state == "confirmed" and bool(r.cancel_requested_at),
                 "block_scope": r.block_scope if r.kind == "block" else False,
                 "room_id": r.room_id.id or False,
                 "start": ev_start, "end": ev_end,
@@ -785,13 +788,22 @@ class VetReservation(models.Model):
                 # Suggestions computed here: one request per board refresh, not one per card.
                 "suggestions": w.board_suggestions(w.id),
             })
+        cancel_requests = []
+        for c in self.search([("state", "=", "confirmed"), ("cancel_requested_at", "!=", False),
+                              ("stop", ">=", fields.Datetime.now())], order="start"):
+            local = pytz.utc.localize(c.start).astimezone(TZ)
+            cancel_requests.append({
+                "id": c.id, "name": c.name, "date": local.strftime("%Y-%m-%d"),
+                "date_label": "%s %d. %d. %s" % (WEEKDAY_ABBR[local.weekday()], local.day, local.month,
+                                                 local.strftime("%H:%M")),
+                "phone": c.contact_phone or "", "email": c.contact_email or ""})
         return {"date": day_str, "step": s.booking_slot_step,
                 # Rozpis služeb managers edit shifts from the board (click on a doctor, + Služba)
                 "can_edit_shifts": self.env.user.has_group("elite_vet_calendar.group_calendar_manager"),
                 # Nová blokace, dragging and editing blocks: Správce rezervací only
                 "can_edit_blocks": self._can_edit_blocks(),
                 "axis": {"from": axis_from, "to": axis_to},
-                "rooms": rooms_out, "events": events, "waiting": waiting,
+                "rooms": rooms_out, "events": events, "waiting": waiting, "cancel_requests": cancel_requests,
                 # Weekend / public holiday when the website does not book (label only; reception still books).
                 "day_note": A.web_day_note(day) or "",
                 # Public holiday of the day (always, also when the website books): badge in the day header.

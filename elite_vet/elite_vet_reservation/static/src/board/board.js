@@ -187,6 +187,7 @@ export class ReservationBoard extends Component {
         if (e.kind === "block") return e.time_label + "\n" + e.name;
         if (this.isWinvet(e)) return this.winvetTitle(e);
         const lines = [e.time_label + " · " + this.eventLabel(e)];
+        if (e.cancel_requested) lines.push("Klient žádá o zrušení");
         if (e.procedure) lines.push("Úkon: " + e.procedure);
         if (e.doctor) lines.push("Lékařka: " + e.doctor);
         if (e.linked) lines.push("Společný zákrok, také v: " + e.linked);
@@ -576,6 +577,32 @@ export class ReservationBoard extends Component {
             "evb-preview-focus": p.focus === room.id,
             "evb-preview-dim": p.focus !== null && p.focus !== room.id,
         };
+    }
+    confirmCancelRequest(item) {
+        this.dialog.add(CancelDialog, {
+            title: "Potvrdit zrušení",
+            question: `Zrušit rezervaci ${item.name} (${item.date_label}) podle žádosti klienta?` +
+                (item.email ? " Klientovi odejde e-mail o zrušení." : ""),
+            confirmLabel: "Potvrdit zrušení",
+            mailTo: item.email || false,
+            onConfirm: async (message) => {
+                await this.orm.call("elite.vet.reservation", "action_confirm_cancel_request", [[item.id], message]);
+                await this.load(true);
+            },
+        });
+    }
+    keepAfterCancelRequest(item) {
+        this.dialog.add(CancelDialog, {
+            title: "Ponechat rezervaci",
+            question: `Rezervace ${item.name} (${item.date_label}) zůstane.` +
+                (item.email ? " Klientovi odejde e-mail, že nebyla zrušena." : ""),
+            confirmLabel: "Ponechat",
+            mailTo: false,
+            onConfirm: async () => {
+                await this.orm.call("elite.vet.reservation", "action_keep_after_cancel_request", [[item.id]]);
+                await this.load(true);
+            },
+        });
     }
     reject(item) {
         this.leaveWaiting();

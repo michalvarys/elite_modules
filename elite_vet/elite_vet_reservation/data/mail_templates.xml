@@ -105,5 +105,49 @@
 </div>
             </field>
         </record>
+
+        <record id="mail_cancel_requested" model="mail.template">
+            <field name="name">Rezervace: žádost o zrušení přijata</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Cancellation request received – {{ object.start_display }}</field>
+            <field name="email_from">{{ object._mail_sender() }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>Hello <t t-out="object.contact_name"/>,</p>
+    <p>we have received your request to cancel <b t-out="object.name"/> on <b t-out="object.start_display"/>. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked.</p>
+    <p>Elite Vet Karlovy Vary</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_cancel_kept" model="mail.template">
+            <field name="name">Rezervace: žádost o zrušení odmítnuta</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Appointment stays booked – {{ object.start_display }}</field>
+            <field name="email_from">{{ object._mail_sender() }}</field>
+            <field name="lang">{{ object.lang }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif;color:#1a2744;max-width:560px">
+    <p>Hello <t t-out="object.contact_name"/>,</p>
+    <p>your appointment <b t-out="object.name"/> on <b t-out="object.start_display"/> stays booked, the clinic has not cancelled it. If you have any questions, please call the reception.</p>
+    <p>Elite Vet Karlovy Vary</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_cancel_request_for_clinic" model="mail.template">
+            <field name="name">Rezervace: klient žádá o zrušení (klinika)</field>
+            <field name="model_id" ref="model_elite_vet_reservation"/>
+            <field name="subject">Klient žádá o zrušení – {{ object.start_display }}</field>
+            <field name="email_from">{{ object._mail_sender() }}</field>
+            <field name="body_html" type="html">
+<div style="font-family:system-ui,sans-serif">
+    <p><b t-out="object.contact_name"/> · <t t-out="object.contact_phone"/> · <t t-out="object.contact_email"/></p>
+    <p>Žádá o zrušení: <t t-out="object.name"/> · <t t-out="object.start_display"/></p>
+    <p><a t-attf-href="{{ object.get_base_url() }}/odoo/action-elite_vet_reservation.action_board">Otevřít kalendář</a></p>
+</div>
+            </field>
+        </record>
     </data>
 </odoo>

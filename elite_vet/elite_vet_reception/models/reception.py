@@ -120,6 +120,7 @@ class Reception(models.AbstractModel):
             arriving.append({
                 "reservation_id": res.id, "time": local_time(res.start), "pet_id": res.pet_id.id or None,
                 "title": res.title or None,
+                "cancel_requested": bool(res.cancel_requested_at),
                 "pet_name": res.pet_id.name or res.pet_name or None,
                 "owner": res.partner_id.name or res.contact_name or None, "partner_id": res.partner_id.id or None,
                 "procedure": res.procedure_id.with_context(lang=lang).name or None,

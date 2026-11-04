@@ -167,7 +167,54 @@ class TestCancelPage(HttpCase):
         resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token, data={"confirm": "1"})
         self.assertEqual(resp.status_code, 200)
         self.far.invalidate_recordset()
+        self.assertEqual(self.far.state, "confirmed", "the link only asks, reception decides")
+        self.assertTrue(self.far.cancel_requested_at)
+
+    def client_mails(self, template):
+        subject = self.env.ref("elite_vet_reservation." + template).with_context(lang="cs_CZ").subject.split(" – ")[0]
+        return self.env["mail.mail"].search([("subject", "ilike", subject), ("email_to", "ilike", "a@example.cz")])
+
+    def test_cancel_request_twice_mails_once(self):
+        self.far.action_client_cancel()
+        self.far.action_client_cancel()
+        self.assertEqual(len(self.client_mails("mail_cancel_requested")), 1)
+        resp = self.url_open("/rezervace/zruseni/" + self.far.cancel_token)
+        self.assertNotIn('name="confirm"', resp.text, "already asked: no second form")
+
+    def test_cancel_request_on_the_board_and_confirmed(self):
+        self.far.action_client_cancel()
+        day = fields.Datetime.to_string(self.far.start)[:10]
+        data = self.env["elite.vet.reservation"].board_data(day)
+        self.assertIn(self.far.id, [c["id"] for c in data["cancel_requests"]])
+        self.assertTrue(next(e for e in data["events"] if e["id"] == self.far.id)["cancel_requested"])
+        self.far.action_confirm_cancel_request("Omlouváme se")
+        self.assertEqual((self.far.state, self.far.cancel_reason, self.far.cancel_message),
+                         ("cancelled", "client", "Omlouváme se"))
+        self.assertTrue(self.client_mails("mail_cancelled"))
+        self.assertNotIn(self.far.id, [c["id"] for c in self.env["elite.vet.reservation"].board_data(day)["cancel_requests"]])
+
+    def test_cancel_request_refused_keeps_the_reservation(self):
+        self.far.action_client_cancel()
+        self.far.action_keep_after_cancel_request()
+        self.assertEqual(self.far.state, "confirmed")
+        self.assertFalse(self.far.cancel_requested_at)
+        self.assertEqual(len(self.client_mails("mail_cancel_kept")), 1)
+
+    def test_unconfirmed_web_request_is_withdrawn_at_once(self):
+        self.far.write({"state": "web_new"})
+        self.far.action_client_cancel()
         self.assertEqual((self.far.state, self.far.cancel_reason), ("cancelled", "client"))
+
+    def test_no_reminder_while_the_client_asks_to_cancel(self):
+        self.env["elite.vet.setting"].nastaveni().write({"booking_reminder_enabled": True, "booking_reminder_hours_before": 24})
+        self.near.action_client_cancel()
+        self.env["elite.vet.reservation"]._cron_send_reminders()
+        self.assertFalse(self.near.reminder_sent)
+
+    def test_cancel_request_mail_is_translated(self):
+        template = self.env.ref("elite_vet_reservation.mail_cancel_requested")
+        self.assertIn("Žádost o zrušení", template.with_context(lang="cs_CZ").subject)
+        self.assertIn("přijali jsme", template.with_context(lang="cs_CZ").body_html)
 
     def test_cancel_page_after_deadline(self):
         resp = self.url_open("/rezervace/zruseni/" + self.near.cancel_token, data={"confirm": "1"})

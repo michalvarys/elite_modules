@@ -39,6 +39,7 @@
                          t-att-class="{'o_ev_row_winvet': row.winvet_event_id}">
                         <span class="o_ev_num o_ev_time" t-esc="row.time or 'celý den'"/>
                         <div class="o_ev_grow">
+                            <div t-if="row.cancel_requested" class="badge text-bg-danger">Klient žádá o zrušení</div>
                             <div class="fw-bold"><t t-if="row.title"><t t-esc="row.title"/><t t-if="row.pet_name"> · </t></t><t t-esc="row.pet_name or (row.title ? '' : row.winvet_title or 'Bez zvířete')"/>
                                 <span t-if="row.winvet_event_id" class="badge o_ev_winvet_badge ms-1"
                                       title="Objednáno ve WinVetu – záznam je jen pro čtení, přijetí založí návštěvu">WinVet</span>

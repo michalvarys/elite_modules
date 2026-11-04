@@ -178,6 +178,9 @@
                         <t t-if="status == 'cancelled'">
                             <p class="evbk-note">The appointment has been cancelled. You can book a new one on the reservation page.</p>
                         </t>
+                        <t t-elif="status == 'requested'">
+                            <p class="evbk-note">We have received your request. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked.</p>
+                        </t>
                         <t t-elif="status == 'already_cancelled'">
                             <p>This appointment is already cancelled.</p>
                         </t>
