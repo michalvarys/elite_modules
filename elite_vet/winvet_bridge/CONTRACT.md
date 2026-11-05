@@ -334,7 +334,9 @@ above), `symbol` (SYMBOL or `null`), `web` (USE_WEB='A'). Full reconciliation li
 ### calendar_events  [KALENDAR_NEW] – one record per occurrence inside a window
 Push payload has one extra key, the same in every batch of the run:
 `"window": {"from": "YYYY-MM-DD", "to": "YYYY-MM-DD"}` (both days inclusive, local days).
-Default window = yesterday … today + 60 days (`[bridge] calendar_days_back` / `calendar_days_ahead`).
+Default window = today - 90 days … today + 60 days (`[bridge] calendar_days_back` / `calendar_days_ahead`).
+Odoo removes only events inside the pushed window, so an event deleted in WinVet stays in Odoo if it is
+older than the window start: the window reaches this far back for that reason.
 
 Record keys:
 `key` (string, the identity: `"<ID_KALENDAR>"` for a plain event, `"<pattern ID_KALENDAR>-<YYYYMMDD>"`

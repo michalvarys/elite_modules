@@ -835,7 +835,7 @@ class CalendarEventReader(EntityReader):
     read is pushed with every batch so Odoo can remove events that disappeared from WinVet.
     """
 
-    def __init__(self, spec: EntitySpec, db, chunk_size: int = 500, days_back: int = 1, days_ahead: int = 60,
+    def __init__(self, spec: EntitySpec, db, chunk_size: int = 500, days_back: int = 90, days_ahead: int = 60,
                  today: Optional[Callable[[], _dt.date]] = None):
         super().__init__(spec, db, chunk_size)
         self.days_back, self.days_ahead = days_back, days_ahead

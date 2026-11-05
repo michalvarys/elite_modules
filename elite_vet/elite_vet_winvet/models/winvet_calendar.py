@@ -1,6 +1,6 @@
 """WinVet calendar in Odoo (contract v4): resources, activities and events.
 
-The bridge pushes the calendar of a window (yesterday .. +60 days by default) on every run. Odoo
+The bridge pushes the calendar of a window (-90 .. +60 days by default) on every run. Odoo
 keeps it read-only: an event with a mapped room is shown on the boards as "z WinVetu" and - when it
 has a time (not all-day) - occupies the room for every Odoo booking path through
 `elite.vet.reservation._busy_external` (the second half of the single busy rule).

@@ -78,9 +78,10 @@ Most čte i kalendář WinVetu (`KALENDAR_NEW`, kalendáře `KALENDAR_NEW_KALEND
 `ORD_CINNOST`) a posílá ho do Odoo jako `calendar_resources`, `calendar_activities` a
 `calendar_events`. Jen čte – do WinVetu nikdy nic nezapisuje, objednává se dál tam, kde dosud.
 
-- **Okno:** při každém běhu se čte okno od včerejška na 60 dní dopředu (`[bridge]
+- **Okno:** při každém běhu se čte okno 90 dní zpět a 60 dní dopředu (`[bridge]
   calendar_days_back`, `calendar_days_ahead`). Kalendář není v žurnálu změn, proto se okno čte vždy
-  celé; Odoo smaže záznamy okna, které ve WinVetu už nejsou. Starší záznamy v Odoo zůstanou.
+  celé; Odoo smaže záznamy okna, které ve WinVetu už nejsou. Záznamy starší než začátek okna v Odoo
+  zůstanou, i když je někdo ve WinVetu smaže.
 - **Opakované záznamy** most rozloží na jednotlivé výskyty (změněné a smazané výskyty WinVetu
   respektuje). Formát binárních sloupců (`OPAKOVANI_INFO`, `ZDROJ_INFO`) je popsaný v
   `winvet_bridge/scheduler.py`.
@@ -106,7 +107,7 @@ Most čte i kalendář WinVetu (`KALENDAR_NEW`, kalendáře `KALENDAR_NEW_KALEND
 | `py -m winvet_bridge sync` | jeden běh: první běh plný, další jen změny podle žurnálu WinVetu |
 | `py -m winvet_bridge sync --full` | plná synchronizace všeho |
 | `py -m winvet_bridge sync --dry-run` | jen načíst a spočítat, nic neposílat |
-| `py -m winvet_bridge sync --only calendar` | jen kalendář WinVetu (okno včera … +60 dní), bez žurnálu; vhodné každých 5 minut |
+| `py -m winvet_bridge sync --only calendar` | jen kalendář WinVetu (okno −90 … +60 dní), bez žurnálu; vhodné každých 5 minut |
 | `py -m winvet_bridge run` | služba: změny každých `interval_minutes` (15 min), mezi tím kalendář každých `calendar_interval_minutes` (5 min), plná synchronizace jednou denně v `full_sync_time` (03:00) |
 | `py -m winvet_bridge approve --yes` | schválí aktuální verzi WinVetu (viz níže) |
 | `py -m winvet_bridge export --entity owners --out owners.json` | ladicí export jedné entity – **obsahuje osobní údaje**, po použití smažte |
