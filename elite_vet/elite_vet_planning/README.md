@@ -39,6 +39,9 @@ Zdrojový jazyk textů je angličtina, čeština je v `i18n/cs_CZ.po`. Odoo toti
 česky (Rozpis lékařů, Rozpis služeb › Lékařky), zůstávají česky i v anglických textech. Názvy úseků a
 směn jsou data, ne překlady; dny a měsíce formátuje prohlížeč podle jazyka uživatele.
 
+Účty s jazykem English (US) dostanou rozhraní v English (UK), pokud je ten jazyk aktivní
+(`res.users.context_get` v `elite_vet_calendar`). Nastavení účtu zůstává `en_US`.
+
 Po změně textu: `odoo -d <db> -u elite_vet_planning --i18n-overwrite --stop-after-init`.
 
 ## Testy

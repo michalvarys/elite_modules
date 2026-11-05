@@ -1,4 +1,6 @@
 from odoo import api, fields, models
+from odoo.http import request
+from odoo.tools import frozendict
 
 
 class ResUsers(models.Model):
@@ -15,3 +17,18 @@ class ResUsers(models.Model):
     def _compute_elite_vet_doctor_id(self):
         for user in self:
             user.elite_vet_doctor_id = user.elite_vet_doctor_ids[:1]
+
+    @api.model
+    def context_get(self):
+        """Accounts on English (US) get the interface of English (UK).
+
+        The source of our code terms is Czech and Odoo never translates to en_US, so the
+        interface would stay Czech. The account keeps en_US, en_GB only applies to the session.
+        Odoo also calls this for texts written without a language, so crons and other work
+        outside a request must keep the source language.
+        """
+        context = super().context_get()
+        if (request and context.get("lang") == "en_US" and self.env.user._is_internal()
+                and self.env["res.lang"]._lang_get("en_GB")):
+            return frozendict(context, lang="en_GB")
+        return context
