@@ -55,7 +55,7 @@ class BridgeConfig:
     log_level: str = "INFO"
     odoo_error: Optional[str] = None
     #: contract v4: calendar window = today - days_back .. today + days_ahead
-    calendar_days_back: int = 1
+    calendar_days_back: int = 90
     calendar_days_ahead: int = 60
     #: service mode (``run``): extra calendar-only run every n minutes (0 = only with the normal run)
     calendar_interval_minutes: int = 5
@@ -144,7 +144,7 @@ def load_config(path: Path) -> BridgeConfig:
         full_time = _dt.datetime.strptime(br.get("full_sync_time", "03:00").strip(), "%H:%M").time()
     except ValueError as exc:
         raise ConfigError("[bridge] full_sync_time must be HH:MM") from exc
-    calendar_back = br.getint("calendar_days_back", 1)
+    calendar_back = br.getint("calendar_days_back", 90)
     calendar_ahead = br.getint("calendar_days_ahead", 60)
     calendar_interval = br.getint("calendar_interval_minutes", 5)
     if not 0 <= calendar_back <= 366 or not 1 <= calendar_ahead <= 731:
