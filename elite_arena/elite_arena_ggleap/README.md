@@ -158,6 +158,7 @@ Poslední návštěva je pozdější z dvou údajů: poslední stažené přihl�
 - **Nový kontakt:** když se nic nenajde a je zapnuté *Zakládat kontakty*, založí se kontakt. Hráč bez e‑mailu i jména kontakt nedostane.
   - Jméno se vezme z ggLeapu. Pokud je celé malými písmeny, převede se na velká počáteční písmena („karel novák“ → „Karel Novák“).
   - Kontakt dostane štítek *Hráč herny (ggLeap)*.
+  - Kontakt dostane češtinu. Veřejné API ggLeapu jazyk hráče neuvádí. Jazyk změněný v Odoo synchronizace nepřepíše.
 - **Existující kontakt** si při prvním propojení nechá svoje jméno a e‑mail. Doplní se jen prázdné údaje.
 - **Pozdější změny:** když se v ggLeapu později změní e‑mail, telefon nebo jméno, přepíše se do kontaktu jen ten změněný údaj. Úpravy v Odoo ostatních údajů vydrží.
 - **Údaje z herny na kontaktu:** kontakt má pole *Herna: skupina / poslední návštěva / návštěv / utratil / dní od návštěvy*.
