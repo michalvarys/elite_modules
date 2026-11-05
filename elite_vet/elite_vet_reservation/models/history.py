@@ -1,11 +1,13 @@
 """Request 25. 10.: history of reservations for Správce rezervací (menu Historie rezervací).
 
 The change history itself is the chatter (mail tracking on the important fields). Here only who
-and when cancelled a reservation (shown in the list) and restoring a cancelled reservation
-(wizard/restore_wizard.py).
+and when cancelled a reservation (shown in the list) and restoring a cancelled or no-show
+reservation (wizard/restore_wizard.py).
 """
 from odoo import _, fields, models
 from odoo.exceptions import UserError
+
+from .reservation import INACTIVE_STATES
 
 # Filter "Přesunuté": a tracked change of the time or the room (chatter), no extra data stored.
 MOVED_TRACKING_FIELDS = ("start", "room_id")
@@ -68,8 +70,8 @@ class ReservationHistory(models.Model):
         self.ensure_one()
         if not self.env.user.has_group("elite_vet_reservation.group_reservation_manager"):
             raise UserError(_("Obnovit rezervaci může jen správce rezervací."))
-        if self.kind != "reservation" or self.state != "cancelled":
-            raise UserError(_("Obnovit jde jen zrušenou rezervaci."))
+        if self.kind != "reservation" or self.state not in INACTIVE_STATES:
+            raise UserError(_("Obnovit jde jen zrušenou rezervaci nebo rezervaci se stavem Nedorazil."))
         if self.is_second_room:
             raise UserError(_("Toto je kopie ve druhé ordinaci – obnovte hlavní rezervaci."))
         return {

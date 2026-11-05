@@ -41,6 +41,20 @@ class TestBoard(ReservationCase):
         self.assertLessEqual(d["axis"]["from"], 480)
         self.assertGreaterEqual(d["axis"]["to"], 1170)
 
+    def test_no_show_and_cancelled_leave_the_board(self):
+        """The slot looks free again; the reservation stays in the history."""
+        def on_board(res):
+            return res.id in [e["id"] for e in self.R.board_data("2026-10-14")["events"]]
+
+        cancelled = self.reservation(start=self.dt(WED, 10, 0))
+        self.assertTrue(on_board(self.r) and on_board(cancelled))
+        self.r.action_no_show()
+        cancelled.action_cancel()
+        self.assertFalse(on_board(self.r) or on_board(cancelled))
+        self.assertEqual(self.r.state, "no_show")
+        # the same time can be booked again
+        self.assertTrue(self.reservation(start=self.dt(WED, 9, 0)))
+
     def test_board_move(self):
         self.R.board_move(self.r.id, "2026-10-14", 660, self.room2.id)
         self.assertEqual((self.r.start, self.r.room_id), (self.dt(WED, 11, 0), self.room2))

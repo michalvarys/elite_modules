@@ -1,4 +1,4 @@
-"""Request 25. 10.: Historie rezervací (Správce rezervací) and Obnovit of a cancelled reservation."""
+"""Request 25. 10.: Historie rezervací (Správce rezervací) and Obnovit of a cancelled or no-show reservation."""
 from datetime import timedelta
 
 from odoo import fields
@@ -107,6 +107,43 @@ class TestReservationHistory(ReservationCase):
         # another time offered in the same wizard
         self.restore(r, start=self.dt(self.day, 14, 0))
         self.assertEqual((r.state, r.start), ("confirmed", self.dt(self.day, 14, 0)))
+
+    def test_restore_no_show_of_a_past_slot(self):
+        """A mistaken Nedorazil: marked after the time, so the slot is in the past."""
+        past_day = fields.Date.today() - timedelta(days=2)
+        self.hours(self.room1, past_day.weekday(), 8.0, 19.0)
+        r = self.reservation(start=self.dt(past_day, 9, 0))
+        r.action_no_show()
+        mails = self.client_mails()
+        self.restore(r)
+        self.assertEqual((r.state, r.cancel_reason), ("confirmed", False))
+        self.assertEqual(self.client_mails(), mails, "no e-mail unless ticked")
+        self.assertEqual(self.env["elite.vet.reservation"].no_show_summary(partner=r.partner_id)["count"], 0)
+
+    def test_restore_no_show_taken_slot(self):
+        r = self.reservation(start=self.dt(self.day, 11, 0))
+        r.action_no_show()
+        self.reservation(start=self.dt(self.day, 11, 0), contact_email="jiny@example.cz")
+        with self.assertRaisesRegex(UserError, "termín už není volný"):
+            self.restore(r)
+        self.assertEqual(r.state, "no_show")
+
+    def test_restore_no_show_brings_back_the_second_room(self):
+        main = self.reservation(start=self.dt(self.day, 12, 0))
+        second = self.reservation(start=self.dt(self.day, 12, 0), room_id=self.room2.id, is_second_room=True,
+                                  linked_reservation_id=main.id)
+        main.linked_reservation_id = second
+        main.action_no_show()
+        self.assertEqual(second.state, "no_show")
+        self.restore(main)
+        self.assertEqual((main.state, second.state), ("confirmed", "confirmed"))
+        self.assertFalse(second.cancel_reason)
+
+    def test_restore_no_show_manager_only(self):
+        r = self.reservation(start=self.dt(self.day, 15, 0))
+        r.action_no_show()
+        with self.assertRaises(UserError):
+            r.with_user(self.reception).action_restore_wizard()
 
     def test_restore_rules(self):
         past = self.reservation(start=self.dt(fields.Date.today() - timedelta(days=3), 9, 0))

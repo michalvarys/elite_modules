@@ -7,7 +7,7 @@
             <form string="Obnovit rezervaci">
                 <field name="reservation_id" invisible="1"/>
                 <p class="text-muted">
-                    Rezervace se vrátí mezi potvrzené, jen když je termín pořád volný. Když už volný
+                    Rezervace se vrátí do kalendáře mezi potvrzené, jen když je termín pořád volný. Když už volný
                     není, změňte tady začátek nebo ordinaci. Klientovi se nic nepošle, pokud
                     nezaškrtnete „Poslat klientovi potvrzení“.
                 </p>

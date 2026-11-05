@@ -1,5 +1,7 @@
-"""Request 25. 10.: Obnovit – a cancelled reservation back to confirmed (Správce rezervací).
+"""Request 25. 10.: Obnovit – a cancelled or no-show reservation back to confirmed (Správce rezervací).
 
+A no-show is marked after its time, so its slot may lie in the past (a mistaken Nedorazil); a
+cancelled reservation needs a future one. Its second-room copy, marked together with it, comes back too.
 Only when its slot is still free (the same overlap check as booking, _check_overlap); otherwise a
 clear message and the wizard stays open with the time and the room to change. The client gets
 the confirmation e-mail only when "Poslat klientovi potvrzení" is ticked (default: no e-mail).
@@ -9,12 +11,14 @@ from markupsafe import escape
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+from ..models.reservation import INACTIVE_STATES
+
 MANAGER_GROUP = "elite_vet_reservation.group_reservation_manager"
 
 
 class ReservationRestoreWizard(models.TransientModel):
     _name = "elite.vet.reservation.restore.wizard"
-    _description = "Obnovit zrušenou rezervaci"
+    _description = "Obnovit rezervaci"
 
     reservation_id = fields.Many2one("elite.vet.reservation", string="Rezervace", required=True, readonly=True,
                                      ondelete="cascade")
@@ -41,12 +45,14 @@ class ReservationRestoreWizard(models.TransientModel):
         if not self.env.user.has_group(MANAGER_GROUP):
             raise UserError(_("Obnovit rezervaci může jen správce rezervací."))
         res = self.reservation_id
-        if res.kind != "reservation" or res.state != "cancelled":
-            raise UserError(_("Obnovit jde jen zrušenou rezervaci (tato je teď ve stavu %s).")
+        if res.kind != "reservation" or res.state not in INACTIVE_STATES:
+            raise UserError(_("Obnovit jde jen zrušenou rezervaci nebo rezervaci se stavem Nedorazil "
+                              "(tato je teď ve stavu %s).")
                             % dict(res._fields["state"]._description_selection(self.env)).get(res.state))
         if res.is_second_room:
             raise UserError(_("Toto je kopie ve druhé ordinaci – obnovte hlavní rezervaci."))
-        if self.start <= fields.Datetime.now():
+        no_show = res.state == "no_show"
+        if not no_show and self.start <= fields.Datetime.now():
             raise UserError(_("Termín je v minulosti. Zvolte v tomto okně nový začátek a klikněte znovu Obnovit."))
         vals = {"state": "confirmed", "start": self.start, "stop": self.start + (res.stop - res.start),
                 "room_id": self.room_id.id, "cancel_reason": False, "reminder_sent": False}
@@ -54,6 +60,10 @@ class ReservationRestoreWizard(models.TransientModel):
             with self.env.cr.savepoint():
                 # no automatic e-mail (a new time would send "změna termínu"); see send_confirmation
                 res.with_context(ev_skip_mail=True).write(vals)
+                second = res.linked_reservation_id
+                if no_show and second.state == "no_show":
+                    second.with_context(ev_skip_mail=True, ev_linked_sync=True).write(
+                        {"state": "confirmed", "start": res.start, "stop": res.stop, "cancel_reason": False})
         except ValidationError as err:
             raise UserError(_(
                 "Rezervaci nejde obnovit, termín už není volný.\n%s\n\n"

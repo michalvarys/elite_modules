@@ -108,7 +108,7 @@
         <field name="arch" type="xml">
             <xpath expr="//header/field[@name='state']" position="before">
                 <button name="action_restore_wizard" type="object" string="Obnovit" class="btn-primary"
-                        invisible="kind != 'reservation' or state != 'cancelled' or is_second_room"
+                        invisible="kind != 'reservation' or state not in ('cancelled', 'no_show') or is_second_room"
                         groups="elite_vet_reservation.group_reservation_manager"/>
             </xpath>
             <xpath expr="//field[@name='cancel_reason']" position="after">

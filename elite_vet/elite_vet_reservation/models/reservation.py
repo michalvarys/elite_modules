@@ -786,7 +786,7 @@ class VetReservation(models.Model):
         events = []
         for r in self.search([("start", "<", stop), ("stop", ">", start),
                               "|", "&", ("kind", "=", "block"), ("state", "not in", INACTIVE_STATES),
-                              ("state", "in", ("confirmed", "done", "no_show"))]):
+                              ("state", "in", BUSY_STATES)]):
             ev_start, ev_end = A.utc_to_local_minutes(r.start, day), A.utc_to_local_minutes(r.stop, day)
             events.append({
                 "id": r.id, "name": r.name, "kind": r.kind, "state": r.state,
