@@ -6,13 +6,13 @@
  * per person and day. Every change goes to the server (elite.vet.planner), which answers
  * with the whole month, so the screen always shows what is stored.
  */
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { Component, useRef, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
 
-const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
-const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen",
-    "září", "říjen", "listopad", "prosinec"];
+const { DateTime, Info, Settings } = luxon;
+
 // Quick times of the cell dialog (request: 10–18, 8–14, 9–15, 14–20).
 const PRESETS = [[10, 18], [8, 14], [9, 15], [14, 20]];
 // Keyboard entry in Požadavky na směny.
@@ -35,6 +35,11 @@ function saveSetting(key, value) {
 }
 
 function pad(n) { return String(n).padStart(2, "0"); }
+export function monthTitle(iso) { return DateTime.fromISO(iso).toFormat("LLLL yyyy"); }
+export function dayTitle(iso) {
+    return DateTime.fromISO(iso).toLocaleString({ weekday: "short", day: "numeric", month: "long", year: "numeric" });
+}
+export function fmtHours(h) { return (Math.round(h * 10) / 10).toLocaleString(Settings.defaultLocale || undefined); }
 export function hm(value) {
     let h = Math.floor(value), m = Math.round((value - h) * 60);
     if (m === 60) { h += 1; m = 0; }
@@ -62,7 +67,6 @@ function currentMonth() {
     const d = new Date();
     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-01";
 }
-function fmtHours(h) { return (Math.round(h * 10) / 10).toLocaleString("cs-CZ"); }
 
 export class Planner extends Component {
     static template = "elite_vet_planning.Planner";
@@ -115,8 +119,7 @@ export class Planner extends Component {
     }
 
     get monthLabel() {
-        const [y, m] = this.state.month.split("-").map(Number);
-        return MONTHS[m - 1] + " " + y;
+        return monthTitle(this.state.month);
     }
     get days() { return this.state.data.days; }
     get staffById() {
@@ -129,7 +132,8 @@ export class Planner extends Component {
         return data.roles.map((r) => ({ ...r, staff: data.staff.filter((s) => s.role === r.key) }))
             .filter((g) => g.staff.length);
     }
-    weekdayAbbr(day) { return WEEKDAY_ABBR[day.weekday]; }
+    weekdayAbbr(day) { return Info.weekdays("short")[day.weekday]; }
+    dayTitle(day) { return dayTitle(day.date); }
     hm(v) { return hm(v); }
     fmt(v) { return fmtHours(v); }
     textOn(hex) { return textOn(hex); }
@@ -163,10 +167,10 @@ export class Planner extends Component {
         if (!shift.member_id) return "";
         const req = this.request(shift.member_id, shift.date);
         if (!req) return "";
-        if (req.code === "off") return "Na tento den zadal(a) Nemůžu";
-        if (["D", "NV", "L", "PN", "S"].includes(req.code)) return "Na tento den má absenci " + req.short;
-        if (req.code === "morning" && shift.hour_from >= 12) return "Může jen ráno";
-        if (req.code === "afternoon" && shift.hour_from < 12) return "Může jen odpoledne";
+        if (req.code === "off") return _t("Entered Cannot work for this day");
+        if (["D", "NV", "L", "PN", "S"].includes(req.code)) return _t("Has absence %s on this day", req.short);
+        if (req.code === "morning" && shift.hour_from >= 12) return _t("Can work in the morning only");
+        if (req.code === "afternoon" && shift.hour_from < 12) return _t("Can work in the afternoon only");
         return "";
     }
     absencesOn(day) {
@@ -192,7 +196,7 @@ export class Planner extends Component {
     }
     get cellTitle() {
         const { row, slot, day } = this.state.cell;
-        return `${row.name} · ${slot.name} · ${WEEKDAY_ABBR[day.weekday]} ${day.day}. ${this.monthLabel}`;
+        return `${row.name} · ${slot.name} · ${dayTitle(day.date)}`;
     }
     get openShifts() {
         const c = this.state.cell;
@@ -210,7 +214,7 @@ export class Planner extends Component {
         const day = this.state.cell.day;
         const bits = [];
         const req = this.request(member.id, day.date);
-        if (req) bits.push(req.short === "✓" ? "může" : req.short);
+        if (req) bits.push(req.short === "✓" ? _t("can work") : req.short);
         const data = this.state.data;
         for (const s of data.shifts.filter((x) => x.member_id === member.id && x.date === day.date)) {
             const row = data.rows.find((r) => r.id === s.row_id);
@@ -232,7 +236,7 @@ export class Planner extends Component {
     newTimes() {
         const from = parseHm(this.state.newFrom), to = parseHm(this.state.newTo);
         if (from === null || to === null) {
-            this.notification.add("Čas zadejte jako 8:00 nebo 14:30.", { type: "warning" });
+            this.notification.add(_t("Enter the time as 8:00 or 14:30."), { type: "warning" });
             return null;
         }
         return [from, to];
@@ -270,8 +274,8 @@ export class Planner extends Component {
     notBooked(shift) { return Boolean(shift.booking && shift.booking.ok === false); }
     chipTitle(shift) {
         const conflict = this.chipConflict(shift);
-        const origin = shift.assignment ? "Služba zadaná v Rezervace › Rozpis lékařů"
-            : shift.from_roster ? "Směna zadaná v Rozpisu služeb" : "";
+        const origin = shift.assignment ? _t("Service entered in Rezervace › Rozpis lékařů")
+            : shift.from_roster ? _t("Shift entered in the roster") : "";
         const booking = shift.booking && shift.booking.ok === false ? shift.booking.text : "";
         return [origin, conflict, booking].filter(Boolean).join(" · ") || null;
     }
@@ -363,6 +367,9 @@ export class Planner extends Component {
 
     // ---------- balance ----------
     balance(member) { return this.state.data.balance[member.id] || this.state.data.balance[String(member.id)]; }
+    workedTitle(b) {
+        return _t("Shifts %(shifts)s h + D/L/Š %(credited)s h", { shifts: fmtHours(b.shift_hours), credited: fmtHours(b.credited) });
+    }
     absenceText(member) {
         const b = this.balance(member);
         return Object.entries(b.absences).filter(([, n]) => n).map(([code, n]) => {
@@ -378,7 +385,7 @@ export class Planner extends Component {
         const data = this.state.data;
         const q = (v) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
         const lines = [];
-        lines.push(["Rozpis služeb " + this.monthLabel, ...data.days.map((d) => `${d.day}. ${WEEKDAY_ABBR[d.weekday]}`)].map(q).join(";"));
+        lines.push([_t("Shift roster") + " " + this.monthLabel, ...data.days.map((d) => `${d.day}. ${this.weekdayAbbr(d)}`)].map(q).join(";"));
         for (const row of data.rows) {
             for (const slot of row.slots) {
                 const cells = data.days.map((d) => this.cellShifts(slot, d).map((s) => {
@@ -390,15 +397,15 @@ export class Planner extends Component {
         }
         lines.push(["Absence", ...data.days.map((d) => this.absencesOn(d).map((r) => `${this.staffById[r.member_id].initials} ${r.short}`).join(", "))].map(q).join(";"));
         lines.push("");
-        lines.push(["Jméno", "Zkratka", "Úvazek (h/týden)", "Fond (h)", "Odpracováno (h)", "Ranní", "Odpolední",
-            "Celodenní (12 h)", "Víkendy", "Víkendy (h)", "Absence", "Saldo (h)"].map(q).join(";"));
+        lines.push([_t("Full name"), _t("Initials"), _t("Contract (h/week)"), _t("Fund (h)"), _t("Worked (h)"), _t("Morning"), _t("Afternoon"),
+            _t("Full day (12 h)"), _t("Weekends"), _t("Weekends (h)"), "Absence", _t("Balance (h)")].map(q).join(";"));
         for (const m of data.staff) {
             const b = this.balance(m);
             lines.push([m.name, m.initials, fmtHours(m.weekly_hours), fmtHours(b.fond), fmtHours(b.worked), b.morning,
                 b.afternoon, b.full_day, b.weekend, fmtHours(b.weekend_hours), this.absenceText(m), fmtHours(b.saldo)].map(q).join(";"));
         }
         lines.push("");
-        lines.push(["Požadavky", ...data.days.map((d) => d.day)].map(q).join(";"));
+        lines.push([_t("Requests"), ...data.days.map((d) => d.day)].map(q).join(";"));
         for (const m of data.staff) {
             lines.push([m.name, ...data.days.map((d) => this.request(m.id, d.date)?.short || "")].map(q).join(";"));
         }

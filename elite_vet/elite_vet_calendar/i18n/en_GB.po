@@ -1,0 +1,492 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* elite_vet_calendar
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260926\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-05 08:57+0000\n"
+"PO-Revision-Date: 2026-11-05 08:57+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_doctor__active
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__active
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Aktivní"
+msgstr "Active"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_search
+msgid "Archivované"
+msgstr "Archived"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__color
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_list
+msgid "Barva na webu"
+msgstr "Website colour"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_search
+msgid "Bez účtu"
+msgstr "No account"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift__is_note
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__is_note
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_list
+msgid "Celodenní poznámka"
+msgstr "Full-day note"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Celodenní poznámka (bez lékařky)"
+msgstr "Full-day note (no doctor)"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift__date
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_list
+msgid "Datum"
+msgstr "Date"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__time_to
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_list
+msgid "Do"
+msgstr "To"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__purple
+msgid "Fialová"
+msgstr "Purple"
+
+#. module: elite_vet_calendar
+#: model:ir.ui.menu,name:elite_vet_calendar.menu_rozpis_icon
+msgid "Ikony"
+msgstr "Icons"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.actions.act_window,help:elite_vet_calendar.action_vet_doctor
+msgid "Jména odsud se nabízejí při zadávání směny."
+msgstr "Names from here are offered when entering a shift."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_doctor__name
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_list
+msgid "Jméno"
+msgstr "Name"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_form
+msgid ""
+"Jméno se takhle přesně objeví na webu v buňce rozpisu.\n"
+"                        Kdo na klinice skončí, nemusí se mazat — stačí zrušit\n"
+"                        <b>Aktivní</b>. Zmizí z nabídky při zadávání směny, ale\n"
+"                        odsloužené směny zůstanou v pořádku."
+msgstr ""
+"The name appears on the website in the schedule cell exactly like this. "
+"Someone who leaves the clinic need not be deleted — just untick "
+"<b>Active</b>. They disappear from the list when entering a shift, but past "
+"shifts stay intact."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_doctor__member_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_list
+msgid "Karta v týmu"
+msgstr "Team card"
+
+#. module: elite_vet_calendar
+#: model:ir.model,name:elite_vet_calendar.model_elite_vet_doctor
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift__doctor_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_search
+msgid "Lékařka"
+msgstr "Doctor"
+
+#. module: elite_vet_calendar
+#: model:ir.actions.act_window,name:elite_vet_calendar.action_vet_doctor
+#: model:ir.ui.menu,name:elite_vet_calendar.menu_rozpis_doctor
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_search
+msgid "Lékařky"
+msgstr "Doctors"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__blue
+msgid "Modrá"
+msgstr "Blue"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_search
+msgid "Měsíc"
+msgstr "Month"
+
+#. module: elite_vet_calendar
+#: model:res.groups,comment:elite_vet_calendar.group_calendar_manager
+msgid "Může zadávat směny, spravovat lékařky a typy směn."
+msgstr "Can enter shifts and manage doctors and shift types."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_doctor__specialization_ids
+msgid ""
+"Na kartě se ukážou jako štítky s ikonou. V rozpisu služeb se u jména objeví "
+"jen samotné ikony, bez popisků."
+msgstr ""
+"Shown on the card as labels with an icon. In the duty schedule only the "
+"icons appear next to the name."
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Na webu se vypíše"
+msgstr "Shown on the website"
+
+#. module: elite_vet_calendar
+#. odoo-python
+#: code:addons/elite_vet_calendar/models/vet_shift.py:0
+msgid "Nezadáno"
+msgstr "Not set"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__name
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_list
+msgid "Název"
+msgstr "Name"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Název směny"
+msgstr "Shift name"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__time_from
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_list
+msgid "Od"
+msgstr "From"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_search
+msgid "Od dneška"
+msgstr "From today"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__orange
+msgid "Oranžová"
+msgstr "Orange"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift__note
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_list
+msgid "Poznámka"
+msgstr "Note"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__sequence
+msgid "Pořadí"
+msgstr "Sequence"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Pořadí ve vysvětlivkách"
+msgstr "Order in the legend"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_doctor__member_id
+msgid ""
+"Propojení na kartu člověka na stránce Náš tým. Díky němu se v rozpisu v "
+"bublině u jména ukážou ikony jeho specializací. Samotné specializace se "
+"nastavují na kartě, tady se nic nepřepisuje."
+msgstr ""
+"Link to the person's card on the Náš tým page. Thanks to it, icons of their "
+"specialisations show in the bubble by the name. The specialisations are set "
+"on the card, nothing is overwritten here."
+
+#. module: elite_vet_calendar
+#: model_terms:ir.actions.act_window,help:elite_vet_calendar.action_vet_doctor
+msgid "Přidejte lékařku"
+msgstr "Add a doctor"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.actions.act_window,help:elite_vet_calendar.action_vet_shift
+msgid "Přidejte první směnu"
+msgstr "Add the first shift"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.actions.act_window,help:elite_vet_calendar.action_vet_shift_type
+msgid "Přidejte typ směny"
+msgstr "Add a shift type"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_doctor__user_id
+msgid ""
+"Přihlašovací účet tohoto člena týmu. Podle něj se pozná, kdo je přihlášený: "
+"Moji pacienti dnes, obrazovka Ordinace a kdo pacienta převzal. Jeden účet "
+"patří nejvýš jednomu členovi týmu."
+msgstr ""
+"Login account of this team member. It shows who is logged in: My patients "
+"today, the Room screen and who took over a patient. One account belongs to "
+"at most one team member."
+
+#. module: elite_vet_calendar
+#: model:ir.module.category,description:elite_vet_calendar.module_category_elite_vet_calendar
+msgid "Přístup k rozpisu služeb lékařů."
+msgstr "Access to the doctors' duty roster."
+
+#. module: elite_vet_calendar
+#: model:ir.actions.act_window,name:elite_vet_calendar.action_vet_shift
+#: model:ir.ui.menu,name:elite_vet_calendar.menu_rozpis_shift
+msgid "Rozpis"
+msgstr "Schedule"
+
+#. module: elite_vet_calendar
+#: model:ir.module.category,name:elite_vet_calendar.module_category_elite_vet_calendar
+#: model:ir.ui.menu,name:elite_vet_calendar.menu_rozpis_root
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_search
+msgid "Rozpis služeb"
+msgstr "Duty roster"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__pink
+msgid "Růžová"
+msgstr "Pink"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_search
+msgid "Seskupit podle"
+msgstr "Group by"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift__type_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_search
+msgid "Směna"
+msgstr "Shift"
+
+#. module: elite_vet_calendar
+#: model:ir.model,name:elite_vet_calendar.model_elite_vet_shift
+msgid "Směna v rozpisu"
+msgstr "Roster shift"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_doctor__specialization_ids
+#: model:ir.ui.menu,name:elite_vet_calendar.menu_rozpis_spec
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_list
+msgid "Specializace"
+msgstr "Specialisation"
+
+#. module: elite_vet_calendar
+#: model:res.groups,name:elite_vet_calendar.group_calendar_manager
+msgid "Správce rozpisu"
+msgstr "Roster manager"
+
+#. module: elite_vet_calendar
+#. odoo-javascript
+#: code:addons/elite_vet_calendar/static/src/holiday_calendar/holiday_calendar.js:0
+msgid "Státní svátek: %s"
+msgstr "Public holiday: %s"
+
+#. module: elite_vet_calendar
+#: model:ir.model.constraint,message:elite_vet_calendar.constraint_elite_vet_doctor_user_unique
+msgid "Tento účet už je propojený s jiným členem týmu."
+msgstr "This account is already linked to another team member."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_shift__note
+msgid ""
+"Text, který se vypíše na webu přes celou buňku — například Státní svátek. "
+"Vyplňuje se jen u typů s celodenní poznámkou; když zůstane prázdný, použije "
+"se název typu."
+msgstr ""
+"Text shown on the website across the whole cell — for example Public "
+"holiday. Only for types with a full-day note; if empty, the type name is "
+"used."
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid ""
+"Typ označený jako <b>zavřeno</b> není služba, proto se u něj nezadává\n"
+"                        čas ani lékařka. Na webu se v takový den vypíše červeně text, který\n"
+"                        napíšete do pole <b>Poznámka</b> u konkrétního dne v Rozpisu —\n"
+"                        například <i>Státní svátek</i> nebo <i>Sanitární den</i>."
+msgstr ""
+"A type marked <b>closed</b> is not a duty, so it has no time or doctor. On "
+"such a day the website shows in red the text you write in the <b>Note</b> "
+"field of that day in the Roster — for example <i>Public holiday</i> or "
+"<i>Sanitary day</i>."
+
+#. module: elite_vet_calendar
+#: model:ir.model,name:elite_vet_calendar.model_elite_vet_shift_type
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Typ směny"
+msgstr "Shift type"
+
+#. module: elite_vet_calendar
+#: model:ir.actions.act_window,name:elite_vet_calendar.action_vet_shift_type
+#: model:ir.ui.menu,name:elite_vet_calendar.menu_rozpis_type
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_list
+msgid "Typy směn"
+msgstr "Shift types"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__teal
+msgid "Tyrkysová"
+msgstr "Turquoise"
+
+#. module: elite_vet_calendar
+#. odoo-python
+#: code:addons/elite_vet_calendar/models/vet_shift.py:0
+msgid ""
+"U služby vyberte lékařku.\n"
+"\n"
+"Bez lékařky jde uložit jen typ, který má v Typech směn zaškrtnutou Celodenní poznámku — zavřeno, státní svátek, den otevřených dveří a podobně."
+msgstr ""
+"Choose a doctor for the duty.\n"
+"\n"
+"Without a doctor you can only save a type with Full-day note ticked in Shift types — closed, public holiday, open day and so on."
+
+#. module: elite_vet_calendar
+#: model_terms:ir.actions.act_window,help:elite_vet_calendar.action_vet_shift
+msgid ""
+"Vyplňte datum, vyberte lékařku a směnu. Víc není potřeba —\n"
+"               na webu se to objeví samo."
+msgstr ""
+"Fill in the date and choose a doctor and shift. That is all — it appears on "
+"the website by itself."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_shift__is_note
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_shift_type__is_note
+msgid ""
+"Zaškrtněte u typu, který není služba lékařky — zavřeno, státní svátek, "
+"sanitární den, den otevřených dveří. Nevybírá se u něj lékařka ani čas; na "
+"webu se přes celou buňku vypíše text z pole Poznámka, a když je prázdné, "
+"název typu."
+msgstr ""
+"Tick for a type that is not a doctor's duty — closed, public holiday, "
+"sanitary day, open day. It has no doctor or time; the website shows the Note"
+" text across the whole cell, or the type name if empty."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__green
+msgid "Zelená"
+msgstr "Green"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.actions.act_window,help:elite_vet_calendar.action_vet_shift_type
+msgid ""
+"Změna času nebo barvy se hned promítne na web — do vysvětlivek\n"
+"               i do bublin u jmen."
+msgstr ""
+"A change of time or colour shows on the website immediately — in the legend "
+"and in the bubbles by the names."
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid ""
+"Změna času se hned projeví na webu, a to na obou místech najednou —\n"
+"                        ve vysvětlivkách nahoře i v bublině u jména lékařky."
+msgstr ""
+"A time change shows on the website immediately, in both places — in the "
+"legend on top and in the bubble by the doctor's name."
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Zobrazení"
+msgstr "View"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_form
+msgid "např. 1234"
+msgstr "e.g. 1234"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_form
+msgid "např. MVDr. Kateřina Kadavá"
+msgstr "e.g. MVDr. Kateřina Kadavá"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "např. Ranní služba"
+msgstr "e.g. Morning duty"
+
+#. module: elite_vet_calendar
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_form
+msgid "např. Státní svátek"
+msgstr "e.g. Public holiday"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_doctor__user_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_doctor_list
+msgid "Účet"
+msgstr "Account"
+
+#. module: elite_vet_calendar
+#. odoo-python
+#: code:addons/elite_vet_calendar/models/vet_doctor.py:0
+msgid "Účet člena týmu musí být interní uživatel (ne portál): %s."
+msgstr "A team member's account must be an internal user (not portal): %s."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_shift_type__time_display
+#: model_terms:ir.ui.view,arch_db:elite_vet_calendar.view_vet_shift_type_form
+msgid "Čas"
+msgstr "Time"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__red
+msgid "Červená"
+msgstr "Red"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_res_users__elite_vet_doctor_id
+msgid "Člen týmu"
+msgstr "Team member"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_res_users__elite_vet_doctor_id
+msgid ""
+"Člen týmu z Rozpisu služeb › Lékařky, ke kterému tento účet patří. Mění se "
+"tam ve sloupci Účet."
+msgstr ""
+"Team member from Duty roster › Doctors this account belongs to. Changed "
+"there in the Account column."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_res_users__elite_vet_doctor_ids
+msgid "Členové týmu"
+msgstr "Team members"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,field_description:elite_vet_calendar.field_elite_vet_doctor__kvl_number
+msgid "Číslo KVL"
+msgstr "KVL number"
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields,help:elite_vet_calendar.field_elite_vet_doctor__kvl_number
+msgid ""
+"Číslo osvědčení Komory veterinárních lékařů. Tiskne se ve zprávě z vyšetření"
+" u jména ošetřující lékařky. Nepovinné."
+msgstr ""
+"Certificate number of the Chamber of Veterinary Surgeons. Printed in the "
+"examination report by the treating doctor's name. Optional."
+
+#. module: elite_vet_calendar
+#: model:ir.model.fields.selection,name:elite_vet_calendar.selection__elite_vet_shift_type__color__grey
+msgid "Šedá"
+msgstr "Grey"

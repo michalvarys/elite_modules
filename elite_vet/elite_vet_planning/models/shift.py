@@ -19,15 +19,15 @@ from odoo.addons.elite_vet_reservation.models.shift import VetShift as Reservati
 class VetShift(models.Model):
     _inherit = "elite.vet.shift"
 
-    planning_slot_id = fields.Many2one("elite.vet.planning.slot", string="Směna v plánu", ondelete="set null",
+    planning_slot_id = fields.Many2one("elite.vet.planning.slot", string="Plan shift", ondelete="set null",
                                        index="btree_not_null", copy=False)
-    planning_row_id = fields.Many2one(related="planning_slot_id.row_id", string="Úsek", store=True)
-    helper_name = fields.Char(string="Jméno (výpomoc)",
-                              help="Praktikant nebo brigádník, který není v seznamu týmu.")
+    planning_row_id = fields.Many2one(related="planning_slot_id.row_id", string="Section", store=True)
+    helper_name = fields.Char(string="Name (helper)",
+                              help="An intern or temp who is not on the team list.")
     web_visible = fields.Boolean(
-        string="Na webu", compute="_compute_web_visible", store=True,
-        help="Na /rozpis-lekaru jdou celodenní poznámky, směny zadané v rozpisu ručně a z plánu jen "
-             "služby lékařek v úsecích (ne recepce, sestry ani výpomoc).")
+        string="On the website", compute="_compute_web_visible", store=True,
+        help="/rozpis-lekaru shows full-day notes, shifts entered in the roster by hand and, from the plan, "
+             "only doctors' services in sections (not reception, nurses or helpers).")
 
     @api.depends("planning_slot_id.row_id.kind", "type_id.is_note", "doctor_id.accepts_bookings")
     def _compute_web_visible(self):
@@ -117,4 +117,4 @@ class VetShift(models.Model):
     def _check_helper(self):
         for shift in self:
             if shift.helper_name and shift.doctor_id:
-                raise ValidationError(_("Směna má buď člena týmu, nebo vepsané jméno výpomoci, ne obojí."))
+                raise ValidationError(_("A shift has either a team member or a typed helper name, not both."))

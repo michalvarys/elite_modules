@@ -14,7 +14,7 @@ from odoo.addons.elite_vet_reservation.models.live import notify_board
 from odoo.addons.elite_vet_reservation.models.shift import roster_hours
 
 from .doctor import STAFF_ROLES
-from .staff_request import ABSENCE_CODES, CREDITED_CODES, REQUEST_CODES, SELF_CODES, SHORT
+from .staff_request import ABSENCE_CODES, CREDITED_CODES, SELF_CODES, SHORT
 
 ROLE_ORDER = {key: i for i, (key, _label) in enumerate(STAFF_ROLES)}
 MANAGER_GROUP = "elite_vet_calendar.group_calendar_manager"
@@ -97,13 +97,20 @@ def month_balance(members, shifts, requests, first, last, assignments=()):
 
 class Planner(models.AbstractModel):
     _name = "elite.vet.planner"
-    _description = "Plánování služeb"
+    _description = "Staff planning"
 
     # ---------- helpers ----------
     @api.model
+    def _selection(self, model, field):
+        """(value, label) pairs of a selection field in the user's language."""
+        return self.env[model]._fields[field]._description_selection(self.env)
+
+    def _code_labels(self):
+        return self._selection("elite.vet.staff.request", "code")
+
     def _check_manager(self):
         if not self.env.user.has_group(MANAGER_GROUP):
-            raise AccessError(_("Plánovat služby smí jen Správce rozpisu."))
+            raise AccessError(_("Only the roster manager may plan shifts."))
 
     @api.model
     def _members(self):
@@ -134,19 +141,19 @@ class Planner(models.AbstractModel):
         if not doctor or (doctor.staff_role != "doctor" and not doctor.accepts_bookings):
             return {"ok": None, "text": ""}
         if not doctor.accepts_bookings:
-            return {"ok": False, "text": _("Nepropisuje se do rezervací: %s nemá v Lékařkách zaškrtnuto "
-                                           "„Lékařka – přijímá rezervace“.") % doctor.name}
+            return {"ok": False, "text": _("Not written to reservations: %s does not have „Lékařka – přijímá rezervace“ "
+                                           "ticked in Lékařky.") % doctor.name}
         if not shift.room_id:
             if slot and not slot.row_id.room_id:
-                return {"ok": False, "text": _("Nepropisuje se do rezervací: úsek %s nemá v Úsecích plánu "
-                                               "vyplněnou ordinaci.") % slot.row_id.name}
-            return {"ok": False, "text": _("Nepropisuje se do rezervací: směna nemá ordinaci.")}
+                return {"ok": False, "text": _("Not written to reservations: section %s has no room set in "
+                                               "Plan sections.") % slot.row_id.name}
+            return {"ok": False, "text": _("Not written to reservations: the shift has no room.")}
         assignment = self.env["elite.vet.doctor.assignment"].sudo().search([
             ("doctor_id", "=", doctor.id), ("date", "=", shift.date), ("room_id", "=", shift.room_id.id),
             ("hour_from", "<=", shift.hour_from), ("hour_to", ">", shift.hour_from)], limit=1)
         if not assignment:
-            return {"ok": False, "text": _("V kalendáři rezervací chybí. Uložte směnu znovu (změňte a vraťte čas).")}
-        return {"ok": True, "text": _("V kalendáři rezervací: %s") % assignment.display_name}
+            return {"ok": False, "text": _("Missing in the reservation calendar. Save the shift again (change the time and change it back).")}
+        return {"ok": True, "text": _("In the reservation calendar: %s") % assignment.display_name}
 
     @api.model
     def _roster_slot(self, shift, rows):
@@ -161,7 +168,7 @@ class Planner(models.AbstractModel):
         else the one with the doctor's default room, else by role (reception / helpers).
         Slot in the row: among the slots of the same shift type on that day (else all of that day,
         else the same type, else all) the one with the nearest start. No row -> empty slot (the
-        "Z rozpisu – bez úseku" row of the screen)."""
+        "From the roster – no section" row of the screen)."""
         Slot = self.env["elite.vet.planning.slot"]
         row = rows.filtered(lambda r: room and r.room_id == room)[:1]
         if not row:
@@ -217,8 +224,8 @@ class Planner(models.AbstractModel):
             shift_vals.append({"id": -a.id, "date": fields.Date.to_string(a.date), "slot_id": slot.id or 0,
                                "row_id": slot.row_id.id or 0, "member_id": a.doctor_id.id, "helper_name": "",
                                "hour_from": a.hour_from, "hour_to": a.hour_to, "room": a.room_id.name or "",
-                               "type": _("Rozpis lékařů"), "from_roster": True, "assignment": True,
-                               "booking": {"ok": True, "text": _("V kalendáři rezervací (zadáno v Rozpisu lékařů)")}})
+                               "type": "Rozpis lékařů", "from_roster": True, "assignment": True,
+                               "booking": {"ok": True, "text": _("In the reservation calendar (entered in Rozpis lékařů)")}})
         row_vals = [{"id": r.id, "name": r.name, "kind": r.kind, "room": r.room_id.name or "",
                      "preferred_roles": [x.strip() for x in (r.preferred_roles or "").split(",") if x.strip()],
                      "slots": [{"id": sl.id, "name": sl.name, "hour_from": sl.hour_from, "hour_to": sl.hour_to,
@@ -226,22 +233,22 @@ class Planner(models.AbstractModel):
                     for r in rows]
         if any(not v["slot_id"] for v in shift_vals):
             # shifts no row fits (e.g. a room without a row): one read-only row, so nothing is hidden
-            row_vals.append({"id": 0, "name": _("Z rozpisu – bez úseku"), "kind": "roster", "room": "",
-                             "preferred_roles": [], "slots": [{"id": 0, "name": _("Ostatní"), "hour_from": 0,
+            row_vals.append({"id": 0, "name": _("From the roster – no section"), "kind": "roster", "room": "",
+                             "preferred_roles": [], "slots": [{"id": 0, "name": _("Other"), "hour_from": 0,
                                                                "hour_to": 0, "days": "all", "time": ""}]})
         return {
             "month": fields.Date.to_string(first),
             "days": self._days(first, last, day_notes),
             "rows": row_vals,
             "staff": [self._member_vals(m) for m in members],
-            "roles": [{"key": k, "label": label} for k, label in STAFF_ROLES],
+            "roles": [{"key": k, "label": label} for k, label in self._selection("elite.vet.doctor", "staff_role")],
             # planned shifts and the ones entered in Rozpis služeb (shown in their slot, from_roster)
             "shifts": shift_vals,
             "requests": [{"member_id": r.member_id.id, "date": fields.Date.to_string(r.date), "code": r.code,
                           "short": SHORT[r.code], "note": r.note or "", "self": r.entered_by_member}
                          for r in requests],
             "codes": [{"key": k, "label": label, "short": SHORT[k], "absence": k in ABSENCE_CODES}
-                      for k, label in REQUEST_CODES],
+                      for k, label in self._code_labels()],
             "notes": {n.member_id.id: n.note or "" for n in notes},
             "balance": balance,
         }
@@ -251,7 +258,7 @@ class Planner(models.AbstractModel):
         self._check_manager()
         slot = self.env["elite.vet.planning.slot"].browse(slot_id).exists()
         if not slot:
-            raise UserError(_("Tato směna v plánu už neexistuje. Načtěte stránku znovu."))
+            raise UserError(_("This plan shift no longer exists. Reload the page."))
         vals = {"date": day, "type_id": slot.type_id.id, "planning_slot_id": slot.id,
                 "hour_from": slot.hour_from if hour_from is None else hour_from,
                 "hour_to": slot.hour_to if hour_to is None else hour_to, "room_id": False}
@@ -263,9 +270,9 @@ class Planner(models.AbstractModel):
         else:
             helper_name = (helper_name or "").strip()
             if not helper_name:
-                raise UserError(_("Vyberte člověka nebo vepište jméno."))
+                raise UserError(_("Choose a person or type a name."))
             if slot.row_id.kind != "helpers":
-                raise UserError(_("Vepsat jméno jde jen v úseku Stáž / výpomoc."))
+                raise UserError(_("A name can only be typed in an Internship / helpers section."))
             vals["helper_name"] = helper_name
         self.env["elite.vet.shift"].create(vals)
         return self.load_month(month)
@@ -325,7 +332,7 @@ class Planner(models.AbstractModel):
         if done:
             notify_board(self.env)
         result = self.load_month(month)
-        result["message"] = _("Převzato %(ok)s služeb, přeskočeno %(skip)s (ordinace bez úseku nebo kolize).",
+        result["message"] = _("Took over %(ok)s services, skipped %(skip)s (room without a section, or a clash).",
                               ok=done, skip=skipped)
         return result
 
@@ -367,7 +374,7 @@ class Planner(models.AbstractModel):
         if copied:
             notify_board(self.env)   # a rolled-back savepoint drops the queued board refresh
         result = self.load_month(month)
-        result["message"] = _("Zkopírováno %(ok)s směn, přeskočeno %(skip)s.", ok=copied, skip=skipped)
+        result["message"] = _("Copied %(ok)s shifts, skipped %(skip)s.", ok=copied, skip=skipped)
         return result
 
     @api.model
@@ -425,8 +432,8 @@ class Planner(models.AbstractModel):
     def _my_member(self):
         member = self.env.user.sudo().elite_vet_doctor_id
         if not member:
-            raise UserError(_("Váš účet není propojený s členem týmu. Požádejte vedení, ať vás propojí "
-                              "v Rozpis služeb › Lékařky › Účet."))
+            raise UserError(_("Your account is not linked to a team member. Ask the management to link it "
+                              "in Rozpis služeb › Lékařky › Účet."))
         return member
 
     @api.model
@@ -434,7 +441,7 @@ class Planner(models.AbstractModel):
         member = self.env.user.sudo().elite_vet_doctor_id
         first, last = month_bounds(month)
         result = {"month": fields.Date.to_string(first), "days": self._days(first, last), "member": False,
-                  "codes": [{"key": k, "label": label, "short": SHORT[k]} for k, label in REQUEST_CODES
+                  "codes": [{"key": k, "label": label, "short": SHORT[k]} for k, label in self._code_labels()
                             if k in SELF_CODES]}
         if not member:
             return result
@@ -442,7 +449,7 @@ class Planner(models.AbstractModel):
             [("doctor_id", "=", member.id), ("date", ">=", first), ("date", "<=", last)])
         requests = self.env["elite.vet.staff.request"].sudo().search(
             [("member_id", "=", member.id), ("date", ">=", first), ("date", "<=", last)])
-        labels = dict(REQUEST_CODES)
+        labels = dict(self._code_labels())
         result.update({
             "member": self._member_vals(member),
             "shifts": [dict(self._shift_vals(s), row=s.planning_slot_id.display_name or s.type_id.name or "") for s in shifts],
@@ -463,14 +470,14 @@ class Planner(models.AbstractModel):
         member = self._my_member()
         day = fields.Date.to_date(day)
         if day < fields.Date.context_today(self):
-            raise UserError(_("Minulé dny už měnit nejde."))
+            raise UserError(_("Past days can no longer be changed."))
         if code and code not in SELF_CODES:
-            raise UserError(_("Dovolenou, NV, lékaře, nemoc a školení zapisuje vedení."))
+            raise UserError(_("Vacation, time off, doctor's visits, sick leave and training are entered by the management."))
         current = self.env["elite.vet.staff.request"].sudo().search([("member_id", "=", member.id),
                                                                      ("date", "=", day)])
         if current and current.code not in SELF_CODES:
-            raise UserError(_("Na tento den má vedení zapsanou absenci (%s). Změnu domluvte s vedením.")
-                            % dict(REQUEST_CODES)[current.code])
+            raise UserError(_("The management has entered an absence for this day (%s). Agree on any change with them.")
+                            % dict(self._code_labels())[current.code])
         self._write_request(member, day, code, note, by_member=True)
         return self.my_month(month)
 
@@ -479,7 +486,7 @@ class Planner(models.AbstractModel):
         """"Zbytek měsíce: Můžu" - every day from today on without a record gets the code."""
         member = self._my_member()
         if code not in SELF_CODES:
-            raise UserError(_("Tento záznam si zadat nejde."))
+            raise UserError(_("You cannot enter this record yourself."))
         first, last = month_bounds(month)
         start = max(first, fields.Date.context_today(self))
         Request = self.env["elite.vet.staff.request"].sudo()

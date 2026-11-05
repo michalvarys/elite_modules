@@ -4,10 +4,10 @@ from odoo.addons.elite_vet_team.models.team_member import TITULY
 from odoo.addons.elite_vet_reservation.models.reservation import doctor_color
 
 STAFF_ROLES = [
-    ("doctor", "Lékař"),
-    ("nurse", "Sestra"),
-    ("reception", "Recepce"),
-    ("helper", "Výpomoc / stáž"),
+    ("doctor", "Doctor"),
+    ("nurse", "Nurse"),
+    ("reception", "Reception"),
+    ("helper", "Helper / intern"),
 ]
 
 
@@ -31,19 +31,19 @@ class VetDoctor(models.Model):
     _inherit = "elite.vet.doctor"
 
     staff_role = fields.Selection(STAFF_ROLES, string="Role", default="nurse", required=True,
-                                  help="Podle role se lidé řadí v Plánování a v Požadavcích na směny.")
-    weekly_hours = fields.Float(string="Úvazek (h/týden)", default=40.0,
-                                help="Z úvazku se počítá denní fond (úvazek / 5) a měsíční fond "
-                                     "(pracovní dny měsíce bez svátků × denní fond).")
-    initials = fields.Char(string="Zkratka", compute="_compute_initials", store=True, readonly=False,
-                           help="Štítek v Plánování. Spočítá se ze jména, jde přepsat (např. DPI).")
-    vacation_days = fields.Float(string="Dovolená na rok (dny)", default=20.0)
-    vacation_taken = fields.Float(string="Vyčerpáno letos (dny)", compute="_compute_vacation")
-    vacation_left = fields.Float(string="Zbývá (dny)", compute="_compute_vacation")
-    planning_sequence = fields.Integer(string="Pořadí v plánu", default=10)
-    in_planning = fields.Boolean(string="V plánování", default=True,
-                                 help="Odškrtněte u lidí, kteří se neplánují (např. jen web).")
-    planning_color = fields.Char(string="Barva štítku", compute="_compute_planning_color")
+                                  help="People are sorted by role in Planning and in Shift requests.")
+    weekly_hours = fields.Float(string="Contract (h/week)", default=40.0,
+                                help="The contract gives the daily fund (contract / 5) and the monthly fund "
+                                     "(working days of the month without holidays × daily fund).")
+    initials = fields.Char(string="Initials", compute="_compute_initials", store=True, readonly=False,
+                           help="Label in Planning. Computed from the name, can be overwritten (e.g. DPI).")
+    vacation_days = fields.Float(string="Vacation per year (days)", default=20.0)
+    vacation_taken = fields.Float(string="Taken this year (days)", compute="_compute_vacation")
+    vacation_left = fields.Float(string="Left (days)", compute="_compute_vacation")
+    planning_sequence = fields.Integer(string="Order in the plan", default=10)
+    in_planning = fields.Boolean(string="In planning", default=True,
+                                 help="Untick for people who are not planned (e.g. web only).")
+    planning_color = fields.Char(string="Label color", compute="_compute_planning_color")
 
     @api.depends("name")
     def _compute_initials(self):

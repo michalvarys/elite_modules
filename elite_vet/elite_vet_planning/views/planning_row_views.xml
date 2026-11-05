@@ -4,12 +4,12 @@
         <field name="name">elite.vet.planning.row.list</field>
         <field name="model">elite.vet.planning.row</field>
         <field name="arch" type="xml">
-            <list string="Úseky plánu">
+            <list string="Plan sections">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="kind"/>
                 <field name="room_id"/>
-                <field name="slot_ids" widget="many2many_tags" string="Směny"/>
+                <field name="slot_ids" widget="many2many_tags" string="Shifts"/>
             </list>
         </field>
     </record>
@@ -18,11 +18,11 @@
         <field name="name">elite.vet.planning.row.form</field>
         <field name="model">elite.vet.planning.row</field>
         <field name="arch" type="xml">
-            <form string="Úsek plánu">
+            <form string="Plan section">
                 <sheet>
                     <div class="oe_title">
                         <label for="name"/>
-                        <h1><field name="name" placeholder="např. Ordinace 1"/></h1>
+                        <h1><field name="name" placeholder="e.g. Ordinace 1"/></h1>
                     </div>
                     <group>
                         <group>
@@ -45,9 +45,7 @@
                         </list>
                     </field>
                     <div class="alert alert-info" role="status">
-                        Služba lékařky v úseku s ordinací se sama propíše do kalendáře rezervací.
-                        Sestry, recepce a výpomoc se do rezervací nepropisují. Typ směny určuje barvu
-                        a legendu na webu /rozpis-lekaru; čas na webu je čas typu.
+                        A doctor's service in a section with a room goes to the reservation calendar by itself. Nurses, reception and helpers do not. The shift type sets the color and legend on /rozpis-lekaru; the time on the website is the time of the type.
                     </div>
                 </sheet>
             </form>
@@ -55,7 +53,7 @@
     </record>
 
     <record id="action_planning_row" model="ir.actions.act_window">
-        <field name="name">Úseky plánu</field>
+        <field name="name">Plan sections</field>
         <field name="res_model">elite.vet.planning.row</field>
         <field name="view_mode">list,form</field>
     </record>

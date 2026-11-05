@@ -7,11 +7,9 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { Component, useState, onWillStart } from "@odoo/owl";
-import { hm } from "@elite_vet_planning/planner/planner";
+import { dayTitle, fmtHours, hm, monthTitle } from "@elite_vet_planning/planner/planner";
 
-const WEEKDAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
-const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen",
-    "září", "říjen", "listopad", "prosinec"];
+const { Info } = luxon;
 
 function pad(n) { return String(n).padStart(2, "0"); }
 function shiftMonth(iso, delta) {
@@ -50,10 +48,10 @@ export class MyAvailability extends Component {
         await this.load();
     }
     get monthLabel() {
-        const [y, m] = this.state.month.split("-").map(Number);
-        return MONTHS[m - 1] + " " + y;
+        return monthTitle(this.state.month);
     }
-    get weekdays() { return WEEKDAYS; }
+    get weekdays() { return Info.weekdays("short"); }
+    dayTitle(day) { return dayTitle(day.date); }
     get leading() { return Array.from({ length: this.state.data.days[0].weekday }, (_, i) => i); }
     get todayIso() {
         const d = new Date();
@@ -79,7 +77,7 @@ export class MyAvailability extends Component {
         await this.call("set_my_request", day.date, code, this.state.note);
     }
     async fill(code) { await this.call("fill_my_month", code); }
-    fmt(v) { return (Math.round(v * 10) / 10).toLocaleString("cs-CZ"); }
+    fmt(v) { return fmtHours(v); }
 }
 
 registry.category("actions").add("elite_vet_planning.my_availability", MyAvailability);

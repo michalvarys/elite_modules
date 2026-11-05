@@ -20,7 +20,7 @@
         <field name="inherit_id" ref="elite_vet_calendar.view_vet_doctor_form"/>
         <field name="arch" type="xml">
             <xpath expr="//sheet/group" position="after">
-                <group string="Plánování služeb" name="planning">
+                <group string="Staff planning" name="planning">
                     <group>
                         <field name="staff_role"/>
                         <field name="initials"/>
@@ -42,14 +42,14 @@
         <field name="model">elite.vet.doctor</field>
         <field name="priority">40</field>
         <field name="arch" type="xml">
-            <list string="Personál" editable="bottom">
+            <list string="Staff" editable="bottom">
                 <field name="planning_sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="initials"/>
                 <field name="staff_role"/>
                 <field name="weekly_hours"/>
-                <field name="calendar_color" widget="color" string="Barva"/>
-                <field name="accepts_bookings" string="Lékařka (rezervace)" optional="hide"/>
+                <field name="calendar_color" widget="color" string="Color"/>
+                <field name="accepts_bookings" string="Doctor (bookings)" optional="hide"/>
                 <field name="user_id" options="{'no_create': True}" optional="show"/>
                 <field name="vacation_days" optional="show"/>
                 <field name="vacation_left" optional="show"/>
@@ -60,7 +60,7 @@
     </record>
 
     <record id="action_staff" model="ir.actions.act_window">
-        <field name="name">Personál</field>
+        <field name="name">Staff</field>
         <field name="res_model">elite.vet.doctor</field>
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_vet_doctor_staff_list"/>

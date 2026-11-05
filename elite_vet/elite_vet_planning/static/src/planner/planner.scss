@@ -154,7 +154,7 @@
 
     // Moje dostupnost
     .evm-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; max-width: 980px; }
-    .evm-wd { text-align: center; font-size: 12px; color: #64748b; }
+    .evm-wd { text-align: center; font-size: 12px; color: #64748b; text-transform: capitalize; }
     .evm-day {
         min-height: 86px; border: 1px solid var(--evp-line); border-radius: 8px; padding: 6px; background: #fff;
         cursor: pointer; display: flex; flex-direction: column; gap: 3px; text-align: left;

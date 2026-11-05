@@ -133,7 +133,7 @@ class TestSourceVisible(ReservationCase):
         for text in ("evb-source-filter", "evb-legend", "WEB", "WinVet", "Klinika"):
             self.assertIn(text, xml)
         self.assertIn("localStorage.setItem(SOURCE_FILTER_KEY", js)
-        self.assertEqual(re.findall(r'key: "(\w+)", label: "([^"]+)"', js),
+        self.assertEqual(re.findall(r'key: "(\w+)", label: (?:_t\()?"([^"]+)"', js),
                          [("all", "Vše"), ("web", "Web"), ("clinic", "Klinika")])
 
     # ---------------------------------------------------------------- chat widget

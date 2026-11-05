@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Under Rozpis služeb (elite_vet_calendar), which only Správce rozpisu sees. -->
-    <menuitem id="menu_planner" name="Plánování" parent="elite_vet_calendar.menu_rozpis_root"
+    <menuitem id="menu_planner" name="Planning" parent="elite_vet_calendar.menu_rozpis_root"
               action="action_planner" sequence="5"/>
-    <menuitem id="menu_staff" name="Personál" parent="elite_vet_calendar.menu_rozpis_root"
+    <menuitem id="menu_staff" name="Staff" parent="elite_vet_calendar.menu_rozpis_root"
               action="action_staff" sequence="25"/>
-    <menuitem id="menu_staff_request" name="Dostupnost a absence" parent="elite_vet_calendar.menu_rozpis_root"
+    <menuitem id="menu_staff_request" name="Availability and absences" parent="elite_vet_calendar.menu_rozpis_root"
               action="action_staff_request" sequence="27"/>
-    <menuitem id="menu_planning_row" name="Úseky plánu" parent="elite_vet_calendar.menu_rozpis_root"
+    <menuitem id="menu_planning_row" name="Plan sections" parent="elite_vet_calendar.menu_rozpis_root"
               action="action_planning_row" sequence="35"/>
 
     <!-- Every internal user; the page itself checks the account is linked to a team member. -->
-    <menuitem id="menu_my_availability_root" name="Moje směny" sequence="49"
+    <menuitem id="menu_my_availability_root" name="My shifts" sequence="49"
               groups="base.group_user"/>
-    <menuitem id="menu_my_availability" name="Moje dostupnost" parent="menu_my_availability_root"
+    <menuitem id="menu_my_availability" name="My availability" parent="menu_my_availability_root"
               action="action_my_availability" sequence="10"/>
 </odoo>

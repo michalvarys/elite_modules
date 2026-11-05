@@ -1,0 +1,23 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+
+#. module: elite_vet_web
+#: model:ir.ui.menu,name:elite_vet_web.menu_rezervace_root
+msgid "Rezervace"
+msgstr "Appointments"
+
+#. module: elite_vet_web
+#: model:ir.ui.menu,name:elite_vet_web.menu_rezervace_nastaveni
+msgid "Nastavení rezervace"
+msgstr "Appointment settings"
+
+#. module: elite_vet_web
+#: model:ir.ui.menu,name:elite_vet_web.menu_rezervace_faq
+msgid "Časté dotazy"
+msgstr "FAQ"

@@ -1,0 +1,1145 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* elite_vet_planning
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260926\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-05 08:48+0000\n"
+"PO-Revision-Date: 2026-11-05 08:48+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: cs_CZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_shift__web_visible
+msgid ""
+"/rozpis-lekaru shows full-day notes, shifts entered in the roster by hand "
+"and, from the plan, only doctors' services in sections (not reception, "
+"nurses or helpers)."
+msgstr ""
+"Na /rozpis-lekaru jdou celodenní poznámky, směny zadané v rozpisu ručně a z "
+"plánu jen služby lékařek v úsecích (ne recepce, sestry ani výpomoc)."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "A doctor's service goes to reservations:"
+msgstr "Služba lékařky se propíše do rezervací:"
+
+#. module: elite_vet_planning
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_planning_row_form
+msgid ""
+"A doctor's service in a section with a room goes to the reservation calendar"
+" by itself. Nurses, reception and helpers do not. The shift type sets the "
+"color and legend on /rozpis-lekaru; the time on the website is the time of "
+"the type."
+msgstr ""
+"Služba lékařky v úseku s ordinací se sama propíše do kalendáře rezervací. "
+"Sestry, recepce a výpomoc se do rezervací nepropisují. Typ směny určuje "
+"barvu a legendu na webu /rozpis-lekaru; čas na webu je čas typu."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_planning_row__room_id
+msgid ""
+"A doctor's service in this section goes to the reservation calendar in this "
+"room. Empty (e.g. Recepce) = not written."
+msgstr ""
+"Služba lékařky v tomto úseku se propíše do kalendáře rezervací v této "
+"ordinaci. Prázdné (např. Recepce) = nepropisuje se."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/staff_request.py:0
+msgid "A month is stored as its first day."
+msgstr "Měsíc se ukládá jako jeho 1. den."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "A name can only be typed in an Internship / helpers section."
+msgstr "Vepsat jméno jde jen v úseku Stáž / výpomoc."
+
+#. module: elite_vet_planning
+#: model:ir.model.constraint,message:elite_vet_planning.constraint_elite_vet_staff_request_member_date_unique
+msgid "A person has only one record per day."
+msgstr "Jeden člověk má na jeden den jen jeden záznam."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/shift.py:0
+msgid "A shift has either a team member or a typed helper name, not both."
+msgstr "Směna má buď člena týmu, nebo vepsané jméno výpomoci, ne obojí."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__is_absence
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_staff_request_search
+msgid "Absence"
+msgstr ""
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__active
+msgid "Active"
+msgstr "Aktivní"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Add"
+msgstr "Přidat"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Afternoon"
+msgstr "Odpolední"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__afternoon
+msgid "Afternoon only"
+msgstr "Jen odpoledne"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "All changes saved"
+msgstr "Všechny změny uloženy"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_shift__helper_name
+msgid "An intern or temp who is not on the team list."
+msgstr "Praktikant nebo brigádník, který není v seznamu týmu."
+
+#. module: elite_vet_planning
+#: model:ir.actions.act_window,name:elite_vet_planning.action_staff_request
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_staff_request
+#: model:ir.ui.menu,name:elite_vet_planning.menu_staff_request
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_staff_request_list
+msgid "Availability and absences"
+msgstr "Dostupnost a absence"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Balance"
+msgstr "Saldo"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Balance (h)"
+msgstr "Saldo (h)"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__can
+msgid "Can work"
+msgstr "Můžu"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Can work in the afternoon only"
+msgstr "Může jen odpoledne"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Can work in the morning only"
+msgstr "Může jen ráno"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__off
+msgid "Cannot work / off"
+msgstr "Nemůžu / volno"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "Choose a person or type a name."
+msgstr "Vyberte člověka nebo vepište jméno."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid ""
+"Click a day and choose whether you can work. Vacation, NV and other absences"
+" are entered by the management (the day then shows a lock); write wishes in "
+"the note. Planned shifts are in the blue label."
+msgstr ""
+"Klikněte na den a vyberte, jestli můžete pracovat. Dovolenou, NV a další "
+"absence zapisuje vedení (u dne je pak zámek); přání napište do poznámky. "
+"Naplánované směny vidíte v modrém štítku."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid ""
+"Click or type a letter in a cell (D, N, L, P, S, M, R, O, V, Del) · dot = "
+"entered by themselves · drag the bottom edge to resize"
+msgstr ""
+"Klik nebo písmeno v buňce (D, N, L, P, S, M, R, O, V, Del) · tečka = "
+"zadal(a) si sám/sama · velikost změníte tažením za spodní okraj"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Click to add a person. Another click adds another one (+ together)."
+msgstr "Klikem přidáte člověka. Dalším klikem přidáte dalšího (+ spolu)."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Close"
+msgstr "Zavřít"
+
+#. module: elite_vet_planning
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_vet_doctor_staff_list
+msgid "Color"
+msgstr "Barva"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_planning_row__preferred_roles
+msgid ""
+"Comma separated roles (doctor, nurse, reception, helper) offered first when "
+"choosing a person."
+msgstr ""
+"Čárkou oddělené role (doctor, nurse, reception, helper), které se při výběru"
+" člověka nabízejí jako první."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Contract"
+msgstr "Úvazek"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__weekly_hours
+msgid "Contract (h/week)"
+msgstr "Úvazek (h/týden)"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "Copied %(ok)s shifts, skipped %(skip)s."
+msgstr "Zkopírováno %(ok)s směn, přeskočeno %(skip)s."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Copy the shifts of the previous week here"
+msgstr "Zkopírovat sem směny z předchozího týdne"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__create_uid
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__create_uid
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__create_uid
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__create_uid
+msgid "Created by"
+msgstr "Vytvořil(a)"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__create_date
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__create_date
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__create_date
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__create_date
+msgid "Created on"
+msgstr "Vytvořeno"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "D"
+msgstr ""
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "D · NV · L · PN · Š"
+msgstr ""
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__date
+msgid "Date"
+msgstr "Datum"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__days
+msgid "Days"
+msgstr "Dny"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Delete"
+msgstr "Smazat"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Delete record"
+msgstr "Smazat záznam"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__display_name
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__display_name
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__display_name
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__display_name
+msgid "Display Name"
+msgstr "Zobrazovaný název"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_doctor__staff_role__doctor
+msgid "Doctor"
+msgstr "Lékař"
+
+#. module: elite_vet_planning
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_vet_doctor_staff_list
+msgid "Doctor (bookings)"
+msgstr "Lékařka (rezervace)"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__l
+msgid "Doctor's visit"
+msgstr "Lékař"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Done"
+msgstr "Hotovo"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Down"
+msgstr "Dolů"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Download for Excel"
+msgstr "Stáhnout pro Excel"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Drag to resize"
+msgstr "Táhnutím zvětšíte nebo zmenšíte"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Enter the time as 8:00 or 14:30."
+msgstr "Čas zadejte jako 8:00 nebo 14:30."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Entered Cannot work for this day"
+msgstr "Na tento den zadal(a) Nemůžu"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__entered_by_member
+msgid "Entered by themselves"
+msgstr "Zadal(a) sám/sama"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_staff_request__entered_by_member
+msgid "Entered in My availability."
+msgstr "Zaklikl(a) si v Moje dostupnost."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_planning_slot__days__all
+msgid "Every day"
+msgstr "Každý den"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Export CSV"
+msgstr ""
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_staff_month_note__month
+msgid "First day of the month."
+msgstr "1. den měsíce."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__hour_from
+msgid "From"
+msgstr "Od"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "From the roster – no section"
+msgstr "Z rozpisu – bez úseku"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Full day (12 h)"
+msgstr "Celodenní (12 h)"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Full name"
+msgstr "Jméno"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Fund"
+msgstr "Fond"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Fund (h)"
+msgstr "Fond (h)"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid ""
+"Fund = working days of the month without holidays × contract / 5. A morning "
+"and an afternoon shift on one day count once (8–16 + 12–20 = 12 h, full "
+"day). D, L and Š count as a worked day, NV and PN do not. Doctors' services "
+"in sections with a room go to the reservation calendar by themselves."
+msgstr ""
+"Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna "
+"v jeden den se počítá jednou (8–16 + 12–20 = 12 h, celodenní). D, L a Š se "
+"počítají jako odpracovaný den, NV a PN ne. Služby lékařek v úsecích s "
+"ordinací se samy propisují do kalendáře rezervací."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Has absence %s on this day"
+msgstr "Na tento den má absenci %s"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_doctor__staff_role__helper
+msgid "Helper / intern"
+msgstr "Výpomoc / stáž"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Hours balance"
+msgstr "Bilance hodin"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__id
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__id
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__id
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__id
+msgid "ID"
+msgstr ""
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__in_planning
+msgid "In planning"
+msgstr "V plánování"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "In the reservation calendar (entered in Rozpis lékařů)"
+msgstr "V kalendáři rezervací (zadáno v Rozpisu lékařů)"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "In the reservation calendar: %s"
+msgstr "V kalendáři rezervací: %s"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__initials
+msgid "Initials"
+msgstr "Zkratka"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_planning_row__kind__helpers
+msgid "Internship / helpers"
+msgstr "Stáž / výpomoc"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_planning_row__kind
+msgid ""
+"Internship / helpers: any name can be typed in; the shifts are not shown on "
+"the website."
+msgstr ""
+"Stáž / výpomoc: jde vepsat i libovolné jméno; směny se nezobrazují na webu."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__kind
+msgid "Kind"
+msgstr "Druh"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__planning_color
+msgid "Label color"
+msgstr "Barva štítku"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_doctor__initials
+msgid ""
+"Label in Planning. Computed from the name, can be overwritten (e.g. DPI)."
+msgstr "Štítek v Plánování. Spočítá se ze jména, jde přepsat (např. DPI)."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__write_uid
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__write_uid
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__write_uid
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__write_uid
+msgid "Last Updated by"
+msgstr "Naposledy upravil(a)"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__write_date
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__write_date
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__write_date
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__write_date
+msgid "Last Updated on"
+msgstr "Naposledy upraveno"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__vacation_left
+msgid "Left (days)"
+msgstr "Zbývá (dny)"
+
+#. module: elite_vet_planning
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_doctor
+msgid "Lékařka"
+msgstr ""
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"Missing in the reservation calendar. Save the shift again (change the time "
+"and change it back)."
+msgstr ""
+"V kalendáři rezervací chybí. Uložte směnu znovu (změňte a vraťte čas)."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__month
+msgid "Month"
+msgstr "Měsíc"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "Month fund"
+msgstr "Fond měsíce"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_staff_month_note
+msgid "Month note"
+msgstr "Poznámka k měsíci"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_planning_slot__days__weekdays
+msgid "Mon–Fri"
+msgstr "Po–Pá"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Morning"
+msgstr "Ranní"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__morning
+msgid "Morning only"
+msgstr "Jen ráno"
+
+#. module: elite_vet_planning
+#: model:ir.actions.client,name:elite_vet_planning.action_my_availability
+#: model:ir.ui.menu,name:elite_vet_planning.menu_my_availability
+msgid "My availability"
+msgstr "Moje dostupnost"
+
+#. module: elite_vet_planning
+#: model:ir.ui.menu,name:elite_vet_planning.menu_my_availability_root
+msgid "My shifts"
+msgstr "Moje směny"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "NV"
+msgstr ""
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__name
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__name
+msgid "Name"
+msgstr "Název"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_shift__helper_name
+msgid "Name (helper)"
+msgstr "Jméno (výpomoc)"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Next month"
+msgstr "Další měsíc"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"Not written to reservations: %s does not have „Lékařka – přijímá rezervace“ "
+"ticked in Lékařky."
+msgstr ""
+"Nepropisuje se do rezervací: %s nemá v Lékařkách zaškrtnuto „Lékařka – "
+"přijímá rezervace“."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"Not written to reservations: section %s has no room set in Plan sections."
+msgstr ""
+"Nepropisuje se do rezervací: úsek %s nemá v Úsecích plánu vyplněnou "
+"ordinaci."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "Not written to reservations: the shift has no room."
+msgstr "Nepropisuje se do rezervací: směna nemá ordinaci."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__note
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__note
+msgid "Note"
+msgstr "Poznámka"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "Note (e.g. I want vacation, until 14:00)"
+msgstr "Poznámka (např. chci dovolenou, do 14:00)"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Note for the day (optional)"
+msgstr "Poznámka ke dni (nepovinné)"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Note…"
+msgstr "Poznámka…"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_doctor__staff_role__nurse
+msgid "Nurse"
+msgstr "Sestra"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_shift__web_visible
+msgid "On the website"
+msgstr "Na webu"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "Only the roster manager may plan shifts."
+msgstr "Plánovat služby smí jen Správce rozpisu."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__planning_sequence
+msgid "Order in the plan"
+msgstr "Pořadí v plánu"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "Other"
+msgstr "Ostatní"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Other name or note (intern, temp)"
+msgstr "Jiné jméno nebo poznámka (praktikant, brigádník)"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "Past days can no longer be changed."
+msgstr "Minulé dny už měnit nejde."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_doctor__staff_role
+msgid "People are sorted by role in Planning and in Shift requests."
+msgstr "Podle role se lidé řadí v Plánování a v Požadavcích na směny."
+
+#. module: elite_vet_planning
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_planning_row_form
+msgid "Plan section"
+msgstr "Úsek plánu"
+
+#. module: elite_vet_planning
+#: model:ir.actions.act_window,name:elite_vet_planning.action_planning_row
+#: model:ir.ui.menu,name:elite_vet_planning.menu_planning_row
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_planning_row_list
+msgid "Plan sections"
+msgstr "Úseky plánu"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_shift__planning_slot_id
+msgid "Plan shift"
+msgstr "Směna v plánu"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "Planned"
+msgstr "Naplánováno"
+
+#. module: elite_vet_planning
+#: model:ir.actions.client,name:elite_vet_planning.action_planner
+#: model:ir.ui.menu,name:elite_vet_planning.menu_planner
+msgid "Planning"
+msgstr "Plánování"
+
+#. module: elite_vet_planning
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_planning_row
+msgid "Planning section"
+msgstr "Úsek plánu služeb"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Previous month"
+msgstr "Předchozí měsíc"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Print"
+msgstr "Tisk"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_doctor__staff_role__reception
+msgid "Reception"
+msgstr "Recepce"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__code
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_staff_request_search
+msgid "Record"
+msgstr "Záznam"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Remove"
+msgstr "Odebrat"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Requests"
+msgstr "Požadavky"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "Rest of the month: Can work"
+msgstr "Zbytek měsíce: Můžu"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__staff_role
+msgid "Role"
+msgstr ""
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__preferred_roles
+msgid "Roles on top of the list"
+msgstr "Role nahoře v nabídce"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__room_id
+msgid "Room in reservations"
+msgstr "Ordinace v rezervacích"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_planning_slot__days__weekend
+msgid "Sat–Sun"
+msgstr "So–Ne"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Save the note only"
+msgstr "Uložit jen poznámku"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Saving…"
+msgstr "Ukládání…"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__row_id
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_shift__planning_row_id
+msgid "Section"
+msgstr "Úsek"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_planning_row__kind__room
+msgid "Section / room"
+msgstr "Úsek / místnost"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Section / shift"
+msgstr "Úsek / směna"
+
+#. module: elite_vet_planning
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_planning_slot
+msgid "Section shift"
+msgstr "Směna úseku"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__sequence
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__sequence
+msgid "Sequence"
+msgstr "Pořadí"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Service entered in Rezervace › Rozpis lékařů"
+msgstr "Služba zadaná v Rezervace › Rozpis lékařů"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Shift entered in the roster"
+msgstr "Směna zadaná v Rozpisu služeb"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Shift requests"
+msgstr "Požadavky na směny"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Shift roster"
+msgstr "Rozpis služeb"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Shift roster –"
+msgstr "Rozpis služeb –"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__type_id
+msgid "Shift type in the roster"
+msgstr "Typ směny v rozpisu"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_planning_slot__type_id
+msgid "Shift type used in the roster (color and legend on the website)."
+msgstr ""
+"Typ směny, pod kterým se zapíše do Rozpisu služeb (barva a legenda na webu)."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_row__slot_ids
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_planning_row_list
+msgid "Shifts"
+msgstr "Směny"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Shifts %(shifts)s h + D/L/Š %(credited)s h"
+msgstr "Směny %(shifts)s h + D/L/Š %(credited)s h"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__pn
+msgid "Sick leave (PN)"
+msgstr "Nemoc (PN)"
+
+#. module: elite_vet_planning
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_shift
+msgid "Směna v rozpisu"
+msgstr ""
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+#: model:ir.actions.act_window,name:elite_vet_planning.action_staff
+#: model:ir.ui.menu,name:elite_vet_planning.menu_staff
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_vet_doctor_staff_list
+msgid "Staff"
+msgstr "Personál"
+
+#. module: elite_vet_planning
+#: model:ir.model,name:elite_vet_planning.model_elite_vet_planner
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_vet_doctor_form_planning
+msgid "Staff planning"
+msgstr "Plánování služeb"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Take over services from Rozpis lékařů ("
+msgstr "Převzít služby z Rozpisu lékařů ("
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__vacation_taken
+msgid "Taken this year (days)"
+msgstr "Vyčerpáno letos (dny)"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_month_note__member_id
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_staff_request__member_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_staff_request_search
+msgid "Team member"
+msgstr "Člen týmu"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_doctor__weekly_hours
+msgid ""
+"The contract gives the daily fund (contract / 5) and the monthly fund "
+"(working days of the month without holidays × daily fund)."
+msgstr ""
+"Z úvazku se počítá denní fond (úvazek / 5) a měsíční fond (pracovní dny "
+"měsíce bez svátků × denní fond)."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"The management has entered an absence for this day (%s). Agree on any change"
+" with them."
+msgstr ""
+"Na tento den má vedení zapsanou absenci (%s). Změnu domluvte s vedením."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planning_row.py:0
+msgid ""
+"The shift times From and To must be between 0:00 and 24:00 and must differ."
+msgstr "Čas směny „Od“ a „Do“ musí být mezi 0:00 a 24:00 a nesmí být stejný."
+
+#. module: elite_vet_planning
+#: model:ir.model.constraint,message:elite_vet_planning.constraint_elite_vet_staff_month_note_member_month_unique
+msgid "There is one note per month."
+msgstr "Na měsíc je jedna poznámka."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "This plan shift no longer exists. Reload the page."
+msgstr "Tato směna v plánu už neexistuje. Načtěte stránku znovu."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__time_display
+msgid "Time"
+msgstr "Čas"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Time of the new shift:"
+msgstr "Čas nové směny:"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__nv
+msgid "Time off in lieu"
+msgstr "Náhradní volno"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_planning_slot__hour_to
+msgid "To"
+msgstr "Do"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"Took over %(ok)s services, skipped %(skip)s (room without a section, or a "
+"clash)."
+msgstr ""
+"Převzato %(ok)s služeb, přeskočeno %(skip)s (ordinace bez úseku nebo "
+"kolize)."
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__s
+msgid "Training / congress"
+msgstr "Školení / kongres"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid ""
+"Turns the services entered in Rezervace › Rozpis lékařů into roster shifts, "
+"planned here from then on"
+msgstr ""
+"Služby zadané v Rezervace › Rozpis lékařů převede na směny v rozpisu, dál se"
+" plánují tady"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_doctor__in_planning
+msgid "Untick for people who are not planned (e.g. web only)."
+msgstr "Odškrtněte u lidí, kteří se neplánují (např. jen web)."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Up"
+msgstr "Nahoru"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields.selection,name:elite_vet_planning.selection__elite_vet_staff_request__code__d
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_staff_request_search
+msgid "Vacation"
+msgstr "Dovolená"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "Vacation left"
+msgstr "Zbývá dovolené"
+
+#. module: elite_vet_planning
+#: model:ir.model.fields,field_description:elite_vet_planning.field_elite_vet_doctor__vacation_days
+msgid "Vacation per year (days)"
+msgstr "Dovolená na rok (dny)"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"Vacation, time off, doctor's visits, sick leave and training are entered by "
+"the management."
+msgstr "Dovolenou, NV, lékaře, nemoc a školení zapisuje vedení."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Weekends"
+msgstr "Víkendy"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Weekends (h)"
+msgstr "Víkendy (h)"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Worked"
+msgstr "Odpracováno"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Worked (h)"
+msgstr "Odpracováno (h)"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "You cannot enter this record yourself."
+msgstr "Tento záznam si zadat nejde."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid ""
+"Your account is not linked to a team member. Ask the management to link it "
+"in Rozpis služeb › Lékařky › Účet."
+msgstr ""
+"Váš účet není propojený s členem týmu. Požádejte vedení, ať vás propojí v "
+"Rozpis služeb › Lékařky › Účet."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "can work"
+msgstr "může"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "days"
+msgstr "dní"
+
+#. module: elite_vet_planning
+#: model_terms:ir.ui.view,arch_db:elite_vet_planning.view_planning_row_form
+msgid "e.g. Ordinace 1"
+msgstr "např. Ordinace 1"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "h"
+msgstr ""
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "h)"
+msgstr ""
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid "h/week"
+msgstr "h/týden"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "h/wk"
+msgstr "h/t"
