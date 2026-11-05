@@ -174,8 +174,6 @@ class ReceptionBoard(models.AbstractModel):
             raise UserError(_("Druhá ordinace se označuje s hlavní rezervací – otevřete hlavní rezervaci."))
         if reservation.state != "confirmed":
             raise UserError(_("Jako nedorazil jde označit jen potvrzenou rezervaci."))
-        if local_date(reservation.start) > clinic_today():
-            raise UserError(_("Rezervace je teprve v budoucnu – jako nedorazil ji jde označit nejdřív v její den."))
         if self._reservation_visit(reservation):
             raise UserError(_("Klient už je přijatý (návštěva je založená) – nejde označit jako nedorazil."))
         reservation.action_no_show()

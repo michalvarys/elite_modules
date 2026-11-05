@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from odoo import fields
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from .common import ReservationCase
@@ -70,3 +71,18 @@ class TestNoShow(ReservationCase):
         self.assertFalse(wizard.no_show_warning)   # a new client has no history
         view = self.env.ref("elite_vet_reservation.view_reservation_wizard_form")
         self.assertIn("o_ev_no_show_warning", view.arch)
+
+    def test_not_before_the_day_of_the_reservation(self):
+        r = self.reservation(start=self.dt(self.today + timedelta(days=2), 9, 0), partner_id=self.client.id)
+        self.assertTrue(r.is_future_day)
+        with self.assertRaisesRegex(UserError, "teprve v budoucnu"):
+            r.action_no_show()
+        self.assertEqual(r.state, "confirmed")
+
+    def test_no_show_frees_the_time_for_the_web(self):
+        r = self.reservation(start=self.dt(self.today, 23, 0), partner_id=self.client.id)
+        self.assertFalse(r.is_future_day)
+        busy = self.env["elite.vet.reservation"]._busy_domain([r.room_id.id], r.start, r.stop, scope="web")
+        self.assertIn(r, self.env["elite.vet.reservation"].search(busy))
+        r.action_no_show()
+        self.assertNotIn(r, self.env["elite.vet.reservation"].search(busy))

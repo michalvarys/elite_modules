@@ -31,7 +31,9 @@
                     <button name="action_send_confirmation" type="object" string="Poslat potvrzení"
                             invisible="state != 'confirmed' or kind == 'block' or not contact_email"/>
                     <button name="action_done" type="object" string="Proběhla" invisible="state != 'confirmed' or kind == 'block'"/>
-                    <button name="action_no_show" type="object" string="Nedorazil" invisible="state != 'confirmed' or kind == 'block'"/>
+                    <field name="is_future_day" invisible="1"/>
+                    <button name="action_no_show" type="object" string="Nedorazil"
+                            invisible="state != 'confirmed' or kind == 'block' or is_future_day"/>
                     <!-- Three cancel variants: a block has nobody to notify, nor does a reservation without e-mail.
                          The e-mail warning is shown only where an e-mail is actually sent; with an e-mail
                          a dialog (cancel wizard) asks first and takes the message for the client. -->

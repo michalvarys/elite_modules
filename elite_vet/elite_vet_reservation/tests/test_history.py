@@ -16,6 +16,7 @@ class TestReservationHistory(ReservationCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.day = fields.Date.today() + timedelta(days=12)
+        cls.past = fields.Date.today() - timedelta(days=2)   # Nedorazil cannot be marked before its day
         Users = cls.env["res.users"].with_context(no_reset_password=True)
 
         def user(login, group):
@@ -121,16 +122,16 @@ class TestReservationHistory(ReservationCase):
         self.assertEqual(self.env["elite.vet.reservation"].no_show_summary(partner=r.partner_id)["count"], 0)
 
     def test_restore_no_show_taken_slot(self):
-        r = self.reservation(start=self.dt(self.day, 11, 0))
+        r = self.reservation(start=self.dt(self.past, 11, 0))
         r.action_no_show()
-        self.reservation(start=self.dt(self.day, 11, 0), contact_email="jiny@example.cz")
+        self.reservation(start=self.dt(self.past, 11, 0), contact_email="jiny@example.cz")
         with self.assertRaisesRegex(UserError, "termín už není volný"):
             self.restore(r)
         self.assertEqual(r.state, "no_show")
 
     def test_restore_no_show_brings_back_the_second_room(self):
-        main = self.reservation(start=self.dt(self.day, 12, 0))
-        second = self.reservation(start=self.dt(self.day, 12, 0), room_id=self.room2.id, is_second_room=True,
+        main = self.reservation(start=self.dt(self.past, 12, 0))
+        second = self.reservation(start=self.dt(self.past, 12, 0), room_id=self.room2.id, is_second_room=True,
                                   linked_reservation_id=main.id)
         main.linked_reservation_id = second
         main.action_no_show()
@@ -140,7 +141,7 @@ class TestReservationHistory(ReservationCase):
         self.assertFalse(second.cancel_reason)
 
     def test_restore_no_show_manager_only(self):
-        r = self.reservation(start=self.dt(self.day, 15, 0))
+        r = self.reservation(start=self.dt(self.past, 15, 0))
         r.action_no_show()
         with self.assertRaises(UserError):
             r.with_user(self.reception).action_restore_wizard()
