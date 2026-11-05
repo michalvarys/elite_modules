@@ -1,6 +1,6 @@
 {
     "name": "Elite Arena - ggLeap data",
-    "version": "18.0.1.2.0",
+    "version": "18.0.1.3.0",
     "category": "Services",
     "summary": "Automatická synchronizace z ggLeapu (herna): hráči, návštěvy, prodeje, produkty, PC, rezervace "
                "a herní passy; propojení hráčů s kontakty, přidávání passů a přehled tržeb a návštěvnosti.",

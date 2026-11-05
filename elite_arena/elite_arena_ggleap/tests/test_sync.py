@@ -338,6 +338,21 @@ class TestGgleapSync(TransactionCase):
         self.assertEqual(Booking.search([("uuid", "=", "b1-test")]).state, "planned")
         self.assertEqual(Booking.search([("uuid", "=", "b2-test")]).state, "noshow")
 
+    def test_new_contact_gets_czech(self):
+        self.env["res.lang"]._activate_lang("cs_CZ")
+        self.partner_existing.lang = "en_US"
+        self.run_sync(dataset())
+        partner = self.player(U1).partner_id
+        self.assertEqual(partner.lang, "cs_CZ", "ggLeap keeps no language of its players; they are Czech")
+        self.assertEqual(self.partner_existing.lang, "en_US", "a contact linked by e-mail keeps its language")
+        # a language changed in Odoo is not overwritten by the next run
+        partner.lang = "en_US"
+        data = dataset()
+        data["users"][0]["Email"] = "karel.novy@example.com"
+        self.run_sync(data, now=NOW + timedelta(hours=1))
+        self.assertEqual(partner.email, "karel.novy@example.com")
+        self.assertEqual(partner.lang, "en_US")
+
     def test_second_run_is_idempotent_and_copies_changes(self):
         data = dataset()
         self.run_sync(data)

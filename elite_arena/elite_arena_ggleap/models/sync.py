@@ -46,6 +46,8 @@ LOGOUT_ACTIONS = ("LoggedOut", "RemoteLoggedOut")
 PAID_STATUSES = ("Paid", "PartiallyRefunded")
 LINE_RULES = 2   # bump to re-apply stored transactions when the line rules change
 CONTACT_TO_PARTNER = {"first_name": "name", "last_name": "name", "email": "email", "phone": "phone"}
+# The public API of ggLeap gives no language of a player; they are Czech.
+PLAYER_LANG = "cs_CZ"
 
 # Areas that commit after every downloaded chunk (and use a savepoint per chunk themselves).
 CHUNKED = {"activity", "launches", "transactions"}
@@ -1042,6 +1044,9 @@ class GgleapSync(models.AbstractModel):
         Player = self.env["elite.arena.ggleap.player"]
         Partner = self.env["res.partner"].with_context(active_test=False)
         tag = self.env.ref("elite_arena_ggleap.partner_category_player", raise_if_not_found=False)
+        # The cron runs as superuser (English): without it every new contact would get e-mails in
+        # English. Only on create, a language changed in Odoo stays.
+        lang = {"lang": PLAYER_LANG} if self.env["res.lang"]._lang_get(PLAYER_LANG) else {}
         todo = Player.search([("deleted", "=", False), ("partner_dirty", "=", True)])
         created = updated = 0
         for player in todo:
@@ -1059,7 +1064,7 @@ class GgleapSync(models.AbstractModel):
                     player.write({"partner_dirty": False, "partner_dirty_fields": False})
                     continue
                 vals = {"name": self._nice_name(player), "email": player.email, "phone": player.phone,
-                        "ggleap_uuid": player.uuid, "ref": player.uuid, "is_company": False}
+                        "ggleap_uuid": player.uuid, "ref": player.uuid, "is_company": False, **lang}
                 if tag:
                     vals["category_id"] = [(4, tag.id)]
                 partner = Partner.create(vals)
