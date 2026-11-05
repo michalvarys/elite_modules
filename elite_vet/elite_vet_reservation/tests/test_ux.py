@@ -100,8 +100,13 @@ class TestBoardSuggestions(ReservationCase):
         w = self.waiting()
         row = next(x for x in self.R.board_data(self.day.isoformat())["waiting"] if x["id"] == w.id)
         self.assertEqual(row["minute"], 540)
-        weekdays = ["po", "út", "st", "čt", "pá", "so", "ne"]
-        self.assertEqual(row["date_label"], "%s %d. %d. 09:00" % (weekdays[self.day.weekday()], self.day.day, self.day.month))
+        # the weekday follows the language of the user
+        day = "%d. %d. 09:00" % (self.day.day, self.day.month)
+        for lang, weekdays in (("cs_CZ", ["po", "út", "st", "čt", "pá", "so", "ne"]),
+                               ("en_US", ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])):
+            data = self.R.with_context(lang=lang).board_data(self.day.isoformat())
+            label = next(x for x in data["waiting"] if x["id"] == w.id)["date_label"]
+            self.assertEqual(label, "%s %s" % (weekdays[self.day.weekday()], day))
         self.R.board_confirm(w.id, row["date"], row["minute"], self.room2.id, self.dr_b.id)
         self.assertEqual((w.state, w.room_id, w.doctor_id, w.start),
                          ("confirmed", self.room2, self.dr_b, self.dt(self.day, 9, 0)))

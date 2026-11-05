@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 20:16+0000\n"
-"PO-Revision-Date: 2026-10-10 20:16+0000\n"
+"POT-Creation-Date: 2026-11-05 09:02+0000\n"
+"PO-Revision-Date: 2026-11-05 09:02+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -18,7 +18,99 @@ msgstr ""
 #. module: elite_vet_reservation
 #. odoo-python
 #: code:addons/elite_vet_reservation/models/doctor_assignment.py:0
-msgid "%s už v tu dobu slouží: %s."
+msgid "%(doctor)s už v tu dobu slouží v ordinaci %(room)s: %(clash)s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/doctor_assignment.py:0
+msgid "%(n)s služeb je z Rozpisu služeb – ty se nekopírují, zadávají se tam."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "%(time)s v %(room)s je obsazený: %(conflict)s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid ""
+"%(time)s v %(room)s je obsazený: %(conflict)s. Vyberte jiný čas, nebo "
+"použijte „Přesto vytvořit“."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "%(time)s v %(room)s není pro tento úkon volný – vyberte jiný čas."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/doctor_assignment.py:0
+msgid ""
+"%s nemá zaškrtnuto „Lékařka – přijímá rezervace“. Do rozpisu lékařů patří "
+"jen lékařky; nastavuje se v Rozpis služeb → Lékařky."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+msgid ""
+"%s nepřijímá rezervace, proto u její směny nemůže být ordinace – ordinaci "
+"smažte. (Lékařky se označují v Rozpis služeb → Lékařky, „Lékařka – přijímá "
+"rezervace“.)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "%s – recepce v tento den objednává normálně (i ručním časem)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_form
+msgid ""
+");\n"
+"                        tady jde upravit jen „Jen tyto úkony“ a poznámka."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "+ poznámka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "+ služba"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "+15 min"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "+30 min"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+".\n"
+"                            Je-li čas volný, krok s výběrem času se přeskočí."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+".\n"
+"                        Klienta jde doplnit později (Klient… / Spárovat klienta)."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -32,8 +124,18 @@ msgid "1 · What do you need"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "1. Co a kdy"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "2 · Date and time"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "2. Volný čas"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -42,8 +144,18 @@ msgid "3 · Your details"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "3. Klient"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "4 · Done"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "4. Shrnutí"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -55,6 +167,17 @@ msgid ""
 "    <p>Úkon: <t t-out=\"object.procedure_id.name\"/> · <t t-out=\"object.start_display\"/><t t-if=\"object.doctor_id\"> · <t t-out=\"object.doctor_id.name\"/></t></p>\n"
 "    <p>Popis: <t t-out=\"object.problem\"/></p>\n"
 "    <p><a t-attf-href=\"{{ object.get_base_url() }}/odoo/action-elite_vet_reservation.action_reservation_waiting\">Otevřít frontu Čekající z webu</a></p>\n"
+"</div>\n"
+"            "
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_request_for_clinic
+msgid ""
+"<div style=\"font-family:system-ui,sans-serif\">\n"
+"    <p><b t-out=\"object.contact_name\"/> · <t t-out=\"object.contact_phone\"/> · <t t-out=\"object.contact_email\"/></p>\n"
+"    <p>Žádá o zrušení: <t t-out=\"object.name\"/> · <t t-out=\"object.start_display\"/></p>\n"
+"    <p><a t-attf-href=\"{{ object.get_base_url() }}/odoo/action-elite_vet_reservation.action_board\">Otevřít kalendář</a></p>\n"
 "</div>\n"
 "            "
 msgstr ""
@@ -79,6 +202,28 @@ msgid ""
 "    <p>we have received your request for <b t-out=\"object.procedure_id.name\"/> on <b t-out=\"object.start_display\"/>.\n"
 "       Our reception will confirm it shortly by e-mail.</p>\n"
 "    <p t-if=\"object.procedure_id.client_note\" style=\"background:#e0f2f0;padding:10px 14px;border-radius:8px\" t-out=\"object.procedure_id.client_note\"/>\n"
+"    <p>Elite Vet Karlovy Vary</p>\n"
+"</div>\n"
+"            "
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_requested
+msgid ""
+"<div style=\"font-family:system-ui,sans-serif;color:#1a2744;max-width:560px\">\n"
+"    <p>Hello <t t-out=\"object.contact_name\"/>,</p>\n"
+"    <p>we have received your request to cancel <b t-out=\"object.name\"/> on <b t-out=\"object.start_display\"/>. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked.</p>\n"
+"    <p>Elite Vet Karlovy Vary</p>\n"
+"</div>\n"
+"            "
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_kept
+msgid ""
+"<div style=\"font-family:system-ui,sans-serif;color:#1a2744;max-width:560px\">\n"
+"    <p>Hello <t t-out=\"object.contact_name\"/>,</p>\n"
+"    <p>your appointment <b t-out=\"object.name\"/> on <b t-out=\"object.start_display\"/> stays booked, the clinic has not cancelled it. If you have any questions, please call the reception.</p>\n"
 "    <p>Elite Vet Karlovy Vary</p>\n"
 "</div>\n"
 "            "
@@ -129,8 +274,115 @@ msgid ""
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "<i class=\"fa fa-user-times me-1\" title=\"Nedorazil\" aria-hidden=\"true\"/>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"<span class=\"btn btn-light btn-sm disabled\" invisible=\"reached_step &gt;= 1\">2. Volný čas</span>\n"
+"                    <span class=\"btn btn-primary btn-sm pe-none\" invisible=\"step != 'client'\">3. Klient</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"<span class=\"btn btn-light btn-sm disabled\" invisible=\"reached_step &gt;= 2\">3. Klient</span>\n"
+"                    <span class=\"btn btn-primary btn-sm pe-none\" invisible=\"step != 'summary'\">4. Shrnutí</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"<span class=\"btn btn-light btn-sm disabled\" invisible=\"reached_step &gt;="
+" 3\">4. Shrnutí</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"<span class=\"btn btn-primary btn-sm pe-none\" invisible=\"step != "
+"'time'\">2. Volný čas</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"<span class=\"btn btn-primary btn-sm pe-none\" invisible=\"step != "
+"'what'\">1. Co a kdy</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
+msgid "<span class=\"rs-cta-text\">Book online</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"<span class=\"text-muted small ms-2\">i mimo nabízené časy – brání jen úplná"
+" blokace, u jiné rezervace se průvodce zeptá</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_block_readonly_form
+msgid ""
+"<span class=\"text-muted\">Blokace může měnit jen recepce nebo správce "
+"rezervací.</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "<span data-text=\"any-doctor\" hidden=\"hidden\">Any doctor</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid ""
+"<span invisible=\"overlap_can_override\">Přes blokaci rezervace uložit "
+"nejde.</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid ""
+"<span invisible=\"repeat_rule != 'daily'\">den / dní</span>\n"
+"                                <span invisible=\"repeat_rule != 'weekly'\">týden / týdnů (2 = každý druhý, sudý / lichý)</span>\n"
+"                                <span invisible=\"repeat_rule != 'monthly'\">měsíc / měsíců, stejný den v měsíci</span>\n"
+"                                <span invisible=\"repeat_rule != 'yearly'\">rok / let, stejné datum</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid ""
+"<span invisible=\"repeat_rule != 'daily'\">den / dní</span>\n"
+"                            <span invisible=\"repeat_rule != 'weekly'\">týden / týdnů (2 = každý druhý, sudý / lichý)</span>\n"
+"                            <span invisible=\"repeat_rule != 'monthly'\">měsíc / měsíců, stejný den v měsíci</span>\n"
+"                            <span invisible=\"repeat_rule != 'yearly'\">rok / let, stejné datum</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_page_bar
+msgid ""
+"<span><span class=\"evbk-bar-elite\">Elite</span><span class=\"evbk-bar-"
+"vet\">Vet</span></span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "<span>opakováních (včetně této blokace)</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "<span>opakováních (včetně této poznámky)</span>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_quick_create
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_reservation
+msgid "<span>–</span>"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -159,6 +411,21 @@ msgid "Activity Type Icon"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "Adresa formuláře WinVet"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_email_from
+msgid ""
+"Adresa, ze které chodí klientům e-maily k rezervacím (potvrzení, změna, "
+"zrušení, připomínka). Musí to být schránka, přes kterou Odoo odesílá "
+"(odchozí poštovní server), jinak e-maily skončí ve spamu nebo je server "
+"odmítne. Jde zadat i se jménem: Elite Vet Karlovy Vary <rezervace@elite-"
+"vet.cz>."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Afternoon"
 msgstr ""
@@ -168,6 +435,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__active
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__active
 msgid "Aktivní"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__allowed_doctor_ids
+msgid "Allowed Doctor"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -183,6 +455,11 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:mail.template,subject:elite_vet_reservation.mail_rescheduled
 msgid "Appointment moved – {{ object.start_display }}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,subject:elite_vet_reservation.mail_cancel_kept
+msgid "Appointment stays booked – {{ object.start_display }}"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -202,9 +479,42 @@ msgid "Barva"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_doctor__calendar_color
+msgid ""
+"Barva jejího proužku na kartách rezervací a její služby v kalendáři. Když ji"
+" nevyberete, přidělí se automaticky – každá lékařka má jinou."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor__calendar_color
+msgid "Barva v kalendáři"
+msgstr ""
+
+#. module: elite_vet_reservation
 #. odoo-python
 #: code:addons/elite_vet_reservation/models/reservation.py:0
 msgid "Bez jména"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__partner_mode__none
+msgid "Bez klienta"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_end__never
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_end__never
+msgid "Bez konce"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__repeat_end
+msgid "Bez konce: blokace se založí na rok dopředu."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_room_note__repeat_end
+msgid "Bez konce: poznámka se založí na rok dopředu."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -223,6 +533,24 @@ msgstr ""
 #: code:addons/elite_vet_reservation/models/reservation.py:0
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__kind__block
 msgid "Blokace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
+msgid "Blokace jen pro web"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Blokace může měnit jen recepce nebo správce rezervací."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__block_room_ids
+msgid ""
+"Blokace platí v každé zaškrtnuté ordinaci. Všechny zaškrtnuté = blokace celé"
+" kliniky."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -261,6 +589,16 @@ msgid "Cancel appointment | Elite Vet"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:mail.template,subject:elite_vet_reservation.mail_cancel_requested
+msgid "Cancellation request received – {{ object.start_display }}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Change"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Choose a doctor, then the reason for your visit."
 msgstr ""
@@ -273,6 +611,17 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Choose the reason for your visit."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Chybí termín."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__step__what
+msgid "Co a kdy"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -297,9 +646,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__create_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__create_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__create_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__create_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__create_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__create_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__create_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__create_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__create_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__create_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__create_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -308,9 +663,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__create_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__create_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__create_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__create_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__create_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__create_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__create_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__create_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__create_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__create_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__create_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__create_date
 msgid "Created on"
 msgstr ""
 
@@ -320,23 +681,52 @@ msgid "Currency"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Další den ›"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Další volný den"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__date
 msgid "Datum"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.actions.act_window,help:elite_vet_reservation.action_assignment
-msgid ""
-"Datum, lékařka, ordinace, od–do. Podle toho se na webu nabízí termíny\n"
-"               „k lékaři“ a v kalendáři je vidět, kdo je v ordinaci."
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Datum rezervace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Datum zrušení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__day_label
+msgid "Day Label"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__weekday
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__date
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
 msgid "Den"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_rule__daily
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_rule__daily
+msgid "Denně"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -355,37 +745,58 @@ msgid "Deposit | Elite Vet"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Specify the reason for your visit"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "e.g. a check-up, vaccination, limping on the left leg"
-msgstr ""
-
-#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__display_name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__display_name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__display_name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__display_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__display_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__display_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__display_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__display_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__display_name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__display_name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__display_name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__display_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__display_name
 msgid "Display Name"
 msgstr ""
 
 #. module: elite_vet_reservation
 #. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
 msgid "Dnes"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Dny v týdnu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__hour_to
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__hour_to
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__hour_to
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_shift__hour_to
 msgid "Do"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/second_room.py:0
+msgid "Do druhé ordinace jde přidat jen potvrzená rezervace."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Do tohoto kroku se ještě nedá přejít."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -399,8 +810,19 @@ msgid "Dokud je vypnuté, záloha se nikde neukazuje."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Done by: {name}"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__species
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__pet_species
 msgid "Druh"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__block_scope
+msgid "Druh blokace"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -409,8 +831,44 @@ msgid "Druh zvířete"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__doctor_id
+msgid "Druhá lékařka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__is_second_room
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__room_id
+msgid "Druhá ordinace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__linked_reservation_id
+msgid ""
+"Druhá rezervace téhož zákroku v jiné ordinaci. Přesun a zrušení platí pro "
+"obě."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Dvě lékařky v jedné ordinaci: pacient je ale vždy jen jeden naráz."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Dále"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__duration
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__duration
 msgid "Délka (min)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Délka musí být násobek 5 minut, nejméně 5 a nejvýše 480."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -425,12 +883,27 @@ msgid "Důvod blokace"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__problem
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__problem
+msgid "Důvod návštěvy"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Důvod návštěvy: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__cancel_reason
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__cancel_reason
 msgid "Důvod zrušení"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__contact_email
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__contact_email
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__contact_email
 msgid "E-mail"
 msgstr ""
 
@@ -440,8 +913,23 @@ msgid "E-mail for confirmation"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__contact_email
+msgid "E-mail klienta"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_notify_email
 msgid "E-mail pro upozornění"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_page_bar
+msgid "Elite Vet"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_setting__web_booking_source__elite
+msgid "Elite Vet (náš kalendář)"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -450,9 +938,32 @@ msgid "Elite Vet - nastavení webu"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "Elite Vet Karlovy Vary <rezervace@elite-vet.cz>"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Examinations in {name}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__partner_mode__existing
+msgid "Existující klient"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__purple
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room__color__purple
 msgid "Fialová"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid ""
+"Filtr skrývá část rezervací tohoto dne – klik do skrytého místa je pořád "
+"obsazený."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -471,14 +982,54 @@ msgid "Font awesome icon e.g. fa-tasks"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Free day"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__has_message
 msgid "Has Message"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__has_multiple_serving
+msgid "Has Multiple Serving"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__has_pet
+msgid "Has Pet"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.actions.act_window,name:elite_vet_reservation.action_reservation_history
+#: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_history
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Historie rezervací"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__partner_id
+msgid "Hledá podle jména, telefonu i e-mailu."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__rodent
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__rodent
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__rodent
 msgid "Hlodavec"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/setting.py:0
+msgid "Hodnoty časových limitů nesmí být záporné."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__holiday_warning
+msgid "Holiday Warning"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -493,9 +1044,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__id
 msgid "ID"
 msgstr ""
 
@@ -534,11 +1091,13 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__note
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__note
 msgid "Interní poznámka"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
 msgid "Interní poznámka recepce"
 msgstr ""
 
@@ -548,13 +1107,32 @@ msgid "Is Follower"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__is_manual
+msgid "Is Manual"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.cancel_page
 msgid "It is too late to cancel online. Please call the reception:"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "JN"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_procedure__custom_color
+msgid ""
+"Jakákoli barva podle přání. Když je vybraná, má přednost před barvou ze "
+"seznamu; výběr barvy ze seznamu ji zase smaže."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__lang
-msgid "Jazyk klienta"
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__lang
+msgid "Jazyk rezervace"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -565,13 +1143,42 @@ msgid ""
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.constraint,message:elite_vet_reservation.constraint_elite_vet_doctor_assignment_shift_unique
+msgid "Jedna směna z rozpisu služeb může mít jen jednu službu v ordinaci."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
 msgid "Jen blokace"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Jen poznámka – termíny neblokuje."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Jen pro čtení – mění se ve WinVetu. Termín je obsazený."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
 msgid "Jen rezervace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Jen rezervace z webu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Jen rezervace založené na klinice (bez záznamů z WinVetu)"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -585,8 +1192,20 @@ msgid "Jen u blokace: založí kopie na stejný den v týdnu až do tohoto data.
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__block_scope__web
+msgid "Jen web"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Jen web – recepce sem objednat smí (klik do sloupce)."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__other
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__other
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__other
 msgid "Jiné"
 msgstr ""
 
@@ -602,12 +1221,31 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__contact_name
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__contact_name
 msgid "Jméno a příjmení"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__pet_name
 msgid "Jméno mazlíčka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Jméno, telefon nebo e-mail"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.actions.client,name:elite_vet_reservation.action_board
+#: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_board
+msgid "Kalendář"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_email_reply_to
+msgid ""
+"Kam dojde odpověď, když klient na e-mail k rezervaci odpoví. Prázdné = na "
+"odesílatele."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -621,6 +1259,25 @@ msgstr ""
 #: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_procedure__room_ids
 msgid ""
 "Kde se úkon dělá. Prázdné = ve všech ordinacích rezervovatelných online."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__performed_by
+msgid "Kdo dělá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__cancelled_by_id
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__cancelled_by_id
+msgid ""
+"Kdo rezervaci zrušil (u zrušení klientem z webu veřejný uživatel webu)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_procedure__specialization_ids
+msgid ""
+"Kdo úkon dělá: jen lékařky s aspoň jednou z těchto specializací (na kartě v "
+"Náš tým). Prázdné = kterákoli lékařka. Podle toho web nabízí časy a lékařky."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -642,9 +1299,37 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__partner_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__partner_mode
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__cancel_reason__client
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__step__client
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
 msgid "Klient"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/no_show.py:0
+msgid "Klient %(count)d× nedorazil, naposledy %(day)s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Klient dostane e-mail o změně termínu (%s)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Klient dostane potvrzovací e-mail (%s)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
+msgid "Klient e-mail nedostane – v historii rezervace zůstane poznámka."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -659,20 +1344,167 @@ msgid "Klient může zrušit do (hodin před)"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/mailing.py:0
+msgid "Klient nebyl o potvrzení informován."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/mailing.py:0
+msgid "Klient nebyl o změně informován."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/mailing.py:0
+msgid "Klient požádal o zrušení."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__no_show_warning
+msgid "Klient v posledních 12 měsících nedorazil – jen upozornění."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__cancel_requested_at
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
+msgid "Klient žádá o zrušení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,subject:elite_vet_reservation.mail_cancel_request_for_clinic
+msgid "Klient žádá o zrušení – {{ object.start_display }}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/sound/sound.js:0
+msgid "Klient žádá o zrušení: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.actions.act_window,name:elite_vet_reservation.action_client
 #: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_client
 msgid "Klienti"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Klientovi odejde e-mail o zrušení."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__send_confirmation
+msgid "Klientovi odejde e-mail s potvrzením rezervace (jako u nové)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Klientovi odejde e-mail, že nebyla zrušena."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Klientovi odešlo potvrzení na %s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Klientovi se nic neposílalo."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Klik = upravit službu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__cancel_reason__clinic
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__source__internal
 msgid "Klinika"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Klinika – iniciály toho, kdo rezervaci založil"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_res_partner__no_show_count
+#: model:ir.model.fields,help:elite_vet_reservation.field_res_users__no_show_count
+msgid ""
+"Kolikrát klient nedorazil za posledních 12 měsíců (rezervace ve stavu "
+"Nedorazil)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_pet__no_show_count
+msgid ""
+"Kolikrát zvíře nedorazilo za posledních 12 měsíců (rezervace ve stavu "
+"Nedorazil)."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__stop
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__stop
 msgid "Konec"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.js:0
+msgid "Konec musí být po začátku."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_end
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_end
+msgid "Konec opakování"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Konec opakování musí být v den blokace nebo později."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/room_note.py:0
+msgid "Konec opakování musí být v den poznámky nebo později."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_end__count
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_end__count
+msgid "Konec po"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+#: code:addons/elite_vet_reservation/models/room_note.py:0
+msgid "Konec po: zadejte aspoň 1 opakování."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_end__until
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_end__until
+msgid "Konec v"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -681,9 +1513,32 @@ msgid "Konfigurace"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__is_second_room
+msgid "Kopie pro druhou lékařku. Klientovi se z ní neposílají e-maily."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Kopie ve druhé ordinaci zůstává zrušená."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/doctor_assignment.py:0
+msgid "Kopírování na další týden"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__cat
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__cat
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__cat
 msgid "Kočka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__step
+msgid "Krok"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -692,9 +1547,21 @@ msgid "Krok slotů (min)"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/setting.py:0
+msgid "Krok slotů musí být kladný násobek 5 minut."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__rabbit
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__rabbit
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__rabbit
 msgid "Králík"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Kterákoli, která úkon dělá"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -709,9 +1576,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__write_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__write_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__write_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__write_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__write_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__write_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__write_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__write_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__write_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__write_uid
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__write_uid
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -720,23 +1593,67 @@ msgstr ""
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__write_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__write_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__write_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__write_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__write_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__write_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__write_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__write_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__write_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__write_date
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__write_date
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__write_date
 msgid "Last Updated on"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_purple
+msgid "Levandulová"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Loading…"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_doctor
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__doctor_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__doctor_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__doctor_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__doctor_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Lékařka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_doctor_list_reservation
+msgid "Lékařka (rezervace)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__slot_doctor_id
+msgid "Lékařka termínu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor__accepts_bookings
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_shift__accepts_bookings
+msgid "Lékařka – přijímá rezervace"
 msgstr ""
 
 #. module: elite_vet_reservation
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
-msgid "Lékař:"
+msgid "Lékařka:"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__doctor_id
-#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__doctor_id
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
-msgid "Lékařka"
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Lékařka: %s"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -757,8 +1674,15 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.model,name:elite_vet_reservation.model_elite_vet_pet
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__pet_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__pet_id
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_pet_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
 msgid "Mazlíček"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_orange
+msgid "Meruňková"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -772,8 +1696,26 @@ msgid "Messages"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid ""
+"Mimo běžnou ordinační dobu – vkládáte ručně (%(time)s, %(room)s). "
+"Zkontrolujte čas a pokračujte tlačítkem „Použít ruční čas“."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__duration_minutes
 msgid "Minut"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__minute
+msgid "Minuta od půlnoci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__minute
+msgid "Minute"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -790,6 +1732,23 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__my_activity_date_deadline
 msgid "My Activity Deadline"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_teal
+msgid "Mátová"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_rule__monthly
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_rule__monthly
+msgid "Měsíčně"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
+msgid "Můžete to přesto udělat – v historii rezervace zůstane poznámka."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -815,6 +1774,40 @@ msgid "Name"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__cancel_message
+msgid ""
+"Napište důvod nebo cokoli dalšího – vloží se do e-mailu o zrušení, který "
+"klient dostane."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_list
+msgid "Naposledy změnil(a)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "Např. Mimo ordinační dobu se k ceně připočítává pohotovostní poplatek…"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Např. dopoledne jen očkování"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/cancel_dialog/cancel_dialog.xml:0
+msgid "Např. důvod zrušení nebo nabídka jiného termínu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/setting.py:0
+msgid "Nastavení může měnit jen správce rezervací."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:res.groups,comment:elite_vet_reservation.group_reservation_manager
 msgid "Navíc spravuje ordinace, úkony, ordinační dobu, rozpis a nastavení."
 msgstr ""
@@ -826,10 +1819,22 @@ msgid "Načítám…"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__no_show_count
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_res_partner__no_show_count
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_res_users__no_show_count
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__cancel_reason__no_show
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__state__no_show
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_partner_form_no_show
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_pet_form_no_show
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
 msgid "Nedorazil"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/no_show.py:0
+msgid "Nedorazil – %s"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -845,6 +1850,69 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_min_hours_before
 msgid "Nejdříve za (hodin)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_rule__none
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_rule__none
+msgid "Neopakovat"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Neplatný čas konce: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.js:0
+msgid "Nepodařilo se uložit."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/history.py:0
+msgid "Nepodporovaný operátor."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Nepovinné – prázdné bude Jiné"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Nepovinné – prázdné uloží Jiné"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__title
+msgid ""
+"Nepovinné – ukáže se jako první v názvu rezervace v kalendáři. Bez klienta "
+"je povinné."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Nepovinné – ukáže se v kalendáři"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Nepovinné – ukáže se v kalendáři (bez klienta povinné)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__message
+msgid "Nepovinné – vloží se do e-mailu o zrušení, který klient dostane."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__title
+msgid ""
+"Nepovinný krátký popis – ukáže se jako první v názvu rezervace v kalendáři. "
+"Hodí se hlavně pro rezervaci bez klienta."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -879,6 +1947,11 @@ msgid "Nic nečeká."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__no_show_warning
+msgid "No Show Warning"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.deposit_page
 msgid "No deposit is required for this appointment."
 msgstr ""
@@ -886,8 +1959,8 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid ""
-"No doctor has online appointments in the coming weeks. Choose by procedure or "
-"call us."
+"No doctor has online appointments in the coming weeks. Choose by procedure "
+"or call us."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -901,6 +1974,11 @@ msgid "No specializations are set up yet. Choose by procedure."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Nothing matches your search. Try another word or choose by doctor."
+msgstr ""
+
+#. module: elite_vet_reservation
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
 #: model:ir.actions.act_window,name:elite_vet_reservation.action_block_new
@@ -909,13 +1987,51 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Nová poznámka k ordinaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#. odoo-python
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+#: model:ir.actions.act_window,name:elite_vet_reservation.action_reservation_wizard
+#: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_new
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
 msgid "Nová rezervace"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:mail.template,subject:elite_vet_reservation.mail_new_for_clinic
 msgid "Nová rezervace z webu: {{ object.name }} – {{ object.start_display }}"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Nová služba"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/sound/sound.js:0
+msgid "Nová žádost z webu: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__partner_mode__new
+msgid "Nový klient"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__pet_name
+msgid "Nový mazlíček – jméno"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_shift__hour_to
+msgid "Noční služba může končit druhý den ráno (20:00–8:00)."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -939,28 +2055,103 @@ msgid "Number of messages with delivery error"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Náhled ·"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__name
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__name
 msgid "Název"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__name
+msgid "Název rezervace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form_history
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_restore_wizard_form
+msgid "Obnovit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Obnovit jde jen zrušenou rezervaci (tato je teď ve stavu %s)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/history.py:0
+msgid "Obnovit jde jen zrušenou rezervaci."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/history.py:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_restore_wizard_form
+msgid "Obnovit rezervaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/history.py:0
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Obnovit rezervaci může jen správce rezervací."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation_restore_wizard
+msgid "Obnovit zrušenou rezervaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__hour_from
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__hour_from
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__hour_from
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_shift__hour_from
 msgid "Od"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_exception_search
 msgid "Od dneška"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_email_from
+msgid "Odesílatel e-mailů"
+msgstr ""
+
+#. module: elite_vet_reservation
 #. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
 msgid "Odmítnout"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Odmítnout rezervaci %(name)s (%(date)s)?"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Odmítnout žádost"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_email_reply_to
+msgid "Odpovědi klientů na"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -975,13 +2166,61 @@ msgid "Online jen tam, kde slouží lékař"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/controllers/booking.py:0
+msgid "Online rezervace najdete na stránce Rezervační systém."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__in_series
+msgid "Opakovaná"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Opakovaná poznámka: úprava platí jen pro tento den."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_until
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_until
+msgid "Opakovat do"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_interval
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_interval
+msgid "Opakovat každý"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+#: code:addons/elite_vet_reservation/models/room_note.py:0
+msgid "Opakovat každý: zadejte aspoň 1."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_weekly_until
 msgid "Opakovat týdně do"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_rule
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_rule
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
-msgid "Opravdu zrušit? Klientovi odejde e-mail o zrušení."
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Opakování"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Opravdu zrušit tuto rezervaci?"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_cancel_wizard_form
+msgid "Opravdu zrušit? Klientovi odejde e-mail o zrušení na"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -991,25 +2230,58 @@ msgid "Oranžová"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
 #: model:ir.actions.act_window,name:elite_vet_reservation.action_room
 #: model:ir.model,name:elite_vet_reservation.model_elite_vet_room
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__room_id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__room_ids
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__block_room_ids
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__room_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__room_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__room_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__room_id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__room_id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__room_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__room_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_shift__room_id
 #: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_room
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_exception_search
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_form
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_list_reservation
 msgid "Ordinace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__manual_room_id
+msgid "Ordinace (ručně)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+msgid ""
+"Ordinace patří jen ke službě lékařky. „%s“ je celodenní poznámka – ordinaci "
+"smažte."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_doctor__default_room_id
+msgid ""
+"Ordinace, která se jí předvyplní u nové směny v Rozpisu služeb. Směna s "
+"ordinací se sama propíše do Rozpisu lékařů v rezervacích. U směny jde "
+"ordinaci změnit nebo smazat (pak se směna do rezervací nepropíše)."
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model,name:elite_vet_reservation.model_elite_vet_room_hours
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__hours_ids
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_list
 msgid "Ordinační doba"
 msgstr ""
 
@@ -1022,8 +2294,41 @@ msgid ""
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"Ordinační doba, služba lékařky, blokace jen pro web, víkend ani svátek tu nebrání.\n"
+"                                    Lékařku (zvolenou v kroku 1, jinak tu, která v ordinaci zrovna slouží) zkontrolujte."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:elite.vet.procedure,name:elite_vet_reservation.procedure_other
+msgid "Other"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Other examinations with doctors of this specialization"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__overlap_can_override
+msgid "Overlap Can Override"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__overlap_ok
+msgid "Overlap Ok"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__overlap_room_id
+msgid "Overlap Room"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__dog
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__dog
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__dog
 msgid "Pes"
 msgstr ""
 
@@ -1054,6 +2359,11 @@ msgid "Platnost „od“ je později než „do“."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Platné (čekající, potvrzené)"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_hours__date_to
 msgid "Platí do"
 msgstr ""
@@ -1066,6 +2376,7 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__reptile
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__reptile
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__reptile
 msgid "Plaz"
 msgstr ""
 
@@ -1080,18 +2391,28 @@ msgid "Po kolika minutách se nabízejí začátky termínů."
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_procedure__specialization_ids
-msgid "Podle nich klient hledá úkon přes záložku Specializace."
-msgstr ""
-
-#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_hours__weekday__0
 msgid "Pondělí"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__problem
-msgid "Důvod návštěvy"
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Ponechat"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Ponechat rezervaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__title
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__title
+msgid "Popis"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1101,19 +2422,43 @@ msgid "Popište prosím, s čím přicházíte."
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Poslat klientovi e-mail o změně"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__send_confirmation
+msgid "Poslat klientovi potvrzení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__send_email
+msgid "Poslat klientovi potvrzení e-mailem"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Poslat potvrzení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_notify_enabled
+msgid "Posílat klinice upozornění"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_reminder_enabled
 msgid "Posílat připomínku"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
 msgid "Potvrdit"
-msgstr ""
-
-#. module: elite_vet_reservation
-#. odoo-javascript
-#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
-msgid "Potvrdit / upravit"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1123,8 +2468,46 @@ msgid "Potvrdit jde jen čekající rezervaci."
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Potvrdit zrušení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Potvrdit žádost"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Potvrdit žádost?"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Potvrdit →"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Potvrzeno: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__state__confirmed
 msgid "Potvrzená"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Potvrzená rezervace musí mít ordinaci."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1133,16 +2516,48 @@ msgid "Potvrzené"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid ""
+"Potvrďte návrhem, nebo přetáhněte kartu do sloupce ordinace na požadovaný "
+"čas."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Použít ruční čas"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__note
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_pet__note
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__note
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_exception__note
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__text
 msgid "Poznámka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Poznámka k ordinaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_room_note
+msgid "Poznámka k ordinaci na den"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_pet_form
 msgid "Poznámka pro recepci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_count
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_count
+msgid "Počet opakování"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1152,8 +2567,34 @@ msgid "Pořadí"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Požadovaný čas (obsazeno) ·"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Požadovaný čas už není volný – otevřete a přeplánujte."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Požadovaný čas už uplynul – otevřete a přeplánujte."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Previous month"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_second_room_wizard_form
+msgid ""
+"Pro zákrok, který potřebuje dvě lékařky. Rezervace se zkopíruje do druhé ordinace\n"
+"                    ve stejném čase. Obě zůstanou propojené: přesun i zrušení hlavní rezervace platí pro obě.\n"
+"                    Klientovi nic dalšího nepřijde."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1163,13 +2604,37 @@ msgid "Proběhla"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Proběhlé"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+msgid ""
+"Propsáno %(done)s. Přeskočeno: bez výchozí ordinace %(no_room)s, kolize "
+"%(clash)s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__warning
+msgid "Proč se předvyplněný čas z kalendáře nepoužil."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_doctor_assignment__procedure_ids
 msgid "Prázdné = všechny úkony, které se v ordinaci dělají."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation_wizard
+msgid "Průvodce novou rezervací"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_pet__species__bird
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__pet_species__bird
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__pet_species__bird
 msgid "Pták"
 msgstr ""
 
@@ -1184,9 +2649,97 @@ msgid "Písmeno v kalendáři, např. V = vakcinace."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__doctor_id
+msgid "Předvyplní se lékařka, která má v druhé ordinaci v tu dobu službu."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.js:0
+msgid "Přesto %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__allow_overlap
+msgid "Přesto uložit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Přesto uložit přes tuto rezervaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Přesto vytvořit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Přesunout"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Přesunout?"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Přesunuto i přes upozornění: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__was_moved
+msgid "Přesunutá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Přesunuté"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+#: model:ir.actions.server,name:elite_vet_reservation.action_shift_roster_to_reservations
+#: model:ir.ui.menu,name:elite_vet_reservation.menu_rozpis_to_reservations
+msgid "Převzít rozpis do rezervací"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+msgid "Převzít rozpis do rezervací smí jen Správce rezervací."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_second_room_wizard_form
+msgid "Přidat"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/second_room.py:0
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation_second_room_wizard
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_second_room_wizard_form
+msgid "Přidat druhou ordinaci"
+msgstr ""
+
+#. module: elite_vet_reservation
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
-msgid "Přetáhněte do sloupce = potvrdit v tom čase."
+msgid "Přidat poznámku k ordinaci na tento den, může se opakovat"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Přidat službu do Rozpisu služeb (den a ordinace jsou předvyplněné)"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1195,8 +2748,33 @@ msgid "Připomínka (hodin před)"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__original_doctor_id
+msgid "Původní lékařka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__original_room_id
+msgid "Původní ordinace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__start
+msgid "Původní čas; když už není volný, zvolte jiný."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__reached_step
+msgid "Reached Step"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:res.groups,name:elite_vet_reservation.group_reservation_reception
 msgid "Recepce"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__overlap_ok
+msgid "Recepce potvrdila rezervaci přes obsazený termín."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1210,6 +2788,12 @@ msgid "Reminder – {{ object.start_display }}"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__reservation_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__reservation_id
+msgid "Reservation"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__activity_user_id
 msgid "Responsible User"
 msgstr ""
@@ -1217,6 +2801,7 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.actions.act_window,name:elite_vet_reservation.action_reservation
 #: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__reservation_id
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_res_partner__reservation_ids
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_res_users__reservation_ids
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__kind__reservation
@@ -1226,6 +2811,79 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_list
 msgid "Rezervace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Rezervace %(name)s (%(date)s) zůstane."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Rezervace bez klienta potřebuje popis – vyplňte Popis v prvním kroku."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/second_room_wizard.py:0
+msgid "Rezervace je teď i v ordinaci %s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__web_booking_source
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "Rezervace na webu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/setting.py:0
+msgid ""
+"Rezervace přes WinVet potřebují adresu formuláře WinVet. Vyplňte ji, nebo "
+"přepněte rezervace na webu na Elite Vet (náš kalendář)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Rezervace se uloží bez klienta, v kalendáři ji poznáte podle popisu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_restore_wizard_form
+msgid ""
+"Rezervace se vrátí mezi potvrzené, jen když je termín pořád volný. Když už volný\n"
+"                    není, změňte tady začátek nebo ordinaci. Klientovi se nic nepošle, pokud\n"
+"                    nezaškrtnete „Poslat klientovi potvrzení“."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Rezervace uložena: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/second_room.py:0
+msgid "Rezervace už druhou ordinaci má: %s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_partner_form_no_show
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_pet_form_no_show
+msgid "Rezervace ve stavu Nedorazil za posledních 12 měsíců"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Rezervace zůstane a klient dostane e-mail, že nebyla zrušena."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,name:elite_vet_reservation.mail_cancel_request_for_clinic
+msgid "Rezervace: klient žádá o zrušení (klinika)"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1264,6 +2922,32 @@ msgid "Rezervace: zrušeno"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:mail.template,name:elite_vet_reservation.mail_cancel_kept
+msgid "Rezervace: žádost o zrušení odmítnuta"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:mail.template,name:elite_vet_reservation.mail_cancel_requested
+msgid "Rezervace: žádost o zrušení přijata"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid ""
+"Rezervaci nejde obnovit, termín už není volný.\n"
+"%s\n"
+"\n"
+"Zvolte v tomto okně jiný začátek nebo ordinaci a klikněte znovu Obnovit (nebo rezervaci nechte zrušenou a založte novou)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Rezervaci obnovil(a) %s."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.module.category,description:elite_vet_reservation.module_category_elite_vet_reservation
 msgid "Rezervační kalendář kliniky."
 msgstr ""
@@ -1282,9 +2966,20 @@ msgid "Rozpis lékařů"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_rule__yearly
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_rule__yearly
+msgid "Ročně"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__pink
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room__color__pink
 msgid "Růžová"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "S čím klient přichází"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1293,8 +2988,25 @@ msgid "SMS Delivery error"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Search for the reason for your visit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Search…"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Selected"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_notify_email
-msgid "Sem chodí zpráva o každé nové rezervaci z webu."
+msgid ""
+"Sem chodí zpráva o každé nové rezervaci z webu a o zrušení rezervace "
+"klientem."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1303,19 +3015,123 @@ msgid "Sem padají rezervace z webu. Otevřete je, vyberte ordinaci a potvrďte.
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__send_email_offered
+msgid "Send Email Offered"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "Send the request"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__serving_doctor_ids
+msgid "Serving Doctor"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_exception_search
 msgid "Seskupit podle"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__step__summary
+msgid "Shrnutí"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Služba"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_form
+msgid "Služba lékaře"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model,name:elite_vet_reservation.model_elite_vet_doctor_assignment
 msgid "Služba lékaře v ordinaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_shift__assignment_ids
+msgid "Služba v rezervacích"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_doctor_assignment__from_roster
+msgid ""
+"Služba vznikla z Rozpisu služeb (směna s ordinací). Lékařku, ordinaci, datum"
+" a čas jde měnit jen tam."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Smazat"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Smazat i další opakování"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_reservation
+msgid "Smazat službu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_form
+msgid "Smazat tuto službu? Zmizí z kalendáře i z volných termínů na webu."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_reservation
+msgid ""
+"Smazat tuto službu? Zmizí z rozpisu, z kalendáře i z volných termínů na "
+"webu."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_quick_create
+msgid "Směna"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_reservation
+msgid ""
+"Směna s ordinací se sama propíše do rezervací (Rezervace → Rozpis lékařů, kalendář,\n"
+"                    volné termíny). Bez ordinace se do rezervací nepropíše."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_shift
+msgid "Směna v rozpisu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__shift_id
+msgid "Směna v rozpisu služeb"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+msgid "Směnu „%(shift)s“ (%(date)s) nejde propsat do rezervací: %(reason)s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.actions.act_window,help:elite_vet_reservation.action_assignment
+msgid ""
+"Směny se zadávají v Rozpisu služeb – směna s ordinací se sem propíše sama.\n"
+"               Ručně tu jde přidat jen službu mimo rozpis (vlastní čas, půl směny).\n"
+"               Podle toho se na webu nabízí termíny „k lékaři“ a v kalendáři je vidět, kdo je v ordinaci."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1329,9 +3145,30 @@ msgid "Souhlasím se zpracováním údajů…"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room__hours_summary
+msgid "Souhrn ordinační doby"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__specialization_ids
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__specialization_ids
 msgid "Specializace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Specify the reason for your visit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Společný zákrok, také v: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__linked_reservation_id
+msgid "Společně s"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1360,6 +3197,7 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__state
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
 msgid "Stav"
 msgstr ""
@@ -1370,19 +3208,95 @@ msgid "Steps"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__holiday_warning
+msgid "Státní svátek v den rezervace - jen upozornění, rezervace jde uložit."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Státní svátek: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_block_holidays
+msgid "Státní svátky jen ručně (web neobjednává)"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_hours__weekday__2
 msgid "Středa"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model:ir.actions.client,name:elite_vet_reservation.action_board
-#: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_board
-msgid "Kalendář"
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__summary
+msgid "Summary"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_blue
+msgid "Světle modrá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_pink
+msgid "Světle růžová"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_green
+msgid "Světle zelená"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_grey
+msgid "Světle šedá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__series_uid
+msgid "Série"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/second_room.py:0
+msgid "Tato rezervace už je druhou ordinací jiné rezervace."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_form
+msgid ""
+"Tato služba je <b>z rozpisu služeb</b>. Lékařka, ordinace, datum a čas se mění\n"
+"                        v aplikaci <b>Rozpis služeb</b> (směna"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/doctor_assignment.py:0
+msgid "Tato služba je z Rozpisu služeb – upravte ji tam."
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__contact_phone
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__contact_phone
 msgid "Telefon"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Telefon: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Tento měsíc"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Tento týden"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1397,7 +3311,32 @@ msgid "Termín %s–%s v ordinaci %s je obsazený: %s."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__is_manual
+msgid "Termín byl zadán ručně (pro shrnutí)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Termín je obsazený: %s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid ""
+"Termín je v minulosti. Zvolte v tomto okně nový začátek a klikněte znovu "
+"Obnovit."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "Text"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_intro
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
 msgid "Text nad rezervací"
 msgstr ""
 
@@ -1407,7 +3346,13 @@ msgid "Text nad rezervačním průvodcem"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "Text pod rezervacemi"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_consent_text
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
 msgid "Text souhlasu pod formulářem"
 msgstr ""
 
@@ -1447,8 +3392,30 @@ msgid "This time has just been taken. Please choose another."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__time_label
+msgid "Time Label"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "Today"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.constraint,message:elite_vet_reservation.constraint_elite_vet_reservation_cancel_token_uniq
 msgid "Token rezervace musí být jedinečný."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/history.py:0
+#: code:addons/elite_vet_reservation/wizard/restore_wizard.py:0
+msgid "Toto je kopie ve druhé ordinaci – obnovte hlavní rezervaci."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_shift_type
+msgid "Typ směny"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1463,10 +3430,22 @@ msgid "Tyrkysová"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Táhnutím změníte šířku panelu · dvojklik = výchozí šířka"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_form
 msgid ""
 "Týdenní šablona. Přestávku zadejte jako dva řádky\n"
 "                               (8:00–12:00 a 13:00–18:00). Den bez řádku je zavřený."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__repeat_rule__weekly
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_note__repeat_rule__weekly
+msgid "Týdně"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1482,6 +3461,19 @@ msgid "U úkonu se zálohou vyplňte částku zálohy."
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_procedure_list
+msgid "Ukázka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid ""
+"Ukáže se na stránce /rezervacni-system pod rezervacemi, ve WinVetu\n"
+"                        i v Elite Vet. U WinVetu stojí během načítání uprostřed rámečku a po\n"
+"                        načtení klesne pod něj. Prázdné pole = žádný text."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_procedure__client_note
 msgid ""
 "Ukáže se ve výběru i v potvrzovacím e-mailu, např. „Zvíře musí být nalačno "
@@ -1489,8 +3481,125 @@ msgid ""
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Uloženo přes obsazený termín: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "Uložit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Uložit rezervaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__warning
+msgid "Upozornění"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__overlap_warning
+msgid "Upozornění na obsazený termín"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Upravit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "V %s v %s neslouží %s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "V %s v %s neslouží lékařka, která dělá %s."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "V dalších %s dnech není pro tento úkon volný termín."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__was_moved
+msgid "V historii změn je změna času nebo ordinace."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_procedure_form
+msgid "V kalendáři"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid ""
+"V tento den není volný čas. Zkuste „Další volný den“, nebo zadejte čas "
+"ručně."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__lang
+msgid ""
+"V tomto jazyce klient dostane e-maily k rezervaci. Novému klientovi se "
+"zapíše do profilu."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.actions.act_window,help:elite_vet_reservation.action_reservation_history
+msgid "V tomto výběru nejsou žádné rezervace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__serving_doctor_id
+msgid ""
+"V tu dobu se v ordinaci překrývají služby více lékařek – vyberte, ke které."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Ve WinVetu: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_shift__room_id
+msgid ""
+"Ve které ordinaci lékařka slouží. Směna s ordinací se sama propíše do "
+"rezervací (Rezervace → Rozpis lékařů, kalendář, volné termíny). Prázdné = "
+"směna se do rezervací nepropíše (např. sestra). Předvyplní se výchozí "
+"ordinace lékařky."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__serving_doctor_ids
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__serving_doctor_id
+msgid "Ve službě"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Ve všech ordinacích už je v tomto čase úplná blokace."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:res.groups,comment:elite_vet_reservation.group_reservation_reception
-msgid "Vidí kalendář, potvrzuje a zakládá rezervace, spravuje klienty."
+msgid "Vidí tabuli, potvrzuje a zakládá rezervace, spravuje klienty."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__custom_color
+msgid "Vlastní barva"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1499,8 +3608,48 @@ msgid "Vlastní rezervační systém"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__manual
+msgid ""
+"Vložit rezervaci i mimo nabízené časy. Brání jen jiná rezervace a úplná "
+"blokace; ordinační doba, služba lékařky, blokace jen pro web, víkend ani "
+"svátek ne."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/cancel_dialog/cancel_dialog.xml:0
+msgid "Vloží se do e-mailu o zrušení, který odejde na"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__doctor_id
+msgid "Volitelné. Nabízí se jen lékařky, které úkon dělají."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__slot_ids
+msgid "Volné časy"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation_wizard__step__time
+msgid "Volný čas"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation_wizard_slot
+msgid "Volný čas v průvodci rezervací"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__deposit_state__refunded
 msgid "Vráceno"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/second_room_wizard.py:0
+msgid "Vyberte druhou ordinaci."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1511,14 +3660,82 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #. odoo-python
+#: code:addons/elite_vet_reservation/models/second_room.py:0
+msgid "Vyberte jinou ordinaci, než ve které rezervace je."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Vyberte ordinaci a čas."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
 #: code:addons/elite_vet_reservation/models/reservation.py:0
 msgid "Vyberte ordinaci, do které rezervaci zapsat."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.js:0
+msgid "Vyberte ordinaci."
 msgstr ""
 
 #. module: elite_vet_reservation
 #. odoo-python
 #: code:addons/elite_vet_reservation/controllers/booking.py:0
 msgid "Vyberte termín."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Vyberte úkon."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__has_pet
+msgid "Vybraný mazlíček patří vybranému existujícímu klientovi."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Vybraný termín už pro tento úkon neplatí – vyberte jiný čas."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Vybraný termín:"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Vybrat"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__partner_id
+msgid "Vyhledat klienta"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Vyhledejte klienta, nebo zvolte „Nový klient“."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.js:0
+msgid "Vyplňte datum a čas."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Vyplňte jméno a příjmení klienta."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1534,8 +3751,37 @@ msgid "Vyplňte jméno mazlíčka."
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/wizard/reservation_wizard.py:0
+msgid "Vyplňte telefon nebo e-mail klienta."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.js:0
+msgid "Vyplňte čas konce (do)."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__deposit_required
 msgid "Vyžaduje zálohu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_setting__booking_block_weekends
+msgid "Víkendy jen ručně (web neobjednává)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation_wizard__duration
+msgid ""
+"Výchozí je délka úkonu. Prodlužte, když víte, že návštěva potrvá déle (např."
+" dva psi)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor__default_room_id
+msgid "Výchozí ordinace"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1553,6 +3799,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:elite_vet_reservation.action_room_exception
 #: model:ir.ui.menu,name:elite_vet_reservation.menu_reservation_room_exception
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_exception_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_exception_search
 msgid "Výjimky ordinační doby"
 msgstr ""
 
@@ -1562,8 +3809,45 @@ msgid "Výpočet volných termínů"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Vše"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.actions.act_window,help:elite_vet_reservation.action_reservation_history
+msgid ""
+"Všechny rezervace i zrušené, nedorazil a proběhlé. Změny (kdo a kdy) jsou v kartě\n"
+"                rezervace dole v historii zpráv. Zrušenou rezervaci vrátíte tlačítkem Obnovit."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Všechny rezervace i záznamy z WinVetu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "WEB"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
 msgid "We have received your request"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.cancel_page
+msgid ""
+"We have received your request. The clinic will confirm the cancellation by "
+"e-mail. Until then the appointment stays booked."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
+msgid "We take online bookings on our booking page."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1594,6 +3878,47 @@ msgid "Which doctor?"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "WinVet"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_setting__web_booking_source__winvet
+msgid "WinVet (podle adresy)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__web_booking_source
+msgid ""
+"WinVet (podle adresy) = na stránce /rezervacni-system je formulář WinVet z "
+"adresy níže, jako dřív. Náš webový rezervační systém (stránka i chat) pak "
+"žádné rezervace nepřijímá. Elite Vet (náš kalendář) = na stejném místě je "
+"náš rezervační průvodce a žádosti z webu chodí do Odoo (Rezervace › "
+"Čekající). Recepce, kalendář a pokladna objednávají v obou režimech stejně."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid ""
+"WinVet = na stránce /rezervacni-system je formulář WinVet z této adresy, náš\n"
+"                    systém z webu rezervace nepřijímá. Elite Vet = na stejném místě je náš průvodce\n"
+"                    a žádosti chodí do Rezervace › Čekající. Recepce, kalendář a pokladna objednávají\n"
+"                    v obou režimech stejně."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "WinVet ·"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__wizard_id
+msgid "Wizard"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.cancel_page
 msgid "Yes, cancel it"
 msgstr ""
@@ -1606,7 +3931,55 @@ msgstr ""
 #. module: elite_vet_reservation
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Z WinVetu – jen pro čtení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Z WinVetu, celý den: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
+msgid "Z kliniky"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__from_roster
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_list
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
+msgid "Z rozpisu služeb"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
 msgid "Z webu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Z webu – objednal(a) se klient sám"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "ZRUŠIT?"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_assignment_search
+msgid "Zadané ručně"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__manual
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Zadat čas ručně"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1619,6 +3992,28 @@ msgstr ""
 #. odoo-python
 #: code:addons/elite_vet_reservation/controllers/booking.py:0
 msgid "Zadejte telefon, například +420 777 111 222."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_list
+msgid "Založeno"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Založeno na klinice"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__created_by_id
+msgid "Založil(a)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Založil(a): %s"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1637,10 +4032,33 @@ msgid "Zaplaceno"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_notify_enabled
+msgid ""
+"Zapnuté = klinika dostane e-mail o každé nové rezervaci z webu a o zrušení "
+"rezervace klientem. Vypnuté = klinice nechodí nic; e-maily klientům "
+"(potvrzení, změna, zrušení, připomínka) chodí dál."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_require_doctor
 msgid ""
 "Zapnuté = termín se nabídne jen v čase, kdy má ordinace zapsanou službu "
 "lékaře."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_block_weekends
+msgid ""
+"Zapnuté = web v sobotu a neděli nenabízí žádné termíny. Recepce objednává "
+"dál (i ručním časem mimo ordinační dobu)."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_setting__booking_block_holidays
+msgid ""
+"Zapnuté = web ve státní svátek (včetně Velkého pátku a Velikonočního "
+"pondělí) nenabízí žádné termíny. Svátky se počítají samy, nic se nezadává. "
+"Recepce objednává dál."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1649,7 +4067,17 @@ msgid "Zavřeno celý den"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_restore_wizard_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_second_room_wizard_form
+msgid "Zavřít"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__start
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__start
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__start
 msgid "Začátek"
 msgstr ""
 
@@ -1659,7 +4087,24 @@ msgid "Začátek musí být dřív než konec."
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Zaškrtněte aspoň jednu ordinaci."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_doctor__accepts_bookings
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_shift__accepts_bookings
+msgid ""
+"Zaškrtněte jen u veterinárních lékařek. Jen ty jde zapsat do Rozpisu lékařů "
+"a jen ty se klientům nabízejí na webu. Které úkony dělá, plyne ze "
+"specializací na její kartě v Náš tým."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__source
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_search
 msgid "Zdroj"
 msgstr ""
 
@@ -1670,8 +4115,73 @@ msgid "Zelená"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.actions.server,name:elite_vet_reservation.action_assignment_copy_week
+msgid "Zkopírovat na další týden"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/doctor_assignment.py:0
+msgid "Zkopírováno %(ok)s, přeskočeno %(skip)s."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_procedure__symbol
 msgid "Zkratka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/assignment_calendar/assignment_calendar.xml:0
+msgid "Změnit ordinaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_list
+msgid "Změněno"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Zobrazit rezervace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_cancel_wizard__message
+msgid "Zpráva klientovi"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/cancel_dialog/cancel_dialog.xml:0
+msgid "Zpráva klientovi (nepovinné)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_cancel_wizard_form
+msgid ""
+"Zpráva klientovi (nepovinné) – např. důvod zrušení nebo nabídka jiného "
+"termínu. Vloží se do e-mailu."
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__cancel_message
+msgid "Zpráva klientovi při zrušení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/cancel_dialog/cancel_dialog.xml:0
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_cancel_wizard_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Zpět"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__cancelled_at
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__cancelled_at
+msgid "Zrušeno"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1680,8 +4190,64 @@ msgid "Zrušená"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Zrušené"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__cancelled_by_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_restore_wizard__cancelled_by_id
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_history_search
+msgid "Zrušil(a)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
 msgid "Zrušit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Zrušit blokaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation_cancel_wizard
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_cancel_wizard_form
+msgid "Zrušit rezervaci"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Zrušit rezervaci %(name)s (%(date)s) podle žádosti klienta?"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+msgid "Zrušit rezervaci podle žádosti klienta? Klient dostane e-mail."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/no_show.py:0
+msgid "Zvíře %(count)d× nedorazilo, naposledy %(day)s"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1703,9 +4269,31 @@ msgid "Zálohy zapnuté"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
+msgid "e.g. a check-up, vaccination, limping on the left leg"
+msgstr ""
+
+#. module: elite_vet_reservation
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
 msgid "interní"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "jen web ·"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/procedure.py:0
+msgid "kterákoli lékařka"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "min"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1715,9 +4303,94 @@ msgid "min)"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_quick_create
+msgid "např. Státní svátek"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_sun
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_sun
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "ne"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_mon
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_mon
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "po"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_fri
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_fri
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "pá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "rezervace z webu (klient sám)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_setting_reservation_form_booking
+msgid "rezervace@elite-vet.cz"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "skryto:"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_sat
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_sat
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "so"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_wed
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_wed
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "st"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "v"
+msgstr ""
+
+#. module: elite_vet_reservation
 #. odoo-python
 #: code:addons/elite_vet_reservation/models/reservation.py:0
 msgid "všechny"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "všechny ordinace"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "z WinVetu, jen pro čtení"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "z rozpisu služeb"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1736,8 +4409,21 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.model,name:elite_vet_reservation.model_elite_vet_procedure
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__procedure_id
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__procedure_id
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_procedure_form
 msgid "Úkon"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Úkon %s se v %s nedělá."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Úkon: %s"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1748,8 +4434,46 @@ msgid "Úkony"
 msgstr ""
 
 #. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_reservation__block_scope__full
+msgid "Úplná"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_reservation__block_scope
+msgid ""
+"Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
+"Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí."
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_hours__weekday__1
 msgid "Úterý"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_tue
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_tue
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "út"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard_slot__time_label
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_quick_create
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_vet_shift_form_reservation
+msgid "Čas"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_wizard__manual_time
+msgid "Čas (ručně)"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/shift.py:0
+msgid "Čas služby „Od“ a „Do“ musí být mezi 0:00 a 24:00 a nesmí být stejný."
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1785,14 +4509,57 @@ msgid "Červená"
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Činnost: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room_hours__weekday__3
 msgid "Čtvrtek"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__repeat_thu
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_room_note__repeat_thu
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_room_note_form
+msgid "čt"
 msgstr ""
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__grey
 #: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_room__color__grey
 msgid "Šedá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Šířka panelu čekajících žádostí"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields.selection,name:elite_vet_reservation.selection__elite_vet_procedure__color__light_yellow
+msgid "Žlutá"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/mailing.py:0
+msgid "Žádost klienta o zrušení odmítnuta, rezervace zůstává."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Žádosti o zrušení ("
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/procedure.py:0
+msgid "žádná lékařka – zkontrolujte specializace"
 msgstr ""
 
 #. module: elite_vet_reservation
@@ -1807,103 +4574,18 @@ msgid "‹ Back to reservations"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Search…"
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "‹ Předchozí den"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Search for the reason for your visit"
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "🔔 Zvuk"
 msgstr ""
 
 #. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Nothing matches your search. Try another word or choose by doctor."
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Change"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Free day"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Selected"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Today"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Loading…"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Examinations in {name}"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Other examinations with doctors of this specialization"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.booking_widget
-msgid "Done by: {name}"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
-msgid "We take online bookings on our booking page."
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.rozpis_lekaru_booking
-msgid "<span class=\"rs-cta-text\">Book online</span>"
-msgstr ""
-
-#. module: elite_vet_reservation
-#. odoo-python
-#: code:addons/elite_vet_reservation/models/mailing.py:0
-msgid "Klient nebyl o změně informován."
-msgstr ""
-
-#. module: elite_vet_reservation
-#. odoo-python
-#: code:addons/elite_vet_reservation/models/mailing.py:0
-msgid "Klient nebyl o potvrzení informován."
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_requested
-msgid "<div style=\"font-family:system-ui,sans-serif;color:#1a2744;max-width:560px\">\n    <p>Hello <t t-out=\"object.contact_name\"/>,</p>\n    <p>we have received your request to cancel <b t-out=\"object.name\"/> on <b t-out=\"object.start_display\"/>. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked.</p>\n    <p>Elite Vet Karlovy Vary</p>\n</div>\n            "
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model:mail.template,body_html:elite_vet_reservation.mail_cancel_kept
-msgid "<div style=\"font-family:system-ui,sans-serif;color:#1a2744;max-width:560px\">\n    <p>Hello <t t-out=\"object.contact_name\"/>,</p>\n    <p>your appointment <b t-out=\"object.name\"/> on <b t-out=\"object.start_display\"/> stays booked, the clinic has not cancelled it. If you have any questions, please call the reception.</p>\n    <p>Elite Vet Karlovy Vary</p>\n</div>\n            "
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model:mail.template,subject:elite_vet_reservation.mail_cancel_requested
-msgid "Cancellation request received – {{ object.start_display }}"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model:mail.template,subject:elite_vet_reservation.mail_cancel_kept
-msgid "Appointment stays booked – {{ object.start_display }}"
-msgstr ""
-
-#. module: elite_vet_reservation
-#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.cancel_page
-msgid "We have received your request. The clinic will confirm the cancellation by e-mail. Until then the appointment stays booked."
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "🔕 Bez zvuku"
 msgstr ""

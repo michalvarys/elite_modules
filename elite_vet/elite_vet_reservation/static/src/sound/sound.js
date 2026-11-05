@@ -12,6 +12,7 @@
  * after the first user interaction, so the first click "unlocks" it.
  * It can be muted with a button on the board; the choice applies to this browser.
  */
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 
 const SOUND_KEY = "elite_vet_reservation.sound";
@@ -92,17 +93,17 @@ export const soundService = {
         };
         document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
         bus_service.subscribe("elite_vet_reservation/changed", (payload) => {
-            const announce = (labels, ids, prefix) => {
+            const announce = (labels, ids, message) => {
                 const fresh = takeUnannounced(ids || []);
                 (labels || []).forEach((label, i) => {
                     if (fresh.includes(ids[i])) {
-                        notification.add(prefix + label, { type: "info", sticky: true });
+                        notification.add(message(label), { type: "info", sticky: true });
                     }
                 });
                 return fresh.length > 0;
             };
-            const web = announce(payload?.web, payload?.web_ids, "Nová žádost z webu: ");
-            const cancel = announce(payload?.cancel, payload?.cancel_ids, "Klient žádá o zrušení: ");
+            const web = announce(payload?.web, payload?.web_ids, (label) => _t("Nová žádost z webu: %s", label));
+            const cancel = announce(payload?.cancel, payload?.cancel_ids, (label) => _t("Klient žádá o zrušení: %s", label));
             if ((web || cancel) && isSoundOn()) playChime();
         });
         bus_service.start();

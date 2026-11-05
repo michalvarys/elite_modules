@@ -9,6 +9,7 @@
  * under the day in the header. Clicking the day works as before (a double-click no
  * longer fails, see onDateClick).
  */
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { calendarView } from "@web/views/calendar/calendar_view";
 import { CalendarModel } from "@web/views/calendar/calendar_model";
@@ -86,7 +87,7 @@ export class HolidayCalendarCommonRenderer extends CalendarCommonRenderer {
         const label = document.createElement("span");
         label.className = "o_ev_holiday_name";
         label.textContent = name;
-        label.title = `Státní svátek: ${name}`;
+        label.title = _t("Státní svátek: %s", name);
         top.prepend(label);
     }
 

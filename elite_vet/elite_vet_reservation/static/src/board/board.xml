@@ -10,12 +10,12 @@
                 <h3 class="evb-day-title" t-esc="dayTitle"/>
                 <!-- Public holiday: always shown (reception books normally, it is only a reminder). -->
                 <span t-if="!state.loading and state.data and state.data.holiday" class="evb-day-note evb-holiday-note"
-                      t-att-title="state.data.holiday.label + ' – recepce v tento den objednává normálně (i ručním časem).'"
+                      t-att-title="dayNoteTitle(state.data.holiday.label)"
                       t-esc="state.data.holiday.label"/>
                 <!-- Weekend note (or a holiday note already said by the badge above). -->
                 <span t-if="!state.loading and state.data and state.data.day_note and !(state.data.holiday and state.data.holiday.web_closed)"
                       class="evb-day-note"
-                      t-att-title="state.data.day_note + ' – recepce v tento den objednává normálně (i ručním časem).'"
+                      t-att-title="dayNoteTitle(state.data.day_note)"
                       t-esc="state.data.day_note"/>
                 <div class="evb-week" role="group" aria-label="Dny v týdnu">
                     <button t-foreach="weekDays" t-as="d" t-key="d.iso" type="button" class="evb-weekday"
@@ -27,7 +27,7 @@
                 </div>
                 <span class="flex-grow-1"/>
                 <button type="button" class="btn btn-light evb-sound" t-on-click="toggleSound"
-                        t-att-title="state.soundOn ? 'Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete' : 'Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete'">
+                        t-att-title="soundTitle">
                     <t t-if="state.soundOn">🔔 Zvuk</t><t t-else="">🔕 Bez zvuku</t>
                 </button>
                 <button class="btn btn-primary" t-on-click="() => this.openWizard()">Nová rezervace</button>
@@ -145,7 +145,7 @@
                                 </span>
                                 <span t-foreach="room.doctors" t-as="d" t-key="d.id" class="badge evb-doctor-chip"
                                       t-att-class="{'evb-editable': state.data.can_edit_shifts}"
-                                      t-att-style="'background:' + d.color" t-att-title="bandTitle(d) + (state.data.can_edit_shifts ? '\nKlik = upravit službu' : '')"
+                                      t-att-style="'background:' + d.color" t-att-title="bandEditTitle(d)"
                                       t-on-click="() => this.editShift(d)">
                                     <t t-esc="d.name"/> <t t-esc="d.time_label"/>
                                 </span>
@@ -197,7 +197,7 @@
                                           t-esc="e.created_by_initials or 'K'"/>
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
-                                    <span t-if="e.linked" class="evb-web" t-att-title="'Společný zákrok, také v: ' + e.linked">🔗</span>
+                                    <span t-if="e.linked" class="evb-web" t-att-title="linkedTitle(e)">🔗</span>
                                     <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                 </div>
                                 <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>

@@ -2,10 +2,12 @@ import uuid
 from datetime import timedelta
 
 import pytz
+from babel.dates import format_date
 
 from odoo import _, api, fields, models
 from odoo.addons.base.models.res_partner import _lang_get
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tools.misc import get_lang
 
 from .holidays import holiday_name
 from .pet import SPECIES
@@ -817,7 +819,7 @@ class VetReservation(models.Model):
             waiting.append({
                 "id": w.id, "name": w.name, "date": local.strftime("%Y-%m-%d"), "time": local.strftime("%H:%M"),
                 "minute": local.hour * 60 + local.minute,
-                "date_label": "%s %d. %d. %s" % (WEEKDAY_ABBR[local.weekday()], local.day, local.month,
+                "date_label": "%s %d. %d. %s" % (format_date(local, "EEE", locale=get_lang(self.env).code), local.day, local.month,
                                                  local.strftime("%H:%M")),
                 "procedure": w.procedure_id.with_context(lang=lang).name or "", "duration": w.duration_minutes,
                 "phone": w.contact_phone or "", "email": w.contact_email or "", "problem": w.problem or "",
@@ -834,7 +836,7 @@ class VetReservation(models.Model):
             local = pytz.utc.localize(c.start).astimezone(TZ)
             cancel_requests.append({
                 "id": c.id, "name": c.name, "date": local.strftime("%Y-%m-%d"),
-                "date_label": "%s %d. %d. %s" % (WEEKDAY_ABBR[local.weekday()], local.day, local.month,
+                "date_label": "%s %d. %d. %s" % (format_date(local, "EEE", locale=get_lang(self.env).code), local.day, local.month,
                                                  local.strftime("%H:%M")),
                 "phone": c.contact_phone or "", "email": c.contact_email or ""})
         # Grid lines start at the axis, slots at multiples of the step: keep the two aligned.

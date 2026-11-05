@@ -123,7 +123,7 @@ class TestPlanner(ReservationCase):
     def test_adopt_manual_services(self):
         manual = self.assign(self.dr_a, self.room1, self.day, 9, 15)
         result = self.P.adopt_assignments(self.month)
-        self.assertIn("Převzato 1", result["message"])
+        self.assertIn("Took over 1", result["message"])
         self.assertTrue(manual.exists())
         self.assertEqual(manual.shift_id.planning_slot_id, self.morning)
         self.assertEqual((manual.hour_from, manual.hour_to, manual.room_id), (9, 15, self.room1))

@@ -14,10 +14,11 @@
  * own, a yes to one is not a yes to the other. A full block is final. Used by the backend board
  * (elite_vet_reservation) and the till's board (elite_vet_reception, POS assets).
  */
+import { _t } from "@web/core/l10n/translation";
 import { Component, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 
-const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
+const { Info } = luxon;
 
 function pad(n) {
     return String(n).padStart(2, "0");
@@ -43,18 +44,18 @@ export function timeLabel(minute) {
     return `${Math.floor(minute / 60)}:${pad(minute % 60)}`;
 }
 
-/** "čt 29. 10." of "2026-10-29" (Czech, not the browser language). */
+/** "čt 29. 10." of "2026-10-29" (in the language of the user). */
 export function shortDayLabel(iso) {
     const [y, m, d] = (iso || "").split("-").map(Number);
     if (!y || !m || !d) {
         return "";
     }
     const weekday = (new Date(y, m - 1, d, 12).getDay() + 6) % 7;
-    return `${WEEKDAY_ABBR[weekday]} ${d}. ${m}.`;
+    return `${Info.weekdays("short")[weekday]} ${d}. ${m}.`;
 }
 
 export function errorText(error) {
-    return error?.data?.message || error?.message || String(error || "Nepodařilo se uložit.");
+    return error?.data?.message || error?.message || String(error || _t("Nepodařilo se uložit."));
 }
 
 /** Did the server refuse only the doctor / room rule (it can be overridden with force)? */
@@ -221,7 +222,7 @@ export class MoveConfirmDialog extends Component {
     }
 
     get forceLabel() {
-        return `Přesto ${this.props.confirmLabel.toLowerCase()}`;
+        return _t("Přesto %s", this.props.confirmLabel.toLowerCase());
     }
 
     async confirm(force = false) {
@@ -230,19 +231,19 @@ export class MoveConfirmDialog extends Component {
         }
         const minute = this.minute;
         if (minute === null || !this.state.date) {
-            this.state.error = "Vyplňte datum a čas.";
+            this.state.error = _t("Vyplňte datum a čas.");
             return;
         }
         if (this.endMinute === null) {
-            this.state.error = "Vyplňte čas konce (do).";
+            this.state.error = _t("Vyplňte čas konce (do).");
             return;
         }
         if (!this.endValid) {
-            this.state.error = "Konec musí být po začátku.";
+            this.state.error = _t("Konec musí být po začátku.");
             return;
         }
         if (!this.state.roomId) {
-            this.state.error = "Vyberte ordinaci.";
+            this.state.error = _t("Vyberte ordinaci.");
             return;
         }
         if (force) {

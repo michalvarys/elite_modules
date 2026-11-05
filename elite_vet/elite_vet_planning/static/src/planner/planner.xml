@@ -4,55 +4,55 @@
         <div class="evp o_action">
             <div class="evp-toolbar">
                 <div class="btn-group">
-                    <button class="btn btn-secondary" t-on-click="() => this.goMonth(-1)" title="Předchozí měsíc">‹</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.goMonth(-1)" title="Previous month">‹</button>
                     <span class="btn btn-light evp-month" t-esc="monthLabel"/>
-                    <button class="btn btn-secondary" t-on-click="() => this.goMonth(1)" title="Další měsíc">›</button>
+                    <button class="btn btn-secondary" t-on-click="() => this.goMonth(1)" title="Next month">›</button>
                 </div>
                 <div class="evp-tools">
-                    <span t-if="state.busy" class="text-muted evp-saving">Ukládání…</span>
-                    <span t-else="" class="text-muted evp-saving">Všechny změny uloženy</span>
+                    <span t-if="state.busy" class="text-muted evp-saving">Saving…</span>
+                    <span t-else="" class="text-muted evp-saving">All changes saved</span>
                     <button t-if="state.data and assignmentCount" class="btn btn-warning"
                             t-on-click="adoptAssignments"
-                            title="Služby zadané v Rezervace › Rozpis lékařů převede na směny v rozpisu, dál se plánují tady">
-                        Převzít služby z Rozpisu lékařů (<t t-esc="assignmentCount"/>)
+                            title="Turns the services entered in Rezervace › Rozpis lékařů into roster shifts, planned here from then on">
+                        Take over services from Rozpis lékařů (<t t-esc="assignmentCount"/>)
                     </button>
-                    <button class="btn btn-secondary" t-on-click="openStaff">Personál</button>
-                    <button class="btn btn-secondary" t-on-click="exportCsv" title="Stáhnout pro Excel">Export CSV</button>
-                    <button class="btn btn-secondary" t-on-click="print">Tisk</button>
+                    <button class="btn btn-secondary" t-on-click="openStaff">Staff</button>
+                    <button class="btn btn-secondary" t-on-click="exportCsv" title="Download for Excel">Export CSV</button>
+                    <button class="btn btn-secondary" t-on-click="print">Print</button>
                 </div>
             </div>
 
             <div t-if="state.data" class="evp-body">
-                <h2 class="evp-print-title">Rozpis služeb – <t t-esc="monthLabel"/></h2>
+                <h2 class="evp-print-title">Shift roster – <t t-esc="monthLabel"/></h2>
 
                 <!-- Požadavky na směny above the plan (Lucie, 3. 11.): resizable by the bottom edge,
                      scrolls inside, day columns aligned and scrolled together with the plan. -->
                 <div class="evp-req-panel">
                     <div class="evp-req-panel-head">
                         <button class="btn btn-sm btn-link" t-on-click="toggleRequests">
-                            <t t-esc="state.reqOpen ? '▾' : '▸'"/> Požadavky na směny
+                            <t t-esc="state.reqOpen ? '▾' : '▸'"/> Shift requests
                         </button>
-                        <small t-if="state.reqOpen" class="text-muted">Klik nebo písmeno v buňce (D, N, L, P, S, M, R, O, V, Del) · tečka = zadal(a) si sám/sama · velikost změníte tažením za spodní okraj</small>
+                        <small t-if="state.reqOpen" class="text-muted">Click or type a letter in a cell (D, N, L, P, S, M, R, O, V, Del) · dot = entered by themselves · drag the bottom edge to resize</small>
                     </div>
                     <t t-if="state.reqOpen">
                         <div class="evp-scroll evp-req-scroll" t-ref="reqScroll" t-att-style="'height:' + state.reqHeight + 'px'"
                              t-on-scroll="onReqScroll">
                             <t t-call="elite_vet_planning.PlannerRequestsTable"/>
                         </div>
-                        <div class="evp-resize" title="Táhnutím zvětšíte nebo zmenšíte" t-on-pointerdown="startResize"/>
+                        <div class="evp-resize" title="Drag to resize" t-on-pointerdown="startResize"/>
                     </t>
                 </div>
                 <div class="evp-scroll" t-ref="gridScroll" t-on-scroll="onGridScroll">
                     <table class="evp-grid">
                         <thead>
                             <tr>
-                                <th class="evp-head-row">Úsek / směna</th>
+                                <th class="evp-head-row">Section / shift</th>
                                 <t t-foreach="days" t-as="day" t-key="day.date">
                                     <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
                                         <div class="evp-day-num" t-esc="day.day"/>
                                         <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
                                         <div t-if="day.note" class="evp-day-note" t-att-title="day.note" t-esc="day.note"/>
-                                        <button t-if="day.weekday === 0" class="evp-copy" title="Zkopírovat sem směny z předchozího týdne"
+                                        <button t-if="day.weekday === 0" class="evp-copy" title="Copy the shifts of the previous week here"
                                                 t-on-click="(ev) => this.copyWeek(day, ev)">⧉</button>
                                     </th>
                                 </t>
@@ -77,7 +77,7 @@
                                                           t-att-title="chipTitle(shift)">
                                                         <t t-esc="chipLabel(shift)"/>
                                                         <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
-                                                        <button class="evp-x" title="Odebrat" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
+                                                        <button class="evp-x" title="Remove" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
                                                     </span>
                                                 </t>
                                             </td>
@@ -102,13 +102,13 @@
                     </table>
                 </div>
 
-                <h3 class="evp-h3">Bilance hodin</h3>
+                <h3 class="evp-h3">Hours balance</h3>
                 <div class="evp-scroll">
                     <table class="evp-balance">
                         <thead>
                             <tr>
-                                <th>Jméno</th><th>Úvazek</th><th>Fond</th><th>Odpracováno</th><th>Ranní</th>
-                                <th>Odpolední</th><th>Celodenní (12 h)</th><th>Víkendy</th><th>Absence</th><th>Saldo</th>
+                                <th>Full name</th><th>Contract</th><th>Fund</th><th>Worked</th><th>Morning</th>
+                                <th>Afternoon</th><th>Full day (12 h)</th><th>Weekends</th><th>Absence</th><th>Balance</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,9 +116,9 @@
                                 <t t-set="b" t-value="balance(m)"/>
                                 <tr>
                                     <td><span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/> <t t-esc="m.name"/></td>
-                                    <td><t t-esc="fmt(m.weekly_hours)"/> h/t</td>
+                                    <td><t t-esc="fmt(m.weekly_hours)"/> h/wk</td>
                                     <td><t t-esc="fmt(b.fond)"/> h</td>
-                                    <td t-att-title="'Směny ' + fmt(b.shift_hours) + ' h + D/L/Š ' + fmt(b.credited) + ' h'"><t t-esc="fmt(b.worked)"/> h</td>
+                                    <td t-att-title="workedTitle(b)"><t t-esc="fmt(b.worked)"/> h</td>
                                     <td t-esc="b.morning"/>
                                     <td t-esc="b.afternoon"/>
                                     <td t-esc="b.full_day"/>
@@ -133,9 +133,7 @@
                     </table>
                 </div>
                 <p class="evp-help text-muted">
-                    Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna v jeden den se počítá jednou
-                    (8–16 + 12–20 = 12 h, celodenní). D, L a Š se počítají jako odpracovaný den, NV a PN ne.
-                    Služby lékařek v úsecích s ordinací se samy propisují do kalendáře rezervací.
+                    Fund = working days of the month without holidays × contract / 5. A morning and an afternoon shift on one day count once (8–16 + 12–20 = 12 h, full day). D, L and Š count as a worked day, NV and PN do not. Doctors' services in sections with a room go to the reservation calendar by themselves.
                 </p>
             </div>
 
@@ -144,7 +142,7 @@
                 <div class="evp-modal" role="dialog">
                     <div class="evp-modal-head">
                         <b t-esc="cellTitle"/>
-                        <button class="btn-close" t-on-click="closeCell" aria-label="Zavřít"/>
+                        <button class="btn-close" t-on-click="closeCell" aria-label="Close"/>
                     </div>
                     <div t-if="openShifts.length" class="evp-current">
                         <t t-foreach="openShifts" t-as="shift" t-key="shift.id">
@@ -156,7 +154,7 @@
                                 <span>–</span>
                                 <input class="form-control form-control-sm evp-time" t-att-value="hm(shift.hour_to)"
                                        t-on-change="(ev) => this.changeTime(shift, 'hour_to', ev)"/>
-                                <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.removeShift(shift)">Smazat</button>
+                                <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.removeShift(shift)">Delete</button>
                             </div>
                             <div t-if="chipConflict(shift)" class="evp-warn" t-esc="chipConflict(shift)"/>
                             <div t-if="shift.booking and shift.booking.ok !== null"
@@ -166,17 +164,17 @@
                         </t>
                     </div>
                     <div class="evp-times">
-                        <span class="text-muted">Čas nové směny:</span>
+                        <span class="text-muted">Time of the new shift:</span>
                         <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.setPreset(state.cell.slot.hour_from, state.cell.slot.hour_to)" t-esc="state.cell.slot.time"/>
                         <t t-foreach="presets" t-as="p" t-key="p_index">
                             <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.setPreset(p[0], p[1])"><t t-esc="p[0]"/>–<t t-esc="p[1]"/></button>
                         </t>
-                        <input class="form-control form-control-sm evp-time" t-model="state.newFrom" title="Od"/>
+                        <input class="form-control form-control-sm evp-time" t-model="state.newFrom" title="From"/>
                         <span>–</span>
-                        <input class="form-control form-control-sm evp-time" t-model="state.newTo" title="Do"/>
+                        <input class="form-control form-control-sm evp-time" t-model="state.newTo" title="To"/>
                     </div>
                     <div class="evp-pick">
-                        <p class="text-muted small mb-1">Klikem přidáte člověka. Dalším klikem přidáte dalšího (+ spolu).</p>
+                        <p class="text-muted small mb-1">Click to add a person. Another click adds another one (+ together).</p>
                         <t t-foreach="pickerGroups()" t-as="group" t-key="group.key">
                             <div class="evp-pick-group">
                                 <div class="evp-pick-label" t-esc="group.label"/>
@@ -191,14 +189,14 @@
                             </div>
                         </t>
                         <div t-if="state.cell.row.kind === 'helpers'" class="evp-helper">
-                            <input class="form-control form-control-sm" t-model="state.helperName" placeholder="Jiné jméno nebo poznámka (praktikant, brigádník)"
+                            <input class="form-control form-control-sm" t-model="state.helperName" placeholder="Other name or note (intern, temp)"
                                    t-on-keydown="onHelperKey"/>
-                            <button class="btn btn-sm btn-primary" t-on-click="addHelper">Přidat</button>
+                            <button class="btn btn-sm btn-primary" t-on-click="addHelper">Add</button>
                         </div>
                     </div>
                     <div class="evp-modal-foot">
-                        <span t-if="state.cell.row.room" class="text-muted small">Služba lékařky se propíše do rezervací: <t t-esc="state.cell.row.room"/></span>
-                        <button class="btn btn-primary" t-on-click="closeCell">Hotovo</button>
+                        <span t-if="state.cell.row.room" class="text-muted small">A doctor's service goes to reservations: <t t-esc="state.cell.row.room"/></span>
+                        <button class="btn btn-primary" t-on-click="closeCell">Done</button>
                     </div>
                 </div>
             </div>
@@ -207,10 +205,10 @@
             <div t-if="state.picker" class="evp-modal-back" t-on-click.self="() => this.state.picker = null">
                 <div class="evp-modal evp-modal-sm" role="dialog">
                     <div class="evp-modal-head">
-                        <b><t t-esc="state.picker.member.name"/> · <t t-esc="weekdayAbbr(state.picker.day)"/> <t t-esc="state.picker.day.day"/>. <t t-esc="monthLabel"/></b>
-                        <button class="btn-close" t-on-click="() => this.state.picker = null" aria-label="Zavřít"/>
+                        <b><t t-esc="state.picker.member.name"/> · <t t-esc="dayTitle(state.picker.day)"/></b>
+                        <button class="btn-close" t-on-click="() => this.state.picker = null" aria-label="Close"/>
                     </div>
-                    <input class="form-control mb-2" t-model="state.picker.note" placeholder="Poznámka ke dni (nepovinné)"/>
+                    <input class="form-control mb-2" t-model="state.picker.note" placeholder="Note for the day (optional)"/>
                     <div class="evp-codes">
                         <t t-foreach="state.data.codes" t-as="c" t-key="c.key">
                             <button t-attf-class="btn btn-sm evp-code-btn evp-code-#{c.key}" t-on-click="() => this.pickCode(c.key)">
@@ -219,8 +217,8 @@
                         </t>
                     </div>
                     <div class="evp-modal-foot">
-                        <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.pickCode(false)">Smazat záznam</button>
-                        <button class="btn btn-sm btn-secondary" t-on-click="saveNoteOnly">Uložit jen poznámku</button>
+                        <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.pickCode(false)">Delete record</button>
+                        <button class="btn btn-sm btn-secondary" t-on-click="saveNoteOnly">Save the note only</button>
                     </div>
                 </div>
             </div>
@@ -230,7 +228,7 @@
         <table class="evp-grid evp-requests">
             <thead>
                 <tr>
-                    <th class="evp-head-row">Jméno</th>
+                    <th class="evp-head-row">Full name</th>
                     <t t-foreach="days" t-as="day" t-key="day.date">
                         <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
                             <div class="evp-day-num" t-esc="day.day"/>
@@ -239,7 +237,7 @@
                     </t>
                     <th class="evp-sum">D</th>
                     <th class="evp-sum">NV</th>
-                    <th class="evp-note-col">Poznámka k měsíci</th>
+                    <th class="evp-note-col">Month note</th>
                 </tr>
             </thead>
             <tbody>
@@ -248,8 +246,8 @@
                         <tr t-attf-class="evp-role-#{m.role} #{m_first ? 'evp-row-first' : ''}">
                             <th class="evp-head-row">
                                 <span class="evp-order">
-                                    <button t-att-disabled="m_first" t-on-click="() => this.moveMember(m, -1)" title="Nahoru">▲</button>
-                                    <button t-att-disabled="m_last" t-on-click="() => this.moveMember(m, 1)" title="Dolů">▼</button>
+                                    <button t-att-disabled="m_first" t-on-click="() => this.moveMember(m, -1)" title="Up">▲</button>
+                                    <button t-att-disabled="m_last" t-on-click="() => this.moveMember(m, 1)" title="Down">▼</button>
                                 </span>
                                 <span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/>
                                 <span class="evp-member-name" t-esc="m.name"/>
@@ -268,7 +266,7 @@
                             <td class="evp-sum" t-esc="countCode(m, 'NV')"/>
                             <td class="evp-note-col">
                                 <input class="form-control form-control-sm" t-att-value="monthNote(m)"
-                                       t-on-change="(ev) => this.saveMonthNote(m, ev)" placeholder="Poznámka…"/>
+                                       t-on-change="(ev) => this.saveMonthNote(m, ev)" placeholder="Note…"/>
                             </td>
                         </tr>
                     </t>

@@ -1,0 +1,58 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid "In the reservation calendar (entered in Rozpis lékařů)"
+msgstr "In the appointment calendar (entered in the Doctors' schedule)"
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"Not written to reservations: %s does not have „Lékařka – přijímá rezervace“ "
+"ticked in Lékařky."
+msgstr ""
+"Not written to appointments: %s does not have “Doctor – accepts "
+"appointments” ticked in Doctors."
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.js:0
+msgid "Service entered in Rezervace › Rozpis lékařů"
+msgstr "Duty entered in Appointments › Doctors' schedule"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "Take over services from Rozpis lékařů ("
+msgstr "Take over duties from the Doctors' schedule ("
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid ""
+"Turns the services entered in Rezervace › Rozpis lékařů into roster shifts, "
+"planned here from then on"
+msgstr ""
+"Turns the duties entered in Appointments › Doctors' schedule into roster "
+"shifts, planned here from then on"
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+#: code:addons/elite_vet_planning/static/src/my_availability/my_availability.xml:0
+msgid ""
+"Your account is not linked to a team member. Ask the management to link it "
+"in Rozpis služeb › Lékařky › Účet."
+msgstr ""
+"Your account is not linked to a team member. Ask the management to link it "
+"in Duty roster › Doctors › Account."

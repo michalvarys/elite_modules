@@ -4,7 +4,7 @@
         <field name="name">elite.vet.staff.request.list</field>
         <field name="model">elite.vet.staff.request</field>
         <field name="arch" type="xml">
-            <list string="Dostupnost a absence" editable="bottom">
+            <list string="Availability and absences" editable="bottom">
                 <field name="date"/>
                 <field name="member_id"/>
                 <field name="code"/>
@@ -21,16 +21,16 @@
                 <field name="member_id"/>
                 <field name="date"/>
                 <filter name="absence" string="Absence" domain="[('is_absence', '=', True)]"/>
-                <filter name="vacation" string="Dovolená" domain="[('code', '=', 'D')]"/>
+                <filter name="vacation" string="Vacation" domain="[('code', '=', 'D')]"/>
                 <group>
-                    <filter name="by_member" string="Člen týmu" context="{'group_by': 'member_id'}"/>
-                    <filter name="by_code" string="Záznam" context="{'group_by': 'code'}"/>
+                    <filter name="by_member" string="Team member" context="{'group_by': 'member_id'}"/>
+                    <filter name="by_code" string="Record" context="{'group_by': 'code'}"/>
                 </group>
             </search>
         </field>
     </record>
     <record id="action_staff_request" model="ir.actions.act_window">
-        <field name="name">Dostupnost a absence</field>
+        <field name="name">Availability and absences</field>
         <field name="res_model">elite.vet.staff.request</field>
         <field name="view_mode">list</field>
     </record>

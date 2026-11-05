@@ -1,4 +1,5 @@
 /** @odoo-module **/
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { MoveConfirmDialog, shortDayLabel } from "@elite_vet_reservation/move_dialog/move_dialog";
@@ -18,8 +19,8 @@ function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-"
 function parseIso(iso) { return new Date(iso + "T12:00:00"); }
 function nowMinute() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 // Czech names hardcoded: must not depend on the browser or user language.
-const WEEKDAY_NAMES = ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle"];
-const WEEKDAY_ABBR = ["po", "út", "st", "čt", "pá", "so", "ne"];
+const { Info } = luxon;
+const weekdayName = (i) => { const n = Info.weekdays("long")[i]; return n.charAt(0).toUpperCase() + n.slice(1); };
 function weekdayIndex(d) { return (d.getDay() + 6) % 7; }   // 0 = Monday
 
 // Width of the "Waiting from web" panel: drag handle between panel and board, remembered by the browser.
@@ -60,9 +61,9 @@ function saveDay(day, today) {
 // WinVet entries are shown in "Vše" only; blocks always (they are not bookings).
 const SOURCE_FILTER_KEY = "elite_vet_reservation.board_source_filter";
 export const SOURCE_FILTERS = [
-    { key: "all", label: "Vše", title: "Všechny rezervace i záznamy z WinVetu" },
-    { key: "web", label: "Web", title: "Jen rezervace z webu" },
-    { key: "clinic", label: "Klinika", title: "Jen rezervace založené na klinice (bez záznamů z WinVetu)" },
+    { key: "all", label: _t("Vše"), title: _t("Všechny rezervace i záznamy z WinVetu") },
+    { key: "web", label: "Web", title: _t("Jen rezervace z webu") },
+    { key: "clinic", label: _t("Klinika"), title: _t("Jen rezervace založené na klinice (bez záznamů z WinVetu)") },
 ];
 
 function loadSourceFilter() {
@@ -147,7 +148,7 @@ export class ReservationBoard extends Component {
     // ---------- header ----------
     get dayTitle() {
         const d = parseIso(this.state.date);
-        return WEEKDAY_NAMES[weekdayIndex(d)] + " " + d.getDate() + ". " + (d.getMonth() + 1) + ". " + d.getFullYear();
+        return weekdayName(weekdayIndex(d)) + " " + d.getDate() + ". " + (d.getMonth() + 1) + ". " + d.getFullYear();
     }
     get weekDays() {
         const monday = parseIso(this.state.date);
@@ -161,9 +162,9 @@ export class ReservationBoard extends Component {
             // Holidays of the loaded week (board_data.week_holidays); none while loading another week.
             const holiday = (this.state.data && this.state.data.week_holidays || {})[iso] || "";
             out.push({
-                iso, short: WEEKDAY_ABBR[i], label: d.getDate() + ". " + (d.getMonth() + 1) + ".",
+                iso, short: Info.weekdays("short")[i], label: d.getDate() + ". " + (d.getMonth() + 1) + ".",
                 selected: iso === this.state.date, today, holiday,
-                title: [today ? "Dnes" : "", holiday ? "Státní svátek: " + holiday : ""].filter(Boolean).join(" · "),
+                title: [today ? _t("Dnes") : "", holiday ? _t("Státní svátek: %s", holiday) : ""].filter(Boolean).join(" · "),
             });
         }
         return out;
@@ -187,14 +188,14 @@ export class ReservationBoard extends Component {
         if (e.kind === "block") return e.time_label + "\n" + e.name;
         if (this.isWinvet(e)) return this.winvetTitle(e);
         const lines = [e.time_label + " · " + this.eventLabel(e)];
-        if (e.cancel_requested) lines.push("Klient žádá o zrušení");
-        if (e.procedure) lines.push("Úkon: " + e.procedure);
-        if (e.doctor) lines.push("Lékařka: " + e.doctor);
-        if (e.linked) lines.push("Společný zákrok, také v: " + e.linked);
+        if (e.cancel_requested) lines.push(_t("Klient žádá o zrušení"));
+        if (e.procedure) lines.push(_t("Úkon: %s", e.procedure));
+        if (e.doctor) lines.push(_t("Lékařka: %s", e.doctor));
+        if (e.linked) lines.push(_t("Společný zákrok, také v: %s", e.linked));
         if (e.kind === "reservation") lines.push(this.originTitle(e));
-        if (e.phone) lines.push("Telefon: " + e.phone);
+        if (e.phone) lines.push(_t("Telefon: %s", e.phone));
         if (e.email) lines.push("E-mail: " + e.email);
-        if (e.problem) lines.push("Důvod návštěvy: " + e.problem);
+        if (e.problem) lines.push(_t("Důvod návštěvy: %s", e.problem));
         return lines.join("\n");
     }
     isShort(e) { return e.end - e.start <= 15; }
@@ -202,9 +203,9 @@ export class ReservationBoard extends Component {
     get sourceFilters() { return SOURCE_FILTERS; }
     isWeb(e) { return e.kind === "reservation" && e.source === "web"; }
     originTitle(e) {
-        if (this.isWeb(e)) return "Z webu – objednal(a) se klient sám" + (e.created_at ? ", " + e.created_at : "");
-        if (e.created_by) return "Založil(a): " + e.created_by + (e.created_at ? ", " + e.created_at : "");
-        return "Založeno na klinice" + (e.created_at ? ", " + e.created_at : "");
+        if (this.isWeb(e)) return _t("Z webu – objednal(a) se klient sám") + (e.created_at ? ", " + e.created_at : "");
+        if (e.created_by) return _t("Založil(a): %s", e.created_by) + (e.created_at ? ", " + e.created_at : "");
+        return _t("Založeno na klinice") + (e.created_at ? ", " + e.created_at : "");
     }
     passesSourceFilter(e) {
         const f = this.state.sourceFilter;
@@ -228,14 +229,14 @@ export class ReservationBoard extends Component {
     isWinvet(e) { return e.kind === "winvet"; }
     winvetTitle(e) {
         const lines = ["Z WinVetu · " + e.time_label, this.eventLabel(e)];
-        if (e.procedure) lines.push("Činnost: " + e.procedure);
-        if (e.winvet_title && e.winvet_title !== this.eventLabel(e)) lines.push("Ve WinVetu: " + e.winvet_title);
-        lines.push("Jen pro čtení – mění se ve WinVetu. Termín je obsazený.");
+        if (e.procedure) lines.push(_t("Činnost: %s", e.procedure));
+        if (e.winvet_title && e.winvet_title !== this.eventLabel(e)) lines.push(_t("Ve WinVetu: %s", e.winvet_title));
+        lines.push(_t("Jen pro čtení – mění se ve WinVetu. Termín je obsazený."));
         return lines.join("\n");
     }
     winvetNoteTitle(n) {
-        return "Z WinVetu, celý den: " + n.label + (n.activity ? "\nČinnost: " + n.activity : "") +
-            "\nJen poznámka – termíny neblokuje.";
+        return _t("Z WinVetu, celý den: %s", n.label) + (n.activity ? "\n" + _t("Činnost: %s", n.activity) : "") +
+            "\n" + _t("Jen poznámka – termíny neblokuje.");
     }
 
     // ---------- geometry ----------
@@ -253,7 +254,7 @@ export class ReservationBoard extends Component {
     isWebBlock(e) { return e.kind === "block" && e.block_scope === "web"; }
     webBlocksFor(room) { return this.eventsFor(room).filter((e) => this.isWebBlock(e)); }
     otherEventsFor(room) { return this.eventsFor(room).filter((e) => !this.isWebBlock(e) && this.passesSourceFilter(e)); }
-    webBlockTitle(b) { return b.time_label + "\n" + b.name + "\nJen web – recepce sem objednat smí (klik do sloupce)."; }
+    webBlockTitle(b) { return b.time_label + "\n" + b.name + "\n" + _t("Jen web – recepce sem objednat smí (klik do sloupce)."); }
 
     // ---------- doctor shifts (bands on the left) ----------
     // Concurrent shifts sit side by side (lanes); events start after the bands.
@@ -261,7 +262,14 @@ export class ReservationBoard extends Component {
         return "top:" + this.top(d.from) + "px;height:" + this.height(d.from, d.to) + "px;left:" +
             (BAND_GAP + d.lane * (BAND_W + BAND_GAP)) + "px;width:" + BAND_W + "px;background:" + d.color;
     }
-    bandTitle(d) { return d.name + " " + d.time_label + (d.from_roster ? " · z rozpisu služeb" : ""); }
+    dayNoteTitle(note) { return _t("%s – recepce v tento den objednává normálně (i ručním časem).", note); }
+    get soundTitle() {
+        return this.state.soundOn ? _t("Zvuk při nové žádosti z webu je zapnutý – kliknutím vypnete")
+            : _t("Zvuk při nové žádosti z webu je vypnutý – kliknutím zapnete");
+    }
+    bandEditTitle(d) { return this.bandTitle(d) + (this.state.data.can_edit_shifts ? "\n" + _t("Klik = upravit službu") : ""); }
+    linkedTitle(e) { return _t("Společný zákrok, také v: %s", e.linked); }
+    bandTitle(d) { return d.name + " " + d.time_label + (d.from_roster ? " · " + _t("z rozpisu služeb") : ""); }
     eventLeft(room) { return 4 + (room.lanes || 0) * (BAND_W + BAND_GAP); }
     eventStyle(room, e) {
         let style = "top:" + this.top(e.start) + "px;height:" + this.height(e.start, e.end) + "px";
@@ -329,7 +337,7 @@ export class ReservationBoard extends Component {
     // ---------- doctor shifts: edited in Rozpis služeb (roster) right from the board ----------
     openShiftForm(resModel, resId, context = {}) {
         this.action.doAction({
-            type: "ir.actions.act_window", name: resId ? "Služba" : "Nová služba",
+            type: "ir.actions.act_window", name: resId ? _t("Služba") : _t("Nová služba"),
             res_model: resModel, res_id: resId || false,
             views: [[false, "form"]], target: "new", context,
         }, { onClose: () => this.load(true) });
@@ -349,7 +357,7 @@ export class ReservationBoard extends Component {
     // ---------- room notes: same right as blocks ----------
     openNoteForm(resId, context = {}) {
         this.action.doAction({
-            type: "ir.actions.act_window", name: resId ? "Poznámka k ordinaci" : "Nová poznámka k ordinaci",
+            type: "ir.actions.act_window", name: resId ? _t("Poznámka k ordinaci") : _t("Nová poznámka k ordinaci"),
             res_model: "elite.vet.room.note", res_id: resId || false,
             views: [[false, "form"]], target: "new", context,
         }, { onClose: () => this.load(true) });
@@ -409,14 +417,14 @@ export class ReservationBoard extends Component {
         const day = this.state.date;
         const oldRoom = event.room_id
             ? (this.state.data.rooms.find((r) => r.id === event.room_id)?.name || "")
-            : "všechny ordinace";
+            : _t("všechny ordinace");
         const who = event.kind === "block"
             ? "blokaci „" + event.name + "“"
             : ([event.pet, event.owner ? "(" + event.owner + ")" : ""].filter(Boolean).join(" ") || event.name);
         this.dialog.add(MoveConfirmDialog, {
-            title: "Přesunout?",
-            confirmLabel: "Přesunout",
-            verb: "Přesunout",
+            title: _t("Přesunout?"),
+            confirmLabel: _t("Přesunout"),
+            verb: _t("Přesunout"),
             who,
             from: shortDayLabel(day) + " " + event.time_label + ", " + oldRoom,
             date: day,
@@ -430,8 +438,8 @@ export class ReservationBoard extends Component {
             origDate: day,
             origMinute: event.start,
             origRoomId: event.room_id || false,
-            mailText: "Klient dostane e-mail o změně termínu (" + (event.mail_on_move || "") + ").",
-            mailLabel: "Poslat klientovi e-mail o změně",
+            mailText: _t("Klient dostane e-mail o změně termínu (%s).", event.mail_on_move || ""),
+            mailLabel: _t("Poslat klientovi e-mail o změně"),
             onConfirm: async ({ date, minute, endMinute, roomId, notify, force, forceOverlap }) => {
                 await this.orm.call("elite.vet.reservation", "board_move",
                     [event.id, date, minute, roomId, notify, endMinute, force, forceOverlap]);
@@ -444,9 +452,9 @@ export class ReservationBoard extends Component {
      *  `doctorId` (a suggestion) is kept only while its room stays chosen. */
     askConfirmRequest(w, dateIso, min, roomId, doctorId) {
         this.dialog.add(MoveConfirmDialog, {
-            title: "Potvrdit žádost?",
-            confirmLabel: "Potvrdit",
-            verb: "Potvrdit žádost",
+            title: _t("Potvrdit žádost?"),
+            confirmLabel: _t("Potvrdit"),
+            verb: _t("Potvrdit žádost"),
             who: [w.pet, w.owner ? "(" + w.owner + ")" : ""].filter(Boolean).join(" ") || w.name,
             date: dateIso,
             minute: min,
@@ -455,14 +463,14 @@ export class ReservationBoard extends Component {
             duration: w.duration || 0,
             step: this.state.data.step,
             mailTo: w.email || false,
-            mailText: "Klient dostane potvrzovací e-mail (" + (w.email || "") + ").",
-            mailLabel: "Poslat klientovi potvrzení",
+            mailText: _t("Klient dostane potvrzovací e-mail (%s).", w.email || ""),
+            mailLabel: _t("Poslat klientovi potvrzení"),
             onConfirm: async ({ date, minute, endMinute, roomId: chosen, notify, force, forceOverlap }) => {
                 const doctor = doctorId && chosen === roomId ? doctorId : null;
                 await this.orm.call("elite.vet.reservation", "board_confirm",
                     [w.id, date, minute, chosen, doctor, notify, endMinute, force, forceOverlap]);
                 const room = this.roomChoices.find((r) => r.id === chosen)?.name || "";
-                this.notification.add("Potvrzeno: " + shortDayLabel(date) + " · " + room, { type: "success" });
+                this.notification.add(_t("Potvrzeno: %s", shortDayLabel(date) + " · " + room), { type: "success" });
                 await this.afterChange(date);
             },
         });
@@ -594,10 +602,10 @@ export class ReservationBoard extends Component {
     }
     confirmCancelRequest(item) {
         this.dialog.add(CancelDialog, {
-            title: "Potvrdit zrušení",
-            question: `Zrušit rezervaci ${item.name} (${item.date_label}) podle žádosti klienta?` +
-                (item.email ? " Klientovi odejde e-mail o zrušení." : ""),
-            confirmLabel: "Potvrdit zrušení",
+            title: _t("Potvrdit zrušení"),
+            question: _t("Zrušit rezervaci %(name)s (%(date)s) podle žádosti klienta?", { name: item.name, date: item.date_label }) +
+                (item.email ? " " + _t("Klientovi odejde e-mail o zrušení.") : ""),
+            confirmLabel: _t("Potvrdit zrušení"),
             mailTo: item.email || false,
             onConfirm: async (message) => {
                 await this.orm.call("elite.vet.reservation", "action_confirm_cancel_request", [[item.id], message]);
@@ -607,10 +615,10 @@ export class ReservationBoard extends Component {
     }
     keepAfterCancelRequest(item) {
         this.dialog.add(CancelDialog, {
-            title: "Ponechat rezervaci",
-            question: `Rezervace ${item.name} (${item.date_label}) zůstane.` +
-                (item.email ? " Klientovi odejde e-mail, že nebyla zrušena." : ""),
-            confirmLabel: "Ponechat",
+            title: _t("Ponechat rezervaci"),
+            question: _t("Rezervace %(name)s (%(date)s) zůstane.", { name: item.name, date: item.date_label }) +
+                (item.email ? " " + _t("Klientovi odejde e-mail, že nebyla zrušena.") : ""),
+            confirmLabel: _t("Ponechat"),
             mailTo: false,
             onConfirm: async () => {
                 await this.orm.call("elite.vet.reservation", "action_keep_after_cancel_request", [[item.id]]);
@@ -621,10 +629,10 @@ export class ReservationBoard extends Component {
     reject(item) {
         this.leaveWaiting();
         this.dialog.add(CancelDialog, {
-            title: "Odmítnout žádost",
-            question: `Odmítnout rezervaci ${item.name} (${item.date_label})?` +
-                (item.email ? " Klientovi odejde e-mail o zrušení." : ""),
-            confirmLabel: "Odmítnout",
+            title: _t("Odmítnout žádost"),
+            question: _t("Odmítnout rezervaci %(name)s (%(date)s)?", { name: item.name, date: item.date_label }) +
+                (item.email ? " " + _t("Klientovi odejde e-mail o zrušení.") : ""),
+            confirmLabel: _t("Odmítnout"),
             mailTo: item.email || false,
             onConfirm: async (message) => {
                 await this.orm.call("elite.vet.reservation", "action_cancel", [[item.id], "clinic", message]);
