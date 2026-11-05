@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Web, na kterém je katalog vidět. Na ostatních webech databáze je /katalog 404. -->
+        <record id="param_website" model="ir.config_parameter">
+            <field name="key">elite_trafika_catalog.website</field>
+            <field name="value">Elite Trafika</field>
+        </record>
+    </data>
+</odoo>

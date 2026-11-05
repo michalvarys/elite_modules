@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Vygenerováno skriptem scripts/gen_data.py. Úpravy v Odoo aktualizace nepřepíše. -->
+        <record id="item_white_widow_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC White Widow</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Kořeněná, lehce květinová vůně.</field>
+            <field name="ean">8594196142412</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">10</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/white_widow_1g.jpg"/>
+        </record>
+        <record id="item_northern_lights_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Northern Lights</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Výrazná, intenzivní vůně.</field>
+            <field name="ean">8594196141156</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">20</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/northern_lights_1g.jpg"/>
+        </record>
+        <record id="item_limoncello_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Limoncello</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Svěží citronová vůně.</field>
+            <field name="ean">8594196142498</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">30</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/limoncello_1g.jpg"/>
+        </record>
+        <record id="item_sherbert_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Sherbert</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Sladká ovocná vůně.</field>
+            <field name="ean">8594196142481</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">40</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/sherbert_1g.jpg"/>
+        </record>
+        <record id="item_blueberry_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Blueberry Diesel</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Sladké borůvky s ostrým dieselovým tónem.</field>
+            <field name="ean">8594196144041</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">50</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/blueberry_1g.jpg"/>
+        </record>
+        <record id="item_grape_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Grape Kush</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Sladké hrozny s výrazným kush tónem.</field>
+            <field name="ean">8594196144034</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">60</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/grape_1g.jpg"/>
+        </record>
+        <record id="item_peach_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Peach Haze</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Šťavnatá broskev s klasickým haze tónem.</field>
+            <field name="ean">8594196144027</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">70</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/peach_1g.jpg"/>
+        </record>
+        <record id="item_watermelon_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Watermelon OG</field>
+            <field name="kind">flower</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Sladký meloun s klasickým OG tónem.</field>
+            <field name="ean">8594196144010</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">80</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/watermelon_1g.jpg"/>
+        </record>
+        <record id="item_white_widow_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC White Widow</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Kořeněná, lehce květinová vůně.</field>
+            <field name="ean">8594196143136</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">90</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/white_widow_3g.jpg"/>
+        </record>
+        <record id="item_northern_lights_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Northern Lights</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Výrazná, intenzivní vůně.</field>
+            <field name="ean">8594196143105</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">100</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/northern_lights_3g.jpg"/>
+        </record>
+        <record id="item_limoncello_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Limoncello</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Svěží citronová vůně.</field>
+            <field name="ean">8594196143150</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">110</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/limoncello_3g.jpg"/>
+        </record>
+        <record id="item_sherbert_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Sherbert</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Sladká ovocná vůně.</field>
+            <field name="ean">8594196143143</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">120</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/sherbert_3g.jpg"/>
+        </record>
+        <record id="item_blueberry_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Blueberry Diesel</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Sladké borůvky s ostrým dieselovým tónem.</field>
+            <field name="ean">8594196144980</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">130</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/blueberry_3g.jpg"/>
+        </record>
+        <record id="item_grape_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Grape Kush</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Sladké hrozny s výrazným kush tónem.</field>
+            <field name="ean">8594196144973</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">140</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/grape_3g.jpg"/>
+        </record>
+        <record id="item_peach_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Peach Haze</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Šťavnatá broskev s klasickým haze tónem.</field>
+            <field name="ean">8594196144966</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">150</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/peach_3g.jpg"/>
+        </record>
+        <record id="item_watermelon_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Watermelon OG</field>
+            <field name="kind">flower</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Sladký meloun s klasickým OG tónem.</field>
+            <field name="ean">8594196144959</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">160</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/watermelon_3g.jpg"/>
+        </record>
+        <record id="item_damiana_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Damiana OG Kush</field>
+            <field name="kind">herbal</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Zemitá bylinná vůně inspirovaná OG Kush.</field>
+            <field name="ean">8594196142290</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">170</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/damiana_1g.jpg"/>
+        </record>
+        <record id="item_raspberry_1g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Raspberry Chemdawg</field>
+            <field name="kind">herbal</field>
+            <field name="pack">1 g</field>
+            <field name="aroma">Sladká malina se zemitým tónem.</field>
+            <field name="ean">8594196142306</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">180</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/raspberry_1g.jpg"/>
+        </record>
+        <record id="item_damiana_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Damiana OG Kush</field>
+            <field name="kind">herbal</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Zemitá bylinná vůně inspirovaná OG Kush.</field>
+            <field name="ean">8594196143112</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">190</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/damiana_3g.jpg"/>
+        </record>
+        <record id="item_raspberry_3g" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Raspberry Chemdawg</field>
+            <field name="kind">herbal</field>
+            <field name="pack">3 g</field>
+            <field name="aroma">Sladká malina se zemitým tónem.</field>
+            <field name="ean">8594196143129</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">200</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/raspberry_3g.jpg"/>
+        </record>
+        <record id="item_stick_white_widow" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick White Widow</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Kořeněná, lehce květinová vůně.</field>
+            <field name="ean">8594196142931</field>
+            <field name="in_store" eval="True"/>
+            <field name="sequence">210</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_white_widow.jpg"/>
+        </record>
+        <record id="item_stick_watermelon" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick Watermelon OG</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Sladký meloun s klasickým OG tónem.</field>
+            <field name="ean">8594196143907</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">220</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_watermelon.jpg"/>
+        </record>
+        <record id="item_stick_blueberry" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick Blueberry Diesel</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Sladké borůvky s ostrým dieselovým tónem.</field>
+            <field name="ean">8594196143969</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">230</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_blueberry.jpg"/>
+        </record>
+        <record id="item_stick_grape" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick Grape Kush</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Sladké hrozny s výrazným kush tónem.</field>
+            <field name="ean">8594196143945</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">240</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_grape.jpg"/>
+        </record>
+        <record id="item_stick_peach" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick Peach Haze</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Šťavnatá broskev s klasickým haze tónem.</field>
+            <field name="ean">8594196143921</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">250</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_peach.jpg"/>
+        </record>
+        <record id="item_stick_damiana" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick Damiana OG Kush</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Zemitá bylinná vůně inspirovaná OG Kush.</field>
+            <field name="ean">8594196142399</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">260</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_damiana.jpg"/>
+        </record>
+        <record id="item_stick_raspberry" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick Raspberry Chemdawg</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="aroma">Sladká malina se zemitým tónem.</field>
+            <field name="ean">8594196142405</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">270</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_raspberry.jpg"/>
+        </record>
+        <record id="item_stick_t9hc" model="elite.trafika.catalog.item">
+            <field name="name">T9HC Aroma Stick</field>
+            <field name="kind">stick</field>
+            <field name="pack">1 ks</field>
+            <field name="ean">8594196141316</field>
+            <field name="in_store" eval="False"/>
+            <field name="sequence">280</field>
+            <field name="image_1920" type="base64" file="elite_trafika_catalog/static/img/items/stick_t9hc.jpg"/>
+        </record>
+    </data>
+</odoo>

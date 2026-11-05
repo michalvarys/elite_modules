@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_trafika_catalog_item_public,elite.trafika.catalog.item.public,model_elite_trafika_catalog_item,base.group_public,1,0,0,0
+access_trafika_catalog_item_portal,elite.trafika.catalog.item.portal,model_elite_trafika_catalog_item,base.group_portal,1,0,0,0
+access_trafika_catalog_item_user,elite.trafika.catalog.item.user,model_elite_trafika_catalog_item,base.group_user,1,0,0,0
+access_trafika_catalog_item_designer,elite.trafika.catalog.item.designer,model_elite_trafika_catalog_item,website.group_website_designer,1,1,1,1
+access_trafika_catalog_like_designer,elite.trafika.catalog.like.designer,model_elite_trafika_catalog_like,website.group_website_designer,1,0,0,1

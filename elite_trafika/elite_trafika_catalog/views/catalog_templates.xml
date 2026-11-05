@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="catalog_layout" name="Katalog trafiky: rámeček">
+        <t t-call="website.layout">
+            <t t-set="head"><meta name="robots" content="noindex, nofollow"/></t>
+            <t t-set="pageName" t-value="'katalog'"/>
+            <div id="wrap" class="o_trafika_catalog">
+                <t t-out="0"/>
+            </div>
+        </t>
+    </template>
+
+    <template id="age_gate" name="Katalog trafiky: 18+">
+        <t t-call="elite_trafika_catalog.catalog_layout">
+            <div class="o_tc_gate">
+                <p class="o_tc_eyebrow">Elite Trafika</p>
+                <h1>Je ti 18?</h1>
+                <p>Tahle stránka je jen pro dospělé.</p>
+                <form action="/katalog/18" method="post">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="zdroj" t-att-value="source"/>
+                    <button type="submit" class="o_tc_primary">Ano, je mi 18</button>
+                </form>
+                <a href="/" class="o_tc_secondary">Ne, odejít</a>
+            </div>
+        </t>
+    </template>
+
+    <template id="catalog_page" name="Katalog trafiky">
+        <t t-call="elite_trafika_catalog.catalog_layout">
+            <div class="o_tc_page" t-att-data-source="source">
+                <header class="o_tc_head">
+                    <p class="o_tc_eyebrow">Elite Trafika · katalog</p>
+                    <h1>Co chceš mít u nás na pultu?</h1>
+                    <p>Klepni na srdíčko u toho, co se ti líbí. Podle toho vybíráme, co naskladníme.</p>
+                </header>
+
+                <div class="o_tc_filters" role="group" aria-label="Filtr výrobků">
+                    <button type="button" class="o_tc_filter active" data-filter="all" aria-pressed="true">Vše</button>
+                    <button type="button" class="o_tc_filter" data-filter="in_store" aria-pressed="false">V prodejně</button>
+                    <t t-foreach="kinds.items()" t-as="kind">
+                        <button type="button" class="o_tc_filter" t-att-data-filter="kind[0]" aria-pressed="false">
+                            <t t-out="kind[1]"/>
+                        </button>
+                    </t>
+                </div>
+
+                <div class="o_tc_grid">
+                    <article t-foreach="items" t-as="item" class="o_tc_card" t-att-data-kind="item.kind"
+                             t-att-data-in-store="'1' if item.in_store else None">
+                        <div class="o_tc_photo">
+                            <img t-att-src="website.image_url(item, 'image_512')" t-att-alt="item.name" loading="lazy"/>
+                            <span t-if="item.in_store" class="o_tc_badge">V prodejně</span>
+                        </div>
+                        <div class="o_tc_body">
+                            <h2><t t-out="item.name"/></h2>
+                            <p class="o_tc_pack" t-if="item.pack"><t t-out="kinds[item.kind]"/> · <t t-out="item.pack"/></p>
+                            <p class="o_tc_aroma" t-if="item.aroma"><t t-out="item.aroma"/></p>
+                        </div>
+                        <button type="button" class="o_tc_like" t-att-data-item="item.id" aria-pressed="false"
+                                t-att-aria-label="'Líbí se mi: %s %s' % (item.name, item.pack or '')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.3 2.3 4.5 6 4.5c2.4 0 4.3 1.3 6 3.5 1.7-2.2 3.6-3.5 6-3.500 3.700 0 5.600 3.800 4 7.200C19.500 16.400 12 21 12 21z"/></svg>
+                            <span>Líbí se mi</span>
+                        </button>
+                    </article>
+                </div>
+
+                <footer class="o_tc_foot">
+                    <p><strong>Prodáváme jen v prodejně, a to lidem od 18 let.</strong> Na webu nic nekoupíš.</p>
+                    <p>Hybešova 16, Karlovy Vary ·
+                        <a href="https://www.google.com/maps/search/?api=1&amp;query=Hybe%C5%A1ova+16%2C+Karlovy+Vary" target="_blank" rel="noopener">Ukázat na mapě</a></p>
+                    <p class="o_tc_note">Výrobky jsou určené ke sběratelským a aromatickým účelům, nejsou určené ke konzumaci.</p>
+                </footer>
+            </div>
+        </t>
+    </template>
+</odoo>

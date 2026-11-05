@@ -1,0 +1,163 @@
+$tc-lime: #9ce424;
+$tc-black: #0b0b0b;
+$tc-panel: #171717;
+$tc-muted: #b5b5b5;
+
+.o_trafika_catalog {
+    background: $tc-black;
+    color: #fff;
+    min-height: 70vh;
+
+    h1, h2 { color: #fff; }
+
+    .o_tc_eyebrow {
+        color: $tc-lime;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+    }
+
+    .o_tc_gate {
+        margin: 0 auto;
+        max-width: 420px;
+        padding: 18vh 16px;
+        text-align: center;
+
+        h1 { font-size: 2.5rem; font-weight: 800; }
+        form { margin: 1.5rem 0 1rem; }
+    }
+
+    .o_tc_primary {
+        background: $tc-lime;
+        border: 0;
+        border-radius: 10px;
+        color: #000;
+        font-size: 1.1rem;
+        font-weight: 800;
+        padding: 14px 24px;
+        width: 100%;
+    }
+
+    .o_tc_secondary { color: $tc-muted; text-decoration: underline; }
+
+    .o_tc_page { margin: 0 auto; max-width: 1200px; padding: 32px 16px 48px; }
+
+    .o_tc_head {
+        margin-bottom: 20px;
+        max-width: 640px;
+
+        h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); font-weight: 800; line-height: 1.1; }
+        p:last-child { color: $tc-muted; font-size: 1.05rem; margin: 0.5rem 0 0; }
+    }
+
+    .o_tc_filters {
+        display: flex;
+        gap: 8px;
+        margin: 0 -16px 20px;
+        overflow-x: auto;
+        padding: 0 16px 4px;
+        scrollbar-width: none;
+    }
+
+    .o_tc_filter {
+        background: $tc-panel;
+        border: 1px solid #333;
+        border-radius: 999px;
+        color: #fff;
+        flex: none;
+        font-weight: 600;
+        min-height: 44px;
+        padding: 0 16px;
+
+        &.active { background: $tc-lime; border-color: $tc-lime; color: #000; }
+    }
+
+    .o_tc_grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        @media (min-width: 768px) { gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        @media (min-width: 1100px) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .o_tc_card {
+        background: $tc-panel;
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        &[hidden] { display: none; }
+    }
+
+    .o_tc_photo {
+        aspect-ratio: 1;
+        background: #fff;
+        position: relative;
+
+        img { display: block; height: 100%; object-fit: contain; width: 100%; }
+    }
+
+    .o_tc_badge {
+        background: $tc-lime;
+        border-radius: 6px;
+        color: #000;
+        font-size: 0.75rem;
+        font-weight: 800;
+        left: 8px;
+        padding: 3px 8px;
+        position: absolute;
+        top: 8px;
+    }
+
+    .o_tc_body {
+        flex: 1;
+        padding: 12px 12px 8px;
+
+        h2 { font-size: 1.05rem; font-weight: 700; line-height: 1.25; margin: 0 0 4px; }
+        p { margin: 0; }
+    }
+
+    .o_tc_pack { color: $tc-lime; font-size: 0.85rem; font-weight: 600; }
+    .o_tc_aroma { color: $tc-muted; font-size: 0.9rem; margin-top: 4px !important; }
+
+    .o_tc_like {
+        align-items: center;
+        background: transparent;
+        border: 1px solid #444;
+        border-radius: 10px;
+        color: #fff;
+        display: flex;
+        font-weight: 700;
+        gap: 8px;
+        justify-content: center;
+        margin: 0 12px 12px;
+        min-height: 44px;
+
+        svg { fill: none; height: 20px; stroke: currentColor; stroke-width: 2; width: 20px; }
+
+        &[aria-pressed="true"] {
+            background: $tc-lime;
+            border-color: $tc-lime;
+            color: #000;
+
+            svg { fill: currentColor; }
+        }
+    }
+
+    .o_tc_foot {
+        border-top: 1px solid #333;
+        color: $tc-muted;
+        margin-top: 32px;
+        padding-top: 20px;
+
+        strong { color: #fff; }
+        a { color: $tc-lime; }
+        p { margin-bottom: 0.4rem; }
+    }
+
+    .o_tc_note { font-size: 0.85rem; }
+}
