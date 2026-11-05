@@ -152,6 +152,7 @@ class VetReservation(models.Model):
         BLOCK_SCOPES, string="Druh blokace", default="full",
         help="Úplná: v tom čase nikdo nic nevytvoří (web ani recepce).\n"
              "Jen web: web v tom čase nenabízí termíny, recepce tam rezervaci vložit smí.")
+    is_future_day = fields.Boolean(string="Je v dalších dnech", compute="_compute_is_future_day")
     # The reservation form's yes to a taken time: never stored, create() and write() turn it into
     # the context key ev_allow_overlap.
     allow_overlap = fields.Boolean(string="Přesto uložit", store=False)
@@ -325,6 +326,12 @@ class VetReservation(models.Model):
             self.stop = self.start + (origin.stop - origin.start)
         elif self.procedure_id:
             self.stop = self.start + timedelta(minutes=self.procedure_id.duration)
+
+    @api.depends("start")
+    def _compute_is_future_day(self):
+        today = pytz.utc.localize(fields.Datetime.now()).astimezone(TZ).date()
+        for rec in self:
+            rec.is_future_day = bool(rec.start) and pytz.utc.localize(rec.start).astimezone(TZ).date() > today
 
     # ---------- overlaps ----------
     @api.model
@@ -726,6 +733,8 @@ class VetReservation(models.Model):
         self.write({"state": "done"})
 
     def action_no_show(self):
+        if any(self.mapped("is_future_day")):
+            raise UserError(_("Rezervace je teprve v budoucnu – jako nedorazil ji jde označit nejdřív v její den."))
         self.write({"state": "no_show", "cancel_reason": "no_show"})
 
     def action_reschedule(self, start, room_id=None, doctor_id=None, stop=None):
