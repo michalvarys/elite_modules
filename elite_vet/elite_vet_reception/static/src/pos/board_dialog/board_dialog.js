@@ -347,7 +347,7 @@ export class BoardDialog extends Component {
             o_ev_board_card: e.kind === "reservation",
             o_ev_board_cancel_requested: e.cancel_requested,
             o_ev_board_from_web: this.isWeb(e),
-            o_ev_board_muted: e.state === "done" || e.state === "no_show",
+            o_ev_board_muted: e.state === "done",
             o_ev_board_short: this.isShort(e),
             o_ev_board_dragging: this.state.drag?.id === e.id,
         };

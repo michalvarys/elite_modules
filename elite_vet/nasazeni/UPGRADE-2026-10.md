@@ -1180,3 +1180,16 @@ bez nich padal přehled tržeb).
 
 Pro agenta: u `res.partner` a `elite.vet.room` vždy uvádět seznam polí (`search_read(domain, ["name", ...])`) –
 partner má i účetní pole a ta účet číst nesmí, `search_read` bez polí skončí chybou přístupu.
+
+## Doplnění: Nedorazil zmizí z tabule a jde obnovit (5. 11.)
+
+Rezervace se stavem **Nedorazil** se na tabuli (backend i pokladna) už neukazuje, stejně jako
+zrušená, aby bylo vidět, že je termín volný. Zůstává v Historii rezervací a počítá se do
+„Nedorazil N×“.
+
+Správce rezervací ji může vrátit tlačítkem **Obnovit** ve formuláři rezervace (stejný průvodce jako
+u zrušené), jen když je termín volný. Na rozdíl od zrušené jde obnovit i termín v minulosti, protože
+Nedorazil se zadává až po něm. Kopie ve druhé ordinaci se obnoví s hlavní rezervací.
+
+Data se nemění. Upgrade `elite_vet_reservation` (18.0.2.25.0), restart Odoo a na počítačích s tabulí
+a na pokladnách obnovit stránku natvrdo (Ctrl+Shift+R).

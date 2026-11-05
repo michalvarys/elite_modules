@@ -182,7 +182,7 @@
                                       t-on-click.stop="() => this.openEvent(e)">jen web · <t t-esc="e.name"/></span>
                             </div>
                             <div t-foreach="otherEventsFor(room)" t-as="e" t-key="e.id" class="evb-event"
-                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-res': e.kind === 'reservation', 'evb-cancel-requested': e.cancel_requested, 'evb-from-web': isWeb(e), 'evb-muted': e.state === 'done' || e.state === 'no_show', 'evb-short': isShort(e)}"
+                                 t-att-class="{'evb-block': e.kind === 'block', 'evb-winvet': isWinvet(e), 'evb-res': e.kind === 'reservation', 'evb-cancel-requested': e.cancel_requested, 'evb-from-web': isWeb(e), 'evb-muted': e.state === 'done', 'evb-short': isShort(e)}"
                                  t-att-style="eventStyle(room, e)"
                                  t-att-title="eventTitle(e)"
                                  t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
