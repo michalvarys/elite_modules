@@ -373,6 +373,7 @@ export class CardIndexDialog extends Component {
             values: formValues({ name }, OWNER_FIELDS),
             // task 31: the full pet form of task 22 (Další údaje closed, no Uhynulý)
             pet: petFormState({ name: res?.pet_name || "", species: "dog" }),
+            inWinvet: false, // the sync pairs the client by name and pet and fills in the contact
             error: null,
         };
     }
@@ -506,10 +507,9 @@ export class CardIndexDialog extends Component {
         let data;
         try {
             // task 31: a new client with a pet in one call (nothing is created when the pet is refused)
-            const args = form.isNew ? [form.values, false] : [form.values, this.owner.id];
-            if (withPet) {
-                args.push(this.petVals(form.pet));
-            }
+            const args = form.isNew
+                ? [form.values, false, withPet ? this.petVals(form.pet) : null, form.inWinvet]
+                : [form.values, this.owner.id];
             data = await callReception(this.orm, this.notification, "save_owner", args, { rethrow: true });
         } catch (error) {
             form.error = errorMessage(error); // the form stays open with everything typed

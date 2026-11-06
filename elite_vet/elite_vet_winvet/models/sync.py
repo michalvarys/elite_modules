@@ -6,8 +6,11 @@ rows are resolved by their WinVet ids; an unresolved reference keeps the raw id 
 """
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from odoo import api, fields, models
+
+from odoo.addons.elite_vet_reservation.models.pet import name_key
 
 from .contact import CONTACT_TYPE_CODES
 from .item import CLASSIFICATIONS
@@ -37,6 +40,8 @@ MASTER = {"users", "items", "owners", "contacts", "patients"}
 CHAR_REF_MODELS = {"res.partner"}
 # WinVet keeps no language of its clients; they are Czech.
 CLIENT_LANG = "cs_CZ"
+# An owner without the client's pet counts only when created in WinVet this close to the booking or after it.
+PAIRING_DAYS = 14
 
 OWNER_KINDS = {0: "company", 1: "person", 2: "group"}
 CLASSIFICATION_KEYS = {key for key, _label in CLASSIFICATIONS}
@@ -206,6 +211,9 @@ class WinvetSync(models.AbstractModel):
                     Run.cleanup(run_id, entity)
 
         self._fixups()
+        # After the last batch: the owner's contacts are in, the paired reservations take them over.
+        if entity in ("contacts", "patients") and batch >= batches:
+            self._pair_awaiting_clients()
         if full_run_done:
             self._after_full_run(entity, stats, errors)
         self.env["elite.vet.winvet.status"].get_status().record_push(
@@ -475,8 +483,26 @@ class WinvetSync(models.AbstractModel):
                 "winvet_created": to_date(r.get("created")),
                 "winvet_modified": to_utc_datetime(r.get("modified")),
             }
+        self._adopt_odoo_pets(vals)
         self._upsert("elite.vet.pet", vals, stats, errors, guard="winvet_modified")
         self._mark_clients(self.env["res.partner"].browse(set(partners.values())))
+
+    def _adopt_odoo_pets(self, vals_by_ref):
+        """A pet created here for an owner (same name) takes the WinVet id of the pet arriving
+        now, so it stays one pet with its reservations and visits."""
+        known = self._ref_map("elite.vet.pet", vals_by_ref)
+        new = {ref: v for ref, v in vals_by_ref.items() if ref not in known}
+        owners = {v["partner_id"] for v in new.values()} - {self._placeholder_owner().id}
+        if not owners:
+            return
+        free = defaultdict(list)
+        for pet in self.env["elite.vet.pet"].search([("partner_id", "in", list(owners)), ("active", "=", True),
+                                                     "|", ("winvet_ref", "=", 0), ("winvet_ref", "=", False)]):
+            free[pet.partner_id.id, name_key(pet.name)].append(pet)
+        for ref, v in new.items():
+            pets = free.get((v["partner_id"], name_key(v["name"])))
+            if pets:
+                pets.pop().winvet_ref = ref
 
     def _mark_clients(self, partners):
         """Owners with patients are clients of the clinic (groups excepted)."""
@@ -645,7 +671,8 @@ class WinvetSync(models.AbstractModel):
             owner.winvet_merge_pending = False
             return
         vals = owner._convert_to_write({f: owner[f] for f in self.LINK_FIELDS})
-        vals.update({"winvet_ref": owner.winvet_ref, "is_vet_client": True, "active": owner.active})
+        vals.update({"winvet_ref": owner.winvet_ref, "is_vet_client": True, "active": owner.active,
+                     "winvet_pairing_pending": False})
         owner.write({"winvet_ref": False, "winvet_merge_pending": False, "active": False})
         owner.flush_recordset()
         client.write(vals)
@@ -658,6 +685,67 @@ class WinvetSync(models.AbstractModel):
         except Exception:  # noqa: BLE001 - keep it archived when something still points to it
             self.env.invalidate_all()
         _logger.info("WinVet owner %s linked to existing client %s", vals["winvet_ref"], client.id)
+
+    def _pair_awaiting_clients(self):
+        """Clients marked "Je ve WinVetu" (winvet_pairing_pending) merge into their WinVet owner,
+        who stays: reservations, visits and pets move over, the contact is WinVet's."""
+        Partner = self.env["res.partner"]
+        awaiting = Partner.search([("winvet_pairing_pending", "=", True), ("active", "=", True),
+                                   "|", ("winvet_ref", "=", False), ("winvet_ref", "=", "")])
+        if not awaiting:
+            return
+        owners = defaultdict(lambda: Partner)
+        for owner in Partner.search([("winvet_kind", "=", "person"), ("active", "=", True),
+                                     ("winvet_ref", "!=", False), ("winvet_ref", "!=", "")]):
+            owners[name_key(owner.name)] |= owner
+        for client in awaiting:
+            owner = self._owner_of_awaiting_client(client, owners[name_key(client.name)])
+            if owner:
+                self._pair_client_with_owner(client, owner)
+
+    def _owner_of_awaiting_client(self, client, same_name):
+        """The one owner of that name: the one with the client's pet, otherwise the one created
+        in WinVet around the time of the booking. Nobody when it is not clear (same names):
+        reception pairs such a client by hand, a wrong pair would send e-mails to a stranger."""
+        pets = {name_key(pet.name) for pet in client.pet_ids}
+        found = same_name.filtered(lambda o: pets & {name_key(pet.name) for pet in o.pet_ids})
+        if not found:
+            since = client.create_date.date() - timedelta(days=PAIRING_DAYS)
+            found = same_name.filtered(lambda o: o.winvet_created and o.winvet_created >= since)
+        return found if len(found) == 1 else self.env["res.partner"]
+
+    def _pair_client_with_owner(self, client, owner):
+        reservations = client.reservation_ids.filtered(lambda r: r.state in ("web_new", "confirmed"))
+        try:
+            with self.env.cr.savepoint():
+                self.env["base.partner.merge.automatic.wizard"]._merge([client.id, owner.id], owner,
+                                                                       extra_checks=False)
+                reservations.write({"contact_name": owner.name, "contact_phone": owner.phone or owner.mobile or False,
+                                    "contact_email": owner.email or False})
+        except Exception:  # noqa: BLE001 - the client keeps waiting, the sync must go on
+            self.env.invalidate_all()
+            _logger.exception("WinVet owner %s not paired with client %s", owner.winvet_ref, client.id)
+            return
+        self._merge_duplicate_pets(owner)
+        _logger.info("Client %s paired with WinVet owner %s", client.id, owner.winvet_ref)
+
+    def _merge_duplicate_pets(self, owner):
+        """A pet created here whose WinVet twin is already in Odoo gives way to it."""
+        twins = {name_key(pet.name): pet for pet in owner.pet_ids if pet.winvet_ref}
+        links = self.env["ir.model.fields"].search([("relation", "=", "elite.vet.pet"), ("ttype", "=", "many2one"),
+                                                    ("store", "=", True), ("compute", "=", False),
+                                                    ("related", "=", False)])
+        for pet in owner.pet_ids.filtered(lambda p: not p.winvet_ref and name_key(p.name) in twins):
+            try:
+                with self.env.cr.savepoint():
+                    for link in links:
+                        Model = self.env[link.model]
+                        if not (Model._abstract or Model._transient):
+                            Model.search([(link.name, "=", pet.id)]).write({link.name: twins[name_key(pet.name)].id})
+                    pet.unlink()
+            except Exception:  # noqa: BLE001 - two pets of one name are better than a stopped sync
+                self.env.invalidate_all()
+                _logger.exception("Pet %s not merged into its WinVet twin", pet.id)
 
     def _apply_contacts(self, partners):
         """WinVet is the master for e-mail, mobile and phone: the first WinVet contact

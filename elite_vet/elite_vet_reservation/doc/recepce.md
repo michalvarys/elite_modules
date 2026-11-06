@@ -281,7 +281,11 @@ vkládáte ručně“. Zkontrolujte čas a klikněte **Použít ruční čas**.
 
 ![Průvodce – krok 3](img/pruvodce-3.png)
 
-1. Zvolte **Existující klient** nebo **Nový klient**.
+1. Zvolte **Existující klient** nebo **Nový klient**. Když klienta právě založíte ve WinVetu a v kartotéce
+   ještě není, zvolte **Je ve WinVetu**: stačí jméno, ideálně i jméno zvířete, kontakt není potřeba.
+   Stejná volba je v kartotéce u pokladny při zakládání klienta. Synchronizace klienta spáruje podle jména
+   a zvířete a doplní kontakt. Když je stejné jméno víckrát, klient zůstane nespárovaný, najdete ho
+   v Klientech pod filtrem **Čeká na spárování s WinVetem** a sloučíte ho ručně.
 2. Existující: do **Vyhledat klienta** napište jméno, telefon nebo e-mail
    (telefon stačí i část, mezery nevadí). Má-li klient jen jednoho mazlíčka,
    doplní se sám; jinak ho vyberte v poli **Mazlíček**.

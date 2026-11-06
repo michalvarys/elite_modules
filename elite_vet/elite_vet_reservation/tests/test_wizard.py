@@ -80,6 +80,34 @@ class TestReservationWizard(ReservationCase):
         self.assertEqual(r.pet_id.partner_id, r.partner_id)
         self.assertEqual(r.pet_id.species, "cat")
 
+    def test_client_in_winvet_needs_no_contact(self):
+        """Request 6. 11.: a client who is in WinVet, not yet here; the sync pairs them later."""
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.W.with_user(self.reception).create({"procedure_id": self.vacc.id, "date": self.day})
+        w.action_step_time()
+        w.slot_ids.filtered(lambda ln: ln.minute == 10 * 60)[:1].action_select()
+        w.write({"partner_mode": "winvet", "pet_name": "Rex", "pet_species": "dog"})
+        with self.assertRaises(UserError, msg="the name is what the sync pairs by"):
+            w.action_step_summary()
+        w.contact_name = "Jana Wintestová"
+        w.action_step_summary()
+        self.assertIn("kontakt doplní WinVet", w.summary)
+        w.action_save()
+        r = self.env["elite.vet.reservation"].search([("contact_name", "=", "Jana Wintestová")])
+        self.assertEqual(len(r), 1)
+        self.assertTrue(r.partner_id.winvet_pairing_pending)
+        self.assertEqual(r.pet_id.partner_id, r.partner_id)
+        self.assertFalse(r.contact_phone or r.contact_email)
+
+    def test_new_client_still_needs_a_contact(self):
+        self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)
+        w = self.W.with_user(self.reception).create({"procedure_id": self.vacc.id, "date": self.day})
+        w.action_step_time()
+        w.slot_ids.filtered(lambda ln: ln.minute == 10 * 60)[:1].action_select()
+        w.write({"partner_mode": "new", "contact_name": "Jana Bezkontaktní"})
+        with self.assertRaises(UserError):
+            w.action_step_summary()
+
     def test_reservation_without_client_with_description(self):
         """Request 1. 11. (Lucie): a description above the procedure; with it, no client is needed."""
         self.assign(self.dr_a, self.room1, self.day, 8.0, 12.0)

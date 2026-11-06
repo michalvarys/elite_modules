@@ -116,6 +116,13 @@ class TestCardIndex(ReceptionCase):
             self.api(self.reception).owner_data(999_999_999)
 
     # ---------------------------------------------------------------- save_owner / save_pet
+    def test_new_owner_in_winvet_waits_for_pairing(self):
+        reception = self.api(self.reception)
+        data = reception.save_owner({"name": "Čekající Kartotéky"}, False, None, True)
+        self.assertTrue(self.env["res.partner"].browse(data["owner"]["id"]).winvet_pairing_pending)
+        data = reception.save_owner({"name": "Bez Značky Kartotéky"})
+        self.assertFalse(self.env["res.partner"].browse(data["owner"]["id"]).winvet_pairing_pending)
+
     def test_create_owner_and_pet(self):
         reception = self.api(self.reception)
         data = reception.save_owner({"name": "  Nová Klientka Kartotéky ", "phone": "604 222 333",

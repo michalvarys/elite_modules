@@ -338,13 +338,14 @@ class ReceptionCardIndex(models.AbstractModel):
     # ------------------------------------------------------------------ write API
 
     @api.model
-    def save_owner(self, vals, partner_id=None, pet_vals=None):
+    def save_owner(self, vals, partner_id=None, pet_vals=None, in_winvet=False):
         """Create (no partner_id) or edit an owner. Same phone / e-mail as another owner is
         allowed: nothing is merged.
 
         Task 31: a new owner can come with their first pet (`pet_vals`, the values of save_pet:
         every pet field and the alerts, never deceased). Both are created in one go: when the
-        pet fails validation, the owner is not created either. The result then has `new_pet_id`."""
+        pet fails validation, the owner is not created either. The result then has `new_pet_id`.
+        `in_winvet`: a new owner who is in WinVet, the sync pairs them and fills in the contact."""
         check_clinic_writable(self.env)
         self._check_reception()
         vals = _clean(vals, OWNER_FIELDS)
@@ -359,13 +360,14 @@ class ReceptionCardIndex(models.AbstractModel):
             return self.owner_data(partner.id)
         if not vals.get("name"):
             raise UserError(_("Vyplňte jméno majitele."))
+        vals.update(is_vet_client=True, winvet_pairing_pending=bool(in_winvet))
         if pet_vals is None:
-            partner = self.env["res.partner"].create(dict(vals, is_vet_client=True))
+            partner = self.env["res.partner"].create(vals)
             return self.owner_data(partner.id)
         # owner and pet together: a savepoint, so a refused pet leaves no owner behind even when
         # the caller's transaction goes on (the RPC itself would roll back as a whole as well)
         with self.env.cr.savepoint():
-            partner = self.env["res.partner"].create(dict(vals, is_vet_client=True))
+            partner = self.env["res.partner"].create(vals)
             data = self.save_pet(partner.id, pet_vals)
         new = [p["id"] for p in data["pets"]]
         data["new_pet_id"] = new[0] if new else None

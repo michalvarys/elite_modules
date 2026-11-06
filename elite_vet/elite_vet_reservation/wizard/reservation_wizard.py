@@ -89,7 +89,7 @@ class ReservationWizard(models.TransientModel):
 
     # 3. Client
     partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient"),
-                                     ("none", "Bez klienta")],
+                                     ("winvet", "Je ve WinVetu"), ("none", "Bez klienta")],
                                     string="Klient", default="existing", required=True)
     partner_id = fields.Many2one("res.partner", string="Vyhledat klienta", domain=[("type", "=", "contact")],
                                  help="Hledá podle jména, telefonu i e-mailu.")
@@ -250,6 +250,8 @@ class ReservationWizard(models.TransientModel):
             client = w.contact_name or ""
             if w.partner_mode == "none":
                 client = "bez klienta"
+            elif w.partner_mode == "winvet":
+                client += " (kontakt doplní WinVet)"
             elif not w._selected_partner():
                 client += " (nový klient)"
             rows = [("Popis", w.title)] if w.title else []
@@ -321,7 +323,7 @@ class ReservationWizard(models.TransientModel):
     @api.onchange("partner_mode")
     def _onchange_partner_mode(self):
         """Switching to a new client (or none) drops the selected client, their pet and contact."""
-        if self.partner_mode in ("new", "none") and self.partner_id:
+        if self.partner_mode in ("new", "winvet", "none") and self.partner_id:
             self.partner_id = False
             self.pet_id = False
             self.contact_name = self.contact_phone = self.contact_email = False
@@ -567,11 +569,10 @@ class ReservationWizard(models.TransientModel):
             raise UserError(_("Vyhledejte klienta, nebo zvolte „Nový klient“."))
         if self.partner_mode == "none" and not (self.title or "").strip():
             raise UserError(_("Rezervace bez klienta potřebuje popis – vyplňte Popis v prvním kroku."))
-        if self.partner_mode == "new":
-            if not (self.contact_name or "").strip():
-                raise UserError(_("Vyplňte jméno a příjmení klienta."))
-            if not (self.contact_phone or self.contact_email):
-                raise UserError(_("Vyplňte telefon nebo e-mail klienta."))
+        if self.partner_mode in ("new", "winvet") and not (self.contact_name or "").strip():
+            raise UserError(_("Vyplňte jméno a příjmení klienta."))
+        if self.partner_mode == "new" and not (self.contact_phone or self.contact_email):
+            raise UserError(_("Vyplňte telefon nebo e-mail klienta."))
         self.step = "summary"
         return self._reopen()
 
@@ -590,8 +591,9 @@ class ReservationWizard(models.TransientModel):
         pet = self._selected_pet()
         no_client = self.partner_mode == "none"
         if not partner and not no_client:
-            partner = env["res.partner"].find_or_create_client(
-                self.contact_name, self.contact_email, self.contact_phone, lang=self.lang)
+            Partner = env["res.partner"]
+            find = Partner.client_in_winvet if self.partner_mode == "winvet" else Partner.find_or_create_client
+            partner = find(self.contact_name, self.contact_email, self.contact_phone, lang=self.lang)
         if not pet and partner and (self.pet_name or "").strip():
             pet = env["elite.vet.pet"].find_or_create(partner, self.pet_name, self.pet_species)
         start = env["elite.vet.availability"].local_to_utc(self.date, self.minute)
