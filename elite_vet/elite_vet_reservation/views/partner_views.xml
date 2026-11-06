@@ -19,8 +19,20 @@
                     </field>
                     <group>
                         <field name="winvet_ref"/>
+                        <field name="winvet_pairing_pending"/>
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_partner_filter_vet" model="ir.ui.view">
+        <field name="name">res.partner.select.vet</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='inactive']" position="before">
+                <filter name="winvet_pairing_pending" string="Čeká na spárování s WinVetem"
+                        domain="[('winvet_pairing_pending', '=', True)]"/>
             </xpath>
         </field>
     </record>

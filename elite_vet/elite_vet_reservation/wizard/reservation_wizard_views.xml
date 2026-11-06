@@ -132,12 +132,16 @@
                         Rezervace se uloží bez klienta, v kalendáři ji poznáte podle popisu<field name="title" class="d-inline fw-bold ms-1" readonly="1" invisible="not title"/>.
                         Klienta jde doplnit později (Klient… / Spárovat klienta).
                     </div>
+                    <div invisible="partner_mode != 'winvet'" class="text-muted mb-2">
+                        Stačí jméno jako ve WinVetu, ideálně i jméno zvířete. Kontakt doplní synchronizace,
+                        ta klienta spáruje podle jména a zvířete.
+                    </div>
                     <group>
                         <group string="Klient" invisible="partner_mode == 'none'">
                             <field name="partner_id" invisible="partner_mode != 'existing'"
                                    context="{'ev_search_phone': True, 'default_is_vet_client': True}"
                                    placeholder="Jméno, telefon nebo e-mail" options="{'no_create': True}"/>
-                            <field name="contact_name" required="step == 'client' and partner_mode == 'new'"/>
+                            <field name="contact_name" required="step == 'client' and partner_mode in ('new', 'winvet')"/>
                             <field name="contact_phone" widget="phone"/>
                             <field name="contact_email" widget="email"/>
                             <field name="lang"/>

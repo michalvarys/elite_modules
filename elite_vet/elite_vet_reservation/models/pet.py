@@ -1,4 +1,5 @@
 import re
+import unicodedata
 
 from odoo import api, fields, models
 from odoo.osv import expression
@@ -12,6 +13,12 @@ SPECIES = [
 def normalize_phone(text):
     """'+420 722-599 699' -> '420722599699'. The last 9 digits are compared."""
     return re.sub(r"\D", "", text or "")
+
+
+def name_key(name):
+    """A name for comparing people and pets: WinVet has "Novák Jan", reception types "Jan Novak"."""
+    plain = unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode().lower()
+    return " ".join(sorted(plain.split()))
 
 
 class VetPet(models.Model):
@@ -46,6 +53,10 @@ class ResPartner(models.Model):
     pet_ids = fields.One2many("elite.vet.pet", "partner_id", string="Mazlíčci")
     # Placeholder for a future WinVet export. Not filled anywhere yet.
     winvet_ref = fields.Char(string="ID ve WinVetu", index=True)
+    winvet_pairing_pending = fields.Boolean(
+        string="Čeká na spárování s WinVetem", copy=False, index=True,
+        help="Klient je ve WinVetu, ale do kartotéky ještě nepřišel. Synchronizace ho spáruje "
+             "podle jména a zvířete a doplní kontakt.")
     reservation_ids = fields.One2many("elite.vet.reservation", "partner_id", string="Rezervace")
 
     @api.model
@@ -65,6 +76,17 @@ class ResPartner(models.Model):
             if ids:
                 domain = expression.OR([domain, [("id", "in", ids)]])
         return domain
+
+    @api.model
+    def client_in_winvet(self, name, email, phone, lang=None):
+        """A client reception knows is in WinVet: the contact may be empty, the sync pairs them
+        later. A second booking before the sync finds the same waiting client by name."""
+        key = name_key(name)
+        waiting = self.search([("winvet_pairing_pending", "=", True)]).filtered(lambda p: name_key(p.name) == key)
+        partner = waiting[:1] or self.find_or_create_client(name, email, phone, lang=lang)
+        if not partner.winvet_ref:
+            partner.sudo().winvet_pairing_pending = True
+        return partner
 
     @api.model
     def find_or_create_client(self, name, email, phone, lang=None):

@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from odoo import fields
 from odoo.tests import tagged
 
 from .common import WinvetCase
@@ -83,3 +86,83 @@ class TestPartnerMatching(WinvetCase):
         self.assertEqual(partner.phone, "353 000 006", "missing WinVet value does not clear Odoo")
         types = partner.with_context(active_test=False).winvet_contact_ids.filtered("active").mapped("type")
         self.assertEqual(types, ["email"], "contacts missing from the full run are archived")
+
+
+@tagged("post_install", "-at_install")
+class TestClientInWinvet(WinvetCase):
+    """Reception marks a client as "Je ve WinVetu": no contact, the sync pairs them later."""
+
+    def setUp(self):
+        super().setUp()
+        self.today = fields.Date.to_string(fields.Date.today())
+        self.Partner = self.env["res.partner"]
+
+    def waiting(self, name="Jana Testová"):
+        return self.Partner.client_in_winvet(name, "", "")
+
+    def new_owner(self, n=1, name="Testová Jana", **over):
+        return self.owner(n, name=name, created=self.today, **over)
+
+    def pair(self, owner=None, contacts=()):
+        self.push("owners", [owner or self.new_owner()])
+        self.push("contacts", list(contacts))
+
+    def test_paired_by_name_and_contact_filled_in(self):
+        client = self.waiting()
+        self.assertTrue(client.winvet_pairing_pending)
+        res = self.env["elite.vet.reservation"].create({
+            "kind": "reservation", "state": "confirmed", "partner_id": client.id, "contact_name": client.name,
+            "room_id": self.env["elite.vet.room"].create({"name": "Pár T"}).id,
+            "start": fields.Datetime.now() + timedelta(days=3)})
+        self.pair(contacts=[{"id": self.ref(100), "owner_id": self.ref(1), "type": -4, "label": None,
+                             "value": "jana.par@example.invalid"}])
+        owner = self.find("res.partner", 1)
+        self.assertFalse(client.exists())
+        self.assertEqual(res.partner_id, owner)
+        self.assertEqual(res.contact_email, "jana.par@example.invalid")
+        self.assertFalse(owner.winvet_pairing_pending)
+
+    def test_second_booking_finds_the_waiting_client(self):
+        self.assertEqual(self.waiting(), self.waiting("Testová Jana"))
+
+    def test_same_names_stay_waiting(self):
+        client = self.waiting()
+        self.push("owners", [self.new_owner(1), self.new_owner(2)])
+        self.push("contacts", [])
+        self.assertTrue(client.exists() and client.winvet_pairing_pending)
+
+    def test_old_owner_of_the_name_needs_the_pet(self):
+        client = self.waiting()
+        self.env["elite.vet.pet"].create({"name": "Bella", "partner_id": client.id, "species": "dog"})
+        self.pair(self.owner(1, name="Testová Jana", created="2020-01-02"))
+        self.push("patients", [self.patient(10, 1, name="Azor")])
+        self.assertTrue(client.exists(), "an old namesake with another pet is someone else")
+        self.push("patients", [self.patient(11, 1, name="Bella")])
+        self.assertFalse(client.exists())
+
+    def test_pet_created_here_takes_the_winvet_id(self):
+        client = self.waiting()
+        pet = self.env["elite.vet.pet"].create({"name": "Bella", "partner_id": client.id, "species": "dog"})
+        self.pair()
+        self.push("patients", [self.patient(10, 1, name="BELLA")])
+        self.assertEqual(self.find("elite.vet.pet", 10), pet)
+        self.assertEqual(pet.partner_id, self.find("res.partner", 1))
+
+    def test_pet_already_synced_replaces_the_one_created_here(self):
+        self.push("owners", [self.new_owner()])
+        self.push("patients", [self.patient(10, 1, name="Bella")])
+        twin = self.find("elite.vet.pet", 10)
+        client = self.waiting()
+        pet = self.env["elite.vet.pet"].create({"name": "Bella", "partner_id": client.id, "species": "dog"})
+        res = self.env["elite.vet.reservation"].create({
+            "kind": "reservation", "state": "confirmed", "partner_id": client.id, "pet_id": pet.id,
+            "contact_name": client.name, "room_id": self.env["elite.vet.room"].create({"name": "Pár T2"}).id,
+            "start": fields.Datetime.now() + timedelta(days=3)})
+        self.push("contacts", [])
+        self.assertFalse(pet.exists())
+        self.assertEqual(res.pet_id, twin)
+
+    def test_unmarked_client_is_not_paired_by_name(self):
+        client = self.Partner.find_or_create_client("Testová Jana", "jina.par@example.invalid", "")
+        self.pair()
+        self.assertTrue(client.exists())

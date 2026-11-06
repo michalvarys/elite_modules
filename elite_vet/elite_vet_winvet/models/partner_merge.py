@@ -32,4 +32,5 @@ class PartnerMergeWizard(models.TransientModel):
             "winvet_ref": primary,
             "winvet_alias_refs": ",%s," % ",".join(str(a) for a in sorted(aliases)) if aliases else False,
             "winvet_merge_pending": False,
+            "winvet_pairing_pending": False,
         })
