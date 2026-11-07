@@ -48,6 +48,8 @@
 .evb-ev-line { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .evb-ev-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .evb-ev-proc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .92; }
+// internal note: as many lines as the card height allows, the card cuts the rest
+.evb-ev-note { white-space: pre-line; overflow-wrap: anywhere; font-size: 11px; font-style: italic; opacity: .92; }
 .evb-event.evb-short { padding-top: 1px; padding-bottom: 0; }
 .evb-web { float: none; flex-shrink: 0; }
 .evb-initials {
@@ -173,7 +175,6 @@ body.evb-resizing, body.evb-resizing * { cursor: col-resize !important; user-sel
     font-size: 10px; font-weight: 800; letter-spacing: .03em; white-space: nowrap;
 }
 .evb-src-web { background: #1d4ed8; color: #fff; box-shadow: 0 0 0 1px #fff; }
-.evb-src-clinic { background: #fff; color: #0f5f57; border: 1px solid #0f5f57; line-height: 12px; }
 .evb-src-winvet { background: #475569; color: #fff; }
 // A web booking also gets a dashed blue outline with a white inner line (visible on blue cards too).
 .evb-event.evb-from-web::after {

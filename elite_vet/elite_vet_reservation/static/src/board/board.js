@@ -196,6 +196,7 @@ export class ReservationBoard extends Component {
         if (e.phone) lines.push(_t("Telefon: %s", e.phone));
         if (e.email) lines.push("E-mail: " + e.email);
         if (e.problem) lines.push(_t("Důvod návštěvy: %s", e.problem));
+        if (e.note) lines.push(_t("Interní poznámka: %s", e.note));
         return lines.join("\n");
     }
     isShort(e) { return e.end - e.start <= 15; }

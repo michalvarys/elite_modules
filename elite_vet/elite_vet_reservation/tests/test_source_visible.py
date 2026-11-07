@@ -64,6 +64,22 @@ class TestSourceVisible(ReservationCase):
                                                                 local.strftime("%H:%M")))
         self.assertEqual(rec.created_by_id, self.reception)
 
+    def test_board_card_shows_internal_note_not_creator(self):
+        """Request 7. 11.: the internal note in the card body; the creator's initials were
+        confusing, who booked it stays in the tooltip only."""
+        rec = self.clinic_res(11, note="Volat po 14:00\nkouše")
+        self.assertEqual(self.event(rec)["note"], "Volat po 14:00\nkouše")
+        self.assertEqual(self.event(self.clinic_res(12))["note"], "")
+        with file_open("elite_vet_reservation/static/src/board/board.xml") as f:
+            xml = f.read()
+        with file_open("elite_vet_reservation/static/src/board/board.js") as f:
+            js = f.read()
+        self.assertIn('class="evb-ev-note" t-esc="e.note"', xml)
+        self.assertNotIn("created_by_initials", xml)
+        self.assertNotIn("evb-src-clinic", xml)
+        self.assertIn('_t("Interní poznámka: %s", e.note)', js)
+        self.assertIn('_t("Založil(a): %s", e.created_by)', js)
+
     def test_board_web_reservation_has_no_creator(self):
         rec = self.web_res(10)
         self.assertEqual(rec.create_uid, self.public)
@@ -130,7 +146,8 @@ class TestSourceVisible(ReservationCase):
             xml = f.read()
         with file_open("elite_vet_reservation/static/src/board/board.js") as f:
             js = f.read()
-        for text in ("evb-source-filter", "evb-legend", "WEB", "WinVet", "Klinika"):
+        # "Klinika" is only the filter button now (request 7. 11.), checked in board.js below.
+        for text in ("evb-source-filter", "evb-legend", "WEB", "WinVet"):
             self.assertIn(text, xml)
         self.assertIn("localStorage.setItem(SOURCE_FILTER_KEY", js)
         self.assertEqual(re.findall(r'key: "(\w+)", label: (?:_t\()?"([^"]+)"', js),

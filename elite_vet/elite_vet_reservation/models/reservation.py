@@ -812,6 +812,7 @@ class VetReservation(models.Model):
                 "color_hex": r.color_hex, "symbol": r.procedure_id.symbol or "",
                 "phone": r.contact_phone or r.partner_id.phone or "", "email": r.contact_email or r.partner_id.email or "",
                 "problem": r.problem or "", "procedure": r.procedure_id.with_context(lang=lang).name or "",
+                "note": r.note or "",
                 "doctor": r.doctor_id.name or "", "doctor_initials": name_initials(r.doctor_id.name),
                 "doctor_color": doctor_color(r.doctor_id) if r.doctor_id else False,
                 "linked": r._linked_label(),

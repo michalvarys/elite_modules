@@ -43,7 +43,6 @@
                 </div>
                 <span class="evb-legend">
                     <span class="evb-legend-item"><span class="evb-src evb-src-web">WEB</span><span class="evb-legend-swatch"/> rezervace z webu (klient sám)</span>
-                    <span class="evb-legend-item"><span class="evb-src evb-src-clinic">JN</span> Klinika – iniciály toho, kdo rezervaci založil</span>
                     <span class="evb-legend-item"><span class="evb-src evb-src-winvet">WinVet</span> z WinVetu, jen pro čtení</span>
                 </span>
                 <span t-if="!state.loading and hiddenCount" class="evb-hidden-count"
@@ -188,19 +187,18 @@
                                  t-att-draggable="isDraggable(e) ? 'true' : 'false'" t-on-dragstart="(ev) => this.onDragStart(ev, e, 'event')" t-on-dragend="onDragEnd"
                                  t-on-click.stop="() => this.openEvent(e)">
                                 <div class="evb-ev-line">
-                                    <!-- Task 24: where it comes from first (WEB / creator's initials / WinVet),
+                                    <!-- Task 24: where it comes from first (WEB / WinVet; who booked it is in the tooltip),
                                          then the doctor initials next to her stripe, procedure abbreviation on the right. -->
                                     <span t-if="e.cancel_requested" class="evb-src evb-src-cancel" title="Klient žádá o zrušení">ZRUŠIT?</span>
                                     <span t-if="isWinvet(e)" class="evb-src evb-src-winvet" title="Z WinVetu – jen pro čtení">WinVet</span>
                                     <span t-elif="isWeb(e)" class="evb-src evb-src-web" t-att-title="originTitle(e)">WEB</span>
-                                    <span t-elif="e.kind === 'reservation'" class="evb-src evb-src-clinic" t-att-title="originTitle(e)"
-                                          t-esc="e.created_by_initials or 'K'"/>
                                     <span t-if="e.doctor_initials" class="evb-initials" t-att-title="e.doctor" t-esc="e.doctor_initials"/>
                                     <span class="evb-ev-text"><t t-esc="e.time_label"/> · <t t-esc="eventLabel(e)"/></span>
                                     <span t-if="e.linked" class="evb-web" t-att-title="linkedTitle(e)">🔗</span>
                                     <span t-if="e.symbol" class="evb-symbol" t-att-title="e.procedure" t-esc="e.symbol"/>
                                 </div>
                                 <div t-if="!isShort(e) and e.kind !== 'block' and e.procedure" class="evb-ev-proc" t-esc="e.procedure"/>
+                                <div t-if="!isShort(e) and e.kind !== 'block' and e.note" class="evb-ev-note" t-esc="e.note"/>
                             </div>
                             <t t-set="pv" t-value="previewFor(room)"/>
                             <div t-if="pv" class="evb-preview" t-att-class="previewClass(room, pv)" t-att-style="previewStyle(room, pv)">

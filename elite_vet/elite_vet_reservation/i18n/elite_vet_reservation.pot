@@ -1436,12 +1436,6 @@ msgid "Klinika"
 msgstr ""
 
 #. module: elite_vet_reservation
-#. odoo-javascript
-#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
-msgid "Klinika – iniciály toho, kdo rezervaci založil"
-msgstr ""
-
-#. module: elite_vet_reservation
 #: model:ir.model.fields,help:elite_vet_reservation.field_res_partner__no_show_count
 #: model:ir.model.fields,help:elite_vet_reservation.field_res_users__no_show_count
 msgid ""
@@ -4588,4 +4582,10 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.xml:0
 msgid "🔕 Bez zvuku"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
+msgid "Interní poznámka: %s"
 msgstr ""
