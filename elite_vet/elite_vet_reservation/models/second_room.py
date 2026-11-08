@@ -25,7 +25,8 @@ class VetReservationSecondRoom(models.Model):
             return False
         return " · ".join(p for p in (second.room_id.name, second.doctor_id.name) if p)
 
-    def add_second_room(self, room, doctor=None):
+    def add_second_room(self, room, doctor=None, allow_overlap=False):
+        """allow_overlap: the room is taken and the user said yes (only Recepce and up, _check_overlap)."""
         self.ensure_one()
         if self.kind != "reservation" or self.state != "confirmed":
             raise UserError(_("Do druhé ordinace jde přidat jen potvrzená rezervace."))
@@ -35,7 +36,7 @@ class VetReservationSecondRoom(models.Model):
             raise UserError(_("Rezervace už druhou ordinaci má: %s.") % self._linked_label())
         if not room or room == self.room_id:
             raise UserError(_("Vyberte jinou ordinaci, než ve které rezervace je."))
-        second = self.with_context(ev_no_mail=True, ev_linked_sync=True).copy({
+        second = self.with_context(ev_no_mail=True, ev_linked_sync=True, ev_allow_overlap=allow_overlap).copy({
             "room_id": room.id, "doctor_id": doctor.id if doctor else False,
             "start": self.start, "stop": self.stop, "state": "confirmed", "source": "internal",
             "is_second_room": True, "linked_reservation_id": self.id,

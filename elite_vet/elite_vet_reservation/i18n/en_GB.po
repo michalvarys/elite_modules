@@ -204,6 +204,7 @@ msgstr ""
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_second_room_wizard_form
 msgid ""
 "<span invisible=\"overlap_can_override\">Přes blokaci rezervace uložit "
 "nejde.</span>"
@@ -1982,11 +1983,13 @@ msgstr "%s anyway"
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__allow_overlap
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__allow_overlap
 msgid "Přesto uložit"
 msgstr "Save anyway"
 
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_second_room_wizard_form
 msgid "Přesto uložit přes tuto rezervaci"
 msgstr "Save over this appointment anyway"
 
@@ -2676,6 +2679,7 @@ msgstr "Warning"
 
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__overlap_warning
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__overlap_warning
 msgid "Upozornění na obsazený termín"
 msgstr "Taken time warning"
 
