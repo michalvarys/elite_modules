@@ -18,6 +18,10 @@ class TestSecondRoom(ReservationCase):
         super().setUpClass()
         cls.R = cls.env["elite.vet.reservation"]
         cls.day = fields.Date.today() + timedelta(days=10)
+        cls.reception = cls.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "Recepce Druhá", "login": "recepce_druha",
+            "groups_id": [(6, 0, [cls.env.ref("base.group_user").id,
+                                  cls.env.ref("elite_vet_reservation.group_reservation_reception").id])]})
 
     def main_reservation(self, **vals):
         return self.reservation(start=self.dt(self.day, 9, 0), doctor_id=self.dr_a.id, **vals)
@@ -40,6 +44,33 @@ class TestSecondRoom(ReservationCase):
         r = self.main_reservation()
         with self.assertRaises(ValidationError):
             r.add_second_room(self.room2, self.dr_b)
+
+    def test_second_room_busy_after_yes(self):
+        """Request 8. 11.: the wizard warns about the taken room and adds it after the tick."""
+        taken = self.reservation(start=self.dt(self.day, 9, 0), room_id=self.room2.id)
+        r = self.main_reservation()
+        w = self.env["elite.vet.reservation.second.room.wizard"].with_user(self.reception).create(
+            {"reservation_id": r.id, "room_id": self.room2.id, "doctor_id": self.dr_b.id})
+        self.assertIn(taken.name, w.overlap_warning)
+        self.assertTrue(w.overlap_can_override)
+        with self.assertRaises(ValidationError):
+            w.action_add()
+        w.allow_overlap = True
+        w.action_add()
+        d = r.linked_reservation_id
+        self.assertEqual((d.room_id, d.start, d.is_second_room), (self.room2, r.start, True))
+        self.assertIn("Uloženo přes obsazený termín", d.message_ids[:1].body)
+
+    def test_second_room_never_over_a_block(self):
+        self.R.create({"kind": "block", "state": "confirmed", "block_reason": "Oběd T", "block_scope": "full",
+                       "room_id": self.room2.id, "start": self.dt(self.day, 9), "stop": self.dt(self.day, 10)})
+        r = self.main_reservation()
+        w = self.env["elite.vet.reservation.second.room.wizard"].with_user(self.reception).create(
+            {"reservation_id": r.id, "room_id": self.room2.id, "allow_overlap": True})
+        self.assertTrue(w.overlap_warning)
+        self.assertFalse(w.overlap_can_override)
+        with self.assertRaises(ValidationError):
+            w.action_add()
 
     def test_not_twice_nor_same_room(self):
         r = self.main_reservation()

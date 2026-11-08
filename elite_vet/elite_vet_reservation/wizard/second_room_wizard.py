@@ -24,6 +24,18 @@ class SecondRoomWizard(models.TransientModel):
     doctor_id = fields.Many2one("elite.vet.doctor", string="Druhá lékařka",
                                 domain="[('accepts_bookings', '=', True), ('id', '!=', original_doctor_id)]",
                                 help="Předvyplní se lékařka, která má v druhé ordinaci v tu dobu službu.")
+    # Request 8. 11.: like the reservation form, a taken second room can be used after a yes.
+    overlap_warning = fields.Char(string="Upozornění na obsazený termín", compute="_compute_overlap_warning")
+    overlap_can_override = fields.Boolean(compute="_compute_overlap_warning")
+    allow_overlap = fields.Boolean(string="Přesto uložit")
+
+    @api.depends("room_id", "reservation_id")
+    def _compute_overlap_warning(self):
+        for w in self:
+            r = w.reservation_id
+            clash = r._overlap_clash([w.room_id.id]) if w.room_id and r.start and r.stop else False
+            w.overlap_warning = _("Termín je obsazený: %s.") % clash.name if clash else False
+            w.overlap_can_override = bool(clash) and r._overlap_overridable(clash)
 
     @api.depends("room_id", "reservation_id")
     def _compute_serving_doctors(self):
@@ -57,7 +69,7 @@ class SecondRoomWizard(models.TransientModel):
         self.ensure_one()
         if not self.room_id:
             raise UserError(_("Vyberte druhou ordinaci."))
-        self.reservation_id.add_second_room(self.room_id, self.doctor_id)
+        self.reservation_id.add_second_room(self.room_id, self.doctor_id, allow_overlap=self.allow_overlap)
         return {
             "type": "ir.actions.client", "tag": "display_notification",
             "params": {"type": "success",

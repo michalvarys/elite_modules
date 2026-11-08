@@ -7,6 +7,7 @@
             <form string="Přidat druhou ordinaci">
                 <field name="reservation_id" invisible="1"/>
                 <field name="original_doctor_id" invisible="1"/>
+                <field name="overlap_can_override" invisible="1"/>
                 <p class="text-muted">
                     Pro zákrok, který potřebuje dvě lékařky. Rezervace se zkopíruje do druhé ordinace
                     ve stejném čase. Obě zůstanou propojené: přesun i zrušení hlavní rezervace platí pro obě.
@@ -25,6 +26,15 @@
                         <field name="doctor_id" options="{'no_create': True, 'no_open': True}"/>
                     </group>
                 </group>
+                <div class="alert alert-warning d-flex flex-wrap gap-3 align-items-center" role="alert"
+                     invisible="not overlap_warning">
+                    <field name="overlap_warning" nolabel="1" readonly="1"/>
+                    <span invisible="not overlap_can_override">
+                        <field name="allow_overlap" nolabel="1"/>
+                        <label for="allow_overlap" string="Přesto uložit přes tuto rezervaci"/>
+                    </span>
+                    <span invisible="overlap_can_override">Přes blokaci rezervace uložit nejde.</span>
+                </div>
                 <footer>
                     <button name="action_add" type="object" string="Přidat" class="btn-primary"/>
                     <button special="cancel" string="Zavřít" class="btn-link"/>
