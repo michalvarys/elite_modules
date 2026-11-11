@@ -7,3 +7,4 @@ from . import test_transport
 from . import test_device
 from . import test_sending
 from . import test_views
+from . import test_playground
