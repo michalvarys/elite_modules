@@ -44,7 +44,7 @@ class TestArenaPosSetup(TransactionCase):
 
     def test_products(self):
         products = self.setup._module_products()
-        self.assertEqual(len(products), 57)
+        self.assertEqual(len(products), 59)
         for product in products:
             expected = self.tax_12 if product.default_code in self.reduced else self.tax
             self.assertEqual(product.taxes_id, expected, product.name)
