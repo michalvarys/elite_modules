@@ -702,7 +702,7 @@
             <field name="default_code">16082</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">19.00</field>
+            <field name="list_price">25.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
