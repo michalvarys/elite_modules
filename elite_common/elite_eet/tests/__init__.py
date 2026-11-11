@@ -4,3 +4,4 @@ from . import test_cert
 from . import test_message
 from . import test_wssec
 from . import test_transport
+from . import test_device

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_eet" model="ir.module.category">
+        <field name="name">EET</field>
+        <field name="sequence">60</field>
+    </record>
+
+    <record id="group_eet_user" model="res.groups">
+        <field name="name">Uživatel</field>
+        <field name="category_id" ref="module_category_eet"/>
+    </record>
+
+    <record id="group_eet_manager" model="res.groups">
+        <field name="name">Správce</field>
+        <field name="category_id" ref="module_category_eet"/>
+        <field name="implied_ids" eval="[(4, ref('group_eet_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+
+    <record id="rule_eet_device_company" model="ir.rule">
+        <field name="name">EET: pokladny podle firmy</field>
+        <field name="model_id" ref="model_elite_eet_device"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_eet_sale_company" model="ir.rule">
+        <field name="name">EET: tržby podle firmy</field>
+        <field name="model_id" ref="model_elite_eet_sale"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_eet_attempt_company" model="ir.rule">
+        <field name="name">EET: pokusy podle firmy</field>
+        <field name="model_id" ref="model_elite_eet_attempt"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

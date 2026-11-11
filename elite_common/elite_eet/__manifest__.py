@@ -16,7 +16,10 @@ elite_eet_pos. Popis je v README.md.
     "website": "https://www.michalvarys.eu",
     "license": "LGPL-3",
     "depends": ["base", "mail"],
-    "data": [],
+    "data": [
+        "security/elite_eet_security.xml",
+        "security/ir.model.access.csv",
+    ],
     "installable": True,
     "application": False,
 }

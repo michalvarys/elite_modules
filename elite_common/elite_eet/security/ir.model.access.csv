@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_eet_device_user,eet.device user,model_elite_eet_device,group_eet_user,1,0,0,0
+access_eet_device_manager,eet.device manager,model_elite_eet_device,group_eet_manager,1,1,1,0
+access_eet_device_system,eet.device system,model_elite_eet_device,base.group_system,1,1,1,1
+access_eet_sale_user,eet.sale user,model_elite_eet_sale,group_eet_user,1,0,0,0
+access_eet_sale_manager,eet.sale manager,model_elite_eet_sale,group_eet_manager,1,1,1,0
+access_eet_attempt_user,eet.attempt user,model_elite_eet_attempt,group_eet_user,1,0,0,0
