@@ -6,3 +6,4 @@ from . import test_wssec
 from . import test_transport
 from . import test_device
 from . import test_sending
+from . import test_views

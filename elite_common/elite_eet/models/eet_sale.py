@@ -9,6 +9,7 @@ from ..eet import message
 
 _logger = logging.getLogger(__name__)
 
+NEAR_DEADLINE = timedelta(hours=6)
 FROZEN_FIELDS = ("device_id", "porad_cis", "dat_trzby", "celk_trzba", "urceno_cerp_zuct", "cerp_zuct")
 
 
@@ -37,6 +38,10 @@ class EliteEetSale(models.Model):
     warning_text = fields.Text("Varování", readonly=True)
     last_error = fields.Text("Poslední chyba", readonly=True)
     deadline = fields.Datetime("Lhůta 48 h", compute="_compute_deadline", store=True)
+    is_near_deadline = fields.Boolean(
+        "Blíží se 48 h", compute="_compute_deadline_flags", search="_search_near_deadline"
+    )
+    is_overdue = fields.Boolean("Po lhůtě", compute="_compute_deadline_flags", search="_search_overdue")
     attempt_ids = fields.One2many("elite.eet.attempt", "sale_id", "Pokusy")
     attempt_count = fields.Integer("Počet pokusů", compute="_compute_attempt_count")
 
@@ -48,6 +53,23 @@ class EliteEetSale(models.Model):
     def _compute_deadline(self):
         for sale in self:
             sale.deadline = sale.dat_trzby and sale.dat_trzby + timedelta(hours=48)
+
+    @api.depends("deadline", "state")
+    def _compute_deadline_flags(self):
+        now = fields.Datetime.now()
+        for sale in self:
+            open_sale = sale.state != "registered" and sale.deadline
+            sale.is_overdue = bool(open_sale and sale.deadline < now)
+            sale.is_near_deadline = bool(open_sale and now <= sale.deadline < now + NEAR_DEADLINE)
+
+    def _search_near_deadline(self, operator, value):
+        now = fields.Datetime.now()
+        domain = [("state", "!=", "registered"), ("deadline", ">=", now), ("deadline", "<", now + NEAR_DEADLINE)]
+        return domain if (operator == "=") == bool(value) else ["!", "&", "&"] + domain
+
+    def _search_overdue(self, operator, value):
+        domain = [("state", "!=", "registered"), ("deadline", "<", fields.Datetime.now())]
+        return domain if (operator == "=") == bool(value) else ["!", "&"] + domain
 
     def _compute_attempt_count(self):
         for sale in self:

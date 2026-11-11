@@ -215,3 +215,14 @@ class TestEetSending(EetCase):
         sale._eet_send_after_commit(first_send=True)
         self.assertEqual(len(self.env.cr.postcommit._funcs), before + 1)
         self.env.cr.postcommit._funcs.pop()
+
+    def test_deadline_filters(self):
+        now = fields.Datetime.now()
+        near = self.make_sale("N1", dat_trzby=now - timedelta(hours=44))
+        over = self.make_sale("N2", dat_trzby=now - timedelta(hours=50))
+        fresh = self.make_sale("N3", dat_trzby=now - timedelta(hours=1))
+        done = self.make_sale("N4", dat_trzby=now - timedelta(hours=50), state="registered")
+        Sale = self.env["elite.eet.sale"]
+        all_sales = near | over | fresh | done
+        self.assertEqual(Sale.search([("is_near_deadline", "=", True), ("id", "in", all_sales.ids)]), near)
+        self.assertEqual(Sale.search([("is_overdue", "=", True), ("id", "in", all_sales.ids)]), over)
