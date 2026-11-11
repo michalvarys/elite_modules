@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_order_form_eet" model="ir.ui.view">
+        <field name="name">pos.order.form.eet</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='extra']/group" position="inside">
+                <group string="EET" name="eet" invisible="not eet_sale_id">
+                    <field name="eet_sale_id" groups="elite_eet.group_eet_user"/>
+                    <field name="eet_state" widget="badge" decoration-success="eet_state == 'registered'"
+                           decoration-warning="eet_state == 'pending'" decoration-danger="eet_state == 'error'"/>
+                    <field name="eet_pok"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_pos_order_list_eet" model="ir.ui.view">
+        <field name="name">pos.order.list.eet</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="after">
+                <field name="eet_state" optional="hide" widget="badge" decoration-success="eet_state == 'registered'"
+                       decoration-warning="eet_state == 'pending'" decoration-danger="eet_state == 'error'"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="pos_config_view_form_eet" model="ir.ui.view">
+        <field name="name">pos.config.form.eet</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <div id="title" position="after">
+                <group name="eet">
+                    <field name="eet_device_id" readonly="1"/>
+                </group>
+            </div>
+        </field>
+    </record>
+
+    <record id="pos_payment_method_view_form_eet" model="ir.ui.view">
+        <field name="name">pos.payment.method.form.eet</field>
+        <field name="model">pos.payment.method</field>
+        <field name="inherit_id" ref="point_of_sale.pos_payment_method_view_form"/>
+        <field name="arch" type="xml">
+            <field name="split_transactions" position="before">
+                <field name="eet_register"/>
+                <field name="eet_voucher_redemption" invisible="not eet_register"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="pos_payment_method_view_tree_eet" model="ir.ui.view">
+        <field name="name">pos.payment.method.list.eet</field>
+        <field name="model">pos.payment.method</field>
+        <field name="inherit_id" ref="point_of_sale.pos_payment_method_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="split_transactions" position="after">
+                <field name="eet_register" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="product_template_form_view_eet" model="ir.ui.view">
+        <field name="name">product.template.form.eet</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="point_of_sale.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='pos']" position="inside">
+                <field name="eet_prepaid_voucher"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

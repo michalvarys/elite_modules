@@ -16,7 +16,12 @@ v README.md.
     "website": "https://www.michalvarys.eu",
     "license": "LGPL-3",
     "depends": ["elite_eet", "point_of_sale"],
-    "data": [],
+    "data": [
+        "security/elite_eet_pos_security.xml",
+        "views/eet_views.xml",
+        "views/pos_views.xml",
+        "views/menus.xml",
+    ],
     "installable": True,
     "application": False,
 }
