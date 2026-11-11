@@ -20,6 +20,12 @@ class TestCatalogLikes(TransactionCase):
         self.assertEqual(len(items.filtered("in_store")), 9)
         self.assertFalse(items.filtered(lambda i: "solid" in i.name.lower()))
 
+    def test_app_on_home_screen(self):
+        menu = self.env.ref("elite_trafika_catalog.menu_catalog")
+        self.assertFalse(menu.parent_id)
+        self.assertTrue(menu.web_icon_data)
+        self.assertEqual(len(menu.child_id), 3)
+
     def test_like_and_withdraw(self):
         self.item.set_liked(True, "instagram")
         self.item.set_liked(True, "restaurace")
