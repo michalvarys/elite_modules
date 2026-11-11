@@ -83,6 +83,15 @@ def sign_envelope(trzba, private_key, certificate):
     body.append(trzba)
     etree.cleanup_namespaces(root, keep_ns_prefixes=["soapenv", "v4"])
 
+    # Canonicalize a tree parsed from the serialized bytes: lxml's exclusive C14N of a
+    # freshly built tree does not always match the canonical form of the message the
+    # server receives (seen as EET error 4 on the first message of a process).
+    root = etree.fromstring(etree.tostring(root))
+    body = root.find(_q(NS_SOAP, "Body"))
+    signed_info = root.find(f".//{_q(NS_DS, 'SignedInfo')}")
+    digest_value = signed_info.find(f".//{_q(NS_DS, 'DigestValue')}")
+    signature_value = signed_info.getparent().find(_q(NS_DS, "SignatureValue"))
+
     digest = hashlib.sha256(_c14n(body, ["v4"])).digest()
     digest_value.text = base64.b64encode(digest).decode()
     signed = private_key.sign(_c14n(signed_info, ["soapenv", "v4"]), padding.PKCS1v15(), hashes.SHA256())
