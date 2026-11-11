@@ -21,7 +21,7 @@ bankovní a prodejní deník jsou mateřské firmy. Když Elite Arena pobočkou 
 | DPH | 12 % potraviny a jídlo (sladkosti, slanosti, Big Shock tyčinky a hroznový cukr, PANINI, PIZZA, WRAP); 21 % všechny nápoje včetně balené vody, pivo, herní čas a vouchery (GFŘ 916/24/7100-30116-050822) |
 | Sklad | sklad firmy; když žádný nemá, založí sklad „Elite Arena“ (zkratka ARENA) |
 | Skupiny | skupiny pokladny (BIG Shock!, GAME, NEALKO NÁPOJE, PIVO, Service fee, SLADKOSTI A SLANOSTI, JÍDLO) i podskupiny |
-| Zboží | 57 položek, všechny s obrázkem; kód zboží (SKU) je interní reference |
+| Zboží | 59 položek, všechny s obrázkem; kód zboží (SKU) je interní reference |
 | Obrázky | zboží i všech 14 skupin pokladny; doplní se i při aktualizaci, ale jen tam, kde obrázek chybí |
 | Pokladna | „Elite Arena“: platba Hotově a Kartou, faktura z pokladny do prodejního deníku firmy |
 

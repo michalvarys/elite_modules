@@ -684,6 +684,32 @@
             <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16061.jpg"/>
             <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
         </record>
+        <record id="product_16081" model="product.template">
+            <field name="name">Mars Tyčinka</field>
+            <field name="default_code">16081</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">25.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16081.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
+        <record id="product_16082" model="product.template">
+            <field name="name">KNOPPERS Coconut</field>
+            <field name="default_code">16082</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">19.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="product_category_sladkosti"/>
+            <field name="image_1920" type="base64" file="elite_arena_pos/static/img/products/16082.jpg"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_sladkosti')])]"/>
+        </record>
         <record id="product_16068" model="product.template">
             <field name="name">Snickers Tyčinka</field>
             <field name="default_code">16068</field>
