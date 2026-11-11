@@ -14,13 +14,19 @@ class PosOrder(models.Model):
 
     eet_sale_ids = fields.One2many("elite.eet.sale", "pos_order_id", "Tržby EET")
     eet_sale_id = fields.Many2one("elite.eet.sale", "Tržba EET", compute="_compute_eet_sale")
-    eet_state = fields.Selection(related="eet_sale_id.state", string="Stav EET")
-    eet_pok = fields.Char(related="eet_sale_id.pok", string="POK")
+    eet_state = fields.Selection(
+        [("pending", "Čeká"), ("registered", "Evidováno"), ("error", "Chyba")],
+        "Stav EET", compute="_compute_eet_sale",
+    )
+    eet_pok = fields.Char("POK", compute="_compute_eet_sale")
 
-    @api.depends("eet_sale_ids")
+    @api.depends("eet_sale_ids.state", "eet_sale_ids.pok")
     def _compute_eet_sale(self):
         for order in self:
-            order.eet_sale_id = order.eet_sale_ids[:1]
+            sale = order.eet_sale_ids[:1]
+            order.eet_sale_id = sale
+            order.eet_state = sale.state
+            order.eet_pok = sale.pok
 
     @api.model
     def sync_from_ui(self, orders):
