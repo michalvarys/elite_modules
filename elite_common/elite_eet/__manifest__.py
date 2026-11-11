@@ -19,6 +19,7 @@ elite_eet_pos. Popis je v README.md.
     "data": [
         "security/elite_eet_security.xml",
         "security/ir.model.access.csv",
+        "data/cron.xml",
     ],
     "installable": True,
     "application": False,

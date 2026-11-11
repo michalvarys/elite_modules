@@ -1,7 +1,13 @@
+import logging
 from datetime import timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.modules import module as odoo_module
+
+from ..eet import message
+
+_logger = logging.getLogger(__name__)
 
 FROZEN_FIELDS = ("device_id", "porad_cis", "dat_trzby", "celk_trzba", "urceno_cerp_zuct", "cerp_zuct")
 
@@ -51,3 +57,116 @@ class EliteEetSale(models.Model):
         if any(f in vals for f in FROZEN_FIELDS) and self.filtered("attempt_ids"):
             raise UserError(_("Údaje tržby, která už byla odeslána do EET, se nesmí měnit."))
         return super().write(vals)
+
+    # ------------------------------------------------------------------
+    # Sending. _eet_send is the single entry point that turns sales into
+    # messages; when EET supports batches, only this method and
+    # eet/transport.py change.
+    # ------------------------------------------------------------------
+
+    def _eet_sale_data(self):
+        self.ensure_one()
+        device = self.device_id
+        return message.SaleData(
+            eic_popl=device.eic or "",
+            id_jednotky=device.id_jednotky or "",
+            id_pokl=device.id_pokl or "",
+            porad_cis=self.porad_cis,
+            dat_trzby=self.dat_trzby,
+            celk_trzba=self.celk_trzba,
+            urceno_cerp_zuct=self.urceno_cerp_zuct or None,
+            cerp_zuct=self.cerp_zuct or None,
+        )
+
+    def _eet_send(self, first_send=None):
+        """Send the sales (skipping registered and locked ones). Return {sale_id: result}."""
+        sales = self.sudo()
+        if not sales:
+            return {}
+        self.env.cr.execute(
+            "SELECT id FROM elite_eet_sale WHERE id IN %s AND state != 'registered' FOR UPDATE SKIP LOCKED",
+            [tuple(sales.ids)],
+        )
+        locked = {row[0] for row in self.env.cr.fetchall()}
+        results = {}
+        for sale in sales.filtered(lambda s: s.id in locked):
+            if not sale.device_id.active_eet:
+                continue
+            first = (not sale.attempt_ids) if first_send is None else first_send
+            attempt = sale.device_id._eet_transmit(sale._eet_sale_data(), first, False, sale=sale)
+            sale._eet_apply(attempt)
+            results[sale.id] = attempt.result
+        return results
+
+    def _eet_apply(self, attempt):
+        self.ensure_one()
+        if attempt.result == "pok":
+            self.write({
+                "state": "registered",
+                "pok": attempt.pok,
+                "received_at": attempt.received_at or attempt.sent_at,
+                "is_test": attempt.is_test,
+                "warning_text": attempt.warnings or False,
+                "last_error": False,
+            })
+        elif attempt.result in ("critical", "local_error"):
+            error = "%s%s" % (f"{attempt.code}: " if attempt.code else "", attempt.message or "")
+            self.write({"state": "error", "last_error": error})
+            self.device_id._eet_notify(
+                _("Tržba EET skončila chybou"),
+                _("Tržbu %(ref)s EET odmítlo: %(err)s", ref=self.source_ref or self.porad_cis, err=error),
+            )
+        else:
+            self.write({"last_error": attempt.message or False})
+
+    def _eet_send_after_commit(self, first_send=None):
+        """Send right after the current transaction commits (never inside it)."""
+        ids = self.ids
+        if not ids:
+            return
+        registry, uid, context = self.env.registry, self.env.uid, dict(self.env.context)
+
+        @self.env.cr.postcommit.add
+        def _send():
+            try:
+                with registry.cursor() as cr:
+                    env = api.Environment(cr, uid, context)
+                    env["elite.eet.sale"].browse(ids)._eet_send(first_send)
+            except Exception:
+                _logger.exception("EET: sending sales %s after commit failed; the queue will retry", ids)
+
+    @api.model
+    def _cron_send_pending(self, limit=50):
+        sales = self.sudo().search(
+            [("state", "=", "pending"), ("device_id.active_eet", "=", True)], order="dat_trzby, id", limit=limit
+        )
+        unreachable = set()
+        for sale in sales:
+            if sale.device_id.id in unreachable:
+                continue
+            if sale._eet_send().get(sale.id) == "no_response":
+                unreachable.add(sale.device_id.id)
+            if not odoo_module.current_test:
+                self.env.cr.commit()
+
+    def action_send_to_eet(self):
+        to_send = self.filtered(lambda s: s.state in ("pending", "error"))
+        skipped = len(self) - len(to_send)
+        results = to_send._eet_send(first_send=False)
+        registered = sum(1 for r in results.values() if r == "pok")
+        errors = sum(1 for r in results.values() if r in ("critical", "local_error"))
+        text = _(
+            "Odesláno %(sent)s, evidováno %(ok)s, chyba %(err)s, přeskočeno %(skip)s.",
+            sent=len(results), ok=registered, err=errors, skip=skipped + len(to_send) - len(results),
+        )
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Odeslání do EET"),
+                "message": text,
+                "type": "success" if registered == len(results) else "warning",
+                "sticky": False,
+                "next": {"type": "ir.actions.act_window_close"},
+            },
+        }

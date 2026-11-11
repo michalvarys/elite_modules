@@ -5,3 +5,4 @@ from . import test_message
 from . import test_wssec
 from . import test_transport
 from . import test_device
+from . import test_sending

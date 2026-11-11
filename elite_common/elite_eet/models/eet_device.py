@@ -1,16 +1,19 @@
 import base64
 import logging
+import uuid
+from datetime import timedelta
 
 from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError, ValidationError
 
 from ..eet import cert as eet_cert
 from ..eet import fields as eet_fields
-from ..eet import transport
+from ..eet import message, transport, wssec
 
 _logger = logging.getLogger(__name__)
 
 CERT_FIELDS = ("certificate_file", "certificate_password")
+CERT_WARNING_DAYS = 21
 
 
 class EliteEetDevice(models.Model):
@@ -174,3 +177,112 @@ class EliteEetDevice(models.Model):
             return transport.URLS["production"]
         override = self.env["ir.config_parameter"].sudo().get_param("elite_eet.playground_url_override")
         return override or transport.URLS["playground"]
+
+    # ------------------------------------------------------------------
+    # Transmission (one message per call; the batch-capable entry point is
+    # elite.eet.sale._eet_send)
+    # ------------------------------------------------------------------
+
+    def _eet_transmit(self, sale_data, first, verification, sale=None):
+        """Build, sign and send one message; store and return the attempt."""
+        self.ensure_one()
+        device = self.sudo()
+        now = fields.Datetime.now()
+        attempt_vals = {
+            "device_id": device.id,
+            "sale_id": sale.id if sale else False,
+            "uuid": str(uuid.uuid4()),
+            "sent_at": now,
+            "first_send": first,
+            "verification": verification,
+        }
+        try:
+            key, certificate = device._eet_key_and_cert()
+            trzba = message.build_trzba(sale_data, attempt_vals["uuid"], now, first, verification)
+            envelope = wssec.sign_envelope(trzba, key, certificate)
+            url = device._eet_url()
+        except (message.MessageError, UserError) as e:
+            attempt_vals.update(result="local_error", message=str(e))
+            return self.env["elite.eet.attempt"].sudo().create(attempt_vals)
+        result = transport.send(url, envelope, device.response_timeout)
+        attempt_vals.update(
+            request_xml=envelope.decode("ascii"),
+            response_xml=result.response_xml.decode("utf-8", "replace") if result.response_xml else False,
+            http_status=result.http_status or 0,
+            transaction_id=result.transaction_id,
+            result=result.kind,
+            pok=result.pok,
+            is_test=result.test,
+            received_at=result.received_at,
+            code=result.code or 0,
+            message=result.message or (result.pok and "POK %s" % result.pok) or False,
+            warnings="\n".join("%s: %s" % w for w in result.warnings) or False,
+        )
+        return self.env["elite.eet.attempt"].sudo().create(attempt_vals)
+
+    def action_check_connection(self):
+        """Send a verification-mode message (nothing is registered)."""
+        self.ensure_one()
+        now = fields.Datetime.now()
+        data = message.SaleData(
+            eic_popl=self.eic or "",
+            id_jednotky=self.id_jednotky or "",
+            id_pokl=self.id_pokl or "",
+            porad_cis="OVERENI",
+            dat_trzby=now,
+            celk_trzba=0,
+        )
+        attempt = self._eet_transmit(data, first=True, verification=True)
+        if attempt.result == "verified":
+            ntype, text = "success", _("Spojení s EET funguje.")
+        else:
+            ntype = "danger"
+            label = dict(attempt._fields["result"].selection)[attempt.result]
+            text = _("EET spojení neověřilo: %(label)s, kód %(code)s – %(msg)s",
+                     label=label, code=attempt.code, msg=attempt.message or "")
+        if attempt.warnings:
+            text += "\n" + _("Varování: %s", attempt.warnings)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {"title": _("Ověření spojení s EET"), "message": text, "type": ntype, "sticky": ntype != "success"},
+        }
+
+    # ------------------------------------------------------------------
+    # Warnings
+    # ------------------------------------------------------------------
+
+    def _eet_notify(self, summary, note):
+        """Schedule a warning activity for the till manager unless one is open."""
+        for device in self.sudo():
+            if any(a.summary == summary for a in device.activity_ids):
+                continue
+            device.activity_schedule(
+                "mail.mail_activity_data_warning",
+                summary=summary,
+                note=note,
+                user_id=device.responsible_user_id.id,
+            )
+
+    @api.model
+    def _cron_watch(self):
+        now = fields.Datetime.now()
+        Sale = self.env["elite.eet.sale"].sudo()
+        for device in self.sudo().search([("active_eet", "=", True)]):
+            base = [("device_id", "=", device.id)]
+            errors = Sale.search_count(base + [("state", "=", "error")])
+            if errors:
+                device._eet_notify(_("Tržba EET skončila chybou"),
+                                   _("%s tržeb je ve stavu Chyba. Opravte příčinu a odešlete je znovu.", errors))
+            late = Sale.search_count(base + [("state", "=", "pending"), ("dat_trzby", "<", now - timedelta(hours=24))])
+            if late:
+                device._eet_notify(_("Tržby EET čekají déle než 24 hodin"),
+                                   _("%s tržeb ještě není v EET. Zákon dává na odeslání 48 hodin.", late))
+            overdue = Sale.search_count(base + [("state", "=", "pending"), ("deadline", "<", now)])
+            if overdue:
+                device._eet_notify(_("Tržby EET po lhůtě 48 hodin"),
+                                   _("%s tržeb nebylo do 48 hodin evidováno. Odešlete je co nejdřív.", overdue))
+            if device.cert_valid_to and device.cert_valid_to <= now + timedelta(days=CERT_WARNING_DAYS):
+                device._eet_notify(_("Certifikát EET brzy vyprší"),
+                                   _("Certifikát pokladny %(name)s platí do %(date)s. Vydejte nový v portálu MOJE daně.",
+                                     name=device.name, date=device.cert_valid_to))
