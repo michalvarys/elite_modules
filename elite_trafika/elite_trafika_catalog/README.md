@@ -11,7 +11,7 @@ líbí. Podle počtů se trafika rozhoduje, co naskladní. Rezervace ani prodej 
 | Výrobky | 28 položek T9HC z euphoria.eu: květy a bylinné směsi 1 g a 3 g, aroma tyčinky po 1 ks. Filtry: V prodejně a podle druhu. |
 | Líbí se mi | Ukládá výrobek, zdroj a čas. Žádné jméno, e-mail, IP adresu ani identifikátor prohlížeče. Stav srdíčka zná jen prohlížeč návštěvníka. |
 | Web | Katalog je jen na webu, jehož název je v parametru `elite_trafika_catalog.website` (výchozí „Elite Trafika“); jinde je `/katalog` 404. Prázdný parametr katalog zobrazí na všech webech databáze. |
-| Správa | Web → Katalog trafiky: Výrobky v katalogu a Zájem podle zdroje. Přístup má návrhář webu. |
+| Správa | Aplikace Katalog trafiky na úvodní obrazovce Odoo (vedle Kalendáře a Herny): Výrobky, Zájem podle zdroje, Otevřít katalog. Vidí ji návrhář webu. |
 
 Modul závisí jen na `website`, takže nepotřebuje pokladnu a jde nainstalovat na server webu elite-trafika.cz
 i na elite-company.cz. Výrobky se nahrávají jen při instalaci (`noupdate`), úpravy v Odoo aktualizace nepřepíše.

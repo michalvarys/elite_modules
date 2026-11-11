@@ -95,8 +95,18 @@
         <field name="view_mode">pivot,list</field>
     </record>
 
-    <menuitem id="menu_catalog" name="Katalog trafiky" parent="website.menu_website_configuration" sequence="40"
+    <record id="action_catalog_page" model="ir.actions.act_url">
+        <field name="name">Otevřít katalog</field>
+        <field name="url">/katalog</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_catalog" name="Katalog trafiky" sequence="62"
+              web_icon="elite_trafika_catalog,static/description/icon.png"
               groups="website.group_website_designer"/>
-    <menuitem id="menu_catalog_items" parent="menu_catalog" action="action_catalog_items" sequence="10"/>
-    <menuitem id="menu_catalog_likes" parent="menu_catalog" action="action_catalog_likes" sequence="20"/>
+    <menuitem id="menu_catalog_items" name="Výrobky" parent="menu_catalog" action="action_catalog_items" sequence="10"/>
+    <menuitem id="menu_catalog_likes" name="Zájem podle zdroje" parent="menu_catalog" action="action_catalog_likes"
+              sequence="20"/>
+    <menuitem id="menu_catalog_page" name="Otevřít katalog" parent="menu_catalog" action="action_catalog_page"
+              sequence="30"/>
 </odoo>
