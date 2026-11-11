@@ -79,7 +79,7 @@
             <field name="default_code">16074</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">45.00</field>
+            <field name="list_price">49.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
@@ -161,7 +161,7 @@
             <field name="default_code">16025</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">0.00</field>
+            <field name="list_price">49.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
@@ -189,7 +189,7 @@
             <field name="default_code">16027</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">45.00</field>
+            <field name="list_price">49.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
@@ -243,7 +243,7 @@
             <field name="default_code">16031</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">0.00</field>
+            <field name="list_price">49.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
@@ -257,7 +257,7 @@
             <field name="default_code">16032</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">0.00</field>
+            <field name="list_price">49.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
@@ -271,7 +271,7 @@
             <field name="default_code">16030</field>
             <field name="type">consu</field>
             <field name="is_storable" eval="True"/>
-            <field name="list_price">0.00</field>
+            <field name="list_price">49.00</field>
             <field name="sale_ok" eval="True"/>
             <field name="purchase_ok" eval="True"/>
             <field name="available_in_pos" eval="True"/>
