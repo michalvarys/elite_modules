@@ -451,8 +451,10 @@ export class ReservationBoard extends Component {
     /** Task 19 + 25: "Potvrdit žádost Rex (Novák) na čt 29. 10. 10:00–10:20, Ordinace 2?" with the
      *  date, time and room editable (+ the confirmation e-mail checkbox when it has an e-mail).
      *  `doctorId` (a suggestion) is kept only while its room stays chosen. */
-    askConfirmRequest(w, dateIso, min, roomId, doctorId) {
+    askConfirmRequest(w, dateIso, min, roomId, doctorId, clash) {
         this.dialog.add(MoveConfirmDialog, {
+            // request 12. 11.: the orange button - confirm over the reservation `clash`
+            overlapWarning: clash ? _t("Termín je obsazený: %s.", clash) : undefined,
             title: _t("Potvrdit žádost?"),
             confirmLabel: _t("Potvrdit"),
             verb: _t("Potvrdit žádost"),
@@ -488,6 +490,12 @@ export class ReservationBoard extends Component {
         if (this.state.busy) return;
         this.leaveWaiting();
         this.askConfirmRequest(w, w.date, w.minute, sug.room_id, sug.doctor_id || null);
+    }
+    /** Request 12. 11. (Lucie): nothing free - confirm straight into a taken room, after a warning. */
+    confirmOverTaken(w, sug) {
+        if (this.state.busy) return;
+        this.leaveWaiting();
+        this.askConfirmRequest(w, w.date, w.minute, sug.room_id, sug.doctor_id || null, sug.clash);
     }
     // The new-request sound is played by the ../sound service (Odoo-wide); this is just the toggle.
     toggleSound() {

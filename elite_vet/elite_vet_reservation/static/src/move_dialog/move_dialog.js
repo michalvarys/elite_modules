@@ -94,6 +94,9 @@ export class MoveConfirmDialog extends Component {
         origDate: { type: String, optional: true },
         origMinute: { type: Number, optional: true },
         origRoomId: { type: [Number, Boolean], optional: true },
+        // Request 12. 11.: opened from the orange "over a taken time" button - the warning is shown
+        // up front and the yes is already given (forceOverlap), until the inputs change.
+        overlapWarning: { type: String, optional: true },
         onConfirm: Function,
     };
 
@@ -114,7 +117,8 @@ export class MoveConfirmDialog extends Component {
             error: "",
             canForce: false,
             force: false,
-            forceOverlap: false,
+            forceOverlap: Boolean(this.props.overlapWarning),
+            overlapWarning: this.props.overlapWarning || "",
         });
     }
 
@@ -188,6 +192,7 @@ export class MoveConfirmDialog extends Component {
         this.state.canForce = false;
         this.state.force = false;
         this.state.forceOverlap = false;
+        this.state.overlapWarning = "";
     }
 
     onDate(ev) {
