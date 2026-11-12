@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="elite_pos_closing_receipt.ClosingReceipt">
+        <div class="elite-closing-receipt pos-receipt">
+            <t t-set="d" t-value="props.data"/>
+            <div class="elite-closing-receipt__header">
+                <div class="elite-closing-receipt__title">Uzávěrka</div>
+                <div t-esc="d.company"/>
+                <div t-if="d.config != d.company" t-esc="d.config"/>
+                <div>Směna <t t-esc="d.session"/></div>
+                <div>Otevřena: <t t-esc="dateTime(d.opened)"/></div>
+                <div>Uzavírá: <t t-esc="props.cashier or d.user"/></div>
+            </div>
+            <hr/>
+
+            <div class="elite-closing-receipt__row elite-closing-receipt__row--total">
+                <span>Tržba celkem</span>
+                <span t-esc="money(d.total)"/>
+            </div>
+            <div class="elite-closing-receipt__row">
+                <span>Počet účtenek</span>
+                <span t-esc="d.orders"/>
+            </div>
+
+            <div t-if="d.payments.length" class="elite-closing-receipt__section">
+                <div class="elite-closing-receipt__section-title">Platby</div>
+                <div t-foreach="d.payments" t-as="p" t-key="p_index" class="elite-closing-receipt__row">
+                    <span t-esc="p.name"/>
+                    <span t-esc="money(p.total)"/>
+                </div>
+            </div>
+
+            <div t-if="d.cash" class="elite-closing-receipt__section">
+                <div class="elite-closing-receipt__section-title">Hotovost v kase</div>
+                <div class="elite-closing-receipt__row">
+                    <span>Počáteční stav</span>
+                    <span t-esc="money(d.cash.opening)"/>
+                </div>
+                <div class="elite-closing-receipt__row">
+                    <span>Přijato v hotovosti</span>
+                    <span t-esc="money(d.cash.payments)"/>
+                </div>
+                <div t-foreach="d.cash.moves" t-as="m" t-key="m_index" class="elite-closing-receipt__row">
+                    <span t-esc="m.name"/>
+                    <span t-esc="money(m.amount)"/>
+                </div>
+                <div class="elite-closing-receipt__row elite-closing-receipt__row--strong">
+                    <span>Má být v kase</span>
+                    <span t-esc="money(d.cash.expected)"/>
+                </div>
+            </div>
+
+            <div t-if="d.vat.length" class="elite-closing-receipt__section">
+                <div class="elite-closing-receipt__section-title">DPH</div>
+                <t t-foreach="d.vat" t-as="v" t-key="v_index">
+                    <div class="elite-closing-receipt__row">
+                        <span t-esc="v.name"/>
+                        <span t-esc="money(v.total)"/>
+                    </div>
+                    <div class="elite-closing-receipt__row elite-closing-receipt__row--sub">
+                        <span>základ <t t-esc="money(v.base)"/></span>
+                        <span>daň <t t-esc="money(v.tax)"/></span>
+                    </div>
+                </t>
+            </div>
+
+            <div t-if="d.discounts.count or d.refunds.qty or d.rounding" class="elite-closing-receipt__section">
+                <div class="elite-closing-receipt__section-title">Slevy a vratky</div>
+                <div t-if="d.discounts.count" class="elite-closing-receipt__row">
+                    <span>Slevy (<t t-esc="d.discounts.count"/> účt.)</span>
+                    <span t-esc="money(d.discounts.amount)"/>
+                </div>
+                <div t-if="d.refunds.qty" class="elite-closing-receipt__row">
+                    <span>Vráceno (<t t-esc="qty(-d.refunds.qty)"/> ks)</span>
+                    <span t-esc="money(d.refunds.total)"/>
+                </div>
+                <div t-if="d.rounding" class="elite-closing-receipt__row">
+                    <span>Zaokrouhlení</span>
+                    <span t-esc="money(d.rounding)"/>
+                </div>
+            </div>
+
+            <div t-if="d.categories.length" class="elite-closing-receipt__section">
+                <div class="elite-closing-receipt__section-title">Prodej podle kategorií</div>
+                <t t-foreach="d.categories" t-as="c" t-key="c_index">
+                    <div class="elite-closing-receipt__row" t-att-class="{'elite-closing-receipt__row--strong': props.withProducts}">
+                        <span><t t-esc="c.name"/> (<t t-esc="qty(c.qty)"/>)</span>
+                        <span t-esc="money(c.total)"/>
+                    </div>
+                    <t t-if="props.withProducts">
+                        <div t-foreach="c.products" t-as="p" t-key="p_index"
+                             class="elite-closing-receipt__row elite-closing-receipt__row--sub elite-closing-receipt__row--indent">
+                            <span><t t-esc="qty(p.qty)"/>× <t t-esc="p.name"/></span>
+                            <span t-esc="money(p.total)"/>
+                        </div>
+                    </t>
+                </t>
+            </div>
+
+            <hr/>
+            <div class="elite-closing-receipt__footer">Vytištěno: <t t-esc="printedAt"/></div>
+        </div>
+    </t>
+
+</templates>
