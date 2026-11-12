@@ -2538,10 +2538,12 @@ msgid "Termín byl zadán ručně (pro shrnutí)."
 msgstr "The time was entered by hand (for the summary)."
 
 #. module: elite_vet_reservation
+#. odoo-javascript
 #. odoo-python
 #: code:addons/elite_vet_reservation/models/reservation.py:0
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
 msgid "Termín je obsazený: %s."
-msgstr "The time is taken: %s."
+msgstr "The timeblock is taken: %s."
 
 #. module: elite_vet_reservation
 #. odoo-python
@@ -3691,3 +3693,21 @@ msgstr "Confirm anyway"
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_confirm_wizard_form
 msgid "Přesto rezervaci potvrdit? Obě rezervace pak budou ve stejném čase v jedné ordinaci."
 msgstr "Confirm the appointment anyway? Both appointments will then be at the same time in one room."
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Potvrdit do obsazeného →"
+msgstr "Confirm over a taken time →"
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Požadovaný čas je obsazený – potvrďte do obsazeného termínu, nebo otevřete a přeplánujte."
+msgstr "The requested time is taken – confirm over the taken time, or open it and reschedule."
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
+msgid "Obě rezervace pak budou ve stejném čase v jedné ordinaci."
+msgstr "Both reservations will then be at the same time in one room."

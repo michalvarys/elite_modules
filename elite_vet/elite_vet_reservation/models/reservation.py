@@ -838,7 +838,10 @@ class VetReservation(models.Model):
                 "mail_on_move": r._mail_on_move(),
             })
         waiting = []
+        # Only reception and up may confirm over a taken time (_check_overlap).
+        can_overlap = self.env.user.has_group(RECEPTION_GROUP)
         for w in self.search([("state", "=", "web_new"), ("stop", ">=", fields.Datetime.now())], order="start"):
+            suggestions = w.board_suggestions(w.id)
             # Clinic local time (module TZ), not the logged-in user's tz - that may not be set.
             local = pytz.utc.localize(w.start).astimezone(TZ)
             waiting.append({
@@ -853,7 +856,9 @@ class VetReservation(models.Model):
                 "pet": w.pet_id.name or w.pet_name or "", "owner": w.partner_id.name or w.contact_name or "",
                 "past": w.start <= fields.Datetime.now(),
                 # Suggestions computed here: one request per board refresh, not one per card.
-                "suggestions": w.board_suggestions(w.id),
+                "suggestions": suggestions,
+                # Nothing free: rooms where it can go over another reservation (orange button).
+                "busy_suggestions": w.board_busy_suggestions(w.id) if can_overlap and not suggestions else [],
             })
         cancel_requests = []
         for c in self.search([("state", "=", "confirmed"), ("cancel_requested_at", "!=", False),
@@ -937,6 +942,42 @@ class VetReservation(models.Model):
             doc = Doctor.browse(doc_id)
             out.append({"room_id": room_id, "room": Room.browse(room_id).name,
                         "doctor_id": doc.id or False, "doctor": doc.name or ""})
+        return out
+
+    @api.model
+    def board_busy_suggestions(self, res_id):
+        """Request 12. 11. (Lucie): rooms where the requested time is taken by another reservation,
+        but where the request could otherwise go (the room is open, a doctor who does the procedure
+        is on duty when one is needed). The board offers them as an orange "confirm over a taken
+        time" button, so reception does not have to open the request and move it first.
+        Never a room under a full block - nothing goes over a block."""
+        rec = self.browse(res_id).exists()
+        if not rec or rec.kind != "reservation" or not rec.procedure_id or rec.state != "web_new" \
+                or rec.start <= fields.Datetime.now():
+            return []
+        A = self.env["elite.vet.availability"]
+        proc, doctor = rec.procedure_id, rec.doctor_id or None
+        local = pytz.utc.localize(rec.start).astimezone(TZ)
+        day, minute = local.date(), local.hour * 60 + local.minute
+        duration = rec.duration_minutes or proc.duration
+        need = A.need_doctor(proc, doctor)
+        serving = A.assignment_minutes(day, proc, doctor)
+        out = []
+        for room in proc.rooms_for_booking():
+            if not any(f <= minute and minute + duration <= t for f, t in A.open_minutes(room, day)):
+                continue
+            doc_ids = A.serving_doctors(proc, day, room.id, minute, doctor, serving=serving, duration=duration)
+            if need and not doc_ids:
+                continue
+            busy = self.search(self._busy_domain([room.id], rec.start, rec.stop, exclude_ids=[rec.id]))
+            if any(b.kind == "block" for b in busy):
+                continue
+            clash = busy[:1] or self._busy_external([room.id], rec.start, rec.stop)[:1]
+            if not clash:
+                continue   # free: a green suggestion (board_suggestions) when everything else fits
+            doc = self.env["elite.vet.doctor"].browse(doc_ids[:1])
+            out.append({"room_id": room.id, "room": room.name, "doctor_id": doc.id or False,
+                        "doctor": doc.name or "", "clash": clash.name})
         return out
 
     @api.model

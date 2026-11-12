@@ -3313,8 +3313,10 @@ msgid "Termín byl zadán ručně (pro shrnutí)."
 msgstr ""
 
 #. module: elite_vet_reservation
+#. odoo-javascript
 #. odoo-python
 #: code:addons/elite_vet_reservation/models/reservation.py:0
+#: code:addons/elite_vet_reservation/static/src/board/board.js:0
 msgid "Termín je obsazený: %s."
 msgstr ""
 
@@ -4612,4 +4614,22 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_confirm_wizard_form
 msgid "Přesto rezervaci potvrdit? Obě rezervace pak budou ve stejném čase v jedné ordinaci."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Potvrdit do obsazeného →"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/board/board.xml:0
+msgid "Požadovaný čas je obsazený – potvrďte do obsazeného termínu, nebo otevřete a přeplánujte."
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-javascript
+#: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
+msgid "Obě rezervace pak budou ve stejném čase v jedné ordinaci."
 msgstr ""

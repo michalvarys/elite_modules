@@ -137,6 +137,43 @@ class TestOverlap(ReservationCase):
         self.assertNotIsInstance(caught.exception, OverlapRuleError)
         self.assertEqual(web.state, "web_new")
 
+    # ------------------------------------------------------------------ orange button on the board (request 12. 11.)
+    def busy_rooms(self, web):
+        return [(s["room_id"], s["clash"]) for s in self.R.board_busy_suggestions(web.id)]
+
+    def board_row(self, web):
+        return next(x for x in self.R.board_data(self.day_str)["waiting"] if x["id"] == web.id)
+
+    def test_board_offers_a_taken_room_and_confirms_over_it(self):
+        web = self.R.with_context(ev_no_mail=True).create(self.vals(
+            state="web_new", source="web", room_id=False, start=self.dt(self.day, 10), contact_name="Z webu"))
+        for room in (self.room1, self.room2):
+            self.R.create(self.vals(room_id=room.id, start=self.dt(self.day, 10), contact_name="V " + room.name))
+        row = self.board_row(web)
+        self.assertEqual(row["suggestions"], [])
+        self.assertEqual([s["room_id"] for s in row["busy_suggestions"]], [self.room1.id, self.room2.id])
+        self.assertIn("V Ordinace 1", row["busy_suggestions"][0]["clash"])
+        self.R.board_confirm(web.id, self.day_str, 600, self.room2.id, None, False, None, False, True)
+        self.assertEqual((web.state, web.room_id), ("confirmed", self.room2))
+        self.assertIn("Uloženo přes obsazený termín", web.message_ids.mapped("body")[0])
+
+    def test_board_offers_taken_rooms_only_when_nothing_is_free(self):
+        web = self.R.with_context(ev_no_mail=True).create(self.vals(
+            state="web_new", source="web", room_id=False, start=self.dt(self.day, 10), contact_name="Z webu"))
+        self.R.create(self.vals(room_id=self.room1.id, start=self.dt(self.day, 10), contact_name="Jen v jedné"))
+        row = self.board_row(web)
+        self.assertEqual([s["room_id"] for s in row["suggestions"]], [self.room2.id])
+        self.assertEqual(row["busy_suggestions"], [])
+
+    def test_board_never_offers_a_room_under_a_block(self):
+        web = self.R.with_context(ev_no_mail=True).create(self.vals(
+            state="web_new", source="web", room_id=False, start=self.dt(self.day, 13), contact_name="Z webu"))
+        self.R.create(self.vals(room_id=self.room1.id, start=self.dt(self.day, 13), contact_name="Obsazeno"))
+        self.env["elite.vet.reservation"].create({
+            "kind": "block", "state": "confirmed", "block_reason": "Oběd", "block_scope": "full",
+            "room_id": self.room2.id, "start": self.dt(self.day, 13), "stop": self.dt(self.day, 14)})
+        self.assertEqual([r for r, _c in self.busy_rooms(web)], [self.room1.id])
+
     def test_context_key_needs_reception(self):
         """A user outside Recepce cannot use the key (the public website goes through sudo with no key)."""
         with self.assertRaises(OverlapRuleError):
