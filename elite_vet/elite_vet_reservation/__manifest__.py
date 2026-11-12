@@ -38,6 +38,7 @@ bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
         "wizard/second_room_wizard_views.xml",
         "wizard/restore_wizard_views.xml",
         "wizard/cancel_wizard_views.xml",
+        "wizard/confirm_wizard_views.xml",
         "views/menus.xml",
         "views/booking_page.xml",
         "views/rozpis_page.xml",

@@ -713,6 +713,21 @@ class VetReservation(models.Model):
                 rec.action_match_client()
             rec.write({"state": "confirmed"})
 
+    def action_confirm_ask(self):
+        """"Potvrdit" on the form. Request 11. 11. (Lucie): a web request whose time got taken
+        meanwhile asks first instead of failing; the yes confirms over it like the board does."""
+        self.ensure_one()
+        rooms = self._overlap_rooms() if self.kind == "reservation" and self.state == "web_new" else []
+        clash = self._overlap_clash(rooms) if rooms else False
+        if clash and self._overlap_overridable(clash):
+            return {
+                "type": "ir.actions.act_window", "res_model": "elite.vet.reservation.confirm.wizard",
+                "name": _("Potvrdit do obsazeného termínu"), "view_mode": "form", "views": [[False, "form"]],
+                "target": "new", "context": {"default_reservation_id": self.id,
+                                             "default_overlap_warning": _("Termín je obsazený: %s.") % clash.name},
+            }
+        return self.action_confirm()
+
     def action_cancel(self, reason="clinic", message=None):
         """`message`: the clinic's text for the client (cancellation e-mail); None leaves the field as it is."""
         vals = {"state": "cancelled", "cancel_reason": reason}

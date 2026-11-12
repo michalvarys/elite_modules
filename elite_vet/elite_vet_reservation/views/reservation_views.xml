@@ -26,7 +26,7 @@
         <field name="arch" type="xml">
             <form string="Rezervace">
                 <header>
-                    <button name="action_confirm" type="object" string="Potvrdit" class="btn-primary"
+                    <button name="action_confirm_ask" type="object" string="Potvrdit" class="btn-primary"
                             invisible="state != 'web_new' or kind == 'block'"/>
                     <button name="action_send_confirmation" type="object" string="Poslat potvrzení"
                             invisible="state != 'confirmed' or kind == 'block' or not contact_email"/>
