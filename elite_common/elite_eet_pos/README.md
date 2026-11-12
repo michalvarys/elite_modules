@@ -95,8 +95,10 @@ Dokud pokladna nemá zapnuté nastavení EET, nic se neodesílá.
 
 ## Před ostrým provozem je potřeba rozhodnout
 
-- **Kdo je poplatníkem za Trafiku.** V Odoo je Elite Trafika pobočkou firmy Elite, ale export z Dotykačky je
-  na SL FORTIS s.r.o. Podle toho se zadává EIČ a certifikát.
+- **Poplatník za Trafiku je SL FORTIS s.r.o.** (IČO 18020984, DIČ a EIČ CZ18020984; rozhodnuto 12. 11. 2026).
+  Evidenční jednotka a certifikát Trafiky se zakládají v DIS+ této firmy. Pozor: v Odoo je Elite Trafika
+  vedená jako pobočka firmy Elite, takže účetnictví a DPH tržeb Trafiky jsou teď v knihách Elite. To je
+  potřeba vyřešit s účetní; EET to nijak neovlivní.
 - **Které vouchery Areny jsou na blíže neurčené zboží** (VOUCHER 500 Kč a 1000 Kč?). Jen ty se označí.
 - **Kredit hráčů v ggLeapu.** Dobití se prodává na pokladně Odoo a eviduje se. Zda je čerpání kreditu
   v ggLeapu další evidovanou tržbou, má posoudit účetní. Modul ho neřeší.
