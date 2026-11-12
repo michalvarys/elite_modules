@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Till users read EET sales; till managers also send them and edit EET settings. -->
+    <record id="point_of_sale.group_pos_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('elite_eet.group_eet_user'))]"/>
+    </record>
+    <record id="point_of_sale.group_pos_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('elite_eet.group_eet_manager'))]"/>
+    </record>
+</odoo>

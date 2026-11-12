@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_eet_root" name="EET" parent="point_of_sale.menu_point_root" sequence="80"
+              groups="elite_eet.group_eet_user"/>
+    <menuitem id="menu_eet_sales" name="Tržby EET" parent="menu_eet_root" action="elite_eet.action_eet_sale"
+              sequence="10" groups="elite_eet.group_eet_user"/>
+    <menuitem id="menu_eet_devices" name="Nastavení pokladen EET" parent="menu_eet_root"
+              action="elite_eet.action_eet_device" sequence="20" groups="elite_eet.group_eet_manager"/>
+</odoo>

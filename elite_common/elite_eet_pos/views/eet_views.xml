@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_eet_device_form_pos" model="ir.ui.view">
+        <field name="name">elite.eet.device.form.pos</field>
+        <field name="model">elite.eet.device</field>
+        <field name="inherit_id" ref="elite_eet.view_eet_device_form"/>
+        <field name="arch" type="xml">
+            <field name="active_eet" position="before">
+                <field name="pos_config_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_eet_device_list_pos" model="ir.ui.view">
+        <field name="name">elite.eet.device.list.pos</field>
+        <field name="model">elite.eet.device</field>
+        <field name="inherit_id" ref="elite_eet.view_eet_device_list"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="pos_config_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_eet_sale_form_pos" model="ir.ui.view">
+        <field name="name">elite.eet.sale.form.pos</field>
+        <field name="model">elite.eet.sale</field>
+        <field name="inherit_id" ref="elite_eet.view_eet_sale_form"/>
+        <field name="arch" type="xml">
+            <field name="source_ref" position="after">
+                <field name="pos_order_id" invisible="not pos_order_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

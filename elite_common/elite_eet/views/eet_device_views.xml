@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_eet_device_list" model="ir.ui.view">
+        <field name="name">elite.eet.device.list</field>
+        <field name="model">elite.eet.device</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active_eet" widget="boolean_toggle" readonly="1"/>
+                <field name="environment"/>
+                <field name="eic"/>
+                <field name="id_jednotky"/>
+                <field name="id_pokl"/>
+                <field name="cert_valid_to"/>
+                <field name="responsible_user_id" widget="many2one_avatar_user"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eet_device_form" model="ir.ui.view">
+        <field name="name">elite.eet.device.form</field>
+        <field name="model">elite.eet.device</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_check_connection" type="object" string="Ověřit spojení"
+                            class="btn-primary" groups="elite_eet.group_eet_manager"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-warning" role="alert" invisible="not cert_warning">
+                        <field name="cert_warning"/>
+                    </div>
+                    <div class="alert alert-info" role="alert" invisible="environment != 'playground'">
+                        Pokladna posílá do testovacího prostředí Playground. Tržby se tam neevidují.
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="EET">
+                            <field name="active_eet"/>
+                            <field name="start_datetime" required="active_eet"/>
+                            <field name="environment"/>
+                            <field name="response_timeout"/>
+                            <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Údaje poplatníka">
+                            <field name="eic" required="active_eet"/>
+                            <field name="id_jednotky" required="active_eet"/>
+                            <field name="id_pokl" required="active_eet"/>
+                        </group>
+                    </group>
+                    <group string="Certifikát">
+                        <group groups="base.group_system">
+                            <field name="certificate_file" filename="certificate_filename"/>
+                            <field name="certificate_filename" invisible="1"/>
+                            <field name="certificate_password" password="True"/>
+                        </group>
+                        <group>
+                            <field name="cert_cn"/>
+                            <field name="cert_environment"/>
+                            <field name="cert_valid_from"/>
+                            <field name="cert_valid_to"/>
+                            <field name="cert_serial"/>
+                            <field name="cert_issuer"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Pokusy o odeslání" name="attempts">
+                            <field name="attempt_ids" readonly="1">
+                                <list limit="20">
+                                    <field name="sent_at"/>
+                                    <field name="sale_id"/>
+                                    <field name="verification"/>
+                                    <field name="first_send"/>
+                                    <field name="result"/>
+                                    <field name="code"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eet_device_search" model="ir.ui.view">
+        <field name="name">elite.eet.device.search</field>
+        <field name="model">elite.eet.device</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="eic"/>
+                <filter name="filter_active" string="Zapnuto" domain="[('active_eet', '=', True)]"/>
+                <filter name="filter_production" string="Produkce" domain="[('environment', '=', 'production')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eet_device" model="ir.actions.act_window">
+        <field name="name">Nastavení pokladen EET</field>
+        <field name="res_model">elite.eet.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
