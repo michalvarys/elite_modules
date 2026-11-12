@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Request 11. 11.: "Potvrdit" over a taken time asks first. -->
+    <record id="view_confirm_wizard_form" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.confirm.wizard.form</field>
+        <field name="model">elite.vet.reservation.confirm.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Potvrdit do obsazeného termínu">
+                <field name="reservation_id" invisible="1"/>
+                <div class="alert alert-warning" role="alert">
+                    <field name="overlap_warning" nolabel="1"/>
+                </div>
+                <p>Přesto rezervaci potvrdit? Obě rezervace pak budou ve stejném čase v jedné ordinaci.</p>
+                <footer>
+                    <button name="action_confirm" type="object" string="Přesto potvrdit" class="btn-primary"/>
+                    <button special="cancel" string="Zpět" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

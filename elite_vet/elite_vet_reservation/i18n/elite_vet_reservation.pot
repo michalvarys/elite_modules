@@ -3501,6 +3501,7 @@ msgstr ""
 #. module: elite_vet_reservation
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation__overlap_warning
 #: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_second_room_wizard__overlap_warning
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_reservation_confirm_wizard__overlap_warning
 msgid "Upozornění na obsazený termín"
 msgstr ""
 
@@ -4173,6 +4174,7 @@ msgstr ""
 #: code:addons/elite_vet_reservation/static/src/cancel_dialog/cancel_dialog.xml:0
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_cancel_wizard_form
 #: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_confirm_wizard_form
 msgid "Zpět"
 msgstr ""
 
@@ -4592,4 +4594,22 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/elite_vet_reservation/static/src/board/board.js:0
 msgid "Interní poznámka: %s"
+msgstr ""
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+#: model:ir.model,name:elite_vet_reservation.model_elite_vet_reservation_confirm_wizard
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_confirm_wizard_form
+msgid "Potvrdit do obsazeného termínu"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_confirm_wizard_form
+msgid "Přesto potvrdit"
+msgstr ""
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_confirm_wizard_form
+msgid "Přesto rezervaci potvrdit? Obě rezervace pak budou ve stejném čase v jedné ordinaci."
 msgstr ""

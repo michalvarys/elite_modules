@@ -23,3 +23,4 @@ access_second_room_wizard_reception,elite.vet.reservation.second.room.wizard.rec
 access_restore_wizard_manager,elite.vet.reservation.restore.wizard.manager,model_elite_vet_reservation_restore_wizard,elite_vet_reservation.group_reservation_manager,1,1,1,1
 access_cancel_wizard_reception,elite.vet.reservation.cancel.wizard.reception,model_elite_vet_reservation_cancel_wizard,elite_vet_reservation.group_reservation_reception,1,1,1,1
 access_room_note_reception,elite.vet.room.note.reception,model_elite_vet_room_note,elite_vet_reservation.group_reservation_reception,1,1,1,1
+access_confirm_wizard_reception,elite.vet.reservation.confirm.wizard.reception,model_elite_vet_reservation_confirm_wizard,elite_vet_reservation.group_reservation_reception,1,1,1,1

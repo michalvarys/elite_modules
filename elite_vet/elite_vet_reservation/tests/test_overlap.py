@@ -102,6 +102,41 @@ class TestOverlap(ReservationCase):
         self.assertTrue(form.overlap_warning)
         self.assertFalse(form.overlap_can_override)
 
+    # ------------------------------------------------------------------ "Potvrdit" on the form (request 11. 11.)
+    def web_request(self, h, room=None):
+        """A web request placed while the time was free (11:00 is free at first)."""
+        return self.R.with_context(ev_no_mail=True).create(self.vals(
+            state="web_new", source="web", room_id=(room or self.room1).id, start=self.dt(self.day, h), contact_name="Z webu"))
+
+    def test_confirm_into_a_time_taken_meanwhile_asks_then_confirms(self):
+        web = self.web_request(11)
+        taken = self.R.with_context(ev_allow_overlap=True).create(self.vals(start=self.dt(self.day, 11), contact_name="Mezitím"))
+        with self.assertRaises(OverlapRuleError):
+            web.action_confirm()
+        action = web.action_confirm_ask()
+        self.assertEqual(action["res_model"], "elite.vet.reservation.confirm.wizard")
+        self.assertEqual(web.state, "web_new", "nothing confirmed before the yes")
+        wizard = self.env[action["res_model"]].with_user(self.reception).with_context(action["context"]).create({})
+        self.assertIn(taken.name, wizard.overlap_warning)
+        wizard.action_confirm()
+        self.assertEqual(web.state, "confirmed")
+        self.assertIn("Uloženo přes obsazený termín", web.message_ids.mapped("body")[0])
+
+    def test_confirm_into_a_free_time_does_not_ask(self):
+        web = self.web_request(15)
+        self.assertFalse(web.with_context(ev_no_mail=True).action_confirm_ask())
+        self.assertEqual(web.state, "confirmed")
+
+    def test_confirm_never_over_a_block(self):
+        web = self.web_request(12, room=self.room2)
+        self.env["elite.vet.reservation"].with_context(ev_allow_overlap=True).create({
+            "kind": "block", "state": "confirmed", "block_reason": "Oběd překryv", "block_scope": "full",
+            "room_id": self.room2.id, "start": self.dt(self.day, 12), "stop": self.dt(self.day, 13)})
+        with self.assertRaises(ValidationError) as caught:
+            web.action_confirm_ask()
+        self.assertNotIsInstance(caught.exception, OverlapRuleError)
+        self.assertEqual(web.state, "web_new")
+
     def test_context_key_needs_reception(self):
         """A user outside Recepce cannot use the key (the public website goes through sudo with no key)."""
         with self.assertRaises(OverlapRuleError):
