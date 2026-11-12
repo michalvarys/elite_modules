@@ -124,6 +124,13 @@ class EliteEetDevice(models.Model):
         return devices
 
     def write(self, vals):
+        if "environment" in vals:
+            for device in self.filtered(lambda d: d.environment != vals["environment"]):
+                if device.sale_ids.filtered(lambda s: s.state != "registered"):
+                    raise UserError(_(
+                        "Pokladna %s má neodeslané tržby. Prostředí jde přepnout, až budou všechny evidované, "
+                        "jinak by odešly do jiného prostředí, než ve kterém vznikly.", device.name,
+                    ))
         res = super().write(vals)
         if any(f in vals for f in CERT_FIELDS):
             for device in self:
@@ -268,7 +275,10 @@ class EliteEetDevice(models.Model):
     def _cron_watch(self):
         now = fields.Datetime.now()
         Sale = self.env["elite.eet.sale"].sudo()
-        for device in self.sudo().search([("active_eet", "=", True)]):
+        devices = self.sudo().search(
+            ["|", ("active_eet", "=", True), ("sale_ids.state", "in", ("pending", "error"))]
+        )
+        for device in devices:
             base = [("device_id", "=", device.id)]
             errors = Sale.search_count(base + [("state", "=", "error")])
             if errors:
@@ -282,7 +292,7 @@ class EliteEetDevice(models.Model):
             if overdue:
                 device._eet_notify(_("Tržby EET po lhůtě 48 hodin"),
                                    _("%s tržeb nebylo do 48 hodin evidováno. Odešlete je co nejdřív.", overdue))
-            if device.cert_valid_to and device.cert_valid_to <= now + timedelta(days=CERT_WARNING_DAYS):
+            if device.active_eet and device.cert_valid_to and device.cert_valid_to <= now + timedelta(days=CERT_WARNING_DAYS):
                 device._eet_notify(_("Certifikát EET brzy vyprší"),
                                    _("Certifikát pokladny %(name)s platí do %(date)s. Vydejte nový v portálu MOJE daně.",
                                      name=device.name, date=device.cert_valid_to))

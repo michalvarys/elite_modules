@@ -111,13 +111,42 @@ class EliteEetSale(models.Model):
         )
         locked = {row[0] for row in self.env.cr.fetchall()}
         results = {}
+        # Sales of a device switched off later are still sent: they were paid while EET was on.
         for sale in sales.filtered(lambda s: s.id in locked):
-            if not sale.device_id.active_eet:
-                continue
             first = (not sale.attempt_ids) if first_send is None else first_send
-            attempt = sale.device_id._eet_transmit(sale._eet_sale_data(), first, False, sale=sale)
-            sale._eet_apply(attempt)
-            results[sale.id] = attempt.result
+            try:
+                with self.env.cr.savepoint():
+                    attempt = sale.device_id._eet_transmit(sale._eet_sale_data(), first, False, sale=sale)
+                    sale._eet_apply(attempt)
+                results[sale.id] = attempt.result
+            except Exception as e:  # noqa: BLE001 - one broken sale must not stop the others
+                _logger.exception("EET: sending sale %s failed unexpectedly; it stays in the queue", sale.id)
+                message_text = _("Neočekávaná chyba při odesílání: %s", type(e).__name__)
+                self.env["elite.eet.attempt"].sudo().create({
+                    "device_id": sale.device_id.id,
+                    "sale_id": sale.id,
+                    "sent_at": fields.Datetime.now(),
+                    "first_send": first,
+                    "result": "local_error",
+                    "message": message_text,
+                })
+                sale.write({"last_error": message_text})
+                results[sale.id] = "local_error"
+        return results
+
+    @api.model
+    def _eet_send_batch(self, pairs):
+        """Send [(sale_id, first_send)] in order; skip a device after it did not answer."""
+        unreachable = set()
+        results = {}
+        for sale_id, first_send in pairs:
+            sale = self.sudo().browse(sale_id).exists()
+            if not sale or sale.device_id.id in unreachable:
+                continue
+            result = sale._eet_send(first_send).get(sale.id)
+            results[sale.id] = result
+            if result == "no_response":
+                unreachable.add(sale.device_id.id)
         return results
 
     def _eet_apply(self, attempt):
@@ -142,25 +171,35 @@ class EliteEetSale(models.Model):
             self.write({"last_error": attempt.message or False})
 
     def _eet_send_after_commit(self, first_send=None):
-        """Send right after the current transaction commits (never inside it)."""
-        ids = self.ids
-        if not ids:
-            return
-        registry, uid, context = self.env.registry, self.env.uid, dict(self.env.context)
+        """Send right after the current transaction commits (never inside it).
 
-        @self.env.cr.postcommit.add
-        def _send():
-            try:
-                with registry.cursor() as cr:
-                    env = api.Environment(cr, uid, context)
-                    env["elite.eet.sale"].browse(ids)._eet_send(first_send)
-            except Exception:
-                _logger.exception("EET: sending sales %s after commit failed; the queue will retry", ids)
+        All sales of one transaction (e.g. a till syncing a backlog) share one
+        callback, so an unreachable EET costs one timeout, not one per order.
+        """
+        if not self:
+            return
+        postcommit = self.env.cr.postcommit
+        queue = postcommit.data.get("elite_eet_sales")
+        if queue is None:
+            queue = postcommit.data["elite_eet_sales"] = []
+            registry, uid, context = self.env.registry, self.env.uid, dict(self.env.context)
+
+            @postcommit.add
+            def _send():
+                pairs = list(queue)
+                try:
+                    with registry.cursor() as cr:
+                        env = api.Environment(cr, uid, context)
+                        env["elite.eet.sale"]._eet_send_batch(pairs)
+                except Exception:
+                    _logger.exception("EET: sending sales after commit failed; the queue will retry")
+
+        queue.extend((sale_id, first_send) for sale_id in self.ids)
 
     @api.model
     def _cron_send_pending(self, limit=50):
         sales = self.sudo().search(
-            [("state", "=", "pending"), ("device_id.active_eet", "=", True)], order="dat_trzby, id", limit=limit
+            [("state", "=", "pending")], order="dat_trzby, id", limit=limit
         )
         unreachable = set()
         for sale in sales:

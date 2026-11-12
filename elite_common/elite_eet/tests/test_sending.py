@@ -157,14 +157,6 @@ class TestEetSending(EetCase):
         self.assertEqual(len(self.device.attempt_ids), 1)
         self.assertEqual(len(other.attempt_ids), 1)
 
-    def test_inactive_device_not_sent(self):
-        sale = self.make_sale()
-        self.device.active_eet = False
-        with patch(SEND, FakeSend(pok())) as fake:
-            sale._eet_send()
-            self.env["elite.eet.sale"]._cron_send_pending()
-        self.assertFalse(fake.calls)
-        self.assertEqual(sale.state, "pending")
 
     def test_check_connection_verified(self):
         verified = transport.Result("verified", code=0, message="OK", http_status=200)
@@ -215,6 +207,7 @@ class TestEetSending(EetCase):
         sale._eet_send_after_commit(first_send=True)
         self.assertEqual(len(self.env.cr.postcommit._funcs), before + 1)
         self.env.cr.postcommit._funcs.pop()
+        self.env.cr.postcommit.data.pop("elite_eet_sales")
 
     def test_deadline_filters(self):
         now = fields.Datetime.now()
@@ -226,3 +219,70 @@ class TestEetSending(EetCase):
         all_sales = near | over | fresh | done
         self.assertEqual(Sale.search([("is_near_deadline", "=", True), ("id", "in", all_sales.ids)]), near)
         self.assertEqual(Sale.search([("is_overdue", "=", True), ("id", "in", all_sales.ids)]), over)
+
+    # --- final review fixes -------------------------------------------------
+
+    def test_send_batch_skips_unreachable_device(self):
+        sales = self.make_sale("B1") | self.make_sale("B2") | self.make_sale("B3")
+        with patch(SEND, FakeSend(result("no_response"))) as fake:
+            self.env["elite.eet.sale"]._eet_send_batch([(s.id, True) for s in sales])
+        self.assertEqual(len(fake.calls), 1)
+        self.assertEqual(sales.mapped("state"), ["pending"] * 3)
+
+    def test_after_commit_single_callback(self):
+        a, b = self.make_sale("S1"), self.make_sale("S2")
+        before = len(self.env.cr.postcommit._funcs)
+        a._eet_send_after_commit(first_send=True)
+        b._eet_send_after_commit(first_send=False)
+        self.assertEqual(len(self.env.cr.postcommit._funcs), before + 1)
+        self.assertEqual(self.env.cr.postcommit.data["elite_eet_sales"], [(a.id, True), (b.id, False)])
+        self.env.cr.postcommit._funcs.pop()
+        self.env.cr.postcommit.data.pop("elite_eet_sales")
+
+    def test_environment_change_blocked_with_open_sales(self):
+        self.make_sale("E1")
+        with self.assertRaisesRegex(UserError, "neodeslané"):
+            self.device.write({"environment": "production"})
+
+    def test_disabled_device_still_sends_existing_sales(self):
+        sale = self.make_sale("X1")
+        self.device.active_eet = False
+        with patch(SEND, FakeSend(pok())):
+            self.env["elite.eet.sale"]._cron_send_pending()
+        self.assertEqual(sale.state, "registered")
+
+    def test_watch_covers_disabled_device(self):
+        self.make_sale("X2", dat_trzby=fields.Datetime.now() - timedelta(hours=25))
+        self.device.active_eet = False
+        self.env["elite.eet.device"]._cron_watch()
+        self.assertTrue(self.device.activity_ids)
+
+    def test_unexpected_error_does_not_stall_queue(self):
+        first, second = self.make_sale("Q1"), self.make_sale("Q2")
+        real = transport.Result
+        calls = []
+
+        def flaky(url, envelope, timeout, post=None):
+            calls.append(envelope)
+            if len(calls) == 1:
+                raise RuntimeError("boom")
+            return pok()
+
+        with patch(SEND, flaky):
+            self.env["elite.eet.sale"]._cron_send_pending()
+        self.assertEqual(first.attempt_ids.result, "local_error")
+        self.assertEqual(first.state, "pending")
+        self.assertEqual(second.state, "registered")
+
+    def test_manager_cannot_forge_sale(self):
+        from odoo.exceptions import AccessError
+        manager = self.env["res.users"].create({
+            "name": "EET forger", "login": "eet_forger",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id, self.env.ref("elite_eet.group_eet_manager").id])],
+        })
+        sale = self.make_sale("F1")
+        with self.assertRaises(AccessError):
+            sale.with_user(manager).write({"state": "registered", "pok": "fake"})
+        with patch(SEND, FakeSend(pok())):
+            sale.with_user(manager).action_send_to_eet()
+        self.assertEqual(sale.state, "registered")

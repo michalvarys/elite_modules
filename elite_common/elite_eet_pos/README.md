@@ -24,6 +24,11 @@ Pokladna bez zapnutého nastavení EET se chová jako dřív. Modul u ní nic ne
   který má „Evidovat v EET“ vypnuté. Objednávka zaplacená jen takto do EET nejde. Smíšená objednávka pošle
   jen evidovanou část.
 - **Vratka** z pokladny je samostatná záporná tržba s časem vrácení.
+- **Pořadové číslo tržby** je číslo objednávky bez diakritiky a za `#` interní číslo objednávky, například
+  `Pokladna Bar c. 1/0001#57`. Odoo dává všem vratkám jedné objednávky stejný název a dlouhý název pokladny
+  by jinak usekl číslování; takhle je číslo vždy jedinečné.
+- **Chyba EET nikdy nezastaví uložení objednávky.** Kdyby tržba výjimečně nevznikla, vedoucí pokladny
+  dostane aktivitu „Tržba EET nevznikla“.
 - **Odložená platba na účet zákazníka** (typ Pay Later) má „Evidovat v EET“ ve výchozím stavu vypnuté.
 - **Vouchery na blíže neurčené zboží:**
   - Produkt voucheru má zaškrtnuté „Předplacený kredit/voucher na neurčené zboží“. Jeho prodej jde do EET

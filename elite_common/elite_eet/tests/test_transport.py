@@ -95,3 +95,10 @@ class TestEetTransport(BaseCase):
 
     def test_urls(self):
         self.assertEqual(transport.URLS["production"], "https://trzbyeet.gov.cz/eet/services/EETServiceSOAP/v4")
+
+    def test_unexpected_structure_is_no_response(self):
+        body = (b'<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:e="http://fs.gov.cz/eet/schema/v4">'
+                b'<s:Body><e:Odpoved><e:Hlavicka/></e:Odpoved></s:Body></s:Envelope>')
+        self.assertEqual(transport.parse_response(body, 200, {}).kind, "no_response")
+        body2 = body.replace(b"<e:Hlavicka/>", b"<e:Hlavicka/><e:Chyba>x</e:Chyba>")
+        self.assertEqual(transport.parse_response(body2, 200, {}).kind, "no_response")

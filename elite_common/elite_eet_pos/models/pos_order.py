@@ -1,8 +1,11 @@
+import logging
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 from odoo.addons.elite_eet.eet import fields as eet_fields
+
+_logger = logging.getLogger(__name__)
 
 # An order reaching the server later than this after payment was not sent at
 # payment (till offline), so EET gets it as a repeated sending.
@@ -35,8 +38,31 @@ class PosOrder(models.Model):
     def _process_saved_order(self, draft):
         order_id = super()._process_saved_order(draft)
         if not draft and self.env.context.get("elite_eet_from_ui") and self.state in ("paid", "done", "invoiced"):
-            self._eet_create_sale()
+            # An EET problem must never stop the till from saving a paid order.
+            try:
+                with self.env.cr.savepoint():
+                    self._eet_create_sale()
+            except Exception:  # noqa: BLE001
+                _logger.exception("EET: no sale created for POS order %s", self.id)
+                device = self.sudo().config_id.eet_device_id
+                if device:
+                    device._eet_notify(
+                        _("Tržba EET nevznikla"),
+                        _("U objednávky %s se nepodařilo vytvořit tržbu EET. Zkontrolujte ji a evidujte ručně.",
+                          self.name),
+                    )
         return order_id
+
+    def _eet_porad_cis(self):
+        """Receipt number for EET: unique by construction (order id), max 25 characters.
+
+        Odoo names every refund of an order the same ("<order> REFUND"), and long till
+        names would lose the sequence number when truncated, so the id is appended.
+        """
+        self.ensure_one()
+        suffix = "#%s" % self.id
+        base = eet_fields.sanitize_text(self.name or "", 25 - len(suffix)) if self.name else ""
+        return "%s%s" % (base, suffix)
 
     def _eet_create_sale(self):
         """Create the EET sale of a paid till order and send it after commit."""
@@ -57,7 +83,7 @@ class PosOrder(models.Model):
             "device_id": device.id,
             "pos_order_id": order.id,
             "source_ref": order.name,
-            "porad_cis": eet_fields.sanitize_text(order.name, 25),
+            "porad_cis": order._eet_porad_cis(),
             "dat_trzby": order.date_order,
             "celk_trzba": sum(payments.mapped("amount")),
             "cerp_zuct": sum(payments.filtered(lambda p: p.payment_method_id.eet_voucher_redemption).mapped("amount")),

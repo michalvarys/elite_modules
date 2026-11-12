@@ -12,7 +12,8 @@ Co modul dělá:
   WS-Security pokladním certifikátem.
 - **Odeslání a záznam.** Každá tržba (`elite.eet.sale`) má stav Čeká, Evidováno nebo Chyba, POK a historii
   pokusů (`elite.eet.attempt`) i s odeslanou a přijatou zprávou.
-- **Fronta.** Cron každou minutu pošle čekající tržby jako opakované zaslání: stejná data, nové UUID,
+- **Fronta.** Všechny tržby jedné synchronizace pokladny se po uložení odešlou najednou. Když EET neodpoví,
+  zbytek počká na frontu, takže výpadek stojí pokladnu jen jednu mezní dobu odezvy. Cron každou minutu pošle čekající tržby jako opakované zaslání: stejná data, nové UUID,
   `prvni_zaslani="false"`. Když EET u pokladny neodpoví, zbytek jejích tržeb se v tom běhu přeskočí, aby se
   nečekalo desetkrát na timeout.
 - **Hromadná akce „Odeslat do EET“** v seznamu Tržby EET. Pošle označené tržby ve stavu Čeká a Chyba,
@@ -42,6 +43,13 @@ podpoří dávky, změní se jen tato dvě místa.
   - Produkční adresu EET použije jen pokladna přepnutá na Produkce, a to jen s produkčním certifikátem.
     Nesoulad prostředí a certifikátu nejde uložit.
   - Při běhu testů produkci nic neodešle.
+- **Prostředí nejde přepnout, dokud má pokladna neodeslané tržby.** Jinak by odešly do jiného prostředí, než
+  ve kterém vznikly.
+- **Vypnutí EET u pokladny** zastaví vznik nových tržeb. Už vzniklé tržby se dál posílají a hlídají, protože
+  byly zaplacené se zapnutým EET.
+- **Chyba jedné tržby nezastaví ostatní.** Neočekávaná chyba se zapíše jako pokus „Chyba před odesláním“
+  a tržba zůstane ve frontě.
+- **Tržby nejde ručně zakládat ani měnit.** Stav a POK zapisuje jen odesílání.
 - **Certifikát a heslo** vidí jen správce systému. Do logu, chatteru ani pokusů se nedostanou.
 
 Systémový parametr `elite_eet.playground_url_override` nahradí adresu Playgroundu, například

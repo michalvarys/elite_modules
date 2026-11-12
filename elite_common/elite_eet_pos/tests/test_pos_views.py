@@ -47,7 +47,11 @@ class TestPosEetViews(TestPoSCommon):
         self.env["elite.eet.sale"].with_user(self.pos_user).search([])
         with self.assertRaises(AccessError):
             self.device.with_user(self.pos_user).write({"name": "x"})
-        sale = self.env["elite.eet.sale"].create({
+        with self.assertRaises(AccessError):
+            self.env["elite.eet.sale"].with_user(self.pos_manager).create({
+                "device_id": self.device.id, "porad_cis": "V0", "dat_trzby": "2027-01-15 08:00:00", "celk_trzba": 1,
+            })
+        sale = self.env["elite.eet.sale"].sudo().create({
             "device_id": self.device.id, "porad_cis": "V1", "dat_trzby": "2027-01-15 08:00:00", "celk_trzba": 1,
         })
         with patch.object(type(self.env["elite.eet.sale"]), "_eet_send", lambda s, first_send=None: {}):

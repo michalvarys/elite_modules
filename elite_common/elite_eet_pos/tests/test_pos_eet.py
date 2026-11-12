@@ -164,3 +164,45 @@ class TestPosEet(TestPoSCommon):
         self.assertTrue(self.bank_pm1.eet_register)
         self.assertTrue(self.cash_pm1.eet_register)
         self.assertFalse(self.pay_later_pm.eet_register)
+
+    # --- final review fixes -------------------------------------------------
+
+    def refund(self, order, qty, amount):
+        data = self.create_ui_order_data([(self.beer, qty)], payments=[(self.cash_pm1, amount)])
+        data["lines"][0][2]["refunded_orderline_id"] = order.lines[0].id
+        result = self.env["pos.order"].sync_from_ui([data])
+        return self.env["pos.order"].browse(result["pos.order"][0]["id"])
+
+    def test_double_refund(self):
+        order = self.sync([(self.beer, 2)], [(self.cash_pm1, 500)])
+        first = self.refund(order, -1, -250)
+        second = self.refund(order, -1, -250)
+        self.assertEqual(first.name, second.name)  # Odoo names every refund "<order> REFUND"
+        self.assertTrue(first.eet_sale_id and second.eet_sale_id)
+        self.assertNotEqual(first.eet_sale_id.porad_cis, second.eet_sale_id.porad_cis)
+        for sale in (first | second).eet_sale_ids:
+            self.assertTrue(eet_fields.TEXT25_RE.fullmatch(sale.porad_cis), sale.porad_cis)
+
+    def test_long_config_name(self):
+        # Order names are "<till name at creation>/0001"; a long till name used to lose the
+        # sequence number when truncated to 25 characters, so every order collided.
+        orders = [self.sync([(self.beer, 1)], [(self.bank_pm1, 250)]) for _i in range(3)]
+        numbers = []
+        for i, order in enumerate(orders, 1):
+            order.name = "Elite Trafika Pokladna u vchodu/%04d" % i
+            numbers.append(order._eet_porad_cis())
+        self.assertEqual(len(set(numbers)), 3, numbers)
+        for number in numbers:
+            self.assertTrue(eet_fields.TEXT25_RE.fullmatch(number), number)
+
+    def test_eet_failure_never_blocks_sync(self):
+        order_model = type(self.env["pos.order"])
+
+        def broken(order):
+            raise RuntimeError("EET bug")
+
+        with patch.object(order_model, "_eet_create_sale", broken):
+            order = self.sync([(self.beer, 1)], [(self.bank_pm1, 250)])
+        self.assertEqual(order.state, "paid")
+        self.assertFalse(order.eet_sale_id)
+        self.assertTrue(self.device.activity_ids.filtered(lambda a: "nevznikla" in (a.summary or "")))

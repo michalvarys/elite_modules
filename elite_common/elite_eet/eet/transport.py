@@ -37,6 +37,19 @@ def _utc(value):
 
 def parse_response(body, http_status, headers):
     """Turn the service answer into a Result; anything unreadable is "no_response"."""
+    try:
+        return _parse_response(body, http_status, headers)
+    except (AttributeError, TypeError, ValueError):
+        return Result(
+            "no_response",
+            message="Neočekávaná odpověď (HTTP %s)." % http_status,
+            http_status=http_status,
+            transaction_id=(headers or {}).get("X-Global-Transaction-Id"),
+            response_xml=body,
+        )
+
+
+def _parse_response(body, http_status, headers):
     transaction_id = (headers or {}).get("X-Global-Transaction-Id")
     base = dict(http_status=http_status, transaction_id=transaction_id, response_xml=body)
     try:
