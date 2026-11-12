@@ -105,6 +105,7 @@ class EliteEetSale(models.Model):
         sales = self.sudo()
         if not sales:
             return {}
+        self.env.flush_all()  # the lock query below must see pending ORM changes
         self.env.cr.execute(
             "SELECT id FROM elite_eet_sale WHERE id IN %s AND state != 'registered' FOR UPDATE SKIP LOCKED",
             [tuple(sales.ids)],

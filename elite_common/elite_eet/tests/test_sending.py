@@ -286,3 +286,11 @@ class TestEetSending(EetCase):
         with patch(SEND, FakeSend(pok())):
             sale.with_user(manager).action_send_to_eet()
         self.assertEqual(sale.state, "registered")
+
+    def test_send_sees_unflushed_state(self):
+        sale = self.make_sale("U1")
+        with patch(SEND, FakeSend(pok())):
+            sale._eet_send()
+            sale.state = "pending"  # pending in the ORM cache, not yet in the database
+            sale._eet_send()
+        self.assertEqual(len(sale.attempt_ids), 2)
