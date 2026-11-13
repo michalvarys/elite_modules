@@ -10,7 +10,7 @@ vytisknout kolikrát chcete, i před uzavřením a bez něj.
 ## Co je na uzávěrce
 
 - pokladna, směna, kdy se otevřela, kdo uzavírá
-- tržba celkem a počet účtenek
+- tržba celkem
 - platby podle způsobu platby
 - hotovost v kase: počáteční stav, přijato v hotovosti, vklady a výběry, kolik má být v kase
 - DPH podle sazeb (základ, daň), už po odečtení vratek

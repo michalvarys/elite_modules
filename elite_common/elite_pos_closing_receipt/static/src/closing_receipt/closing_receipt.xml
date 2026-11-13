@@ -18,10 +18,6 @@
                 <span>Tržba celkem</span>
                 <span t-esc="money(d.total)"/>
             </div>
-            <div class="elite-closing-receipt__row">
-                <span>Počet účtenek</span>
-                <span t-esc="d.orders"/>
-            </div>
 
             <div t-if="d.payments.length" class="elite-closing-receipt__section">
                 <div class="elite-closing-receipt__section-title">Platby</div>
