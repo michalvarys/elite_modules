@@ -51,17 +51,23 @@ má co nejdřív obnovit spojení. Pokladní systém pak tržby pošle sám, nej
 
 ## Nastavení (pro každou pokladnu zvlášť)
 
-1. **Evidenční jednotka a certifikát.** V portálu MOJE daně (DIS+) založte evidenční jednotku a vydejte
-   pokladní certifikát (.p12 a heslo). Certifikát platí rok.
-2. **Nastavení pokladny.** Pokladna → EET → Nastavení pokladen EET → Nový:
-   - vyberte pokladnu;
-   - doplňte EIČ a číslo evidenční jednotky (označení pokladny se doplní z jejího názvu);
-   - jako správce systému nahrajte certifikát a heslo;
-   - nechte prostředí Playground.
-3. **Ověření.** Klikněte na „Ověřit spojení“. Má se objevit „Spojení s EET funguje.“
-4. **Ostrý provoz.** Přepněte prostředí na Produkce (vyžaduje produkční certifikát), nastavte „EET od“ na
-   1. 1. 2027 0:00 a zaškrtněte Zapnuto.
+Všechno je v **Pokladna → Konfigurace → Nastavení**, oddíl **EET 2.0**. Nahoře vyberte pokladnu. Nastavení
+smí měnit správce systému.
+
+1. **V portálu MOJE daně (DIS+)** založte evidenční jednotku a vydejte pokladní certifikát (.p12 a heslo).
+   Certifikát platí rok. Pokladny stejného poplatníka mohou mít jeden certifikát.
+2. **V oddílu EET 2.0** vyplňte číslo evidenční jednotky, nahrajte certifikát a heslo (u druhé pokladny
+   stačí „Převzít certifikát z pokladny“) a uložte.
+   - EIČ se doplní z certifikátu.
+   - Prostředí se řídí certifikátem: testovací certifikát posílá do Playgroundu, produkční do ostrého EET.
+   - Označení pokladny se doplní z jejího názvu.
+   - „EET od“ je předvyplněné na 1. 1. 2027 0:00.
+3. **Ověřit spojení.** Stav nahoře v oddílu zezelená: „Spojení ověřeno …“.
+4. **Zapněte „Evidovat tržby této pokladny v EET“** a uložte.
 5. **Způsoby platby.** Zkontrolujte „Evidovat v EET“: Hotově a Kartou ano, interní způsob ne.
+
+Stav v oddílu upozorní na chybějící údaje, neodeslané tržby a končící certifikát. Podrobné nastavení
+(mezní doba odezvy, vedoucí pokladny, historie pokusů) je v Pokladna → EET → Nastavení pokladen EET.
 
 Zkušební odesílání do produkce je možné od 1. 12. 2026. V lednu 2027 běží pilotní režim, ale evidence je
 už povinná.
