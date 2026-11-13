@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from odoo.exceptions import AccessError
 from odoo.tests import new_test_user, tagged
 
@@ -71,3 +73,19 @@ class TestClosingReceipt(TestPoSCommon):
         )
         with self.assertRaises(AccessError):
             self.pos_session.with_user(stranger).get_elite_closing_receipt()
+
+    def test_older_odoo_without_payments_per_method(self):
+        """Older Odoo 18 builds return no "payments_per_method" in the sale details."""
+        report = type(self.env["report.point_of_sale.report_saledetails"])
+        original = report.get_sale_details
+
+        def older(self_report, *args, **kwargs):
+            details = original(self_report, *args, **kwargs)
+            details.pop("payments_per_method", None)
+            return details
+
+        with patch.object(report, "get_sale_details", older):
+            data = self.pos_session.get_elite_closing_receipt()
+        payments = {p["name"]: p["total"] for p in data["payments"]}
+        self.assertAlmostEqual(payments[self.cash_pm1.name], 121)
+        self.assertAlmostEqual(payments[self.bank_pm1.name], 242)
