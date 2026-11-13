@@ -89,3 +89,50 @@ class TestClosingReceipt(TestPoSCommon):
         payments = {p["name"]: p["total"] for p in data["payments"]}
         self.assertAlmostEqual(payments[self.cash_pm1.name], 121)
         self.assertAlmostEqual(payments[self.bank_pm1.name], 242)
+
+    def _close(self, counted):
+        self.pos_session.post_closing_cash_details(counted)
+        self.pos_session.close_session_from_ui()
+        self.assertEqual(self.pos_session.state, "closed")
+
+    def test_closed_session_shows_counted_cash_and_difference(self):
+        # 100 opening + 121 cash sales = 221 expected; the cashier counts 211 (10 short).
+        self._close(211)
+        cash = self.pos_session.get_elite_closing_receipt()["cash"]
+        self.assertAlmostEqual(cash["opening"], 100)
+        self.assertAlmostEqual(cash["payments"], 121)
+        self.assertEqual(cash["moves"], [], "the counting difference is not a cash move")
+        self.assertAlmostEqual(cash["expected"], 221)
+        self.assertAlmostEqual(cash["counted"], 211)
+        self.assertAlmostEqual(cash["difference"], -10)
+
+    def test_cash_moves_survive_closing(self):
+        self.pos_session.try_cash_in_out("in", 50, "drobne", {"translatedType": "in"})
+        before = self.pos_session.get_elite_closing_receipt()["cash"]
+        self.assertAlmostEqual(before["expected"], 271)
+        self._close(271)
+        after = self.pos_session.get_elite_closing_receipt()["cash"]
+        self.assertEqual(after["moves"], before["moves"])
+        self.assertAlmostEqual(after["expected"], 271)
+        self.assertAlmostEqual(after["expected"], self.pos_session.cash_register_balance_end)
+        self.assertAlmostEqual(after["difference"], 0)
+
+    def test_open_session_has_no_counted_cash(self):
+        cash = self.pos_session.get_elite_closing_receipt()["cash"]
+        self.assertNotIn("counted", cash)
+
+    def test_reprint_from_back_office(self):
+        self._close(221)
+        cashier = new_test_user(
+            self.env, login="elite_cashier_reprint", groups="base.group_user,point_of_sale.group_pos_user",
+            company_id=self.company.id, company_ids=self.company.ids,
+        )
+        html, _type = self.env["ir.actions.report"].with_user(cashier)._render_qweb_html(
+            "elite_pos_closing_receipt.report_closing_receipt", self.pos_session.ids
+        )
+        html = html.decode()
+        self.assertIn("Uzávěrka", html)
+        self.assertIn(self.pos_session.name, html)
+        self.assertIn("Uzavřena", html)
+        self.assertIn("Spočítáno", html)
+        self.assertIn("Drink", html)

@@ -7,9 +7,10 @@ class PosSession(models.Model):
     def get_elite_closing_receipt(self):
         """Data of the printed closing receipt of this session.
 
-        Built on the same figures as Odoo's "Daily Sale" report (report_saledetails) and on the cash
-        figures of the closing popup (get_closing_control_data), so the receipt matches both. Amounts
-        are with VAT, as the cashier sees them on the till."""
+        Sales, VAT and categories come from Odoo's "Daily Sale" computation (report_saledetails), so
+        the receipt matches that report. Cash is computed here (see _elite_cash_details) the same way
+        the closing popup does, and works for closed sessions too, so the receipt can be printed
+        again later from the session. Amounts are with VAT, as the cashier sees them on the till."""
         self.ensure_one()
         # A plain POS user may close the session, but Odoo's sale-details computation also reads
         # accounting records (account.payment) a cashier has no rights to. Check access to the
@@ -19,7 +20,6 @@ class PosSession(models.Model):
         details = self.env["report.point_of_sale.report_saledetails"].sudo().get_sale_details(
             session_ids=[session.id]
         )
-        control = session.get_closing_control_data()
         currency = session.currency_id
 
         def categories(groups):
@@ -51,23 +51,18 @@ class PosSession(models.Model):
         } for entry in taxes.values()]
 
         refunds = categories(details.get("refund_products", []))
-        cash = control.get("default_cash_details")
         return {
             "company": session.config_id.company_id.name,
             "config": session.config_id.name,
             "session": session.name,
             "opened": fields.Datetime.to_string(session.start_at) if session.start_at else False,
+            "closed": fields.Datetime.to_string(session.stop_at)
+            if session.state == "closed" and session.stop_at else False,
             "user": session.user_id.name,
             "orders": details["nbr_orders"],
             "total": currency.round(details["currency"]["total_paid"]),
             "payments": session._elite_payments_per_method(),
-            "cash": {
-                "name": cash.get("name", ""),
-                "opening": cash.get("opening", 0.0),
-                "payments": cash.get("payment_amount", 0.0),
-                "moves": cash.get("moves", []),
-                "expected": currency.round(cash.get("amount", 0.0)),
-            } if cash else False,
+            "cash": session._elite_cash_details(),
             "vat": vat,
             "discounts": {"count": details.get("discount_number", 0),
                           "amount": currency.round(details.get("discount_amount", 0.0))},
@@ -86,4 +81,47 @@ class PosSession(models.Model):
         )
         methods = sorted(groups, key=lambda g: (g[0].sequence, g[0].id))
         return [{"name": method.name, "total": self.currency_id.round(amount)} for method, amount in methods]
+
+    def _elite_cash_details(self):
+        """Cash in the register, as in the closing popup (get_closing_control_data).
+
+        On closing, Odoo adds two kinds of cash statement lines next to the cashier's cash in/out:
+        the cash sales (against a receivable account) and the counting difference (against the loss
+        or profit account of the cash journal). Both are left out of the moves here, so a closed
+        session shows the same moves as at closing, plus the counted cash and the difference."""
+        self.ensure_one()
+        method = self.payment_method_ids.filtered(lambda pm: pm.type == "cash")[:1]
+        if not method:
+            return False
+        currency = self.currency_id
+        payments = sum(self._get_closed_orders().payment_ids.filtered(
+            lambda p: p.payment_method_id == method).mapped("amount"))
+        journal = self.cash_journal_id
+        difference_accounts = journal.loss_account_id | journal.profit_account_id
+        moves = []
+        cash_in = cash_out = 0
+        for line in self.statement_line_ids.sorted("create_date"):
+            accounts = line.move_id.line_ids.account_id
+            if accounts & difference_accounts or "asset_receivable" in accounts.mapped("account_type"):
+                continue
+            if line.amount > 0:
+                cash_in += 1
+                name = f"Cash in {cash_in}"
+            else:
+                cash_out += 1
+                name = f"Cash out {cash_out}"
+            moves.append({"name": line.payment_ref or name, "amount": currency.round(line.amount)})
+        opening = self.cash_register_balance_start
+        expected = currency.round(opening + payments + sum(m["amount"] for m in moves))
+        cash = {
+            "name": method.name,
+            "opening": currency.round(opening),
+            "payments": currency.round(payments),
+            "moves": moves,
+            "expected": expected,
+        }
+        if self.state == "closed":
+            counted = currency.round(self.cash_register_balance_end_real)
+            cash.update(counted=counted, difference=currency.round(counted - expected))
+        return cash
 

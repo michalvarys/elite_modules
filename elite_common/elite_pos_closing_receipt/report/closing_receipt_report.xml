@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_report_closing_receipt" model="ir.actions.report">
+        <field name="name">Uzávěrka pokladny</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">elite_pos_closing_receipt.report_closing_receipt</field>
+        <field name="report_file">elite_pos_closing_receipt.report_closing_receipt</field>
+        <field name="print_report_name">'Uzávěrka %s' % object.name</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Same content as the till's receipt (static/src/closing_receipt/closing_receipt.xml);
+         keep the two in step. -->
+    <template id="report_closing_receipt">
+        <t t-call="web.html_container">
+            <style>
+                @page { size: 80mm auto; margin: 4mm; }
+                .elite-cr { width: 72mm; margin: 0 auto 8mm; font-size: 13px; line-height: 1.35; color: #000; }
+                .elite-cr + .elite-cr { page-break-before: always; }
+                .elite-cr hr { border-top: 1px dashed #000; margin: 6px 0; opacity: 1; }
+                .elite-cr__header { text-align: center; }
+                .elite-cr__title { font-size: 18px; font-weight: bold; }
+                .elite-cr__row { display: flex; justify-content: space-between; gap: 8px; }
+                .elite-cr__row--total { font-size: 16px; font-weight: bold; }
+                .elite-cr__row--strong { font-weight: bold; }
+                .elite-cr__row--sub { font-size: 11px; color: #333; }
+                .elite-cr__row--indent { padding-left: 10px; }
+                .elite-cr__section { margin-top: 8px; }
+                .elite-cr__section-title { font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 2px; }
+                .elite-cr__footer { text-align: center; font-size: 11px; }
+            </style>
+            <t t-foreach="receipts" t-as="pair">
+                <t t-set="session" t-value="pair[0]"/>
+                <t t-set="d" t-value="pair[1]"/>
+                <t t-set="cur" t-value="{'widget': 'monetary', 'display_currency': session.currency_id}"/>
+                <div class="elite-cr">
+                    <div class="elite-cr__header">
+                        <div class="elite-cr__title">Uzávěrka</div>
+                        <div t-out="d['company']"/>
+                        <div t-if="d['config'] != d['company']" t-out="d['config']"/>
+                        <div>Směna <t t-out="d['session']"/></div>
+                        <div>Otevřena: <t t-out="d['opened']"/></div>
+                        <div t-if="d['closed']">Uzavřena: <t t-out="d['closed']"/></div>
+                        <div>Pokladní: <t t-out="d['user']"/></div>
+                    </div>
+                    <hr/>
+
+                    <div class="elite-cr__row elite-cr__row--total">
+                        <span>Tržba celkem</span>
+                        <span t-out="d['total']" t-options="cur"/>
+                    </div>
+
+                    <div t-if="d['payments']" class="elite-cr__section">
+                        <div class="elite-cr__section-title">Platby</div>
+                        <div t-foreach="d['payments']" t-as="p" class="elite-cr__row">
+                            <span t-out="p['name']"/>
+                            <span t-out="p['total']" t-options="cur"/>
+                        </div>
+                    </div>
+
+                    <t t-set="cash" t-value="d['cash']"/>
+                    <div t-if="cash" class="elite-cr__section">
+                        <div class="elite-cr__section-title">Hotovost v kase</div>
+                        <div class="elite-cr__row">
+                            <span>Počáteční stav</span>
+                            <span t-out="cash['opening']" t-options="cur"/>
+                        </div>
+                        <div class="elite-cr__row">
+                            <span>Přijato v hotovosti</span>
+                            <span t-out="cash['payments']" t-options="cur"/>
+                        </div>
+                        <div t-foreach="cash['moves']" t-as="m" class="elite-cr__row">
+                            <span t-out="m['name']"/>
+                            <span t-out="m['amount']" t-options="cur"/>
+                        </div>
+                        <div class="elite-cr__row elite-cr__row--strong">
+                            <span>Má být v kase</span>
+                            <span t-out="cash['expected']" t-options="cur"/>
+                        </div>
+                        <t t-if="'counted' in cash">
+                            <div class="elite-cr__row">
+                                <span>Spočítáno</span>
+                                <span t-out="cash['counted']" t-options="cur"/>
+                            </div>
+                            <div class="elite-cr__row elite-cr__row--strong">
+                                <span>Rozdíl</span>
+                                <span t-out="cash['difference']" t-options="cur"/>
+                            </div>
+                        </t>
+                    </div>
+
+                    <div t-if="d['vat']" class="elite-cr__section">
+                        <div class="elite-cr__section-title">DPH</div>
+                        <t t-foreach="d['vat']" t-as="v">
+                            <div class="elite-cr__row">
+                                <span t-out="v['name']"/>
+                                <span t-out="v['total']" t-options="cur"/>
+                            </div>
+                            <div class="elite-cr__row elite-cr__row--sub">
+                                <span>základ <t t-out="v['base']" t-options="cur"/></span>
+                                <span>daň <t t-out="v['tax']" t-options="cur"/></span>
+                            </div>
+                        </t>
+                    </div>
+
+                    <div t-if="d['discounts']['count'] or d['refunds']['qty'] or d['rounding']" class="elite-cr__section">
+                        <div class="elite-cr__section-title">Slevy a vratky</div>
+                        <div t-if="d['discounts']['count']" class="elite-cr__row">
+                            <span>Slevy (<t t-out="d['discounts']['count']"/> účt.)</span>
+                            <span t-out="d['discounts']['amount']" t-options="cur"/>
+                        </div>
+                        <div t-if="d['refunds']['qty']" class="elite-cr__row">
+                            <span>Vráceno (<t t-out="'%g' % -d['refunds']['qty']"/> ks)</span>
+                            <span t-out="d['refunds']['total']" t-options="cur"/>
+                        </div>
+                        <div t-if="d['rounding']" class="elite-cr__row">
+                            <span>Zaokrouhlení</span>
+                            <span t-out="d['rounding']" t-options="cur"/>
+                        </div>
+                    </div>
+
+                    <div t-if="d['categories']" class="elite-cr__section">
+                        <div class="elite-cr__section-title">Prodej podle kategorií</div>
+                        <t t-foreach="d['categories']" t-as="c">
+                            <div class="elite-cr__row elite-cr__row--strong">
+                                <span><t t-out="c['name']"/> (<t t-out="'%g' % c['qty']"/>)</span>
+                                <span t-out="c['total']" t-options="cur"/>
+                            </div>
+                            <div t-foreach="c['products']" t-as="p"
+                                 class="elite-cr__row elite-cr__row--sub elite-cr__row--indent">
+                                <span><t t-out="'%g' % p['qty']"/>× <t t-out="p['name']"/></span>
+                                <span t-out="p['total']" t-options="cur"/>
+                            </div>
+                        </t>
+                    </div>
+
+                    <hr/>
+                    <div class="elite-cr__footer">Vytištěno: <t t-out="printed_at"/></div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>
