@@ -1,4 +1,5 @@
-from odoo.tests import tagged
+from odoo.exceptions import AccessError
+from odoo.tests import new_test_user, tagged
 
 from odoo.addons.point_of_sale.tests.common import TestPoSCommon
 
@@ -52,3 +53,21 @@ class TestClosingReceipt(TestPoSCommon):
         self.assertAlmostEqual(products["Drink"]["total"], 242)
         self.assertAlmostEqual(products["Snack"]["total"], 242)
         self.assertAlmostEqual(sum(c["total"] for c in data["categories"]), 484)
+
+    def test_plain_cashier_can_print(self):
+        """A cashier has no rights to accounting records, which Odoo's sale details read."""
+        cashier = new_test_user(
+            self.env, login="elite_cashier", groups="base.group_user,point_of_sale.group_pos_user",
+            company_id=self.company.id, company_ids=self.company.ids,
+        )
+        data = self.pos_session.with_user(cashier).get_elite_closing_receipt()
+        self.assertAlmostEqual(data["total"], 363)
+        self.assertAlmostEqual(data["cash"]["expected"], 221)
+
+    def test_user_without_pos_access_is_refused(self):
+        stranger = new_test_user(
+            self.env, login="elite_stranger", groups="base.group_user",
+            company_id=self.company.id, company_ids=self.company.ids,
+        )
+        with self.assertRaises(AccessError):
+            self.pos_session.with_user(stranger).get_elite_closing_receipt()

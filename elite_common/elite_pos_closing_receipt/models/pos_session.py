@@ -11,9 +11,16 @@ class PosSession(models.Model):
         figures of the closing popup (get_closing_control_data), so the receipt matches both. Amounts
         are with VAT, as the cashier sees them on the till."""
         self.ensure_one()
-        details = self.env["report.point_of_sale.report_saledetails"].get_sale_details(session_ids=[self.id])
-        control = self.get_closing_control_data()
-        currency = self.currency_id
+        # A plain POS user may close the session, but Odoo's sale-details computation also reads
+        # accounting records (account.payment) a cashier has no rights to. Check access to the
+        # session itself, then compute as superuser.
+        self.check_access("read")
+        session = self.sudo()
+        details = self.env["report.point_of_sale.report_saledetails"].sudo().get_sale_details(
+            session_ids=[session.id]
+        )
+        control = session.get_closing_control_data()
+        currency = session.currency_id
 
         def categories(groups):
             result = []
@@ -46,11 +53,11 @@ class PosSession(models.Model):
         refunds = categories(details["refund_products"])
         cash = control["default_cash_details"]
         return {
-            "company": self.config_id.company_id.name,
-            "config": self.config_id.name,
-            "session": self.name,
-            "opened": fields.Datetime.to_string(self.start_at) if self.start_at else False,
-            "user": self.user_id.name,
+            "company": session.config_id.company_id.name,
+            "config": session.config_id.name,
+            "session": session.name,
+            "opened": fields.Datetime.to_string(session.start_at) if session.start_at else False,
+            "user": session.user_id.name,
             "orders": details["nbr_orders"],
             "total": currency.round(details["currency"]["total_paid"]),
             "payments": [{"name": p["name"], "total": currency.round(p["total"])}
