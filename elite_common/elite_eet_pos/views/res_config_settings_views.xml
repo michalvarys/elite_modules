@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_eet" model="ir.ui.view">
+        <field name="name">res.config.settings.form.pos.eet</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <block id="pos_payment_section" position="after">
+                <block title="EET 2.0" id="pos_eet_section">
+                    <setting id="pos_eet_setting" class="col-lg-12" string="Evidovat tržby této pokladny v EET"
+                             help="Zaplacená objednávka se hned při zaplacení odešle do EET.">
+                        <field name="pos_eet_enabled"/>
+                        <div class="content-group mt16" style="max-width: 720px;">
+                            <div class="alert alert-success mb-2" role="status" invisible="pos_eet_status_level != 'ok'">
+                                <field name="pos_eet_status"/>
+                            </div>
+                            <div class="alert alert-warning mb-2" role="status" invisible="pos_eet_status_level != 'warning'">
+                                <field name="pos_eet_status"/>
+                            </div>
+                            <div class="alert alert-danger mb-2" role="alert" invisible="pos_eet_status_level != 'danger'">
+                                <field name="pos_eet_status"/>
+                            </div>
+                            <div class="alert alert-info mb-2" role="status" invisible="pos_eet_status_level != 'none'">
+                                <field name="pos_eet_status"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="pos_eet_id_jednotky" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_id_jednotky" class="col-lg-8" placeholder="číslo z portálu MOJE daně"/>
+                            </div>
+                            <div class="row mt8" groups="base.group_system">
+                                <label for="pos_eet_certificate_file" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_certificate_file" filename="pos_eet_certificate_filename" class="col-lg-8"/>
+                                <field name="pos_eet_certificate_filename" invisible="1"/>
+                            </div>
+                            <div class="row mt8" groups="base.group_system">
+                                <label for="pos_eet_certificate_password" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_certificate_password" password="True" class="col-lg-8"/>
+                            </div>
+                            <div class="row mt8" groups="base.group_system">
+                                <label for="pos_eet_cert_source_config_id" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_cert_source_config_id" class="col-lg-8"
+                                       domain="[('id', '!=', pos_config_id), ('eet_device_ids.cert_valid_to', '!=', False)]"
+                                       options="{'no_create': True, 'no_open': True}"
+                                       placeholder="jiná pokladna stejné firmy"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="pos_eet_eic" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_eic" class="col-lg-8" placeholder="doplní se z certifikátu"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="pos_eet_environment" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_environment" class="col-lg-8"/>
+                            </div>
+                            <div class="row mt8" invisible="not pos_eet_cert_valid_to">
+                                <label for="pos_eet_cert_valid_to" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_cert_valid_to" class="col-lg-8"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="pos_eet_start_datetime" class="col-lg-4 o_light_label"/>
+                                <field name="pos_eet_start_datetime" class="col-lg-8"/>
+                            </div>
+                            <div class="mt16">
+                                <button name="action_pos_eet_check_connection" type="object" string="Ověřit spojení"
+                                        class="btn-secondary" icon="fa-plug"/>
+                                <button name="%(elite_eet.action_eet_sale)d" type="action" string="Tržby EET"
+                                        class="btn-link" icon="oi-arrow-right"/>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </block>
+        </field>
+    </record>
+</odoo>

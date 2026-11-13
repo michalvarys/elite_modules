@@ -120,7 +120,7 @@ class EliteEetDevice(models.Model):
         devices = super().create(vals_list)
         for device, vals in zip(devices, vals_list):
             if any(f in vals for f in CERT_FIELDS):
-                device._eet_read_certificate()
+                device._eet_read_certificate(follow_environment="environment" not in vals)
         return devices
 
     def write(self, vals):
@@ -134,11 +134,16 @@ class EliteEetDevice(models.Model):
         res = super().write(vals)
         if any(f in vals for f in CERT_FIELDS):
             for device in self:
-                device._eet_read_certificate()
+                device._eet_read_certificate(follow_environment="environment" not in vals)
         return res
 
-    def _eet_read_certificate(self):
-        """Fill the cert_* fields from the uploaded .p12 (checks the password)."""
+    def _eet_read_certificate(self, follow_environment=True):
+        """Fill the cert_* fields from the uploaded .p12 (checks the password).
+
+        An empty EIČ is taken from the certificate (it is issued to the taxpayer). Unless the
+        environment was chosen in the same save, it follows the certificate: a production
+        certificate switches the till to production and back.
+        """
         self.ensure_one()
         device = self.sudo()
         if not device.certificate_file:
@@ -153,14 +158,19 @@ class EliteEetDevice(models.Model):
             )
         except eet_cert.CertError as e:
             raise UserError(str(e)) from None
-        device.write({
+        vals = {
             "cert_cn": info.cn,
             "cert_issuer": info.issuer,
             "cert_serial": info.serial,
             "cert_valid_from": info.valid_from,
             "cert_valid_to": info.valid_to,
             "cert_environment": info.environment,
-        })
+        }
+        if not device.eic:
+            vals["eic"] = info.cn
+        if follow_environment and info.environment and info.environment != device.environment:
+            vals["environment"] = info.environment
+        device.write(vals)
 
     def _eet_key_and_cert(self):
         """Return (private_key, certificate). Never log the result."""

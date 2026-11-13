@@ -20,6 +20,7 @@ v README.md.
         "security/elite_eet_pos_security.xml",
         "views/eet_views.xml",
         "views/pos_views.xml",
+        "views/res_config_settings_views.xml",
         "views/menus.xml",
     ],
     "installable": True,
