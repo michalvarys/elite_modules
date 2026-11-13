@@ -39,7 +39,7 @@ class PosSession(models.Model):
             return result
 
         taxes = {}
-        for tax in details["taxes"] + details["refund_taxes"]:
+        for tax in details.get("taxes", []) + details.get("refund_taxes", []):
             entry = taxes.setdefault(tax["name"], {"name": tax["name"], "base": 0.0, "tax": 0.0})
             entry["base"] += tax["base_amount"]
             entry["tax"] += tax["tax_amount"]
@@ -50,8 +50,8 @@ class PosSession(models.Model):
             "total": currency.round(entry["base"] + entry["tax"]),
         } for entry in taxes.values()]
 
-        refunds = categories(details["refund_products"])
-        cash = control["default_cash_details"]
+        refunds = categories(details.get("refund_products", []))
+        cash = control.get("default_cash_details")
         return {
             "company": session.config_id.company_id.name,
             "config": session.config_id.name,
@@ -60,20 +60,30 @@ class PosSession(models.Model):
             "user": session.user_id.name,
             "orders": details["nbr_orders"],
             "total": currency.round(details["currency"]["total_paid"]),
-            "payments": [{"name": p["name"], "total": currency.round(p["total"])}
-                         for p in details["payments_per_method"]],
+            "payments": session._elite_payments_per_method(),
             "cash": {
-                "name": cash["name"],
-                "opening": cash["opening"],
-                "payments": cash["payment_amount"],
-                "moves": cash["moves"],
-                "expected": currency.round(cash["amount"]),
+                "name": cash.get("name", ""),
+                "opening": cash.get("opening", 0.0),
+                "payments": cash.get("payment_amount", 0.0),
+                "moves": cash.get("moves", []),
+                "expected": currency.round(cash.get("amount", 0.0)),
             } if cash else False,
             "vat": vat,
-            "discounts": {"count": details["discount_number"],
-                          "amount": currency.round(details["discount_amount"])},
+            "discounts": {"count": details.get("discount_number", 0),
+                          "amount": currency.round(details.get("discount_amount", 0.0))},
             "refunds": {"qty": sum(c["qty"] for c in refunds),
                         "total": currency.round(sum(c["total"] for c in refunds))},
-            "rounding": details["cash_rounding_total"],
-            "categories": categories(details["products"]),
+            "rounding": details.get("cash_rounding_total", 0.0),
+            "categories": categories(details.get("products", [])),
         }
+
+    def _elite_payments_per_method(self):
+        """Paid amount per payment method. Computed here rather than taken from the sale details,
+        whose "payments_per_method" key exists only in recent Odoo 18 builds."""
+        self.ensure_one()
+        groups = self.env["pos.payment"]._read_group(
+            [("session_id", "=", self.id)], ["payment_method_id"], ["amount:sum"]
+        )
+        methods = sorted(groups, key=lambda g: (g[0].sequence, g[0].id))
+        return [{"name": method.name, "total": self.currency_id.round(amount)} for method, amount in methods]
+
