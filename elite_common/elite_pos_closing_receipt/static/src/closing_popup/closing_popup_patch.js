@@ -20,10 +20,12 @@ patch(ClosePosPopup.prototype, {
             return;
         }
         this.closingPrint.busy = true;
+        let step = "data";
         try {
             const data = await this.pos.data.call("pos.session", "get_elite_closing_receipt", [
                 this.pos.session.id,
             ]);
+            step = "print";
             await this.printer.print(
                 EliteClosingReceipt,
                 {
@@ -35,10 +37,14 @@ patch(ClosePosPopup.prototype, {
                 { webPrintFallback: true }
             );
         } catch (error) {
-            console.error("Closing receipt print failed", error);
+            console.error("Closing receipt failed at step", step, error);
+            const detail = error?.data?.message || error?.message || String(error);
             this.dialog.add(AlertDialog, {
-                title: _t("Uzávěrku se nepodařilo vytisknout"),
-                body: _t("Zkontrolujte tiskárnu a spojení a zkuste to znovu."),
+                title:
+                    step === "data"
+                        ? _t("Data uzávěrky se nepodařilo načíst ze serveru")
+                        : _t("Uzávěrku se nepodařilo vytisknout"),
+                body: _t("Chyba: %s", detail),
             });
         } finally {
             this.closingPrint.busy = false;
