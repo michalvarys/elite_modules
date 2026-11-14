@@ -10,8 +10,10 @@ vytisknout kolikrát chcete, i před uzavřením a bez něj.
 ## Zpětný tisk ze směny
 
 V backendu **Pokladna → Směny** má formulář směny tlačítko **Vytisknout uzávěrku** (a je i v menu
-Tisk, takže jde vybrat víc směn naráz). Otevře uzávěrku ve formátu účtenky (80 mm) a tlačítkem
-Print se vytiskne přes dialog prohlížeče. U uzavřené směny je navíc čas uzavření, **spočítaná
+Tisk, takže jde vybrat víc směn naráz). Rovnou otevře dialog tisku prohlížeče s uzávěrkou
+ve formátu účtenky (80 mm), bez náhledu a bez stahování PDF. Report jde i stáhnout jako PDF
+(`action_report_closing_receipt`, papír 80 mm); každá uzávěrka je v `div.article`, jinak Odoo
+v PDF rozbije češtinu. U uzavřené směny je navíc čas uzavření, **spočítaná
 hotovost** a **rozdíl** proti tomu, co mělo být v kase.
 
 Šablona zpětného tisku (`report/closing_receipt_report.xml`) má stejný obsah jako účtenka

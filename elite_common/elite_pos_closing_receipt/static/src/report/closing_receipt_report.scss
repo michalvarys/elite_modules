@@ -1,0 +1,86 @@
+// Closing receipt printed again from the POS session (report/closing_receipt_report.xml).
+// Table layout rather than flex: wkhtmltopdf's old WebKit does not lay out flex rows.
+.elite-cr {
+    width: 72mm;
+    margin: 0 auto 8mm;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #000;
+
+    & + & {
+        page-break-before: always;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px dashed #000;
+        margin: 6px 0;
+        opacity: 1;
+    }
+}
+
+.elite-cr__header {
+    text-align: center;
+}
+
+.elite-cr__title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.elite-cr__row {
+    display: table;
+    width: 100%;
+
+    > span {
+        display: table-cell;
+        vertical-align: top;
+    }
+
+    > span:last-child {
+        text-align: right;
+        white-space: nowrap;
+        padding-left: 6px;
+    }
+}
+
+.elite-cr__row--total {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.elite-cr__row--strong {
+    font-weight: bold;
+}
+
+.elite-cr__row--sub {
+    font-size: 11px;
+    color: #333;
+}
+
+.elite-cr__row--indent > span:first-child {
+    padding-left: 10px;
+}
+
+.elite-cr__section {
+    margin-top: 8px;
+}
+
+.elite-cr__section-title {
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 1px solid #000;
+    margin-bottom: 2px;
+}
+
+.elite-cr__footer {
+    text-align: center;
+    font-size: 11px;
+}
+
+@media print {
+    @page {
+        size: 80mm auto;
+        margin: 4mm;
+    }
+}

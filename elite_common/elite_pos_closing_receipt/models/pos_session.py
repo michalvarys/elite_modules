@@ -125,3 +125,12 @@ class PosSession(models.Model):
             cash.update(counted=counted, difference=currency.round(counted - expected))
         return cash
 
+    def action_print_elite_closing_receipt(self):
+        """Print the closing receipt of these sessions through the browser's print dialog."""
+        self.check_access("read")
+        return {
+            "type": "ir.actions.client",
+            "tag": "elite_pos_closing_receipt.print",
+            "params": {"session_ids": self.ids},
+        }
+

@@ -1,6 +1,6 @@
 {
     "name": "Elite - tisk uzávěrky pokladny",
-    "version": "18.0.1.1.0",
+    "version": "18.0.1.2.0",
     "category": "Sales/Point of Sale",
     "summary": "Při zavírání pokladny se tiskne uzávěrka na účtenkovou tiskárnu místo stahování reportu.",
     "description": """
@@ -22,6 +22,12 @@ z formuláře směny v backendu (tlačítko „Vytisknout uzávěrku“, i menu 
         "views/pos_session_views.xml",
     ],
     "assets": {
+        "web.assets_backend": [
+            "elite_pos_closing_receipt/static/src/backend/print_closing_receipt.js",
+        ],
+        "web.report_assets_common": [
+            "elite_pos_closing_receipt/static/src/report/closing_receipt_report.scss",
+        ],
         "point_of_sale._assets_pos": [
             "elite_pos_closing_receipt/static/src/closing_receipt/closing_receipt.js",
             "elite_pos_closing_receipt/static/src/closing_receipt/closing_receipt.xml",
