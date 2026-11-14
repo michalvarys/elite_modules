@@ -128,9 +128,16 @@ class PosSession(models.Model):
     def action_print_elite_closing_receipt(self):
         """Print the closing receipt of these sessions through the browser's print dialog."""
         self.check_access("read")
+        # The receipt is loaded by a separate request, which knows nothing of the companies picked
+        # in the back office; pass them on, the sessions' own companies first, or a session of
+        # another company of the user is refused as a multi-company access error.
+        companies = self.company_id | self.env.companies
         return {
             "type": "ir.actions.client",
             "tag": "elite_pos_closing_receipt.print",
-            "params": {"session_ids": self.ids},
+            "params": {
+                "session_ids": self.ids,
+                "context": {"allowed_company_ids": companies.ids, "lang": self.env.lang},
+            },
         }
 
