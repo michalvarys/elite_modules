@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- 80 mm receipt roll, for the PDF the report also gives (the button prints the HTML). -->
+    <record id="paperformat_closing_receipt" model="report.paperformat">
+        <field name="name">Uzávěrka pokladny 80 mm</field>
+        <field name="format">custom</field>
+        <field name="page_width">80</field>
+        <field name="page_height">297</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">4</field>
+        <field name="margin_bottom">4</field>
+        <field name="margin_left">3</field>
+        <field name="margin_right">3</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">96</field>
+    </record>
+
     <record id="action_report_closing_receipt" model="ir.actions.report">
         <field name="name">Uzávěrka pokladny</field>
         <field name="model">pos.session</field>
@@ -8,35 +24,30 @@
         <field name="report_name">elite_pos_closing_receipt.report_closing_receipt</field>
         <field name="report_file">elite_pos_closing_receipt.report_closing_receipt</field>
         <field name="print_report_name">'Uzávěrka %s' % object.name</field>
+        <field name="paperformat_id" ref="paperformat_closing_receipt"/>
+        <!-- Printing from the Print menu goes through action_print_closing_receipt. -->
+        <field name="binding_model_id" eval="False"/>
+    </record>
+
+    <!-- Print menu of the sessions: straight to the browser's print dialog, like the form button. -->
+    <record id="action_print_closing_receipt" model="ir.actions.server">
+        <field name="name">Uzávěrka pokladny</field>
+        <field name="model_id" ref="point_of_sale.model_pos_session"/>
         <field name="binding_model_id" ref="point_of_sale.model_pos_session"/>
         <field name="binding_type">report</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_print_elite_closing_receipt()</field>
     </record>
 
     <!-- Same content as the till's receipt (static/src/closing_receipt/closing_receipt.xml);
          keep the two in step. -->
     <template id="report_closing_receipt">
         <t t-call="web.html_container">
-            <style>
-                @page { size: 80mm auto; margin: 4mm; }
-                .elite-cr { width: 72mm; margin: 0 auto 8mm; font-size: 13px; line-height: 1.35; color: #000; }
-                .elite-cr + .elite-cr { page-break-before: always; }
-                .elite-cr hr { border-top: 1px dashed #000; margin: 6px 0; opacity: 1; }
-                .elite-cr__header { text-align: center; }
-                .elite-cr__title { font-size: 18px; font-weight: bold; }
-                .elite-cr__row { display: flex; justify-content: space-between; gap: 8px; }
-                .elite-cr__row--total { font-size: 16px; font-weight: bold; }
-                .elite-cr__row--strong { font-weight: bold; }
-                .elite-cr__row--sub { font-size: 11px; color: #333; }
-                .elite-cr__row--indent { padding-left: 10px; }
-                .elite-cr__section { margin-top: 8px; }
-                .elite-cr__section-title { font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; margin-bottom: 2px; }
-                .elite-cr__footer { text-align: center; font-size: 11px; }
-            </style>
             <t t-foreach="receipts" t-as="pair">
                 <t t-set="session" t-value="pair[0]"/>
                 <t t-set="d" t-value="pair[1]"/>
                 <t t-set="cur" t-value="{'widget': 'monetary', 'display_currency': session.currency_id}"/>
-                <div class="elite-cr">
+                <div class="article elite-cr" data-oe-model="pos.session" t-att-data-oe-id="session.id">
                     <div class="elite-cr__header">
                         <div class="elite-cr__title">Uzávěrka</div>
                         <div t-out="d['company']"/>

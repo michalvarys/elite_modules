@@ -136,3 +136,12 @@ class TestClosingReceipt(TestPoSCommon):
         self.assertIn("Uzavřena", html)
         self.assertIn("Spočítáno", html)
         self.assertIn("Drink", html)
+        # One .article per session: without it the PDF loses the UTF-8 layout (garbled Czech).
+        self.assertIn('class="article elite-cr"', html)
+
+    def test_print_action_opens_browser_print(self):
+        action = self.pos_session.action_print_elite_closing_receipt()
+        self.assertEqual(action["tag"], "elite_pos_closing_receipt.print")
+        self.assertEqual(action["params"]["session_ids"], self.pos_session.ids)
+        report = self.env.ref("elite_pos_closing_receipt.action_report_closing_receipt")
+        self.assertFalse(report.binding_model_id, "the Print menu uses the print action, not the PDF report")

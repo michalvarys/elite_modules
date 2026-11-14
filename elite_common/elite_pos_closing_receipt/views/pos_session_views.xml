@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header/field[@name='state']" position="before">
-                <button name="%(elite_pos_closing_receipt.action_report_closing_receipt)d" type="action"
+                <button name="action_print_elite_closing_receipt" type="object"
                         string="Vytisknout uzávěrku" icon="fa-print"
                         invisible="state == 'opening_control'"/>
             </xpath>
