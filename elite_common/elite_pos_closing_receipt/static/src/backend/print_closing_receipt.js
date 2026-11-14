@@ -1,5 +1,6 @@
 /** @odoo-module */
 
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 
 /**
@@ -15,12 +16,22 @@ async function printClosingReceipt(env, action) {
     }
     const frame = document.createElement("iframe");
     frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
-    frame.src = `/report/html/elite_pos_closing_receipt.report_closing_receipt/${ids.join(",")}`;
+    const context = encodeURIComponent(JSON.stringify(action.params.context || {}));
+    frame.src = `/report/html/elite_pos_closing_receipt.report_closing_receipt/${ids.join(",")}?context=${context}`;
     await new Promise((resolve, reject) => {
         frame.onload = resolve;
         frame.onerror = reject;
         document.body.appendChild(frame);
     });
+    if (!frame.contentDocument?.querySelector(".elite-cr")) {
+        // An error page came back instead of the receipt: say so, never print it.
+        frame.remove();
+        env.services.notification.add(
+            _t("Uzávěrku se nepodařilo načíst. Zkontrolujte, že máte přístup k firmě této směny."),
+            { type: "danger" }
+        );
+        return;
+    }
     try {
         frame.contentWindow.focus();
         frame.contentWindow.print();

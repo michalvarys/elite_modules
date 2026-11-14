@@ -143,5 +143,23 @@ class TestClosingReceipt(TestPoSCommon):
         action = self.pos_session.action_print_elite_closing_receipt()
         self.assertEqual(action["tag"], "elite_pos_closing_receipt.print")
         self.assertEqual(action["params"]["session_ids"], self.pos_session.ids)
+        self.assertEqual(action["params"]["context"]["allowed_company_ids"][0], self.pos_session.company_id.id)
         report = self.env.ref("elite_pos_closing_receipt.action_report_closing_receipt")
         self.assertFalse(report.binding_model_id, "the Print menu uses the print action, not the PDF report")
+
+    def test_reprint_session_of_another_company(self):
+        """Back office on another company with the session's company ticked as well: the separate
+        receipt request must still get the session's company, or it is refused."""
+        other = self.env["res.company"].create({"name": "Elite Jina firma"})
+        self.env.user.company_ids |= other
+        back_office = self.pos_session.with_context(allowed_company_ids=[other.id, self.pos_session.company_id.id])
+        action = back_office.action_print_elite_closing_receipt()
+        allowed = action["params"]["context"]["allowed_company_ids"]
+        self.assertEqual(set(allowed), {other.id, self.pos_session.company_id.id})
+
+        report = self.env["ir.actions.report"]
+        name = "elite_pos_closing_receipt.report_closing_receipt"
+        with self.assertRaises(AccessError):  # what the request did without the companies
+            report.with_context(allowed_company_ids=[other.id])._render_qweb_html(name, self.pos_session.ids)
+        html, _type = report.with_context(allowed_company_ids=allowed)._render_qweb_html(name, self.pos_session.ids)
+        self.assertIn(self.pos_session.name, html.decode())
