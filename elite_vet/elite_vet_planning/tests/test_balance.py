@@ -36,11 +36,13 @@ class TestBalance(TransactionCase):
             {"member_id": member.id, "date": "2026-11-06", "code": "NV"},
             {"member_id": member.id, "date": "2026-11-09", "code": "PN"},
             {"member_id": member.id, "date": "2026-11-08", "code": "D"},   # Sunday: no fond, no credit
+            {"member_id": member.id, "date": "2026-11-10", "code": "S"},   # training: not worked (16. 11.)
+            {"member_id": member.id, "date": "2026-11-11", "code": "L"},   # doctor's visit: worked
         ])
         b = month_balance(member, shifts, requests, date(2026, 11, 1), date(2026, 11, 30))[member.id]
         self.assertEqual(b["fond"], 120)            # 20 days × 6 h
         self.assertEqual(b["shift_hours"], 12 + 8 + 8 + 8)
-        self.assertEqual(b["credited"], 6)          # one D on a working day
+        self.assertEqual(b["credited"], 12)         # one D and one L on working days, Š adds nothing
         self.assertEqual((b["full_day"], b["morning"], b["afternoon"], b["weekend"]), (1, 1, 1, 1))
         self.assertEqual(b["absences"]["D"], 2)
-        self.assertEqual(b["saldo"], 42 - 120)
+        self.assertEqual(b["saldo"], 36 + 12 - 120)

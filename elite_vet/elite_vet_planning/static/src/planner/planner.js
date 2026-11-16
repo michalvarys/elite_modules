@@ -145,7 +145,16 @@ export class Planner extends Component {
         return slot.days === "all" || (slot.days === "weekend") === day.weekend;
     }
     cellShifts(slot, day) {
-        return this.state.data.shifts.filter((s) => s.slot_id === slot.id && s.date === day.date);
+        // Doctors first (request 16. 11.: doctors on one line, nurses under them).
+        const order = Object.fromEntries(this.state.data.roles.map((r, i) => [r.key, i]));
+        return this.state.data.shifts.filter((s) => s.slot_id === slot.id && s.date === day.date)
+            .sort((a, b) => (order[a.role] ?? 9) - (order[b.role] ?? 9) || a.hour_from - b.hour_from);
+    }
+    /** The cell's chips in lines: doctors on the first one, everybody else on the second. */
+    cellLines(slot, day) {
+        const items = this.cellShifts(slot, day);
+        return [items.filter((s) => s.role === "doctor"), items.filter((s) => s.role !== "doctor")]
+            .filter((line) => line.length);
     }
     chipLabel(shift) {
         if (!shift.member_id) return shift.helper_name;
@@ -255,6 +264,16 @@ export class Planner extends Component {
         await this.call("add_shift", slot.id, day.date, false, name, times[0], times[1]);
         this.state.helperName = "";
     }
+    /** Eye in the cell dialog: only doctors' shifts that the website would list. */
+    canHideOnWeb(shift) { return shift.id > 0 && shift.role === "doctor"; }
+    webTitle(shift) {
+        return shift.hide_on_web
+            ? _t("Not listed on /rozpis-lekaru (still in the reservation calendar). Click to show it.")
+            : _t("Listed on /rozpis-lekaru. Click to hide it there, the service stays in the reservation calendar.");
+    }
+    get publishedLabel() { return this.state.data.published ? _t("On the website") : _t("Not on the website yet"); }
+    async toggleWeb(shift) { await this.call("set_shift_web", shift.id, shift.hide_on_web); }
+    async togglePublished() { await this.call("set_published", !this.state.data.published); }
     async removeShift(shift, ev) {
         ev?.stopPropagation();
         await this.call("remove_shift", shift.id);
@@ -277,7 +296,8 @@ export class Planner extends Component {
         const origin = shift.assignment ? _t("Service entered in Rezervace › Rozpis lékařů")
             : shift.from_roster ? _t("Shift entered in the roster") : "";
         const booking = shift.booking && shift.booking.ok === false ? shift.booking.text : "";
-        return [origin, conflict, booking].filter(Boolean).join(" · ") || null;
+        const web = shift.hide_on_web ? _t("Hidden on the website") : "";
+        return [origin, conflict, booking, web].filter(Boolean).join(" · ") || null;
     }
     async copyWeek(day, ev) {
         ev.stopPropagation();
@@ -368,7 +388,12 @@ export class Planner extends Component {
     // ---------- balance ----------
     balance(member) { return this.state.data.balance[member.id] || this.state.data.balance[String(member.id)]; }
     workedTitle(b) {
-        return _t("Shifts %(shifts)s h + D/L/Š %(credited)s h", { shifts: fmtHours(b.shift_hours), credited: fmtHours(b.credited) });
+        return _t("Shifts %(shifts)s h + D/L %(credited)s h", { shifts: fmtHours(b.shift_hours), credited: fmtHours(b.credited) });
+    }
+    /** Přehled po lidech: what the person has on the day (computed by the server). */
+    personDay(member, day) {
+        const person = this.state.data.people[member.id] || this.state.data.people[String(member.id)] || {};
+        return person[day.date] || [];
     }
     absenceText(member) {
         const b = this.balance(member);
@@ -380,7 +405,14 @@ export class Planner extends Component {
 
     // ---------- other ----------
     openStaff() { this.action.doAction("elite_vet_planning.action_staff"); }
-    print() { window.print(); }
+    /** PDF made on the server (request 16. 11.: the browser's print to PDF gave a file that would not open). */
+    async downloadPdf() {
+        await this.action.doAction({
+            type: "ir.actions.report", report_type: "qweb-pdf", report_name: "elite_vet_planning.report_roster",
+            report_file: "elite_vet_planning.report_roster", data: { month: this.state.month },
+            context: { active_ids: [] },
+        });
+    }
     exportCsv() {
         const data = this.state.data;
         const q = (v) => '"' + String(v ?? "").replace(/"/g, '""') + '"';

@@ -3,6 +3,7 @@
 Every change returns the whole month again: the month is small (a few hundred shifts) and
 the screen then never shows anything the server does not have."""
 import calendar
+import re
 from collections import defaultdict
 from datetime import timedelta
 
@@ -50,9 +51,9 @@ def month_balance(members, shifts, requests, first, last, assignments=()):
     """{member id: balance row} for the month.
 
     fond        = working days (Mon–Fri without holidays) × weekly hours / 5
-    worked      = shift hours (overlaps on a day counted once) + D / L / Š on working days × daily fond
+    worked      = shift hours (overlaps on a day counted once) + D / L on working days × daily fond
     morning / afternoon / full_day = weekday counts (full day = 12 h and more), weekend = Sat + Sun
-    NV and PN add nothing; saldo = worked − fond. `assignments`: manual services of Rozpis lékařů
+    NV, PN and Š add nothing; saldo = worked − fond. `assignments`: manual services of Rozpis lékařů
     (without a shift) count like shifts.
     """
     workdays = set(working_days(first, last))
@@ -95,6 +96,31 @@ def month_balance(members, shifts, requests, first, last, assignments=()):
     return out
 
 
+def fmt_time(value):
+    """10.0 -> '10', 9.5 -> '9:30' (short, for the overview cells)."""
+    hours, minutes = int(value), int(round((value - int(value)) * 60))
+    if minutes == 60:
+        hours, minutes = hours + 1, 0
+    return "%d" % hours if not minutes else "%d:%02d" % (hours, minutes)
+
+
+def row_short(name):
+    """Short label of a section in Přehled po lidech: 'Ordinace 1' -> 'Ord1', 'Recepce' -> 'Rec'."""
+    name = (name or "").strip()
+    m = re.match(r"ordinace\s*(\d+)", name, re.I)
+    if m:
+        return "Ord%s" % m.group(1)
+    if name.lower().startswith("recep"):
+        return "Rec"
+    return (name.split() or [""])[0][:4]
+
+
+def slot_kind(slot_name):
+    """'Ranní…' -> 'R', 'Odpolední…' -> 'O', else '' (the label then shows the time)."""
+    low = (slot_name or "").strip().lower()
+    return "R" if low.startswith("ran") else "O" if low.startswith("odp") else ""
+
+
 class Planner(models.AbstractModel):
     _name = "elite.vet.planner"
     _description = "Staff planning"
@@ -131,7 +157,65 @@ class Planner(models.AbstractModel):
                 "row_id": slot.row_id.id or 0, "member_id": shift.doctor_id.id,
                 "helper_name": shift.helper_name or "", "hour_from": shift.hour_from, "hour_to": shift.hour_to,
                 "room": shift.room_id.name or "", "type": shift.type_id.name or "",
+                "role": shift.doctor_id.staff_role if shift.doctor_id else "helper",
+                "hide_on_web": shift.hide_on_web, "web_visible": shift.web_visible,
                 "from_roster": not shift.planning_slot_id, "booking": self._booking_status(shift, slot)}
+
+    @api.model
+    def _type_for_hours(self, slot, hour_from, hour_to):
+        """Roster shift type of a planned shift, by its time (request 16. 11.: every planned shift
+        reached Rozpis služeb as the slot's type, e.g. all as Celodenní). The active type whose
+        From–To is nearest to the shift's time wins (8–16 -> Ranní 8–14, 12–20 -> Odpolední 14–20,
+        10–18 -> Víkendová 10–18); on a tie the slot's own type."""
+        types = self.env["elite.vet.shift.type"].sudo().search([("is_note", "=", False)])
+        if not types:
+            return slot.type_id
+        return min(types, key=lambda t: (abs(t.time_from - hour_from) + abs(t.time_to - hour_to),
+                                         t != slot.type_id, t.sequence, t.id))
+
+    @api.model
+    def _people_overview(self, members, shift_vals, requests, rows):
+        """Přehled po lidech: {member id: {date: [{label, sub, kind}]}}.
+
+        A morning and an afternoon of the same person on a weekday that make 12 h and more are
+        one item "C · 12h" (celodenní). A shift with its slot's time is "R-Ord1" / "O-Rec",
+        any other time shows the section and the time ("Ord1" / "10–18"). Absences (D, NV, L, PN, Š)
+        are items too."""
+        slots = {sl.id: sl for r in rows for sl in r.slot_ids}
+        member_ids = set(members.ids)
+        by_day = defaultdict(list)
+        for v in shift_vals:
+            if v["member_id"] in member_ids:
+                by_day[(v["member_id"], v["date"])].append(v)
+        out = defaultdict(dict)
+        for (member_id, day), items in by_day.items():
+            items = sorted(items, key=lambda v: (v["hour_from"], v["hour_to"]))
+            hours = day_hours([roster_hours(v["hour_from"], v["hour_to"]) for v in items])
+            weekday = fields.Date.to_date(day).weekday() < 5
+            cells = []
+            if weekday and len(items) > 1 and hours >= 12:
+                places = list(dict.fromkeys(row_short(slots[v["slot_id"]].row_id.name) if v["slot_id"] in slots
+                                            else v["room"] or "" for v in items))
+                cells.append({"label": "C · %sh" % ("%g" % hours).replace(".", ","), "sub": " + ".join(p for p in places if p),
+                              "kind": "full"})
+            else:
+                for v in items:
+                    slot = slots.get(v["slot_id"])
+                    place = row_short(slot.row_id.name) if slot else (v["room"] or _("Roster"))
+                    kind = slot_kind(slot.name) if slot else ""
+                    if kind and (v["hour_from"], v["hour_to"]) == (slot.hour_from, slot.hour_to):
+                        cells.append({"label": "%s-%s" % (kind, place), "sub": "",
+                                      "kind": "morning" if kind == "R" else "afternoon"})
+                    else:
+                        cells.append({"label": place, "sub": "%s–%s" % (fmt_time(v["hour_from"]), fmt_time(v["hour_to"])),
+                                      "kind": "other"})
+            out[member_id][day] = cells
+        for req in requests:
+            if req.code in ABSENCE_CODES and req.member_id.id in member_ids:
+                day = fields.Date.to_string(req.date)
+                out[req.member_id.id].setdefault(day, []).insert(0, {"label": SHORT[req.code], "sub": "",
+                                                                      "kind": "absence", "code": req.code})
+        return out
 
     @api.model
     def _booking_status(self, shift, slot):
@@ -238,6 +322,8 @@ class Planner(models.AbstractModel):
                                                                "hour_to": 0, "days": "all", "time": ""}]})
         return {
             "month": fields.Date.to_string(first),
+            "published": self.env["elite.vet.roster.month"].is_published(first),
+            "people": self._people_overview(members, shift_vals, requests, rows),
             "days": self._days(first, last, day_notes),
             "rows": row_vals,
             "staff": [self._member_vals(m) for m in members],
@@ -259,9 +345,10 @@ class Planner(models.AbstractModel):
         slot = self.env["elite.vet.planning.slot"].browse(slot_id).exists()
         if not slot:
             raise UserError(_("This plan shift no longer exists. Reload the page."))
-        vals = {"date": day, "type_id": slot.type_id.id, "planning_slot_id": slot.id,
+        vals = {"date": day, "planning_slot_id": slot.id,
                 "hour_from": slot.hour_from if hour_from is None else hour_from,
                 "hour_to": slot.hour_to if hour_to is None else hour_to, "room_id": False}
+        vals["type_id"] = self._type_for_hours(slot, vals["hour_from"], vals["hour_to"]).id
         if member_id:
             member = self.env["elite.vet.doctor"].browse(member_id)
             vals["doctor_id"] = member.id
@@ -280,8 +367,34 @@ class Planner(models.AbstractModel):
     @api.model
     def update_shift(self, month, shift_id, hour_from, hour_to):
         self._check_manager()
-        self._record(shift_id).write({"hour_from": hour_from, "hour_to": hour_to})
+        record = self._record(shift_id)
+        vals = {"hour_from": hour_from, "hour_to": hour_to}
+        if record._name == "elite.vet.shift" and record.planning_slot_id:
+            vals["type_id"] = self._type_for_hours(record.planning_slot_id, hour_from, hour_to).id
+        record.write(vals)
         return self.load_month(month)
+
+    @api.model
+    def set_shift_web(self, month, shift_id, visible):
+        """Eye in the cell dialog: show / hide one shift on /rozpis-lekaru (request 16. 11.)."""
+        self._check_manager()
+        shift = self._record(shift_id)
+        if shift._name != "elite.vet.shift":
+            raise UserError(_("A service entered in Rozpis lékařů is not on the website roster. "
+                              "Take it over as a shift first."))
+        shift.hide_on_web = not visible
+        return self.load_month(month)
+
+    @api.model
+    def set_published(self, month, published):
+        """Publish the month's plan on /rozpis-lekaru, or take it back (request 16. 11.)."""
+        self._check_manager()
+        first, _last = month_bounds(month)
+        self.env["elite.vet.roster.month"]._set_published(first, bool(published))
+        result = self.load_month(month)
+        result["message"] = (_("The roster of this month is on the website.") if published
+                             else _("The roster of this month is hidden from the website."))
+        return result
 
     @api.model
     def remove_shift(self, month, shift_id):
@@ -323,7 +436,8 @@ class Planner(models.AbstractModel):
                 continue
             try:
                 with self.env.cr.savepoint():
-                    Shift.create({"date": a.date, "doctor_id": a.doctor_id.id, "type_id": slot.type_id.id,
+                    Shift.create({"date": a.date, "doctor_id": a.doctor_id.id,
+                                  "type_id": self._type_for_hours(slot, a.hour_from, a.hour_to).id,
                                   "planning_slot_id": slot.id, "room_id": a.room_id.id,
                                   "hour_from": a.hour_from, "hour_to": a.hour_to})
                 done += 1

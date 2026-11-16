@@ -1,0 +1,54 @@
+// PDF of the month plan (report/roster_report.xml). Tables only: wkhtmltopdf does not lay out flex.
+.evr-roster {
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 9px;
+    color: #1e293b;
+    -webkit-print-color-adjust: exact;
+
+    h1 { font-size: 17px; margin: 0; }
+    .evr-h2 { font-size: 14px; margin: 10px 0 3px; page-break-before: always; }
+    .evr-head { width: 100%; margin-bottom: 4px; }
+    .evr-printed { text-align: right; color: #64748b; font-size: 10px; }
+    .evr-muted { color: #64748b; font-weight: normal; }
+
+    table.evr-grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .evr-grid th, .evr-grid td { border: 1px solid #cbd5e1; padding: 1px; vertical-align: top; }
+    .evr-grid tr { page-break-inside: avoid; }
+    .evr-grid thead { display: table-header-group; }
+    .evr-label { width: 150px; text-align: left; font-weight: normal; padding: 1px 3px; }
+    .evr-people .evr-label { width: 170px; }
+    .evr-day { text-align: center; font-weight: normal; }
+    .evr-num { font-weight: bold; font-size: 11px; }
+    .evr-wd { color: #64748b; font-size: 8px; }
+    .evr-we { background: #f1f5f9; }
+    .evr-hol { background: #fef3c7; }
+    .evr-first > th, .evr-first > td { border-top: 1.5px solid #64748b; }
+    .evr-line { white-space: normal; line-height: 12px; }
+    .evr-line + .evr-line { margin-top: 1px; }
+    .evr-chip {
+        display: inline-block; border-radius: 2px; padding: 0 1px; margin: 0 1px 1px 0;
+        font-weight: bold; font-size: 8.5px; line-height: 11px; white-space: nowrap;
+        small { font-weight: normal; font-size: 7px; }
+    }
+    .evr-label .evr-chip { font-size: 9px; }
+
+    .evr-pill {
+        border-radius: 2px; text-align: center; font-weight: bold; font-size: 8px; line-height: 10px;
+        padding: 1px 0; margin-bottom: 1px; border: 1px solid #cbd5e1; background: #fff;
+    }
+    .evr-sub { font-weight: normal; font-size: 7px; }
+    .evr-morning { background: #e0f2fe; border-color: #7dd3fc; color: #075985; }
+    .evr-afternoon { background: #dcfce7; border-color: #86efac; color: #166534; }
+    .evr-full { background: #ede9fe; border-color: #c4b5fd; color: #4c1d95; }
+    .evr-other { background: #fef9c3; border-color: #fde047; color: #713f12; }
+    .evr-absence { background: #f8fafc; color: #334155; }
+    .evr-absence-NV { background: #f3e8ff; border-color: #d8b4fe; color: #6b21a8; }
+    .evr-absence-D { background: #ffedd5; border-color: #fdba74; color: #9a3412; }
+    .evr-absence-PN { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+    table.evr-balance {
+        border-collapse: collapse; font-size: 10px; margin-bottom: 4px;
+        th, td { border: 1px solid #cbd5e1; padding: 1px 5px; white-space: nowrap; }
+        th { background: #f1f5f9; }
+    }
+}

@@ -8,7 +8,9 @@ shift with a room into one assignment in the reservation calendar; this module a
 * merging (planned shifts only): the plan has a doctor in "Ranní 8–16" and "Odpolední 12–20" of the same room
   as two shifts, the reservation calendar gets one service 8–20 (two overlapping
   services in one room would break the assignment's overlap check);
-* the public /rozpis-lekaru shows only doctors' planned shifts, not reception, nurses or helpers.
+* the public /rozpis-lekaru shows only doctors' planned shifts, not reception, nurses or helpers,
+  not a shift marked "Hidden on the website" (an extra doctor on a weekend, request 16. 11.)
+  and planned shifts of a month only once the month is published (elite.vet.roster.month).
 """
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -24,19 +26,37 @@ class VetShift(models.Model):
     planning_row_id = fields.Many2one(related="planning_slot_id.row_id", string="Section", store=True)
     helper_name = fields.Char(string="Name (helper)",
                               help="An intern or temp who is not on the team list.")
+    hide_on_web = fields.Boolean(
+        string="Hidden on the website",
+        help="The service stays in the roster and in the reservation calendar, only /rozpis-lekaru "
+             "does not list it (e.g. a second doctor strengthening a weekend).")
     web_visible = fields.Boolean(
         string="On the website", compute="_compute_web_visible", store=True,
         help="/rozpis-lekaru shows full-day notes, shifts entered in the roster by hand and, from the plan, "
-             "only doctors' services in sections (not reception, nurses or helpers).")
+             "only doctors' services in sections (not reception, nurses or helpers). A shift marked "
+             "Hidden on the website is never shown.")
 
-    @api.depends("planning_slot_id.row_id.kind", "type_id.is_note", "doctor_id.accepts_bookings")
+    @api.depends("planning_slot_id.row_id.kind", "type_id.is_note", "doctor_id.accepts_bookings", "hide_on_web")
     def _compute_web_visible(self):
         for shift in self:
-            if shift.type_id.is_note or not shift.planning_slot_id:
+            if shift.type_id.is_note:
+                shift.web_visible = True
+            elif shift.hide_on_web:
+                shift.web_visible = False
+            elif not shift.planning_slot_id:
                 shift.web_visible = True
             else:
                 shift.web_visible = (shift.planning_row_id.kind == "room"
                                      and bool(shift.doctor_id.accepts_bookings))
+
+    def website_shifts(self):
+        """The shifts /rozpis-lekaru lists: web_visible, and a planned shift only when its month
+        is published in Plánování (request 16. 11.: the roster must not appear while it is being
+        made). Hand-entered shifts and full-day notes are shown as before."""
+        published = set(self.env["elite.vet.roster.month"].sudo().search(
+            [("published", "=", True)]).mapped("month"))
+        return self.filtered(lambda s: s.web_visible and (
+            not s.planning_slot_id or s.date.replace(day=1) in published))
 
     @api.depends("helper_name")
     def _compute_display_name(self):
