@@ -56,3 +56,13 @@ msgid ""
 msgstr ""
 "Your account is not linked to a team member. Ask the management to link it "
 "in Duty roster › Doctors › Account."
+
+#. module: elite_vet_planning
+#. odoo-python
+#: code:addons/elite_vet_planning/models/planner.py:0
+msgid ""
+"A service entered in Rozpis lékařů is not on the website roster. Take it "
+"over as a shift first."
+msgstr ""
+"A duty entered in the Doctors' schedule is not on the website roster. Take "
+"it over as a shift first."

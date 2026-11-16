@@ -130,8 +130,8 @@ posílají žádost stejnou cestou `/rezervace/api/submit`), nebo **Klinika** (p
 rezervace, pokladna, druhá ordinace). Zdroj se nastaví při založení a nemění se – ani potvrzením
 žádosti z webu.
 
-- **Tabule** (Odoo i pokladna): modrý štítek **WEB** a modrý čárkovaný obrys u webových
-  rezervací, bílý štítek s **iniciálami** toho, kdo rezervaci na klinice založil (uživatel, který
+- **Tabule** (Odoo i pokladna): modrý štítek **WEB** u webových rezervací (čárkovaný obrys
+  od 16. 11. není), bílý štítek s **iniciálami** toho, kdo rezervaci na klinice založil (uživatel, který
   ji vytvořil; najetím myší jméno a čas založení), šedý **WinVet** u záznamů z WinVetu. Přepínač
   **Vše | Web | Klinika** si pamatuje prohlížeč; záznamy z WinVetu jsou jen ve „Vše“.
   Druhá ordinace dvoulékařského zákroku přebírá zdroj a autora hlavní rezervace.
@@ -161,7 +161,8 @@ jen pro interní uživatele.
 **Blokuje:** potvrzené rezervace, proběhlé rezervace, blokace (dokud nejsou zrušené).
 Blokace bez ordinace blokuje **všechny ordinace**. Když se úplná blokace pro všechny
 ordinace zakládá přes čas, kde už některá ordinace úplnou blokaci má, rozdělí se
-po ordinacích a doplní jen volné úseky.
+po ordinacích a doplní jen volné úseky. Rezervace, které už v čase jsou, ji nezastaví
+(viz níže).
 
 Záleží ale na druhu blokace a na tom, kdo objednává:
 
@@ -175,8 +176,10 @@ Záleží ale na druhu blokace a na tom, kdo objednává:
 | Mimo ordinační dobu / bez služby lékařky | nenabídne | nenabídne, ale ručním časem jde |
 
 Pravidlo „co je obsazené“ je v kódu na jednom místě (web a recepce se liší jen
-přepínačem), takže se web a recepce nemůžou rozejít. Úplnou blokaci nejde založit
-přes potvrzenou rezervaci; blokaci jen pro web jde založit kdykoli.
+přepínačem), takže se web a recepce nemůžou rozejít. **Úplnou blokaci jde založit i přes
+potvrzené rezervace** (od 16. 11.): rezervace zůstanou, blokace leží v tabuli pod nimi a v celém
+jejím čase už nejde objednat nic nového, ani z webu, ani na recepci. Nejde jen přes jinou úplnou
+blokaci. Blokaci jen pro web jde založit kdykoli.
 
 **Nepotvrzená žádost z webu drží místo.** Žádost ještě nemá ordinaci, proto si
 „v duchu“ podrží tu, kam by šla potvrdit (první online ordinace úkonu, kde je volno
@@ -195,9 +198,9 @@ u druhé zmizí návrhy a recepce ji přeplánuje.
 ## 5. Ochrana proti dvojímu zabrání
 
 Výpočet volných termínů jen **radí**, co nabídnout. Poslední slovo má kontrola
-při **uložení**: každá potvrzená rezervace a úplná blokace se před zápisem porovná
-s ostatními v téže ordinaci (s rezervacemi a úplnými blokacemi; blokace jen pro web se
-nepočítá a sama se nekontroluje). Když se překrývá, uložení se odmítne hláškou
+při **uložení**: každá potvrzená rezervace se před zápisem porovná s ostatními v téže
+ordinaci (s rezervacemi a úplnými blokacemi), úplná blokace jen s jinými úplnými blokacemi
+(blokace jen pro web se nepočítá a sama se nekontroluje). Když se překrývá, uložení se odmítne hláškou
 „Termín … v ordinaci … je obsazený: …“.
 
 Když dvě recepční (nebo recepční a web) ukládají stejný čas ve stejnou chvíli,

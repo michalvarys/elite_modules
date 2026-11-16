@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Plánování služeb",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "category": "Website",
     "summary": "Měsíční plán služeb po úsecích, dostupnost a absence personálu, bilance hodin.",
     "description": """
@@ -30,11 +30,16 @@ Rozšiřuje Rozpis služeb (elite_vet_calendar) a Rezervace (elite_vet_reservati
         "views/planner_actions.xml",
         "views/menus.xml",
         "views/rozpis_page.xml",
+        "views/shift_views.xml",
+        "report/roster_report.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "elite_vet_planning/static/src/planner/*",
             "elite_vet_planning/static/src/my_availability/*",
+        ],
+        "web.report_assets_common": [
+            "elite_vet_planning/static/src/report/roster_report.scss",
         ],
     },
     "post_init_hook": "_post_init",

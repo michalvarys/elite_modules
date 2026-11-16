@@ -18,9 +18,9 @@ SHORT = {"can": "✓", "morning": "R", "afternoon": "O", "off": "×", "D": "D", 
 # What a team member may enter for herself; absences are decided by the management.
 SELF_CODES = ("can", "morning", "afternoon", "off")
 ABSENCE_CODES = ("D", "NV", "L", "PN", "S")
-# Absences counted as worked time (a daily fond each working day). NV is time off for overtime
-# already worked, PN is excused but not worked - both 0 h.
-CREDITED_CODES = ("D", "L", "S")
+# Absences counted as worked time (a daily fond each working day): vacation and doctor's visit only
+# (request 16. 11.). NV is time off for overtime already worked, PN and Š (training) are not worked - 0 h.
+CREDITED_CODES = ("D", "L")
 
 
 class StaffRequest(models.Model):

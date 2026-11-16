@@ -16,9 +16,16 @@
                             title="Turns the services entered in Rezervace › Rozpis lékařů into roster shifts, planned here from then on">
                         Take over services from Rozpis lékařů (<t t-esc="assignmentCount"/>)
                     </button>
+                    <span t-if="state.data" t-attf-class="badge #{state.data.published ? 'text-bg-success' : 'text-bg-warning'} evp-pub"
+                          t-esc="publishedLabel"/>
+                    <button t-if="state.data" t-attf-class="btn #{state.data.published ? 'btn-outline-secondary' : 'btn-success'}"
+                            t-on-click="togglePublished" t-att-disabled="state.busy"
+                            title="The month's plan is shown on /rozpis-lekaru only once it is published">
+                        <t t-if="state.data.published">Hide from the website</t><t t-else="">Publish on the website</t>
+                    </button>
                     <button class="btn btn-secondary" t-on-click="openStaff">Staff</button>
                     <button class="btn btn-secondary" t-on-click="exportCsv" title="Download for Excel">Export CSV</button>
-                    <button class="btn btn-secondary" t-on-click="print">Print</button>
+                    <button class="btn btn-secondary" t-on-click="downloadPdf" title="A4 landscape: plan, overview by person and hours">PDF</button>
                 </div>
             </div>
 
@@ -71,15 +78,18 @@
                                             <t t-set="items" t-value="cellShifts(slot, day)"/>
                                             <td t-att-class="dayClass(day, 'evp-cell' + (applies ? '' : ' evp-off'))"
                                                 t-on-click="() => this.openCell(row, slot, day)">
-                                                <t t-foreach="items" t-as="shift" t-key="shift.id">
-                                                    <t t-set="conflict" t-value="chipConflict(shift)"/>
-                                                    <span t-attf-class="evp-chip #{conflict or notBooked(shift) ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''}" t-att-style="chipStyle(shift)"
-                                                          t-att-title="chipTitle(shift)">
-                                                        <t t-esc="chipLabel(shift)"/>
-                                                        <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
-                                                        <button class="evp-x" title="Remove" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
-                                                    </span>
-                                                </t>
+                                                <div t-foreach="cellLines(slot, day)" t-as="line" t-key="line_index" class="evp-line">
+                                                    <t t-foreach="line" t-as="shift" t-key="shift.id">
+                                                        <t t-set="conflict" t-value="chipConflict(shift)"/>
+                                                        <span t-attf-class="evp-chip #{conflict or notBooked(shift) ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''} #{shift.hide_on_web ? 'evp-chip-hidden' : ''}" t-att-style="chipStyle(shift)"
+                                                              t-att-title="chipTitle(shift)">
+                                                            <t t-esc="chipLabel(shift)"/>
+                                                            <small t-if="chipTime(shift, slot)" t-esc="chipTime(shift, slot)"/>
+                                                            <i t-if="shift.hide_on_web" class="fa fa-eye-slash evp-hidden-ico" aria-hidden="true"/>
+                                                            <button class="evp-x" title="Remove" t-on-click="(ev) => this.removeShift(shift, ev)">×</button>
+                                                        </span>
+                                                    </t>
+                                                </div>
                                             </td>
                                         </t>
                                     </tr>
@@ -98,6 +108,43 @@
                                     </td>
                                 </t>
                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="evp-h3">Overview by person</h3>
+                <div class="evp-scroll">
+                    <table class="evp-grid evp-people">
+                        <thead>
+                            <tr>
+                                <th class="evp-head-row">Full name</th>
+                                <t t-foreach="days" t-as="day" t-key="day.date">
+                                    <th t-att-class="dayClass(day, 'evp-day')" t-att-title="day.holiday or null">
+                                        <div class="evp-day-num" t-esc="day.day"/>
+                                        <div class="evp-day-wd" t-esc="weekdayAbbr(day)"/>
+                                    </th>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="staffGroups" t-as="group" t-key="group.key">
+                                <t t-foreach="group.staff" t-as="m" t-key="m.id">
+                                    <tr t-attf-class="#{m_first ? 'evp-row-first' : ''}">
+                                        <th class="evp-head-row">
+                                            <span class="evp-chip" t-attf-style="background:#{m.color};color:#{textOn(m.color)}" t-esc="m.initials"/>
+                                            <span class="evp-member-name" t-esc="m.name"/>
+                                            <small class="d-block text-muted"><t t-esc="group.label"/> · <t t-esc="fmt(m.weekly_hours)"/> h/wk</small>
+                                        </th>
+                                        <t t-foreach="days" t-as="day" t-key="day.date">
+                                            <td t-att-class="dayClass(day, 'evp-pcell')">
+                                                <div t-foreach="personDay(m, day)" t-as="p" t-key="p_index" t-attf-class="evp-pill evp-p-#{p.kind} #{p.code ? 'evp-p-absence-' + p.code : ''}">
+                                                    <t t-esc="p.label"/><small t-if="p.sub" t-esc="p.sub"/>
+                                                </div>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </t>
+                            </t>
                         </tbody>
                     </table>
                 </div>
@@ -133,7 +180,7 @@
                     </table>
                 </div>
                 <p class="evp-help text-muted">
-                    Fund = working days of the month without holidays × contract / 5. A morning and an afternoon shift on one day count once (8–16 + 12–20 = 12 h, full day). D, L and Š count as a worked day, NV and PN do not. Doctors' services in sections with a room go to the reservation calendar by themselves.
+                    Fund = working days of the month without holidays × contract / 5. A morning and an afternoon shift on one day count once (8–16 + 12–20 = 12 h, full day). D and L count as a worked day, NV, PN and Š do not. Doctors' services in sections with a room go to the reservation calendar by themselves.
                 </p>
             </div>
 
@@ -154,6 +201,12 @@
                                 <span>–</span>
                                 <input class="form-control form-control-sm evp-time" t-att-value="hm(shift.hour_to)"
                                        t-on-change="(ev) => this.changeTime(shift, 'hour_to', ev)"/>
+                                <button t-if="canHideOnWeb(shift)" t-attf-class="btn btn-sm #{shift.hide_on_web ? 'btn-warning' : 'btn-outline-secondary'}"
+                                        t-on-click="() => this.toggleWeb(shift)" t-att-disabled="state.busy"
+                                        t-att-title="webTitle(shift)">
+                                    <i t-attf-class="fa #{shift.hide_on_web ? 'fa-eye-slash' : 'fa-eye'}"/>
+                                    <t t-if="shift.hide_on_web"> Hidden on the website</t><t t-else=""> On the website</t>
+                                </button>
                                 <button class="btn btn-sm btn-outline-danger" t-on-click="() => this.removeShift(shift)">Delete</button>
                             </div>
                             <div t-if="chipConflict(shift)" class="evp-warn" t-esc="chipConflict(shift)"/>

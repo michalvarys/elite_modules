@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- PDF of the month plan (request 16. 11.): A4 landscape, rendered by wkhtmltopdf on the server.
+         Tables only, no flex: wkhtmltopdf's old WebKit does not lay out flex rows. -->
+    <record id="paperformat_roster" model="report.paperformat">
+        <field name="name">Rozpis služeb A4 na šířku</field>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">7</field>
+        <field name="margin_bottom">7</field>
+        <field name="margin_left">6</field>
+        <field name="margin_right">6</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">96</field>
+        <field name="disable_shrinking" eval="True"/>
+    </record>
+
+    <record id="action_report_roster" model="ir.actions.report">
+        <field name="name">Rozpis služeb (PDF)</field>
+        <field name="model">elite.vet.planner</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">elite_vet_planning.report_roster</field>
+        <field name="report_file">elite_vet_planning.report_roster</field>
+        <field name="print_report_name">'rozpis-sluzeb'</field>
+        <field name="paperformat_id" ref="paperformat_roster"/>
+    </record>
+
+    <template id="report_roster">
+        <t t-call="web.html_container">
+            <div class="article evr-roster">
+                <table class="evr-head"><tr>
+                    <td><h1>Rozpis služeb – <t t-esc="month_label"/></h1></td>
+                    <td class="evr-printed">Vytištěno <t t-esc="printed"/><t t-if="not plan['published']"> · zatím není na webu</t></td>
+                </tr></table>
+
+                <!-- plan by sections: rows = section and its shifts, columns = days -->
+                <table class="evr-grid">
+                    <thead>
+                        <tr>
+                            <th class="evr-label">Úsek / směna</th>
+                            <t t-foreach="plan['days']" t-as="day">
+                                <th t-attf-class="evr-day #{day['weekend'] and 'evr-we' or ''} #{day['holiday'] and 'evr-hol' or ''}">
+                                    <div class="evr-num" t-esc="day['day']"/>
+                                    <div class="evr-wd" t-esc="wd(day)"/>
+                                </th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="plan['rows']" t-as="row">
+                            <t t-foreach="row['slots']" t-as="slot">
+                                <tr t-attf-class="#{slot_first and 'evr-first' or ''}">
+                                    <th class="evr-label">
+                                        <b t-if="slot_first" t-esc="row['name']"/><t t-if="slot_first"> · </t><t t-esc="slot['name']"/>
+                                        <span class="evr-muted" t-esc="slot['time']"/>
+                                    </th>
+                                    <t t-foreach="plan['days']" t-as="day">
+                                        <td t-attf-class="evr-cell #{day['weekend'] and 'evr-we' or ''} #{day['holiday'] and 'evr-hol' or ''}">
+                                            <t t-set="items" t-value="chips(slot, day)"/>
+                                            <!-- doctors on the first line, the others under them -->
+                                            <div t-foreach="[[c for c in items if c['doctor']], [c for c in items if not c['doctor']]]" t-as="line"
+                                                 t-if="line" class="evr-line">
+                                                <span t-foreach="line" t-as="c" class="evr-chip"
+                                                      t-attf-style="background:#{c['color']};color:#{text_on(c['color'])}"><t t-esc="c['label']"/><small t-if="c['time']"> <t t-esc="c['time']"/></small></span>
+                                            </div>
+                                        </td>
+                                    </t>
+                                </tr>
+                            </t>
+                        </t>
+                    </tbody>
+                </table>
+
+                <!-- per person: who works when -->
+                <h2 class="evr-h2">Přehled po lidech</h2>
+                <table class="evr-grid evr-people">
+                    <thead>
+                        <tr>
+                            <th class="evr-label">Zaměstnanec</th>
+                            <t t-foreach="plan['days']" t-as="day">
+                                <th t-attf-class="evr-day #{day['weekend'] and 'evr-we' or ''} #{day['holiday'] and 'evr-hol' or ''}">
+                                    <div class="evr-num" t-esc="day['day']"/>
+                                    <div class="evr-wd" t-esc="wd(day)"/>
+                                </th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="groups" t-as="group">
+                            <t t-foreach="group['members']" t-as="m">
+                                <tr t-attf-class="#{m_first and 'evr-first' or ''}">
+                                    <th class="evr-label">
+                                        <span class="evr-chip" t-attf-style="background:#{m['color']};color:#{text_on(m['color'])}" t-esc="m['initials']"/>
+                                        <t t-esc="m['name']"/>
+                                        <span class="evr-muted"><t t-esc="group['label']"/> · <t t-esc="hours(m['weekly_hours'])"/> h/t</span>
+                                    </th>
+                                    <t t-foreach="plan['days']" t-as="day">
+                                        <td t-attf-class="evr-cell #{day['weekend'] and 'evr-we' or ''} #{day['holiday'] and 'evr-hol' or ''}">
+                                            <div t-foreach="people(m, day)" t-as="p" t-attf-class="evr-pill evr-#{p['kind']} #{p.get('code') and 'evr-absence-' + p['code'] or ''}">
+                                                <t t-esc="p['label']"/><div t-if="p['sub']" class="evr-sub" t-esc="p['sub']"/>
+                                            </div>
+                                        </td>
+                                    </t>
+                                </tr>
+                            </t>
+                        </t>
+                    </tbody>
+                </table>
+
+                <h2 class="evr-h2">Bilance hodin</h2>
+                <table class="evr-balance">
+                    <thead><tr>
+                        <th>Jméno</th><th>Úvazek</th><th>Fond</th><th>Odpracováno</th><th>Ranní</th><th>Odpolední</th>
+                        <th>Celodenní (12 h)</th><th>Víkendy</th><th>Absence</th><th>Saldo</th>
+                    </tr></thead>
+                    <tbody>
+                        <t t-foreach="plan['staff']" t-as="m">
+                            <t t-set="b" t-value="plan['balance'][m['id']]"/>
+                            <tr>
+                                <td><t t-esc="m['name']"/></td>
+                                <td><t t-esc="hours(m['weekly_hours'])"/> h/t</td>
+                                <td><t t-esc="hours(b['fond'])"/> h</td>
+                                <td><t t-esc="hours(b['worked'])"/> h</td>
+                                <td t-esc="b['morning']"/>
+                                <td t-esc="b['afternoon']"/>
+                                <td t-esc="b['full_day']"/>
+                                <td><t t-esc="b['weekend']"/><t t-if="b['weekend']"> (<t t-esc="hours(b['weekend_hours'])"/> h)</t></td>
+                                <td><t t-esc="', '.join('%s %s' % (short.get(code, code), n) for code, n in b['absences'].items() if n)"/></td>
+                                <td><t t-if="b['saldo'] &gt; 0.05">+</t><t t-esc="hours(b['saldo'])"/> h</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+                <p class="evr-muted">Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna v jeden den se počítá jednou (8–16 + 12–20 = 12 h, celodenní). D a L se počítají jako odpracovaný den, NV, PN a Š ne.</p>
+            </div>
+        </t>
+    </template>
+</odoo>
