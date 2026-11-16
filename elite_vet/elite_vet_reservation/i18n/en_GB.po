@@ -3711,3 +3711,33 @@ msgstr "The requested time is taken – confirm over the taken time, or open it 
 #: code:addons/elite_vet_reservation/static/src/move_dialog/move_dialog.xml:0
 msgid "Obě rezervace pak budou ve stejném čase v jedné ordinaci."
 msgstr "Both reservations will then be at the same time in one room."
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_doctor_assignment__hide_on_web
+#: model:ir.model.fields,field_description:elite_vet_reservation.field_elite_vet_shift__hide_on_web
+msgid "Skryto na webu"
+msgstr "Hidden on the website"
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_doctor_assignment__hide_on_web
+msgid ""
+"Lékařka se k této službě nenabízí v online objednávání (ani v seznamu "
+"lékařů, ani ve volných termínech); objednat k ní jde jen přes recepci. "
+"Služba z Rozpisu služeb to přebírá ze směny (např. druhá lékařka na víkend, "
+"kterou klienti nemají vidět)."
+msgstr ""
+"Online booking does not offer the doctor for this service (neither in the "
+"list of doctors nor in free times); she can be booked only through "
+"reception. A service from the Duty roster takes this from its shift (e.g. a "
+"second doctor on a weekend whom clients should not see)."
+
+#. module: elite_vet_reservation
+#: model:ir.model.fields,help:elite_vet_reservation.field_elite_vet_shift__hide_on_web
+msgid ""
+"Služba zůstane v rozpisu i v kalendáři rezervací, jen ji web nezobrazí: ani "
+"/rozpis-lekaru, ani online objednávání (lékařka se tam nenabízí). Např. "
+"druhá lékařka na víkend."
+msgstr ""
+"The service stays in the roster and in the reservation calendar, only the "
+"website does not show it: neither /rozpis-lekaru nor online booking (the "
+"doctor is not offered there). E.g. a second doctor on a weekend."

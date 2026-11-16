@@ -21,6 +21,10 @@ a postupuje takto:
    - v nastavení je zapnuté **Online jen tam, kde slouží lékař**.
 
    Jinak stačí ordinační doba (úkon bez specializace se nabídne, i když rozpis chybí).
+
+   Služba označená **Skryto na webu** (u směny v Rozpisu služeb / oko v Plánování, u ruční
+   služby přímo v Rozpisu lékařů) se na webu nepočítá: lékařka není v seznamu lékařů
+   a její služba nepřidá žádný volný termín. Recepce ji vidí a objednává normálně.
 3. **− obsazené** – odečtou se potvrzené a proběhlé rezervace a blokace
    (na webu obě blokace, u recepce jen úplná – viz „Co blokuje termín“).
 4. **Krok** – ve zbylém volném čase se nabízejí začátky po **Krok slotů** (obvykle 15 min),

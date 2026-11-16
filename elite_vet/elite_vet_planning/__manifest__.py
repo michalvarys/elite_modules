@@ -1,6 +1,6 @@
 {
     "name": "Elite Vet - Plánování služeb",
-    "version": "18.0.1.1.0",
+    "version": "18.0.1.2.0",
     "category": "Website",
     "summary": "Měsíční plán služeb po úsecích, dostupnost a absence personálu, bilance hodin.",
     "description": """

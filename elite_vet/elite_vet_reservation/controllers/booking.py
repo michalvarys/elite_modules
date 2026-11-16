@@ -94,7 +94,8 @@ class BookingController(http.Controller):
         s = self._setting()
         today = fields.Date.context_today(env["elite.vet.setting"].sudo())
         horizon = fields.Date.add(today, days=s.booking_max_days_ahead)
-        assignments = env["elite.vet.doctor.assignment"].sudo().search([("date", ">=", today), ("date", "<=", horizon)])
+        assignments = env["elite.vet.doctor.assignment"].sudo().search([("date", ">=", today), ("date", "<=", horizon),
+                                                                       ("hide_on_web", "=", False)])
         doctors = assignments.mapped("doctor_id").filtered("accepts_bookings").sorted("name")
         # Offer only specializations that at least one doctor has - otherwise the
         # client could pick a field nobody can be booked for.

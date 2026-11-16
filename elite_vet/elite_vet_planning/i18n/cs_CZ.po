@@ -1158,12 +1158,13 @@ msgstr "Rozpis tohoto měsíce je na webu."
 #. module: elite_vet_planning
 #: model:ir.model.fields,help:elite_vet_planning.field_elite_vet_shift__hide_on_web
 msgid ""
-"The service stays in the roster and in the reservation calendar, only "
-"/rozpis-lekaru does not list it (e.g. a second doctor strengthening a "
-"weekend)."
+"The service stays in the roster and in the reservation calendar, only the "
+"website does not show it: /rozpis-lekaru does not list it and online booking "
+"does not offer the doctor (e.g. a second doctor strengthening a weekend)."
 msgstr ""
-"Služba zůstane v rozpisu i v kalendáři rezervací, jen ji /rozpis-lekaru "
-"nevypíše (třeba druhá lékařka, která posiluje víkend)."
+"Služba zůstane v rozpisu i v kalendáři rezervací, jen ji web neukáže: "
+"/rozpis-lekaru ji nevypíše a online objednávání lékařku nenabídne (třeba "
+"druhá lékařka, která posiluje víkend)."
 
 #. module: elite_vet_planning
 #. odoo-python

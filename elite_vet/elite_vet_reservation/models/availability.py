@@ -78,8 +78,13 @@ class VetAvailability(models.AbstractModel):
         return sorted((to_min(h.hour_from), to_min(h.hour_to)) for h in lines)
 
     @api.model
-    def assignment_minutes(self, day, procedure, doctor=None, specialization=None):
+    def assignment_minutes(self, day, procedure, doctor=None, specialization=None, scope="internal"):
+        """{room_id: [(from, to, doctor_id)]} of the day's services that do the procedure.
+        scope="web": without services hidden on the website (hide_on_web) - the website must not
+        offer such a doctor; reception (scope="internal") books her as usual."""
         domain = [("date", "=", day)]
+        if scope == "web":
+            domain.append(("hide_on_web", "=", False))
         if doctor:
             domain.append(("doctor_id", "=", doctor.id))
         if specialization:
@@ -165,7 +170,7 @@ class VetAvailability(models.AbstractModel):
         need_doctor = self.need_doctor(procedure, doctor, specialization)
         # Assignments are always loaded: doctor_ids in a slot are informative (who is on duty),
         # but they restrict rooms only with an active filter / when a doctor is required.
-        assignments = self.assignment_minutes(day, procedure, doctor, specialization)
+        assignments = self.assignment_minutes(day, procedure, doctor, specialization, scope=scope)
         busy = self.busy_minutes(rooms.ids, day, scope=scope)
         if scope == "web":
             # Unconfirmed web requests hold their spot so another client cannot book the
@@ -226,7 +231,7 @@ class VetAvailability(models.AbstractModel):
             proc, doctor = req.procedure_id, req.doctor_id or None
             f, t = self.utc_to_local_minutes(req.start, day), self.utc_to_local_minutes(req.stop, day)
             need = self.need_doctor(proc, doctor)
-            assignments = self.assignment_minutes(day, proc, doctor) if need else {}
+            assignments = self.assignment_minutes(day, proc, doctor, scope="web") if need else {}
             for room in proc.rooms_for_booking():
                 free = self.open_minutes(room, day)
                 if need:

@@ -27,9 +27,11 @@ Nic nového vedle rozpisu nevzniká: každé přiřazení v plánu je směna v R
 * **Typ směny** v Rozpisu služeb se bere podle času směny, ne ze směny plánu: vyhraje aktivní typ,
   jehož Od–Do je času nejblíž (8–16 → Ranní 8–14, 12–20 → Odpolední 14–20, 8–20 → Celodenní).
   Při shodě rozhodne typ nastavený u směny plánu. Změna času v plánu typ přepočítá.
-* **Skrýt na webu** (oko v dialogu buňky, pole `hide_on_web` u směny): služba lékařky zůstane
-  v rozpisu i v kalendáři rezervací, jen ji /rozpis-lekaru nevypíše. Slouží třeba k posílení víkendu
-  druhou lékařkou.
+* **Skrýt na webu** (oko v dialogu buňky, pole „Skryto na webu“ / `hide_on_web` u směny v Rozpisu
+  služeb): služba lékařky zůstane v rozpisu i v kalendáři rezervací, jen ji web neukáže. /rozpis-lekaru
+  ji nevypíše a online objednávání lékařku k té službě nenabídne (ani v seznamu lékařů, ani ve volných
+  termínech); objednat k ní jde jen přes recepci. Slouží třeba k posílení víkendu druhou lékařkou.
+  Ranní + odpolední sloučené do jedné služby: stačí skrýt jednu z nich a skrytá je celá služba.
 * **Zveřejnění měsíce** (tlačítko Zveřejnit na webu, model `elite.vet.roster.month`): směny z plánu
   jdou na /rozpis-lekaru, až když je měsíc zveřejněný. Do té doby se dá plánovat, aniž by to klienti
   viděli. Ručně zadané směny v Rozpisu služeb a celodenní poznámky se zobrazují jako dřív. Při
@@ -38,10 +40,10 @@ Nic nového vedle rozpisu nevzniká: každé přiřazení v plánu je směna v R
 
 ## Přehled po lidech a PDF
 
-* Pod plánem je tabulka člověk × den: `R-Ord1` = ranní v Ordinaci 1, `O-Rec` = odpolední na recepci,
+* Pod plánem a bilancí hodin je tabulka člověk × den: `R-Ord1` = ranní v Ordinaci 1, `O-Rec` = odpolední na recepci,
   `C · 12h` = ranní a odpolední v jeden všední den (12 h a víc), jinak úsek a čas (`Ord1 10–18`),
   absence zkratkou (D, NV, L, PN, Š). Počítá server (`_people_overview`).
-* Tlačítko **PDF** stáhne A4 na šířku: plán po úsecích, přehled po lidech, bilance. PDF dělá server
+* Tlačítko **PDF** stáhne A4 na šířku: plán po úsecích, bilance, přehled po lidech. PDF dělá server
   (wkhtmltopdf, report `elite_vet_planning.report_roster`). Tisk z prohlížeče do PDF dával soubor,
   který nešel otevřít.
 
