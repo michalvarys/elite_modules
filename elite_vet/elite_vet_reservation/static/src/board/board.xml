@@ -42,7 +42,7 @@
                             t-on-click="() => this.setSourceFilter(f.key)" t-esc="f.label"/>
                 </div>
                 <span class="evb-legend">
-                    <span class="evb-legend-item"><span class="evb-src evb-src-web">WEB</span><span class="evb-legend-swatch"/> rezervace z webu (klient sám)</span>
+                    <span class="evb-legend-item"><span class="evb-src evb-src-web">WEB</span> rezervace z webu (klient sám)</span>
                     <span class="evb-legend-item"><span class="evb-src evb-src-winvet">WinVet</span> z WinVetu, jen pro čtení</span>
                 </span>
                 <span t-if="!state.loading and hiddenCount" class="evb-hidden-count"

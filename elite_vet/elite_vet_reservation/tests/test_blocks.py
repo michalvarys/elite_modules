@@ -108,14 +108,20 @@ class TestBlockScope(ReservationCase):
         with self.assertRaises(ValidationError):
             self.reservation(start=self.dt(WED, 12, 0))
 
-    def test_web_block_anytime_full_block_not_over_reservation(self):
-        self.reservation(start=self.dt(WED, 10, 0))
+    def test_full_block_goes_under_reservations(self):
+        """Request 16. 11.: a full block may be placed over booked times. The reservation stays,
+        nothing new is booked in the blocked time, and two full blocks still do not overlap."""
+        r = self.reservation(start=self.dt(WED, 10, 0))
         web = self.block(WED, 9, 12, "web")
         self.block(WED, 9, 12, "web")   # even over another web-only block
+        full = self.block(WED, 9, 12, "full")
+        self.assertEqual(r.state, "confirmed")
         with self.assertRaises(ValidationError):
-            self.block(WED, 9, 12, "full")
+            self.reservation(start=self.dt(WED, 11, 0))
         with self.assertRaises(ValidationError):
-            web.block_scope = "full"
+            web.block_scope = "full"   # would overlap the full block
+        full.action_cancel()
+        web.block_scope = "full"
         # A full block over a web-only block (without a reservation) is allowed.
         self.block(WED, 13, 14, "web")
         self.block(WED, 13, 14, "full")
@@ -149,11 +155,11 @@ class TestBlockScope(ReservationCase):
         with self.assertRaises(ValidationError):
             self.block(WED, 9, 12, "full", room_id=False)
 
-    def test_all_rooms_full_block_still_refused_over_reservation(self):
-        self.block(WED, 10, 11, "full", room=self.room2)
-        self.reservation(start=self.dt(WED, 10, 0))
-        with self.assertRaises(ValidationError):
-            self.block(WED, 9, 12, "full", room_id=False)
+    def test_all_rooms_full_block_over_reservation(self):
+        r = self.reservation(start=self.dt(WED, 10, 0))
+        b = self.block(WED, 9, 12, "full", room_id=False, block_reason="Celá klinika")
+        self.assertFalse(b.room_id)   # one clinic-wide block, the reservation stays under it
+        self.assertEqual(r.state, "confirmed")
 
     def test_all_rooms_full_block_repeat_splits_each_week(self):
         self.block(WED + timedelta(days=7), 10, 11, "full", room=self.room1)

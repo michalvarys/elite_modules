@@ -416,7 +416,7 @@ nepřepíná do jiné stránky.
 
   | Štítek vlevo na kartě | Význam |
   |---|---|
-  | Modrý **WEB** + modrý čárkovaný obrys | Rezervace z webu – objednal(a) se klient sám. |
+  | Modrý **WEB** | Rezervace z webu – objednal(a) se klient sám. |
   | Bílý štítek s iniciálami, např. **JN** | Rezervaci založil(a) někdo z kliniky. Najetím: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
   | Šedý **WinVet** | Záznam z kalendáře WinVetu, jen pro čtení. |
 

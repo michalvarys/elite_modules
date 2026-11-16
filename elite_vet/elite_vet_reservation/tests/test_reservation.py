@@ -57,12 +57,14 @@ class TestReservation(ReservationCase):
         with self.assertRaises(UserError):
             r.action_confirm()
 
-    def test_global_block_refuses_existing_reservation(self):
-        self.reservation(start=self.dt(D, 12, 0))
-        with self.assertRaises(ValidationError):
-            self.env["elite.vet.reservation"].create({
-                "kind": "block", "block_reason": "Oběd", "room_id": False,
-                "start": self.dt(D, 12, 0), "stop": self.dt(D, 13, 0)})
+    def test_global_block_goes_under_existing_reservation(self):
+        """Request 16. 11.: the block is placed under the reservation, which stays."""
+        r = self.reservation(start=self.dt(D, 12, 0))
+        block = self.env["elite.vet.reservation"].create({
+            "kind": "block", "block_reason": "Oběd", "room_id": False,
+            "start": self.dt(D, 12, 0), "stop": self.dt(D, 13, 0)})
+        self.assertTrue(block.exists())
+        self.assertEqual(r.state, "confirmed")
 
     def test_global_block_blocks_every_room(self):
         self.env["elite.vet.reservation"].create({

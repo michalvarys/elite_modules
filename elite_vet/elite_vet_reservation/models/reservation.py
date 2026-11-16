@@ -410,9 +410,14 @@ class VetReservation(models.Model):
         return [self.room_id.id] if self.room_id else self.env["elite.vet.room"].search([]).ids
 
     def _overlap_clash(self, rooms):
-        """What occupies `rooms` at the time of the record (empty if nothing)."""
+        """What occupies `rooms` at the time of the record (empty if nothing).
+
+        A full block clashes with other full blocks only (request 16. 11., Lucie): it is placed
+        under the reservations already there, which stay, and nothing new is booked over it."""
         self.ensure_one()
         busy = self._busy_domain(rooms, self.start, self.stop, exclude_ids=[self._origin.id or 0])
+        if self.kind == "block":
+            return self.search(busy + [("kind", "=", "block")], limit=1)
         # A block first: nothing goes over it, so it must not hide behind a reservation.
         clash = self.search(busy + [("kind", "=", "block")], limit=1) or self.search(busy, limit=1)
         if not clash and self.kind == "reservation":
@@ -555,18 +560,17 @@ class VetReservation(models.Model):
 
         When some room already has its own (or another clinic-wide) full block at
         that time, the whole input is not rejected: the block is split per room and
-        fills only the still-free periods. A confirmed reservation still prevents it -
-        a block over a client would silently drop them from the board.
+        fills only the still-free periods. Reservations do not matter: the block goes under them
+        (request 16. 11.).
         """
         for rec in self.filtered(lambda r: r.kind == "block" and r.block_scope == "full"
                                  and not r.room_id and r.state not in INACTIVE_STATES):
             rooms = self.env["elite.vet.room"].search([])
             self._lock_rooms(rooms.ids)
-            existing = self.search(self._busy_domain(rooms.ids, rec.start, rec.stop, exclude_ids=[rec.id]))
+            existing = self.search(self._busy_domain(rooms.ids, rec.start, rec.stop, exclude_ids=[rec.id])
+                                   + [("kind", "=", "block")])
             if not existing:
-                continue   # nothing there, keep a single clinic-wide block
-            if existing.filtered(lambda r: r.kind == "reservation"):
-                continue   # the reservation is reported by _check_overlap as before
+                continue   # no other full block there, keep a single clinic-wide block
             pieces = []
             for room in rooms:
                 taken = sorted((max(b.start, rec.start), min(b.stop, rec.stop))
