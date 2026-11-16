@@ -8,7 +8,7 @@ from .room import format_hour
 # Context key of the roster sync (elite.vet.shift → assignment); only it may change a linked assignment.
 ROSTER_SYNC = "elite_vet_roster_sync"
 # What the roster decides on a linked assignment; the rest (Only these procedures, Note) stays editable here.
-ROSTER_FIELDS = ("shift_id", "doctor_id", "room_id", "date", "hour_from", "hour_to")
+ROSTER_FIELDS = ("shift_id", "doctor_id", "room_id", "date", "hour_from", "hour_to", "hide_on_web")
 
 
 class VetDoctorAssignment(models.Model):
@@ -36,6 +36,11 @@ class VetDoctorAssignment(models.Model):
         string="Jen tyto úkony", help="Prázdné = všechny úkony, které se v ordinaci dělají.")
     specialization_ids = fields.Many2many(related="doctor_id.specialization_ids", readonly=True)
     note = fields.Char(string="Poznámka")
+    hide_on_web = fields.Boolean(
+        string="Skryto na webu",
+        help="Lékařka se k této službě nenabízí v online objednávání (ani v seznamu lékařů, ani "
+             "ve volných termínech); objednat k ní jde jen přes recepci. Služba z Rozpisu služeb to "
+             "přebírá ze směny (např. druhá lékařka na víkend, kterou klienti nemají vidět).")
     shift_id = fields.Many2one("elite.vet.shift", string="Směna v rozpisu služeb", readonly=True, copy=False,
                                index=True, ondelete="cascade")
     from_roster = fields.Boolean(string="Z rozpisu služeb", compute="_compute_from_roster", store=True,

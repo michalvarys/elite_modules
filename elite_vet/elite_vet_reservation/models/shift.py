@@ -42,6 +42,11 @@ class VetShift(models.Model):
     hour_to = fields.Float(string="Do", compute="_compute_hours", store=True, readonly=False,
                            precompute=True, aggregator=None,
                            help="Noční služba může končit druhý den ráno (20:00–8:00).")
+    hide_on_web = fields.Boolean(
+        string="Skryto na webu",
+        help="Služba zůstane v rozpisu i v kalendáři rezervací, jen ji web nezobrazí: ani "
+             "/rozpis-lekaru, ani online objednávání (lékařka se tam nenabízí). Např. druhá lékařka "
+             "na víkend.")
     assignment_ids = fields.One2many("elite.vet.doctor.assignment", "shift_id", string="Služba v rezervacích")
 
     # ---------- defaults and validation ----------
@@ -105,7 +110,7 @@ class VetShift(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if any(f in vals for f in ("room_id", "doctor_id", "date", "type_id", "hour_from", "hour_to")):
+        if any(f in vals for f in ("room_id", "doctor_id", "date", "type_id", "hour_from", "hour_to", "hide_on_web")):
             self._sync_assignments()
         return res
 
@@ -129,7 +134,7 @@ class VetShift(models.Model):
         self.ensure_one()
         h_from, h_to = roster_hours(self.hour_from, self.hour_to)
         return {"doctor_id": self.doctor_id.id, "room_id": self.room_id.id, "date": self.date,
-                "hour_from": h_from, "hour_to": h_to}
+                "hour_from": h_from, "hour_to": h_to, "hide_on_web": self.hide_on_web}
 
     def _sync_assignments(self):
         """Create / update / delete the linked assignment of each shift.
@@ -147,7 +152,8 @@ class VetShift(models.Model):
             try:
                 if linked:
                     current = {"doctor_id": linked.doctor_id.id, "room_id": linked.room_id.id, "date": linked.date,
-                               "hour_from": linked.hour_from, "hour_to": linked.hour_to}
+                               "hour_from": linked.hour_from, "hour_to": linked.hour_to,
+                               "hide_on_web": linked.hide_on_web}
                     changed = {k: v for k, v in vals.items() if current[k] != v}
                     if changed:
                         linked.write(changed)

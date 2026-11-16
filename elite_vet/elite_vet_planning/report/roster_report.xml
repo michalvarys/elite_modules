@@ -73,6 +73,32 @@
                 </table>
 
                 <!-- per person: who works when -->
+                <h2 class="evr-h2">Bilance hodin</h2>
+                <table class="evr-balance">
+                    <thead><tr>
+                        <th>Jméno</th><th>Úvazek</th><th>Fond</th><th>Odpracováno</th><th>Ranní</th><th>Odpolední</th>
+                        <th>Celodenní (12 h)</th><th>Víkendy</th><th>Absence</th><th>Saldo</th>
+                    </tr></thead>
+                    <tbody>
+                        <t t-foreach="plan['staff']" t-as="m">
+                            <t t-set="b" t-value="plan['balance'][m['id']]"/>
+                            <tr>
+                                <td><t t-esc="m['name']"/></td>
+                                <td><t t-esc="hours(m['weekly_hours'])"/> h/t</td>
+                                <td><t t-esc="hours(b['fond'])"/> h</td>
+                                <td><t t-esc="hours(b['worked'])"/> h</td>
+                                <td t-esc="b['morning']"/>
+                                <td t-esc="b['afternoon']"/>
+                                <td t-esc="b['full_day']"/>
+                                <td><t t-esc="b['weekend']"/><t t-if="b['weekend']"> (<t t-esc="hours(b['weekend_hours'])"/> h)</t></td>
+                                <td><t t-esc="', '.join('%s %s' % (short.get(code, code), n) for code, n in b['absences'].items() if n)"/></td>
+                                <td><t t-if="b['saldo'] &gt; 0.05">+</t><t t-esc="hours(b['saldo'])"/> h</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+                <p class="evr-muted">Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna v jeden den se počítá jednou (8–16 + 12–20 = 12 h, celodenní). D a L se počítají jako odpracovaný den, NV, PN a Š ne.</p>
+
                 <h2 class="evr-h2">Přehled po lidech</h2>
                 <table class="evr-grid evr-people">
                     <thead>
@@ -107,32 +133,6 @@
                         </t>
                     </tbody>
                 </table>
-
-                <h2 class="evr-h2">Bilance hodin</h2>
-                <table class="evr-balance">
-                    <thead><tr>
-                        <th>Jméno</th><th>Úvazek</th><th>Fond</th><th>Odpracováno</th><th>Ranní</th><th>Odpolední</th>
-                        <th>Celodenní (12 h)</th><th>Víkendy</th><th>Absence</th><th>Saldo</th>
-                    </tr></thead>
-                    <tbody>
-                        <t t-foreach="plan['staff']" t-as="m">
-                            <t t-set="b" t-value="plan['balance'][m['id']]"/>
-                            <tr>
-                                <td><t t-esc="m['name']"/></td>
-                                <td><t t-esc="hours(m['weekly_hours'])"/> h/t</td>
-                                <td><t t-esc="hours(b['fond'])"/> h</td>
-                                <td><t t-esc="hours(b['worked'])"/> h</td>
-                                <td t-esc="b['morning']"/>
-                                <td t-esc="b['afternoon']"/>
-                                <td t-esc="b['full_day']"/>
-                                <td><t t-esc="b['weekend']"/><t t-if="b['weekend']"> (<t t-esc="hours(b['weekend_hours'])"/> h)</t></td>
-                                <td><t t-esc="', '.join('%s %s' % (short.get(code, code), n) for code, n in b['absences'].items() if n)"/></td>
-                                <td><t t-if="b['saldo'] &gt; 0.05">+</t><t t-esc="hours(b['saldo'])"/> h</td>
-                            </tr>
-                        </t>
-                    </tbody>
-                </table>
-                <p class="evr-muted">Fond = pracovní dny měsíce bez svátků × úvazek / 5. Ranní a odpolední směna v jeden den se počítá jednou (8–16 + 12–20 = 12 h, celodenní). D a L se počítají jako odpracovaný den, NV, PN a Š ne.</p>
             </div>
         </t>
     </template>

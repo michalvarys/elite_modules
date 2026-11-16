@@ -66,6 +66,19 @@ class TestFeedback1611(ReservationCase):
         self.P.set_shift_web(self.month, shift.id, True)
         self.assertTrue(shift.website_shifts())
 
+    def test_merged_service_hidden_when_one_shift_is(self):
+        """Morning 8–16 + afternoon 12–20 make one service 8–20; hiding either shift hides the
+        whole service from online booking (follow-up 16. 11.: the doctor must not show on the web)."""
+        self.P.add_shift(self.month, self.morning.id, self.day, self.dr_a.id)
+        self.P.add_shift(self.month, self.afternoon.id, self.day, self.dr_a.id)
+        service = self.assignments(self.dr_a)
+        self.assertEqual((len(service), service.hour_from, service.hour_to), (1, 8, 20))
+        self.assertFalse(service.hide_on_web)
+        self.P.set_shift_web(self.month, self.planned(self.afternoon).id, False)
+        self.assertTrue(self.assignments(self.dr_a).hide_on_web)
+        self.P.set_shift_web(self.month, self.planned(self.afternoon).id, True)
+        self.assertFalse(self.assignments(self.dr_a).hide_on_web)
+
     def test_month_on_website_only_when_published(self):
         self.P.add_shift(self.month, self.morning.id, self.day, self.dr_a.id)
         shift = self.planned(self.morning)

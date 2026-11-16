@@ -9,7 +9,8 @@ shift with a room into one assignment in the reservation calendar; this module a
   as two shifts, the reservation calendar gets one service 8–20 (two overlapping
   services in one room would break the assignment's overlap check);
 * the public /rozpis-lekaru shows only doctors' planned shifts, not reception, nurses or helpers,
-  not a shift marked "Hidden on the website" (an extra doctor on a weekend, request 16. 11.)
+  not a shift marked "Hidden on the website" (an extra doctor on a weekend, request 16. 11.; online
+  booking does not offer her either, elite_vet_reservation)
   and planned shifts of a month only once the month is published (elite.vet.roster.month).
 """
 from odoo import _, api, fields, models
@@ -28,8 +29,9 @@ class VetShift(models.Model):
                               help="An intern or temp who is not on the team list.")
     hide_on_web = fields.Boolean(
         string="Hidden on the website",
-        help="The service stays in the roster and in the reservation calendar, only /rozpis-lekaru "
-             "does not list it (e.g. a second doctor strengthening a weekend).")
+        help="The service stays in the roster and in the reservation calendar, only the website does not "
+             "show it: /rozpis-lekaru does not list it and online booking does not offer the doctor "
+             "(e.g. a second doctor strengthening a weekend).")
     web_visible = fields.Boolean(
         string="On the website", compute="_compute_web_visible", store=True,
         help="/rozpis-lekaru shows full-day notes, shifts entered in the roster by hand and, from the plan, "
@@ -74,7 +76,7 @@ class VetShift(models.Model):
         return ReservationShift._wants_assignment(self)
 
     def _assignment_cluster(self):
-        """(first shift, from, to) of the group of this doctor's shifts on the same day in the
+        """(first shift, from, to, members) of the group of this doctor's shifts on the same day in the
         same room whose times overlap or touch this one. The first one carries the assignment."""
         self.ensure_one()
         siblings = self.search([("doctor_id", "=", self.doctor_id.id), ("date", "=", self.date),
@@ -90,8 +92,8 @@ class VetShift(models.Model):
                 clusters.append([h_from, [shift], h_to])
         for h_from, members, h_to in clusters:
             if self in members:
-                return members[0], h_from, h_to
-        return self, *roster_hours(self.hour_from, self.hour_to)
+                return members[0], h_from, h_to, members
+        return self, *roster_hours(self.hour_from, self.hour_to), [self]
 
     def _wants_assignment(self):
         # Only planned shifts merge; two overlapping shifts entered by hand stay a clash (as before).
@@ -102,7 +104,9 @@ class VetShift(models.Model):
     def _assignment_vals(self):
         vals = super()._assignment_vals()
         if self.planning_slot_id:
-            _first, vals["hour_from"], vals["hour_to"] = self._assignment_cluster()
+            _first, vals["hour_from"], vals["hour_to"], members = self._assignment_cluster()
+            # One merged service: hidden on the website when any of its shifts is hidden.
+            vals["hide_on_web"] = any(s.hide_on_web for s in members)
         return vals
 
     def _same_day_shifts(self):
