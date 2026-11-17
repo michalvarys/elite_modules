@@ -4,7 +4,11 @@
 běžnou údržbou: lékařky, úkony, ordinace a ordinační doba, rozpis lékařů, nastavení
 webové rezervace a e-maily. Je pro vedoucí kliniky nebo toho, kdo má na starosti
 nastavení. Denní práci recepce popisuje [Návod pro recepci](recepce.md), logiku výpočtu
-termínů [Jak to funguje](jak-to-funguje.md).
+termínů [Jak to funguje](jak-to-funguje.md), měsíční plán směn
+[Plánování služeb](../../elite_vet_planning/doc/planovani.md).
+
+Snímky obrazovek jsou starší: v horní nabídce je na nich ještě „Tabule“, dnes se položka
+jmenuje **Kalendář**.
 
 Doporučené pořadí prvního nastavení: **práva → lékařky → specializace → ordinace
 a ordinační doba → úkony → rozpis lékařů → nastavení rezervace → kontrolní seznam**.
@@ -17,30 +21,32 @@ V **Nastavení → Uživatelé** u každého člověka v části **Rezervace** z
 
 | Skupina | Co smí |
 |---|---|
-| **Recepce** | Tabule, nová rezervace, čekající z webu, rezervace, klienti a mazlíčci. **Blokace jen vidí** (na tabuli se otevřou jen ke čtení). Rozpis lékařů, ordinace, úkony a nastavení jen vidí. |
-| **Správce rezervací** | Vše jako Recepce a navíc **blokace** (zakládá, přesouvá, upravuje, ruší, maže), **Konfigurace** (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy), **Nastavení kontaktu**, úpravy **Rozpis lékařů** a akce **Zkopírovat na další týden**. |
+| **Recepce** | Kalendář, nová rezervace, čekající z webu, rezervace, klienti a mazlíčci a **blokace** (zakládá, přesouvá, upravuje, ruší, maže). Rozpis lékařů jen vidí. Konfiguraci v nabídce nemá. |
+| **Správce rezervací** | Vše jako Recepce a navíc **Historie rezervací** (i s akcí **Obnovit**), **Konfigurace** (Ordinace, Výjimky ordinační doby, Úkony, Nastavení rezervace, Časté dotazy), **Nastavení kontaktu**, úpravy **Rozpis lékařů** a akce **Zkopírovat na další týden** a **Převzít rozpis do rezervací**. |
 
 Správce systému (administrátor) má Správce rezervací automaticky. Role Sestra, Lékařka
-a účty ordinací mají práva Recepce, ne Správce rezervací; blokace a nastavení tedy také jen
-vidí. Vedení je Správce rezervací.
+a účty ordinací mají práva Recepce, ne Správce rezervací: blokace tedy mění, nastavení ne.
+Vedení je Správce rezervací.
 
-**Blokace a nastavení jen správce.** Tabule bez práva správce neukazuje tlačítko **Nová
-blokace**, blokace na ní nejde přetáhnout a klik na blokaci ji otevře jen ke čtení. Klik do
-sloupce (i do blokace jen pro web) dál otevře průvodce novou rezervací. Kdo není správce
-a pokusí se blokaci změnit jinudy (seznam Rezervace), dostane hlášku „Blokace může měnit jen
-správce rezervací.“ Nastavení (Nastavení rezervace i Nastavení kontaktu, je to jeden záznam)
+**Blokace.** Blokace zakládá a mění Recepce a všechny role nad ní (Sestra, Lékařka, účty
+ordinací, Správce rezervací). Kdo žádnou z nich nemá a pokusí se blokaci změnit, dostane
+hlášku „Blokace může měnit jen recepce nebo správce rezervací.“
+
+**Nastavení jen správce.** Nastavení (Nastavení rezervace i Nastavení kontaktu, je to jeden záznam)
 ukládá jen Správce rezervací. Kdo má jen práva správce kalendáře / webu (Hlavní stránka, Ceník),
 nastavení nevidí v menu, a kdyby ho otevřel, uložení skončí hláškou „Nastavení může měnit jen
 správce rezervací.“ Web nastavení čte dál pro všechny.
 
 Lékařky a specializace se upravují v aplikacích **Rozpis služeb** a **Náš tým**.
-K nim je potřeba mít práva i v těchto aplikacích.
+K nim je potřeba mít práva i v těchto aplikacích (v Rozpisu služeb skupina **Správce rozpisu**).
 
 ---
 
 ## 2. Lékařky
 
 ![Seznam lékařek](img/lekarky.png)
+
+*Starší snímek: dnešní seznam má navíc sloupce Účet, Barva v kalendáři a Výchozí ordinace a v nabídce jsou další položky (Plánování, Personál…).*
 
 Seznam lidí je v **Rozpis služeb → Lékařky**. Je v něm celý tým (i sestry a recepce),
 protože se z něj skládá i veřejný rozpis služeb. Rezervace ale smí dostat jen lékařka.
@@ -51,12 +57,15 @@ U každé veterinární lékařky:
 2. Zaškrtněte **Lékařka – přijímá rezervace** (v seznamu sloupec „Lékařka (rezervace)“).
 3. Zkontrolujte **Karta v týmu** – propojení na její kartu na stránce Náš tým.
    Z karty se berou specializace.
-4. Případně změňte **Barva v kalendáři**. V této barvě se na tabuli
-   zobrazuje proužek na kartách jejích rezervací, její služba a štítek. Barva se přidělí automaticky
+4. Případně změňte **Barva v kalendáři**. V této barvě se v kalendáři rezervací
+   zobrazuje levý proužek na kartách jejích rezervací, její služba a štítek. Barva se přidělí automaticky
    (každá lékařka jinou), stačí ji upravit, když se dvě podobají.
 5. Vyplňte **Výchozí ordinace** – ordinaci, kde obvykle slouží. Předvyplní se jí
    u každé nové směny v Rozpisu služeb, a směna se tak sama propíše do rezervací
    (viz kapitola 6). U konkrétní směny jde ordinaci změnit nebo smazat.
+6. Vyplňte **Účet** – přihlašovací účet tohoto člověka. Podle něj systém pozná, kdo je
+   přihlášený (např. Moje dostupnost). Jeden účet patří jen jednomu členovi týmu.
+7. Případně vyplňte **Číslo KVL**. Tiskne se u jména ošetřující lékařky ve zprávě z vyšetření.
 
 Co příznak dělá:
 
@@ -86,14 +95,14 @@ ikona v **Ikony**.
 
 ![Seznam ordinací](img/ordinace.png)
 
-**Rezervace → Konfigurace → Ordinace.** Každá ordinace je jeden sloupec na tabuli.
+**Rezervace → Konfigurace → Ordinace.** Každá ordinace je jeden sloupec v Kalendáři.
 
 | Pole | Význam |
 |---|---|
-| **Název** | Jak se ordinace jmenuje na tabuli a v e-mailu klientovi. |
-| **Barva** | Barva pruhu nad sloupcem tabule. |
-| **Rezervovatelná online** | Odškrtněte u sálu a místností, kam se klienti z webu objednávat nemají. Na tabuli pak mají štítek „interní“. |
-| **Pořadí** | Pořadí sloupců na tabuli (v seznamu lze i přetahovat). |
+| **Název** | Jak se ordinace jmenuje v Kalendáři a v e-mailu klientovi. |
+| **Barva** | Barva pruhu nad sloupcem v Kalendáři. |
+| **Rezervovatelná online** | Odškrtněte u sálu a místností, kam se klienti z webu objednávat nemají. V Kalendáři pak mají štítek „interní“. |
+| **Pořadí** | Pořadí sloupců v Kalendáři (v seznamu lze i přetahovat). |
 | **Poznámka** | Jen pro vás. |
 
 V seznamu je sloupec **Ordinační doba** se souhrnem, např. „Po–Pá 8:15–19:30 · Ne 10:15–17:45“.
@@ -124,7 +133,10 @@ Na jeden den a ordinaci jde jen jedna výjimka. Výjimky všech ordinací najdet
 přehledně v **Konfigurace → Výjimky ordinační doby**.
 
 Výjimka platí pro jednu ordinaci. Zavíráte-li celou kliniku, zadejte ji u každé
-ordinace (nebo použijte blokaci bez ordinace na tabuli).
+ordinace (nebo založte v Kalendáři blokaci se zaškrtnutými všemi ordinacemi).
+
+Státní svátky se počítají samy a web v nich neobjednává (kapitola 7). Výjimku u nich
+zadejte, jen když má být den zavřený i v Kalendáři recepce.
 
 ---
 
@@ -139,9 +151,9 @@ Seznam lze upravovat přímo v řádcích; pořadí se mění přetažením.
 |---|---|
 | **Název** | Co klient vidí na webu a v e-mailu. Překládá se (viz Překlady). |
 | **Délka (min)** | Jak dlouho úkon trvá. Násobek 5 minut. |
-| **Zkratka** | 1–3 znaky na kartě v tabuli (V, P, KA…). |
-| **Barva** | Barva karty na tabuli. V seznamu jsou syté i světlé barvy (světle modrá, žlutá, mátová…). |
-| **Vlastní barva** | Jakákoli barva podle přání (výběr z palety). Má přednost před **Barvou**; výběr barvy ze seznamu ji zase smaže. Pole **Na tabuli** ukazuje výsledek. |
+| **Zkratka** | 1–3 znaky na kartě v Kalendáři (V, P, KA…). |
+| **Barva** | Barva pravého proužku na kartě v Kalendáři (karta je neutrální, levý proužek má barvu lékařky). V seznamu jsou syté i světlé barvy (světle modrá, žlutá, mátová…). |
+| **Vlastní barva** | Jakákoli barva podle přání (výběr z palety). Má přednost před **Barvou**; výběr barvy ze seznamu ji zase smaže. Pole **V kalendáři** (v seznamu sloupec **Ukázka**) ukazuje výsledek. |
 | **Nabízet online** | Odškrtnuté = jen pro recepci, na webu se nenabízí. |
 | **Ordinace** | Kde se úkon dělá. Prázdné = ve všech ordinacích rezervovatelných online. |
 | **Specializace** | **Kdo úkon dělá**: jen lékařky s aspoň jednou z těchto specializací. Prázdné = kterákoli lékařka. |
@@ -152,6 +164,8 @@ Seznam lze upravovat přímo v řádcích; pořadí se mění přetažením.
 Tip: Úkon, který nechcete nabízet, raději **archivujte** (Akce → Archivovat) než mažte.
 Úkon použitý v rezervacích smazat nejde.
 
+Úkon **Jiné** nechte v seznamu: dosadí se do každé rezervace, u které recepce úkon nevybere.
+
 ---
 
 ## 6. Rozpis lékařů
@@ -161,15 +175,18 @@ Tip: Úkon, který nechcete nabízet, raději **archivujte** (Akce → Archivova
 **Rezervace → Rozpis lékařů.** Kdo kdy ve které ordinaci slouží. Podle rozpisu:
 
 - web nabízí termíny „k lékaři“ a úkony se specializací,
-- recepce vidí v hlavičce sloupců tabule, kdo slouží,
-- tabule navrhuje „Potvrdit → Ordinace · lékařka“,
-- průvodce novou rezervací (klik do tabule i **Nová rezervace**) a objednání v pokladně
+- recepce vidí v hlavičce sloupců Kalendáře, kdo slouží,
+- Kalendář navrhuje „Potvrdit → Ordinace · lékařka“,
+- průvodce novou rezervací (klik do Kalendáře i **Nová rezervace**) a objednání v pokladně
   předvyplní lékařku, která v té ordinaci a v tu dobu slouží (jde ji změnit).
 
 ### Směny se zadávají jednou – v Rozpisu služeb
 
-Služby se nezadávají dvakrát. Směna lékařky v aplikaci **Rozpis služeb → Rozpis**
-(seznam i kalendář) má sloupec **Ordinace**:
+Služby se nezadávají dvakrát. Měsíční plán celého týmu se dělá v **Rozpis služeb → Plánování**
+a každé přiřazení v něm je směna v Rozpisu služeb (viz
+[Plánování služeb](../../elite_vet_planning/doc/planovani.md)). Jednotlivou směnu jde zadat
+i přímo: směna lékařky v aplikaci **Rozpis služeb → Rozpis** (seznam i kalendář) má sloupec
+**Ordinace**:
 
 1. Zadejte směnu jako dosud: **Datum**, **Lékařka**, **Směna**.
 2. **Ordinace** se předvyplní z **Výchozí ordinace** lékařky (Rozpis služeb → Lékařky).
@@ -185,19 +202,21 @@ Služby se nezadávají dvakrát. Směna lékařky v aplikaci **Rozpis služeb �
 Z kalendáře Rozpisu služeb: klikněte na den → malý formulář s datem, směnou, lékařkou
 a ordinací. Klik na existující směnu → **Upravit** otevře směnu i s ordinací.
 
-Přímo z **Tabule** (Rezervace → Tabule), když máte právo upravovat Rozpis služeb:
+Přímo z **Kalendáře** (Rezervace → Kalendář), když máte právo upravovat Rozpis služeb:
 
 - **Klik na jméno lékařky** v hlavičce ordinace (nebo na její barevný pruh ve sloupci)
   otevře její směnu z Rozpisu služeb – změníte lékařku, směnu, čas Od–Do nebo ordinaci a po uložení
-  se to propíše do rozpisu na webu i na tabuli. Ručně zadaná služba (vlastní čas) otevře
+  se to propíše do rozpisu na webu i do Kalendáře. Ručně zadaná služba (vlastní čas) otevře
   svůj formulář z Rozpisu lékařů.
+- **Smazat službu** nahoře v tomto okně službu po potvrzení smaže: zmizí z rozpisu, z Kalendáře
+  i z volných termínů na webu.
 - **+ služba** v hlavičce ordinace přidá novou směnu do Rozpisu služeb s předvyplněným
-  dnem tabule a touto ordinací (ordinace zůstane, i když lékařka má jinou výchozí).
-- Bez práva (recepce) se jméno jen zobrazí a klik na pruh založí rezervaci jako dřív.
+  dnem z Kalendáře a touto ordinací (ordinace zůstane, i když lékařka má jinou výchozí).
+- Bez práva (recepce) se jméno jen zobrazí a klik na pruh založí rezervaci.
 
 Co se děje dál:
 
-- **Změna** ordinace, lékařky, data nebo typu směny se hned promítne do služby v rezervacích.
+- **Změna** ordinace, lékařky, data, času nebo typu směny se hned promítne do služby v rezervacích.
 - **Smazání** ordinace, smazání směny nebo změna na celodenní poznámku (Zavřeno) službu
   v rezervacích smaže.
 - **Změna času typu směny** (Typy směn → Od/Do) přepíše čas směn **od dneška dál**, které
@@ -210,10 +229,11 @@ Co se děje dál:
   „Směnu … nejde propsat do rezervací: …“.
 
 Služby z rozpisu jsou v Rozpisu lékařů označené **Z rozpisu služeb** (sloupec a filtr),
-na tabuli je to v bublině proužku lékařky. Lékařka, ordinace, datum a čas se u nich
+v Kalendáři je to v bublině proužku lékařky. Lékařka, ordinace, datum a čas se u nich
 mění jen v Rozpisu služeb – pokus o úpravu nebo smazání tady skončí hláškou
 „Tato služba je z Rozpisu služeb – upravte ji tam.“ Upravit tu jde jen **Jen tyto úkony**
-a **Poznámka**.
+a **Poznámka**. Výjimkou je **Změnit ordinaci** v týdenním kalendáři Rozpisu lékařů: klik
+na službu nabídne ordinace a změna se zapíše i do směny.
 
 ### Převzetí stávajícího rozpisu
 
@@ -233,10 +253,14 @@ přímo tady:
 3. Volitelně (skryté sloupce): **Jen tyto úkony** – v této službě dělá lékařka jen
    vybrané úkony (prázdné = všechny, které umí); **Poznámka**.
 
-Jedna lékařka nemůže mít dvě služby přes sebe. Ve stejné ordinaci mohou sloužit
-dvě lékařky současně – tabule je ukáže jako dva barevné proužky vedle sebe a štítek
-„2 lékařky 10:00–14:00“ v hlavičce sloupce. Kapacita ordinace zůstává **jeden pacient
-naráz**; druhá lékařka znamená jen to, že úkon může dělat kterákoli z nich.
+Ručně zadanou službu smažete tlačítkem **Smazat službu** v jejím formuláři.
+
+Jedna lékařka nemůže mít ve stejné ordinaci dvě služby přes sebe; ve dvou různých ordinacích
+naráz sloužit smí. Ve stejné ordinaci mohou sloužit dvě lékařky současně – Kalendář je ukáže
+jako dva barevné proužky vedle sebe a štítek „2 lékařky 10:00–14:00“ v hlavičce sloupce.
+Kapacita ordinace zůstává **jeden pacient naráz**; druhá lékařka znamená jen to, že úkon může
+dělat kterákoli z nich. Web jiný termín nenabídne, recepce smí obsazený termín po varování
+přesto použít (ne přes úplnou blokaci).
 
 Seznam má výchozí filtr **Od dneška**, seskupit lze podle **Den**, **Lékařka**,
 **Ordinace**, filtrovat **Z rozpisu služeb** / **Zadané ručně**. Vpravo nahoře lze
@@ -247,7 +271,7 @@ přepnout na týdenní kalendář.
 1. V seznamu označte služby, které chcete zopakovat (např. filtrujte týden a zaškrtněte vše).
 2. **Akce → Zkopírovat na další týden**.
 3. Služby se zkopírují o 7 dní dál. Kopie, která by se překrývala s jinou službou téže
-   lékařky, se přeskočí; stejně tak služba lékařky, která už nepřijímá rezervace.
+   lékařky ve stejné ordinaci, se přeskočí; stejně tak služba lékařky, která už nepřijímá rezervace.
    Hláška ukáže „Zkopírováno X, přeskočeno Y.“
 4. Kopírují se jen **ruční** služby. Služby z rozpisu služeb se přeskočí (hláška je
    spočítá zvlášť) – další týden se zadává v Rozpisu služeb.
@@ -258,19 +282,21 @@ přepnout na týdenní kalendář.
 
 ![Nastavení rezervace](img/nastaveni.png)
 
+*Starší snímek: nahoře je dnes přepínač Rezervace na webu a Adresa formuláře WinVet a chybí tu řada polí z tabulky níže. Platí tabulka.*
+
 **Rezervace → Konfigurace → Nastavení rezervace**, část **Vlastní rezervační systém**.
 
 | Pole | Výchozí | Co dělá |
 |---|---|---|
-| **Krok slotů (min)** | 15 | Po kolika minutách se nabízejí začátky (8:15, 8:30…). Násobek 5. Zároveň mřížka tabule. |
+| **Krok slotů (min)** | 15 | Po kolika minutách se nabízejí začátky (8:15, 8:30…). Násobek 5. Zároveň mřížka Kalendáře. |
 | **Nejdříve za (hodin)** | 24 | Na web nejde objednat dřív než za tolik hodin. Recepce toto omezení nemá. |
 | **Nejdál dopředu (dní)** | 60 | Jak daleko dopředu web nabízí termíny. Recepce může až ~400 dní. |
-| **Klient může zrušit do (hodin před)** | 12 | Do kolika hodin před termínem funguje odkaz na zrušení v e-mailu. **0** = klient rušit odkazem nemůže. |
+| **Klient může zrušit do (hodin před)** | 12 | Do kolika hodin před termínem funguje odkaz na zrušení v e-mailu. Nepotvrzená žádost z webu se odkazem rovnou zruší. U potvrzené rezervace odkaz jen pošle **žádost o zrušení**: rezervace zůstává, dokud recepce v Kalendáři nerozhodne (**Potvrdit zrušení** / **Ponechat**). **0** = klient rušit odkazem nemůže. |
 | **Online jen tam, kde slouží lékař** | vypnuto | Zapnuto: web nabízí termín jen v čase, kdy má ordinace v Rozpisu lékařů zapsanou službu. Vypnuto: úkony bez specializace se nabízejí podle ordinační doby, i když rozpis chybí. |
 | **Víkendy jen ručně (web neobjednává)** | zapnuto | Web v sobotu a v neděli nenabízí žádné termíny. Recepce objednává dál (i ručním časem). |
 | **Státní svátky jen ručně (web neobjednává)** | zapnuto | Web ve státní svátek nenabízí žádné termíny. Svátky (i Velký pátek a Velikonoční pondělí) se počítají samy, nic se nezadává. Recepce objednává dál. |
-| **Posílat klinice upozornění** | zapnuto | Vypnuté = klinice nechodí žádné upozornění (nová žádost z webu, zrušení klientem). E-maily klientům chodí dál. |
-| **E-mail pro upozornění** | rezervace@elite-vet.cz | Sem chodí upozornění na každou novou žádost z webu a na zrušení klientem (jen když je zapnuté „Posílat klinice upozornění“). |
+| **Posílat klinice upozornění** | zapnuto | Vypnuté = klinice nechodí žádné upozornění (nová žádost z webu, zrušení nebo žádost o zrušení klientem). E-maily klientům chodí dál. |
+| **E-mail pro upozornění** | rezervace@elite-vet.cz | Sem chodí upozornění na každou novou žádost z webu a na zrušení nebo žádost o zrušení klientem. Pole je vidět a je povinné, jen když je zapnuté „Posílat klinice upozornění“. |
 | **Odesílatel e-mailů** | rezervace@elite-vet.cz | Adresa, ze které klientům chodí e-maily k rezervacím. Musí to být schránka, přes kterou Odoo odesílá (viz *Odesílání e-mailů* níže). Jde zadat i se jménem: `Elite Vet Karlovy Vary <rezervace@elite-vet.cz>`; bez jména se doplní „Elite Vet Karlovy Vary“. |
 | **Odpovědi klientů na** | info@elite-vet.cz | Kam dojde odpověď, když klient na e-mail odpoví. Prázdné = na odesílatele. |
 | **Posílat připomínku** | vypnuto | Zapne připomínkový e-mail klientům. |
@@ -304,7 +330,7 @@ kalendář je na stránce **/rezervacni-system**. Mění ho jen **Správce rezer
 
 - Při **WinVet** je **Adresa formuláře WinVet** povinná. Bez ní formulář neuloží
   („Rezervace přes WinVet potřebují adresu formuláře WinVet…“).
-- Recepce, tabule, průvodce **Nová rezervace** a pokladna objednávají v obou režimech stejně.
+- Recepce, Kalendář, průvodce **Nová rezervace** a pokladna objednávají v obou režimech stejně.
 - Nová instalace i aktualizace databáze, která pole ještě nemá, začíná na **WinVet** – na webu
   se tedy nejdřív ukáže to, co tam bylo. Postup: nastavit ordinace, úkony, lékařky a rozpis
   (kontrolní seznam v kapitole 10), pak přepnout na **Elite Vet (náš kalendář)** a uložit.
@@ -317,6 +343,14 @@ kalendář je na stránce **/rezervacni-system**. Mění ho jen **Správce rezer
   formulář WinVet jako dřív. Při **Elite Vet** je na jeho místě krátká výzva: jedna věta
   („Online objednávky přijímáme na stránce rezervačního systému.“) a tlačítko **Objednat se
   online**, které vede na /rezervacni-system (v jazyce stránky: /de/…, /ru/…, /en/…).
+
+### Kalendář z WinVetu
+
+Záznamy z kalendáře WinVetu se v Kalendáři ukazují jen ke čtení a zabírají termíny. Které
+kalendáře patří ke kterým ordinacím a které činnosti k úkonům, nastavuje vedení v **WinVet
+data → Kalendář z WinVetu** (**Kalendáře → ordinace**, **Činnosti → úkony**), vypíná se tam
+v **Zapnout / vypnout**. Co přesně záznamy v Kalendáři znamenají, popisuje
+[Návod pro recepci](recepce.md).
 
 **Zálohy:** online platební brána zatím **není**. Při zapnutých zálohách se na webu ukáže
 částka a klient dostane informaci, že platební údaje mu pošle recepce.
@@ -334,11 +368,18 @@ režim vývojáře), hledejte „Rezervace:“.
 | Rezervace: nová z webu (klinika) | klinice na E-mail pro upozornění |
 | Rezervace: potvrzeno | klientovi při potvrzení |
 | Rezervace: změna termínu | klientovi při přesunu potvrzené rezervace na jiný čas (ne při změně jen ordinace) |
-| Rezervace: zrušeno | klientovi při zrušení (a klinice při zrušení klientem) |
-| Rezervace: připomínka | klientovi X hodin před termínem (běží každou hodinu) |
+| Rezervace: zrušeno | klientovi při zrušení (může obsahovat zprávu od kliniky z okna zrušení) a klinice, když klient odkazem stáhne nepotvrzenou žádost |
+| Rezervace: žádost o zrušení přijata | klientovi, když odkazem požádá o zrušení potvrzené rezervace |
+| Rezervace: klient žádá o zrušení (klinika) | klinice na E-mail pro upozornění, když klient požádá o zrušení potvrzené rezervace |
+| Rezervace: žádost o zrušení odmítnuta | klientovi, když recepce u žádosti o zrušení zvolí **Ponechat** |
+| Rezervace: připomínka | klientovi X hodin před termínem (běží každou hodinu), ne u rezervace s čekající žádostí o zrušení |
+
+Při přesunu a při potvrzení v Kalendáři jde e-mail klientovi pro ten jeden případ vypnout
+zaškrtávátkem v dialogu.
 
 Šablony jsou psané anglicky a přeložené do češtiny, němčiny a ruštiny. Klient dostane
-e-mail v jazyce, ve kterém rezervoval. Upravujete-li text, upravte ho ve všech jazycích
+e-mail v **Jazyku rezervace**: z webu je to jazyk stránky, recepce ho vybere v průvodci nebo
+na rezervaci. Upravujete-li text, upravte ho ve všech jazycích
 (přepínač jazyka u pole). Adresa v potvrzení (Hybešova 167/18, Karlovy Vary) je přímo
 v textu šablony.
 
@@ -395,7 +436,7 @@ se jen jednou a všichni ho vidí stejně, ať ho napíšete v jakémkoli jazyce
 2. Přepište text.
 3. Uložte a přepněte zpět.
 
-Recepce na tabuli vidí vždy české názvy.
+Recepce v Kalendáři vidí vždy české názvy.
 
 ---
 
@@ -405,7 +446,7 @@ Recepce na tabuli vidí vždy české názvy.
 - [ ] Na kartách v Náš tým jsou **Specializace**.
 - [ ] V **Úkony** nemá žádný online úkon v „Kdo dělá“ text „žádná lékařka“.
 - [ ] Ordinace mají ordinační dobu, sál má odškrtnuté **Rezervovatelná online**.
-- [ ] Svátky na nejbližší měsíce jsou zadané jako **Výjimky**.
+- [ ] Dny, kdy je zavřeno, jsou zadané jako **Výjimky** (státní svátky se počítají samy, viz kapitola 7).
 - [ ] Lékařky mají **Výchozí ordinaci** a stávající rozpis je převzatý
       (**Rozpis služeb → Převzít rozpis do rezervací**).
 - [ ] **Rozpis lékařů** je vyplněný aspoň na **Nejdál dopředu (dní)** dopředu.
@@ -413,7 +454,7 @@ Recepce na tabuli vidí vždy české názvy.
       o „Online jen tam, kde slouží lékař“ a připomínkách.
 - [ ] Zkušební rezervace z webu: dorazily oba e-maily (klientovi i klinice)?
 - [ ] Zkušební zrušení odkazem z e-mailu funguje.
-- [ ] Uživatelé mají skupinu **Recepce** nebo **Správce rezervací**.
+- [ ] Uživatelé mají skupinu **Recepce** nebo **Správce rezervací** a členové týmu vyplněný **Účet**.
 - [ ] Až je všechno nastavené: **Rezervace na webu = Elite Vet (náš kalendář)** a kontrola
       /rezervacni-system a /rozpis-lekaru v anonymním okně (kapitola 7, *Přepnutí rezervací
       na webu*).
@@ -431,5 +472,5 @@ Recepce na tabuli vidí vždy české názvy.
   `odoo -u elite_vet_reservation --i18n-overwrite` (bez toho se nové překlady
   e-mailových šablon a textů nepřepíšou).
 - Cron **Rezervace: připomínky klientům** běží každou hodinu (dělá něco jen při zapnutých připomínkách).
-- Živá aktualizace tabule potřebuje funkční websocket (`/websocket` přes proxy,
-  v produkci workers + gevent port). Bez něj se tabule obnovuje jednou za minutu.
+- Živá aktualizace Kalendáře potřebuje funkční websocket (`/websocket` přes proxy,
+  v produkci workers + gevent port). Bez něj se Kalendář obnovuje jednou za minutu.

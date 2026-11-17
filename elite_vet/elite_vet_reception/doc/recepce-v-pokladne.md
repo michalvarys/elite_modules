@@ -9,7 +9,7 @@ Navazující návody:
 
 - [Pokladna a sklad](../../elite_vet_sale/doc/pokladna-a-sklad.md) – faktura, záloha, vratka,
   uzávěrka, příjem zboží,
-- [Rezervace – návod pro recepci](../../elite_vet_reservation/doc/recepce.md) – tabule, žádosti
+- [Rezervace – návod pro recepci](../../elite_vet_reservation/doc/recepce.md) – kalendář, žádosti
   z webu, průvodce rezervací,
 - [Obrazovka Ordinace](ordinace.md) – účet pro každou ordinaci, pacienti podle ordinací, přiřazení
   do ordinace a Zavolat.
@@ -18,11 +18,31 @@ Cesta návštěvy:
 
 | Stav | Kdo | Kde |
 |---|---|---|
-| Objednáno | web nebo recepce | rezervace (záložka **Objednat**, tabule, web) |
+| Objednáno | web nebo recepce | rezervace (záložka **Objednat**, kalendář, web) |
 | Čeká | recepce | **Přijmout** v záložce Dnes, nebo **+ Bez objednání** v záložce Dnes |
-| V ordinaci | lékařka / sestra | **Zavolat** na obrazovce Ordinace nebo v Moji pacienti dnes, nebo otevření karty pacienta |
+| V ordinaci | lékařka / sestra | **Zavolat** na obrazovce Ordinace nebo v Moji pacienti dnes |
 | K pokladně | lékařka | **Hotovo, k pokladně** v kartě pacienta |
 | Zaplaceno | recepce | **Zaplatit** v záložce Dnes |
+
+## Režim Jen pro čtení
+
+Dokud se pracuje ve WinVetu, může být Odoo přepnuté do režimu **Jen pro čtení**. Poznáte to podle
+žlutého štítku **Jen pro čtení** v horní liště pokladny a žlutého pruhu nahoře na obrazovce Ordinace
+a v kartě pacienta: „Jen pro čtení. Pracuje se ve WinVetu, data se sem přenášejí. Změny může dělat
+jen správce rezervací.“
+
+- **Prohlížet jde všechno:** Dnes, Kartotéka, Objednat, Pokladna, Kalendář, obrazovka Ordinace
+  i karta pacienta. Data přicházejí z WinVetu.
+- **Uložit nejde nic.** Tlačítka jako **Přijmout**, **+ Bez objednání**, **Poznámka**, **Spárovat…**,
+  **Objednat**, **Přesunout**, **Zrušit rezervaci**, **Nedorazil** a úpravy v Kartotéce jsou vidět,
+  ale po kliknutí se ukáže hláška „Ordinace, karty a pokladna jsou zatím jen pro čtení – pracuje se
+  ve WinVetu, odkud se data přenášejí. Změny může dělat jen správce rezervací.“
+- **Pokladna** se otevře a účet jde rozepsat, ale **Potvrdit** u platby ukáže okno „Pokladna je
+  zatím jen pro čtení – prodává se ve WinVetu. Účet se neuloží.“
+- **Obrazovka Ordinace** nemá tlačítko **Zavolat** (v Moji pacienti dnes skončí hláškou). **Karta pacienta** je jen ke čtení: nejde psát
+  do záznamu ani do účtu a nejsou tam tlačítka **Upozornění** a **Upravit pacienta**.
+- **Dál běží** přenos z WinVetu a nové rezervace z webu a z aplikace Rezervace (**Nová rezervace**).
+- **Správce rezervací** (vedení) pracuje normálně. Jak se režim zapíná, je v kapitole 10.
 
 ---
 
@@ -53,7 +73,7 @@ Pokladna se otevře na záložce **Dnes**. Nahoře je lišta:
 | **Kartotéka…** | okno s klienty a zvířaty – jen hledání, prohlížení, nový klient a úpravy |
 | **Objednat** | objednání termínu |
 | **Pokladna** | běžná obrazovka pokladny (prodej zboží, tlačítko **Klient** u účtu – ukazuje jméno zákazníka účtu, např. „Klient: Jana Nováková“; Akce, Nabídka/Objednávka …) |
-| **Tabule** | denní tabule ordinací v okně nad pokladnou (kapitola 5) |
+| **Kalendář** | denní kalendář ordinací v okně nad pokladnou (kapitola 5) |
 | zámek | zamkne pokladnu (kapitola 7) |
 | ☰ | menu pokladny (uzávěrka, objednávky …) |
 
@@ -61,18 +81,24 @@ Pokladna se otevře na záložce **Dnes**. Nahoře je lišta:
 
 ![Záložka Dnes](img/recepce-dnes.png)
 
+*Na obrázcích pokladny je v liště ještě starý název **Tabule**, tlačítko se dnes jmenuje **Kalendář**.*
+
 Tři sloupce:
 
 - **Přicházejí** – dnešní potvrzené rezervace, které ještě nepřišly, podle času: čas, zvíře,
-  majitel, úkon, lékařka. Rezervace z webu (i z chatu na webu) mají u zvířete modrý štítek
-  **WEB**.
+  majitel, úkon, lékařka. Má-li rezervace **Popis**, je před jménem zvířete. Rezervace z webu
+  (i z chatu na webu) mají u zvířete modrý štítek **WEB**. Červený štítek **Klient žádá o zrušení**
+  znamená, že klient odkazem v e-mailu požádal o zrušení. Rezervace dál platí, rozhoduje se
+  v aplikaci Rezervace ([návod Rezervace](../../elite_vet_reservation/doc/recepce.md)).
 - **Čekárna a ordinace** – přijatí klienti: ordinace, lékařka (u neobjednaných případně
-  „kterákoli lékařka“), jak dlouho čekají, a štítek **Čeká** nebo **V ordinaci**.
-- **K pokladně** – účty, které lékařka uzavřela a které čekají na zaplacení, s částkou.
+  „kterákoli lékařka“), jak dlouho čekají (u pacienta v ordinaci čas příchodu) a štítek **Čeká**
+  nebo **V ordinaci**.
+- **K pokladně** – účty, které lékařka uzavřela a které čekají na zaplacení, s částkou. Ikona
+  tiskárny otevře zprávu z vyšetření pro majitele ([Ordinace – 8. Tisk zprávy](ordinace.md#8-tisk-zprávy)).
+  Pod účty je **Dnes zaplaceno** (počet).
 
 Ve státní svátek je u nadpisu dne červený štítek, např. „Státní svátek: Den vzniku samostatného
 československého státu“. Je to jen připomínka, nic se neblokuje.
-  Pod nimi je **Dnes zaplaceno** (počet).
 
 Přehled se obnovuje sám: když lékařka zavolá pacienta nebo uzavře účet, změna je v pokladně
 během pár vteřin (pro jistotu se navíc obnoví každých 30 s). Ručně ho obnoví šipka vpravo nahoře.
@@ -96,9 +122,11 @@ jde jen dnešní návštěvu.
 Ordinace a nahoře v kartě pacienta u té návštěvy. Klient ji nikde nevidí, na účtence ani faktuře
 není. U pacienta v **Čekárně a ordinaci** je vidět i v pokladně a tlačítkem **Poznámka**
 (tužka) ji doplníte, opravíte nebo smažete (prázdné pole = smazat), dokud lékařka návštěvu
-neuzavře. Stejné okno má **Přijmout** v tabuli (kapitola 5).
+neuzavře. Stejné okno má **Přijmout** v Kalendáři (kapitola 5).
 
 ![Čekárna po přijetí](img/recepce-cekarna.png)
+
+*Obrázek je starší: tlačítka **Poznámka** a **Zrušit přijetí** na něm ještě nejsou.*
 
 Když lékařka kartu otevřela dřív, než jste klienta přijali, Přijmout nic nezdvojí – použije se
 záznam, který už existuje.
@@ -142,7 +170,7 @@ WinVetu jako vyřízené se neukazují.
   **+ Nové zvíře**), vyberte zvíře a stiskněte **Přiřadit k objednávce**. Nového klienta i se
   zvířetem spárujete jedním klikem: **+ Nový klient**, zvíře vyplňte rovnou ve formuláři
   a stiskněte **Uložit a přiřadit k objednávce**. Potom má řádek zvíře
-  a **Přijmout** jako ostatní; obrazovka Ordinace u objednávky nabídne Otevřít kartu a tabule
+  a **Přijmout** jako ostatní; obrazovka Ordinace u objednávky nabídne Otevřít kartu a Kalendář
   ukazuje jméno zvířete.
 
   ![Spárovat s objednávkou z WinVetu](img/ordinace-sparovat.png)
@@ -150,7 +178,7 @@ WinVetu jako vyřízené se neukazují.
   (Na obrázku je stejný dialog otevřený z obrazovky Ordinace.)
 - Spárování se uloží **jen v Odoo**, ve WinVetu se nic nemění a další přenos z WinVetu ho
   nepřepíše. Když ve WinVetu objednávce pacienta doplní, platí ten z WinVetu.
-- **Zrušit spárování** (u spárovaného řádku a v dialogu Spárovat…) vrátí objednávku mezi
+- **Zrušit spárování** (u spárovaného řádku) vrátí objednávku mezi
   „bez karty“ – jen dokud klient není přijatý (potom nejdřív **Zrušit přijetí**).
 - Uhynulé zvíře spárovat nejde.
 
@@ -175,6 +203,8 @@ Klient přišel bez rezervace:
    (u pacienta s ordinací je vidět i ordinace).
 
    ![Přijmout bez objednání](img/recepce-bez-objednani.png)
+
+   *Obrázek je starší: pole **Ordinace** a **Interní poznámka pro ordinaci** na něm ještě nejsou.*
 
 ### Klient k rezervaci: Klient… a Spárovat
 
@@ -248,10 +278,11 @@ vybíráte, a dole je nejvýš **jedno hlavní tlačítko** (a Zavřít):
 | lišta **Kartotéka…** | Kartotéka | žádné – jen hledání, prohlížení, nový klient a úpravy |
 | **Objednat**, krok Klient a zvíře › **+ Nový klient** / **Upravit** / majitel bez zvířete | Vybrat klienta a zvíře pro objednání | **Vybrat** – klient a zvíře se zapíšou do formuláře Objednat (kapitola 4) |
 | **Pokladna**, tlačítko **Klient** u účtu | Klient k účtu v pokladně | **Vybrat k účtu** – klient bude zákazníkem rozdělaného účtu |
-| **Dnes**, **Klient…** / **Spárovat** u rezervace; detail na **tabuli** › **Klient…** | Klient k rezervaci 21:00 Kontrola | **Přiřadit k rezervaci** – klient a zvíře se zapíšou k té rezervaci (kapitola 2) |
+| **Dnes**, **Klient…** / **Spárovat** u rezervace; detail v **Kalendáři** › **Klient…** | Klient k rezervaci 21:00 Kontrola | **Přiřadit k rezervaci** – klient a zvíře se zapíšou k té rezervaci (kapitola 2) |
 | **Dnes**, **+ Bez objednání** | Přijmout bez objednání | **Přijmout** – s výběrem lékařky; zvíře jde do čekárny (kapitola 2) |
+| **Dnes**, **Spárovat…** u objednávky z WinVetu; obrazovka Ordinace, nabídka **…** › **Spárovat…** | Spárovat s objednávkou z WinVetu 18:30 | **Přiřadit k objednávce** – zvíře se spáruje s objednávkou (kapitola 2) |
 
-Tlačítka, která potřebují zvíře (Vybrat, Přiřadit k rezervaci, Přijmout), jsou šedá, dokud
+Tlačítka, která potřebují zvíře (Vybrat, Přiřadit k rezervaci, Přijmout, Přiřadit k objednávce), jsou šedá, dokud
 zvíře nevyberete („Vyberte zvíře.“, u klienta bez zvířat „Přidejte zvíře (+ Nové zvíře).“);
 s uhynulým zvířetem nejdou.
 
@@ -303,7 +334,7 @@ Napište jméno majitele nebo zvířete, telefon nebo číslo čipu a stiskněte
      červený štítek u zvířete) a **Poznámka**.
    - **Upozornění**: **+ Upozornění** přidá řádek – druh (Kouše, Alergie, Jiné – stejné jako
      v kartě pacienta) a poznámka (např. náhubek, penicilin). Koš řádek odebere. Upozornění se
-     ukazují jako štítky v kartě majitele, na tabuli i v kartě pacienta.
+     ukazují jako štítky v kartě majitele a v kartě pacienta.
 4. **Upravit** (u klienta) a **Upravit <jméno>** (u zvířete) otevřou stejný formulář s vyplněnými
    údaji. **Uložit** (u klienta **Uložit klienta**) změny zapíše, **Zrušit** je zahodí.
 5. Jen při úpravě zvířete (ne při registraci) je dole **Uhynulý** a pak **Datum úhynu**. Po
@@ -372,13 +403,18 @@ se ukáže, až je předchozí vyplněný.
    má celý den jedna) a počet volných časů. Když je volno jen v jedné, vybere se sama a tento krok
    se neukáže. Vybraná ordinace zůstane i po změně dne.
 5. **Čas** – volné časy vybrané ordinace, rozdělené na dopoledne a odpoledne. Počítají se stejně
-   jako na tabuli a na webu.
+   jako v kalendáři a na webu.
+   Pod nimi je řádek **Obsazený čas:** pro čas, který se nenabízí, protože tam už je jiná rezervace
+   nebo záznam z WinVetu. Zadejte čas, vyberte ordinaci a klikněte **Vybrat**. Po **Objednat** se
+   otevře okno **Termín je obsazený**, které napíše, co tam je: **Přesto objednat** rezervaci uloží,
+   **Zpět** nic neuloží. Přes úplnou blokaci to nejde. Čas, kde nic není, ale úkon se tam nenabízí,
+   pokladna odmítne („Čas … se pro tento úkon v této ordinaci nenabízí – vyberte jiný.“).
 
 Dole je **souhrn** celé objednávky jednou větou, třeba „Rex · Kontrola · čt 22. 10. 2026 9:30 ·
 Ordinace 2 · MVDr. Malá“ (ve státní svátek s červeným upozorněním „Státní svátek: …“ – objednat
-jde normálně), pod ním nepovinná **poznámka** a jediné tlačítko **Objednat**. Zkontrolujte
+jde normálně), pod ním nepovinná **poznámka** a tlačítko **Objednat**. Zkontrolujte
 souhrn a klikněte. Objeví se potvrzení „Objednáno: čt 22. 10. 2026 9:30 · Rex“; rezervace je
-potvrzená a je na tabuli i v Přicházejí toho dne.
+potvrzená a je v Kalendáři i v Přicházejí toho dne.
 
 Potom se **formulář vyprázdní** pro dalšího klienta (klient a zvíře, úkon, lékařka, ordinace,
 čas, poznámka); zůstane jen den. Zelené potvrzení zmizí, jakmile začnete další objednání.
@@ -386,32 +422,36 @@ Potom se **formulář vyprázdní** pro dalšího klienta (klient a zvíře, úk
 ![Objednat – klient, časté úkony, nejbližší volný čas a řada dnů se „zavřeno“](img/recepce-objednat.png)
 
 **E-mail klientovi:** když má majitel v kartotéce e-mail, dostane potvrzení rezervace
-automaticky (stejné jako z průvodce na tabuli). Bez e-mailu se nic neposílá – termín mu řekněte.
+automaticky (stejné jako z průvodce v aplikaci Rezervace). Bez e-mailu se nic neposílá – termín mu řekněte.
 
-Když mezitím termín obsadil někdo jiný (web, kolegyně), objeví se „Termín … už mezitím někdo
-obsadil – vyberte jiný.“ a časy se načtou znovu. Uhynulé zvíře objednat nejde.
+Když mezitím termín obsadila jiná rezervace (web, kolegyně), objeví se stejné okno **Termín je
+obsazený**: vyberte jiný čas, nebo klikněte **Přesto objednat**. Když tam mezitím přibyla úplná
+blokace, objeví se „Termín … už mezitím někdo obsadil – vyberte jiný.“ a časy se načtou znovu.
+Uhynulé zvíře objednat nejde.
 
-**Tabule** vedle Objednat otevře tabuli vybraného dne v okně nad pokladnou (kapitola 5); vybraný
+**Kalendář** vedle Objednat otevře kalendář vybraného dne v okně nad pokladnou (kapitola 5); vybraný
 klient zůstane.
 
-V režimu **Přesunout rezervaci** (z tabule) vás zpět k běžnému objednání vrátí **Nepřesouvat**
+V režimu **Přesunout rezervaci** (z Kalendáře) vás zpět k běžnému objednání vrátí **Nepřesouvat**
 nebo znovu kliknutí na **Objednat** v liště. Úkon a čas přesouvané rezervace se přitom zruší –
 formulář začíná od výběru úkonu.
 Při přesouvání chybí krok Klient a zvíře; souhrn ukazuje přesouvané zvíře a tlačítko je **Přesunout**.
 
-## 5. Tabule
+## 5. Kalendář
 
-Tlačítko **Tabule** v liště (nebo **Tabule** vedle Objednat na záložce Objednat) otevře velké okno
-s tabulí dne přímo nad pokladnou – pokladna ani rozepsaný účet pod ním se nemění a nic se
+Tlačítko **Kalendář** v liště (nebo **Kalendář** vedle Objednat na záložce Objednat) otevře velké okno
+s kalendářem dne přímo nad pokladnou – pokladna ani rozepsaný účet pod ním se nemění a nic se
 nepřepíná do jiné stránky.
 
-![Tabule v pokladně](img/tabule-v-pokladne.png)
+![Kalendář v pokladně](img/tabule-v-pokladne.png)
+
+*Obrázek je starší: nadpis je dnes **Kalendář**, přibyl přepínač **Vše | Web | Klinika** s legendou a rezervace jsou bílé karty s barevnými proužky.*
 
 - **Sloupce** jsou ordinace (u každé lékařky ve službě s časem), vlevo časová osa, červená čára
   je teď. Šrafované je mimo ordinační dobu, šedé šrafované pruhy jsou blokace („jen web“ jsou
   světlé – recepce tam objednat smí).
 - Svislý barevný pruh u levého okraje sloupce je **služba lékařky** (iniciály a čas).
-- **Web, nebo klinika** – pod lištou tabule je přepínač **Vše | Web | Klinika** a jednořádková
+- **Web, nebo klinika** – pod horní lištou je přepínač **Vše | Web | Klinika** a jednořádková
   legenda:
 
   | Štítek vlevo na kartě | Význam |
@@ -422,50 +462,55 @@ nepřepíná do jiné stránky.
 
   **Web** ukáže jen webové rezervace, **Klinika** jen ty založené na klinice; záznamy z WinVetu
   jsou jen ve **Vše**, blokace jsou vidět vždy. Volbu si pamatuje prohlížeč (pokladna zvlášť
-  od backendové tabule). Když filtr něco skrývá, je vpravo „skryto: N“ – skrytý čas je pořád
+  od kalendáře v aplikaci Rezervace). Když filtr něco skrývá, je vpravo „skryto: N“ – skrytý čas je pořád
   obsazený.
 - **Rezervace** jsou bílé karty s proužkem vpravo v barvě úkonu, proužek vlevo v barvě lékařky, štítek WEB / iniciály toho, kdo
   ji založil, iniciály lékařky, čas,
-  zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Proběhlé a nedorazivší
-  jsou bledé.
-- **Záznamy z WinVetu** jsou šedé šrafované karty se štítkem **WinVet** (proužek v barvě
+  zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Má-li rezervace **Popis**,
+  je před jménem zvířete. Proběhlé a nedorazivší jsou bledé. Červený obrys znamená, že klient žádá
+  o zrušení (kapitola 2). Rezervace, které se překrývají, stojí vedle sebe.
+- **Záznamy z WinVetu** jsou světle šedé karty se štítkem **WinVet** (proužek v barvě
   WinVetu, zvíře a majitel z kartotéky, jinak text z WinVetu). Jen pro čtení: nejdou přetáhnout,
   klik na ně nic nedělá (po najetí ukážou čas a činnost). Jejich čas je obsazený – Objednat ho
   nenabídne. Celodenní záznamy WinVetu jsou štítky „WinVet · …“ v hlavičce ordinace a nic
   neblokují.
 - Ve státní svátek je u data červený štítek „Státní svátek: …“ (když web ve svátky neobjednává,
   s „· web neobjednává“).
-- **‹ Dnes ›** a pole s datem přepínají den; tabule se posune na „teď“ (dnes), u jiného dne na
-  začátek. Při hodně ordinacích se tabule posouvá i do stran.
-- Tabule se sama obnovuje (změna z webu, od kolegyně nebo z backendu se ukáže hned, záložně
-  každých 30 s).
+- **‹ Dnes ›** a pole s datem přepínají den; kalendář se posune na „teď“ (dnes), u jiného dne na
+  začátek. Při hodně ordinacích se kalendář posouvá i do stran.
+- Kalendář se sám obnovuje (změna z webu, od kolegyně nebo z aplikace Rezervace se ukáže hned,
+  záložně každých 30 s).
 - **Zavřít** (nebo křížek) vás vrátí tam, kde jste byli.
 
 ### Klik na rezervaci
 
 Otevře se okno s detailem: klient (a telefon), zvíře, úkon, lékařka, čas a ordinace, stav
 a **Zdroj** („WEB z webu – objednal(a) se klient sám“, nebo „Klinika – založil(a) Jana
-Nováková“ s datem a časem založení).
+Nováková“ s datem a časem založení). Když jsou vyplněné, jsou tu i **Popis**, **Důvod návštěvy**
+a **Poznámka**.
 
 ![Detail rezervace](img/tabule-detail.png)
+
+*Obrázek je starší: chybí na něm řádek **Zdroj** a tlačítko **Nedorazil**.*
 
 - **Přijmout** – jen u dnešní rezervace, která ještě nemá návštěvu; zvíře je pak v čekárně
   (stejně jako Přijmout na záložce Dnes, i s oknem pro interní poznámku pro ordinaci). Webová rezervace bez spárovaného klienta se přijme až
   po **Klient…**.
 - **Klient…** – Kartotéka pro tuto rezervaci (stejné jako Klient… na záložce Dnes, kapitola 2):
-  vyberte klienta a zvíře a **Přiřadit k rezervaci**. Tabule zůstane otevřená pod ním.
+  vyberte klienta a zvíře a **Přiřadit k rezervaci**. Kalendář zůstane otevřený pod ním.
   U proběhlé a nedorazivší rezervace Klient… není.
 - **Přesunout** – okno se zavře a otevře se záložka Objednat v režimu **Přesunout rezervaci**:
   úkon a lékařka jsou předvyplněné, vyberte den a volný čas a klikněte **Přesunout**.
   **Nepřesouvat** režim ukončí.
 - **Zrušit rezervaci** – zeptá se ještě v okně („Opravdu zrušit? Klientovi odejde e-mail
   o zrušení.“, nebo bez e-mailu „Opravdu zrušit tuto rezervaci?“) a po **Ano, zrušit rezervaci**
-  rezervaci zruší. E-mail o zrušení odejde stejně jako při zrušení v backendu – jen když má
-  rezervace e-mail.
+  rezervaci zruší. **Ne** nechá vše, jak bylo. E-mail o zrušení odejde stejně jako při zrušení
+  v aplikaci Rezervace – jen když má rezervace e-mail. Pak je v okně i pole **Zpráva klientovi
+  (nepovinné)**, např. důvod zrušení nebo nabídka jiného termínu; text se vloží do e-mailu.
 - **Nedorazil** – u potvrzené rezervace z dneška nebo dřívějška, na kterou klient nepřišel
   (ještě nemá návštěvu). Zeptá se „Označit Rex · Jana Nováková v 9:00 jako nedorazil?“ a po
-  **Ano, nedorazil** dá rezervaci stav Nedorazil – stejně jako tlačítko Nedorazil v backendu,
-  klientovi nic neodejde. Tabule se obnoví a klient má v Kartotéce štítek **Nedorazil N×**.
+  **Ano, nedorazil** dá rezervaci stav Nedorazil – stejně jako tlačítko Nedorazil v aplikaci
+  Rezervace, klientovi nic neodejde. Kalendář se obnoví a klient má v Kartotéce štítek **Nedorazil N×**.
   U budoucí rezervace, u přijatého klienta a u kopie ve druhé ordinaci tlačítko není (kopie se
   označí s hlavní rezervací).
 
@@ -483,21 +528,24 @@ ordinaci přímo v okně, věta se mění s nimi. **Do** se posouvá s **Od** (d
 přepsáním **Do** rezervaci prodloužíte nebo zkrátíte. Dostane-li klient e-mail o změně termínu, okno to
 napíše a ukáže zaškrtnuté **Poslat klientovi e-mail o změně**; po odškrtnutí proběhne tento
 přesun bez e-mailu (v historii rezervace zůstane „Klient nebyl o změně informován.“). Teprve
-**Přesunout** rezervaci přesune; **Zrušit** nechá vše, jak bylo. Platí stejná pravidla jako na backendové tabuli:
-v ordinaci musí sloužit lékařka, která úkon dělá (jinak se lékařka vymění za tu, která tam
-slouží), a čas musí být volný. Když to nejde, objeví se česká hláška (např. „Termín … je
-obsazený“) přímo v okně, okno zůstane otevřené a rezervace tam, kde byla – zvolte jiný čas.
+**Přesunout** rezervaci přesune; **Zrušit** nechá vše, jak bylo. Platí stejná pravidla jako
+v kalendáři v aplikaci Rezervace: v ordinaci má sloužit lékařka, která úkon dělá (když tam dosavadní
+lékařka neslouží, vymění se za tu, která tam slouží), a čas má být volný. Když to nejde, objeví se
+česká hláška (např. „Termín … je obsazený“) přímo v okně, okno zůstane otevřené a rezervace tam,
+kde byla. Zvolte jiný čas, nebo klikněte **Přesto přesunout** – přesun proběhne a v historii
+rezervace zůstane poznámka. Toto tlačítko se ukáže, když vadí jiná rezervace, záznam z WinVetu
+nebo lékařka ve službě. Přes úplnou blokaci přesun nejde.
 Při změně času dostane klient e-mail o přesunu, pokud ho má a pokud ho neodškrtnete.
 
 ### Klik do volného místa
 
-Okno se zavře a otevře se **Objednat** s předvyplněným dnem a nahoře s pruhem „Z tabule:
+Okno se zavře a otevře se **Objednat** s předvyplněným dnem a nahoře s pruhem „Z kalendáře:
 ordinace, den, čas“. Vyberte úkon: když je ten čas pro úkon volný, je hned vybraný („Čas je
 vybraný.“), jinak vyberte z volných časů dne. Vybraný klient (když jste přišli z Objednat)
 zůstane.
 
-Žádosti z webu, nové blokace a plánování dopředu zůstávají na backendové tabuli (vedení,
-[návod Rezervace](../../elite_vet_reservation/doc/recepce.md)).
+Žádosti z webu a nové blokace se řeší v kalendáři v aplikaci Rezervace
+([návod Rezervace](../../elite_vet_reservation/doc/recepce.md)); v pokladně to nejde.
 
 ## 6. Konec dne – uzávěrka
 
@@ -526,20 +574,22 @@ Když ho v menu nevidíte, přihlaste se PINem zaměstnance, který uzávěrku d
 
 ## 8. Moji pacienti dnes
 
-Po přihlášení se lékařce a sestře otevře **Karta pacienta** (aplikace **Ordinace**). Pod polem
-pro hledání je **Moji pacienti dnes** – lékařka vidí své pacienty (objednané i neobjednané),
-sestra a účet bez spárované lékařky vidí všechny.
+Po přihlášení se lékařce a sestře otevře **Karta pacienta** (aplikace **Ordinace**). Účet ordinace
+a účet propojený s členem týmu začínají na obrazovce Ordinace, **Kartu pacienta** najdou v menu.
+Pod polem pro hledání je **Moji pacienti dnes** – účet spárovaný s lékařkou vidí její pacienty
+(objednané i neobjednané), účet bez spárování vidí všechny.
 
 ![Moji pacienti dnes](img/ordinace-dnes.png)
 
 Pacient vypadá stejně jako na obrazovce Ordinace: vlevo barevný pruh s časem a stavem
 (oranžová čeká, zelená v ordinaci, modrošedá objednaný, šedá hotovo), vpravo zvíře, majitel,
-úkon, ordinace a lékařka. Klik na pacienta otevře jeho kartu.
+úkon, ordinace a lékařka (ta jen tam, kde seznam ukazuje všechny pacienty). Klik na pacienta otevře
+jeho kartu.
 
 | Skupina | Kdo v ní je |
 |---|---|
-| **Dnes jsou objednaní** (ještě nepřišli) | dnešní rezervace, které recepce ještě nepřijala |
-| **Čekají** | recepce je přijala, podle příchodu: velký čas příchodu, „Čeká 6 min“, tlačítko **Zavolat**. Neobjednaní mají „bez objednání“; neobjednaní bez lékařky mají „**Kterákoli lékařka**“ a vidí je všechny lékařky. |
+| **Dnes jsou objednaní** (ještě nepřišli) | dnešní rezervace, které recepce ještě nepřijala (objednávky z WinVetu se tu ukážou až po přijetí) |
+| **Čekají** | recepce je přijala, podle příchodu: velký čas objednání (u neobjednaných příchodu), pod ním „příchod 18:05“, „Čeká 6 min“, tlačítko **Zavolat**. Neobjednaní mají „bez objednání“; neobjednaní bez lékařky mají „**Kterákoli lékařka**“ a vidí je všechny lékařky. |
 | **V ordinaci** | zavolaní, „V ordinaci od 18:15“ |
 | **Hotovo dnes** | uzavřené návštěvy (Hotovo, k pokladně) |
 
@@ -556,18 +606,19 @@ a v kartě pacienta žlutý pruh pod záhlavím „Poznámka recepce …“. Je 
 1. U pacienta v **Čekají** klikněte **Zavolat**. Pacient přejde do **V ordinaci**
    a otevře se jeho karta. Pacienta „kterákoli lékařka“ si tím vezmete vy – od té chvíle je
    jen ve vašem seznamu.
-2. Stejně funguje, když kartu pacienta, který čeká, otevřete jinak (ze seznamu, z tabule,
-   z hledání) – pacient se sám přesune do V ordinaci.
-3. V recepci se u pacienta hned ukáže **V ordinaci**.
+2. V recepci se u pacienta hned ukáže **V ordinaci**. Pozor: když kartu pacienta, který čeká, jen
+   otevřete (kliknutím v seznamu, z hledání), do ordinace se nepřesune a zůstane v **Čekají**.
 
 ![Po zavolání](img/ordinace-v-ordinaci.png)
 
-4. Zapište návštěvu a účet v kartě pacienta (**Úkon**, **Lék ze skladu**, **Přidat balíček**).
+*Obrázek je starší: záznam má dnes jedno pole **Záznam z vyšetření** místo polí Anamnéza a Vyšetření a záhlaví karty je nižší.*
+
+3. Zapište návštěvu a účet v kartě pacienta (**Úkon**, **Lék ze skladu**, **Přidat balíček**).
    Jak je karta rozvržená, popisuje [Ordinace – 7. Karta pacienta](ordinace.md#7-karta-pacienta).
-5. Pro recepci můžete nad tlačítkem **Hotovo, k pokladně** napsat **Poznámku pro recepci**
+4. Pro recepci můžete nad tlačítkem **Hotovo, k pokladně** napsat **Poznámku pro recepci**
    (interní, klient ji neuvidí) – recepce ji uvidí u účtu v K pokladně a před platbou. Ukládá
    se sama; opravit nebo smazat ji jde i po uzavření záznamu (dokud není zrušený).
-6. Na konci klikněte **Hotovo, k pokladně** a potvrďte. Pacient přejde do **Hotovo dnes**
+5. Na konci klikněte **Hotovo, k pokladně** a potvrďte. Pacient přejde do **Hotovo dnes**
    a recepce ho hned vidí ve sloupci **K pokladně**. Podrobně (štítky, znovuotevření,
    rozpracovaný účet v pokladně) to popisuje
    [Pokladna a sklad – 1. Jak se účet dostane k pokladně](../../elite_vet_sale/doc/pokladna-a-sklad.md#1-jak-se-účet-dostane-k-pokladně).
@@ -583,8 +634,8 @@ Správce = Vedení; vyšší role má vše, co nižší – kromě pokladny a sk
 
 | Role | Po přihlášení | Menu |
 |---|---|---|
-| Recepce | pokladna Recepce | Prodejní místa (pokladna), Rezervace, Diskuze, ze Skladu jen Přehled skladu a Příjem zboží |
-| Sestra, Lékařka | Karta pacienta (Moji pacienti dnes) | Ordinace, Rezervace, Diskuze – bez pokladny a skladu |
+| Recepce | pokladna Recepce | Prodejní místa (pokladna), z aplikace Ordinace jen obrazovka Ordinace, Rezervace, Diskuze, ze Skladu jen Přehled skladu a Příjem zboží |
+| Sestra, Lékařka | Karta pacienta (Moji pacienti dnes); účet ordinace a účet propojený s členem týmu obrazovka Ordinace | Ordinace, Rezervace, Diskuze – bez pokladny a skladu |
 | Vedení | Přehled tržeb a výdajů | vše |
 
 - **Pokladna a sklad (recepce)** je samostatné pole ve formuláři uživatele (oddíl „Elite Vet –
@@ -593,7 +644,7 @@ Správce = Vedení; vyšší role má vše, co nižší – kromě pokladny a sk
   **Lékařka**, odebere se (i s právy pokladny a skladu). Má-li zboží přijímat i sestra, zapněte
   jí ho ručně **po** nastavení role – ruční změna zůstane. Vedení ho má vždy.
 - Lékařka a sestra dál uzavírají účty (**Hotovo, k pokladně**) a vidí stav platby v kartě
-  pacienta i na tabuli; do pokladny ani do skladu se nedostanou.
+  pacienta i v kalendáři; do pokladny ani do skladu se nedostanou.
 
 - Výchozí obrazovka se nastaví sama, když uživateli přidělíte roli (nebo ji změníte). Vlastní
   výchozí obrazovku, kterou uživatel má nastavenou ručně, to nepřepíše.
@@ -601,11 +652,14 @@ Správce = Vedení; vyšší role má vše, co nižší – kromě pokladny a sk
   uživatele → **Akce → Nastavit výchozí obrazovky**. Nastaví výchozí obrazovky **všem** interním
   uživatelům podle role, nejen zaškrtnutým (vlastní zůstanou). Použijte, když jste měnili členy přímo ve formuláři skupiny.
 - **Skrytá menu:** Prodej, Fakturace, Zaměstnanci, WinVet data, Rozpis služeb, Web a Přehledy
-  vidí jen vedení, Aplikace jen správce systému; recepce nevidí Ordinaci; sestra a lékařka nevidí
-  Prodejní místa ani Sklad. Lékařky vidí služby na tabuli.
+  vidí jen vedení, Aplikace jen správce systému; recepce vidí v aplikaci Ordinace jen obrazovku
+  Ordinace; sestra a lékařka nevidí Prodejní místa ani Sklad. Lékařky vidí služby v kalendáři.
 - **Účetní** potřebuje roli **Vedení** – Fakturace je jen pro vedení.
 - Každý, kdo ráno **otevírá pokladnu**, musí mít u svého uživatele vyplněný **e-mail**. Bez něj
   Odoo otevření odmítne („nakonfigurujte e-mailovou adresu odesílatele“).
+- **Jen pro čtení:** **Nastavení › Elite Vet › Provoz** › **Ordinace, karty a pokladna jen pro čtení**.
+  Přepínač vidí jen správce systému. Zapnutý platí pro všechny kromě role Správce rezervací; co
+  dělá, popisuje část [Režim Jen pro čtení](#režim-jen-pro-čtení).
 
 ## 11. Zaměstnanci s PINem
 
