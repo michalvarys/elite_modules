@@ -6,7 +6,11 @@
 
 services:
   odoo:
-    image: odoo:18
+    # odoo:18 + Python balicky pro mcp_server (viz Dockerfile.dev)
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: odoo-elite:18
     container_name: odoo
     depends_on:
       - db
@@ -16,6 +20,26 @@ services:
       - odoo-data:/var/lib/odoo
       - ./:/mnt/modules:ro
       - ./config:/etc/odoo:ro
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    restart: unless-stopped
+
+  # MCP endpoint pro AI agenty: http://localhost:8070/mcp, napevno databaze ev_test
+  # (viz config/odoo-mcp.conf). Sdili databazi i filestore s hlavni instanci.
+  odoo-mcp:
+    image: odoo-elite:18
+    container_name: odoo-mcp
+    depends_on:
+      - db
+      - odoo
+    ports:
+      - "8070:8069"
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - ./:/mnt/modules:ro
+      - ./config/odoo-mcp.conf:/etc/odoo/odoo.conf:ro
     environment:
       HOST: db
       USER: odoo

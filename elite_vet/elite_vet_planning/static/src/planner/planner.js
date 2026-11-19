@@ -268,8 +268,8 @@ export class Planner extends Component {
     canHideOnWeb(shift) { return shift.id > 0 && shift.role === "doctor"; }
     webTitle(shift) {
         return shift.hide_on_web
-            ? _t("Not listed on /rozpis-lekaru (still in the reservation calendar). Click to show it.")
-            : _t("Listed on /rozpis-lekaru. Click to hide it there, the service stays in the reservation calendar.");
+            ? _t("Not on the website: neither on /rozpis-lekaru nor in online booking (still in the reservation calendar). Click to show it.")
+            : _t("On the website: /rozpis-lekaru and online booking. Click to hide it there, the service stays in the reservation calendar.");
     }
     get publishedLabel() { return this.state.data.published ? _t("On the website") : _t("Not on the website yet"); }
     async toggleWeb(shift) { await this.call("set_shift_web", shift.id, shift.hide_on_web); }

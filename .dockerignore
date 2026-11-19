@@ -1,0 +1,13 @@
+.git
+.github
+.superpowers
+.wt_*
+docs
+**/__pycache__
+**/*.pyc
+*.zip
+*.dump
+docker-compose*.yml
+# mcp_server ma proprietarni licenci a v gitu neni, do image nepatri.
+# Lokalne ho do kontejneru dostane volume ./:/mnt/modules.
+elite_common/mcp_server

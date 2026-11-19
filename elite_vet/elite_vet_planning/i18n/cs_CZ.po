@@ -95,8 +95,8 @@ msgstr "Směna má buď člena týmu, nebo vepsané jméno výpomoci, ne obojí.
 #. module: elite_vet_planning
 #. odoo-javascript
 #: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
-msgid "A4 landscape: plan, overview by person and hours"
-msgstr "A4 na šířku: plán, přehled po lidech a hodiny"
+msgid "A4 landscape: plan, hours and overview by person"
+msgstr "A4 na šířku: plán, hodiny a přehled po lidech"
 
 #. module: elite_vet_planning
 #. odoo-javascript
@@ -605,11 +605,11 @@ msgstr "Zbývá (dny)"
 #. odoo-javascript
 #: code:addons/elite_vet_planning/static/src/planner/planner.js:0
 msgid ""
-"Listed on /rozpis-lekaru. Click to hide it there, the service stays in the "
-"reservation calendar."
+"On the website: /rozpis-lekaru and online booking. Click to hide it there, "
+"the service stays in the reservation calendar."
 msgstr ""
-"Je na /rozpis-lekaru. Kliknutím ji tam skryjete, v kalendáři rezervací "
-"služba zůstane."
+"Je na webu: /rozpis-lekaru i online objednávání. Kliknutím ji tam skryjete, "
+"v kalendáři rezervací služba zůstane."
 
 #. module: elite_vet_planning
 #: model:ir.model,name:elite_vet_planning.model_elite_vet_doctor
@@ -700,11 +700,11 @@ msgstr "Další měsíc"
 #. odoo-javascript
 #: code:addons/elite_vet_planning/static/src/planner/planner.js:0
 msgid ""
-"Not listed on /rozpis-lekaru (still in the reservation calendar). Click to "
-"show it."
+"Not on the website: neither on /rozpis-lekaru nor in online booking (still "
+"in the reservation calendar). Click to show it."
 msgstr ""
-"Na /rozpis-lekaru se nevypisuje (v kalendáři rezervací je). Kliknutím ji "
-"zobrazíte."
+"Na webu není: ani na /rozpis-lekaru, ani v online objednávání (v kalendáři "
+"rezervací je). Kliknutím ji zobrazíte."
 
 #. module: elite_vet_planning
 #. odoo-javascript

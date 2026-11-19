@@ -35,20 +35,27 @@ ordinaci. Vlastní účet lékařky nebo sestry začne na ordinaci, kde má podl
 **Pacient** vypadá všude stejně – na obrazovce Ordinace i v Moji pacienti dnes:
 
 - vlevo **barevný pruh s časem**: barva říká stav – **oranžová čeká**, **zelená je v ordinaci**,
-  **modrošedá je objednaná** (ještě nepřišla), **šedá je hotová**. Velký čas je příchod (u toho,
-  kdo ještě nepřišel, čas rezervace), pod ním „obj. 9:20“, když přišel jindy než na objednaný čas,
-  nebo „bez objednání“, a stav: **Čeká 12 min** / **V ordinaci od 9:25** / **Objednáno** / **Hotovo**;
+  **modrošedá je objednaná** (ještě nepřišla), **šedá je hotová**. Velký čas je objednaný čas
+  (u klienta bez objednání příchod), pod ním „příchod 9:20“, když už přišel, nebo „bez objednání“,
+  a stav: **Čeká 12 min** / **V ordinaci od 9:25** / **Objednáno** (u objednávky z WinVetu
+  **z WinVetu**) / **Hotovo**;
 - vpravo zvíře (druh), majitel, úkon a lékařka;
 - **upozornění** na pacientovi červeně (kouše, alergie…);
 - **poznámka recepce** žlutě s lístečkem – co recepce napsala při příjmu, např. „Klient
   spěchá“. Je interní, klient ji nevidí;
 - jedno **hlavní tlačítko** podle stavu: u čekajícího **Zavolat**, u pacienta v ordinaci
   **Otevřít kartu**. Všechno ostatní je v nabídce **…**: **Otevřít kartu** (u čekajícího
-  a objednaného), **Poznámka recepce…** (upravit nebo smazat) a **Do jiné ordinace** (seznam
-  ordinací přímo v nabídce, a Nepřiřazení).
+  a objednaného), **Spárovat…** (objednávka z WinVetu bez karty, kapitola 5), **Poznámka recepce…**
+  (upravit nebo smazat) a **Do jiné ordinace** (seznam ordinací přímo v nabídce, a Nepřiřazení).
 
 Obrazovka se obnovuje sama: hned po každé změně (příjem, zavolání, přesun, Hotovo) a nejpozději
 každých 30 sekund. Tlačítkem ⟳ ji obnovíte hned.
+
+**Jen pro čtení.** Dokud se pracuje ve WinVetu, může být nahoře žlutý pruh „Jen pro čtení. Pracuje se
+ve WinVetu, data se sem přenášejí. Změny může dělat jen správce rezervací.“ Obrazovka pak ukazuje
+data, ale nic neuloží: tlačítko **Zavolat** chybí a **Vzít dalšího**, přesun do ordinace, poznámka
+i **Spárovat…** skončí hláškou. Správce rezervací pracuje normálně. Celý režim popisuje návod
+[Recepce v pokladně](recepce-v-pokladne.md#režim-jen-pro-čtení).
 
 ## 3. Všechny ordinace
 
@@ -56,7 +63,9 @@ každých 30 sekund. Tlačítkem ⟳ ji obnovíte hned.
 
 Nahoře je souhrn: kolik pacientů **čeká**, kolik je **v ordinacích** a kolik je **nepřiřazených**.
 Pod ním jsou sloupce **Nepřiřazení** a pak jedna ordinace vedle druhé. V hlavičce ordinace je,
-kdo v ní **teď slouží** (podle Rozpisu lékařů), nebo „Teď nikdo ve službě“.
+kdo v ní **teď slouží** (podle Rozpisu lékařů), nebo „Teď nikdo ve službě“. Klik na hlavičku
+ordinace ji otevře (kapitola 4). Zpět se vrátíte tlačítkem **Všechny ordinace** se šipkou nad jejím
+názvem.
 
 Ve sloupci jsou části ve stejném pořadí jako v jedné ordinaci:
 - **Dnes jsou objednaní** (ještě nepřišli): dnešní objednávky této ordinace, klient ještě nedorazil
@@ -73,7 +82,7 @@ hotový), má široký sloupec – aspoň 360 px, a když je místo, sloupce se 
 kde dnes **nikdo** není, je jen úzký proužek (název, kdo slouží a „nikdo“); stejně Nepřiřazení,
 když nikdo nečeká na ordinaci („nikdo nečeká“). Do úzkého sloupce jde pacienta přetáhnout
 stejně jako do širokého – sloupec se pak rozšíří. Když se široké sloupce na obrazovku nevejdou,
-nezužují se: tabule se posouvá **do strany** (posuvník dole, kolečko myši se Shiftem nebo
+nezužují se: obrazovka se posouvá **do strany** (posuvník dole, kolečko myši se Shiftem nebo
 prstem). Hlavičky sloupců zůstávají nahoře, i když sjedete dolů. Dlouhý text z WinVetu je na
 kartě zkrácený na 2–3 řádky („…“); celý text ukáže najetí myší na kartu.
 
@@ -83,7 +92,9 @@ použijte nabídku **…** › **Do jiné ordinace** a vyberte ordinaci.
 
 ![Nabídka …](img/ordinace-menu.png)
 
-Přesun mění jen ordinaci návštěvy. **Rezervace zůstane ve své ordinaci**, takže tabule rezervací
+*Obrázek je starší: sloupce jsou dnes v pořadí **Dnes jsou objednaní**, **Čekají**, **V ordinaci** a pod velkým časem je „příchod“ místo „obj.“.*
+
+Přesun mění jen ordinaci návštěvy. **Rezervace zůstane ve své ordinaci**, takže kalendář rezervací
 ukazuje pořád původní ordinaci.
 
 ## 4. Jedna ordinace
@@ -96,7 +107,7 @@ oranžový pruh „**2 pacienti čekají na ordinaci**“:
 - **Zobrazit** rozbalí jejich seznam; u každého je **Vzít do této ordinace**.
 
 Pod pruhem jsou zleva doprava tři sloupce, jak den plyne: **Dnes jsou objednaní** (ještě
-nepřišli) | **Čekají** (nejdéle čekající nahoře) | **V ordinaci**. Pod posledním je sbalené
+nepřišli) | **Čekají** (podle objednaného času, klienti bez objednání podle příchodu) | **V ordinaci**. Pod posledním je sbalené
 **Hotovo dnes: N**. Prázdný sloupec má jen krátký řádek („Všichni objednaní už přišli.“,
 „Nikdo nečeká.“). Kdo přišel, už mezi objednanými není – je v Čekají nebo V ordinaci.
 
@@ -106,8 +117,8 @@ nejdůležitější pacienti, kteří už čekají.
 
 - **Zavolat** (u čekajícího): pacient jde do stavu V ordinaci a do této ordinace.
 - **Otevřít kartu** (u pacienta v ordinaci, ostatní v nabídce …): otevře kartu pacienta na dnešní
-  návštěvě, stejně jako v „Moji pacienti dnes“. Zpět se vrátíte drobečkovou navigací nahoře
-  (Ordinace).
+  návštěvě, stejně jako v „Moji pacienti dnes“. Pacienta to do ordinace nepřesune, to dělá jen
+  **Zavolat**. Zpět se vrátíte tlačítkem se šipkou **Ordinace** vlevo nahoře v kartě.
 - Návštěvu uzavírá karta pacienta jako dosud: **Hotovo, k pokladně**.
 
 ### Kdo je zapsaný jako lékařka
@@ -141,8 +152,9 @@ je v „Dnes jsou objednaní“ s textem z WinVetu. V nabídce **…** je **Spá
 k objednávce**. Pak je u objednávky zvíře a v nabídce **Otevřít kartu**.
 
 ![Spárovat s objednávkou z WinVetu](img/ordinace-sparovat.png)
- Spárovat můžou recepce,
-sestra i lékařka; uloží se jen v Odoo (viz návod Recepce v pokladně › Objednaní ve WinVetu).
+
+Spárovat můžou recepce, sestra i lékařka; uloží se jen v Odoo (viz návod Recepce v pokladně ›
+Objednaní ve WinVetu).
 
 „Moji pacienti dnes“ v kartě pacienta ukazují lékařce s vlastním účtem její dnešní pacienty.
 Účty ordinací používají obrazovku Ordinace.
@@ -169,9 +181,10 @@ je v Přístupových právech › Elite Vet jen pro čtení **Člen týmu**.
   změní (vitální hodnoty, záznam z vyšetření, poznámka pro recepci, položky účtu, Hotovo),
   zapíše se jako lékařka záznamu – zase jen místo prázdné nebo automatické. Kdo byl první, zůstává;
   další lékařky, které záznam upraví, se ukážou jako „upravovaly také“ a jsou v historii záznamu.
-  Nad záznamem je „**Ošetřuje:** MVDr. …“. Sestra a recepce lékařku úpravou nemění.
-- **Moji pacienti dnes** v kartě pacienta jsou podle propojení (dřív se lékařka hledala podle jména
-  uživatele).
+  V záhlaví karty je „**Ošetřuje** MVDr. …“, u automaticky doplněné lékařky s dovětkem
+  „(automaticky)“. Sestra a recepce lékařku úpravou nemění.
+- **Moji pacienti dnes** v kartě pacienta jsou podle propojení. Účet bez propojení se k lékařce
+  najde podle stejného jména, pokud je shoda jednoznačná.
 - Recepce s vlastním účtem dál začíná v pokladně, vedení na svém přehledu.
 
 **Vytvořit účty (vedení):** Rozpis služeb › Lékařky › tlačítko **Vytvořit účty** (nebo Akce ›
@@ -194,13 +207,17 @@ a kolik řádků se přeskočilo a proč.
 
 ![Karta pacienta](img/ordinace-v-ordinaci.png)
 
+*Obrázek je starší: záhlaví je dnes nižší a místo polí Anamnéza a Vyšetření je jedno pole **Záznam z vyšetření** s tlačítkem **Šablona**.*
+
 - **Záhlaví** má dva řádky: nahoře jméno zvířete, druh, plemeno, pohlaví a věk, stav dnešní
-  návštěvy („**V ordinaci od 9:25**“, „Čeká od 9:05“, „Hotovo, čeká u pokladny“),
-  **Ošetřuje MVDr. …** a vpravo **Upozornění** a **Upravit pacienta**; pod tím majitel
+  návštěvy („**V ordinaci od 9:25**“, „Čeká od 9:05“, „Hotovo, čeká u pokladny“), objednaný čas
+  („objednáno na 9:00“, nebo „bez objednání“), **Ošetřuje MVDr. …** a vpravo **Upozornění** a **Upravit pacienta**; pod tím majitel
   s telefonem, váha, čip, očkování (a **Záloha: 2 000 Kč**, když má majitel ve WinVetu zálohu se
   zůstatkem) a červené štítky upozornění (kouše, alergie…) – klikem se upraví. Důležitá poznámka u pacienta je oranžový štítek (celý text v bublině).
-- **Dnešní záznam** je uprostřed: čtyři velká pole vitálních hodnot s jednotkami a pod nimi jedno
-  velké pole **Záznam z vyšetření**: anamnéza, nález, diagnóza, léčba i doporučení v jednom textu.
+- **Otevření karty** pacienta, který čeká, nic nemění: zůstane v **Čekají**, dokud ho někdo
+  nezavolá.
+- **Dnešní záznam** je uprostřed: pole **Lékařka**, čtyři velká pole vitálních hodnot s jednotkami
+  a pod nimi jedno velké pole **Záznam z vyšetření**: anamnéza, nález, diagnóza, léčba i doporučení v jednom textu.
   Pole se zvětšuje s textem. Psát můžete po svém; nadpisy jako „Anamnéza:“ jsou na vás.
   Záznam se ukládá sám: ikona mráčku = nic neuloženého, „Ukládám…“, pak „✓ Uloženo 9:31“.
 - **Šablony** (tlačítko **Šablona** vpravo nad polem Záznam z vyšetření):
@@ -218,14 +235,20 @@ a kolik řádků se přeskočilo a proč.
   s jedinou vyplněnou částí má jen ten text, bez nadpisu. V historii karty je jako první řádek
   první věta textu (bez nadpisu).
 - **Účet** je vpravo: nahoře **Úkon** a **Lék ze skladu**, pod nimi položky, **Poznámka pro
-  recepci**, dole celkem, **Hotovo, k pokladně** a **Zpráva pro majitele**.
-- **Historie** je vlevo. Na menší obrazovce (pod 1280 px) je sbalená pod záznamem a účtem –
+  recepci**, dole celkem, **Hotovo, k pokladně** a **Zpráva pro majitele**. Tlačítko **Přidat
+  balíček** je pod záznamem.
+- **Historie** je vlevo, s filtrem **Vše**, **Návštěvy**, **Očkování**. Tabulky z WinVetu (laboratorní
+  výsledky) jsou v ní jako tabulky, řádky a sloupce zůstávají. Na menší obrazovce (pod 1280 px)
+  je sbalená pod záznamem a účtem –
   rozbalí se šipkou u nadpisu. Na tabletu na výšku je všechno pod sebou: záznam, účet, historie.
 - **Šířka sloupců** (obrazovka 1280 px a širší): mezi Historií, Dnešním záznamem a Účtem je
   svislý dělič. Chyťte ho myší nebo prstem a táhněte; nebo na něj klikněte (Tab) a použijte
   šipky ← → (se Shiftem po větších krocích), Home/End = nejužší/nejširší. **Dvojklik** vrátí
   původní šířku. Dnešní záznam má vždy aspoň 440 px. Šířky si pamatuje prohlížeč (každý počítač
   a tablet zvlášť); v anonymním okně platí jen do obnovení stránky.
+- **Jen pro čtení** (kapitola 2): nahoře v kartě je žlutý pruh, do záznamu ani účtu nejde psát
+  a tlačítka **Upozornění**, **Upravit pacienta**, **Hotovo, k pokladně** a **Šablona**
+  nejsou vidět.
 
 ## 8. Tisk zprávy
 
@@ -267,7 +290,7 @@ i vedení.
 **Zpráva z návštěvy z WinVetu** má stejnou hlavičku, pacienta, majitele a podpis. Oddíl
 **Záznam z vyšetření** má měření z WinVetu (čas, teplota,
 hmotnost, tep, dech, tlak) a text záznamu (*Dekurz*) tak, jak je ve WinVetu napsaný (i s jeho
-nadpisy „Anamnéza:“, „Klinické vyšetření:“). Pak **Diagnóza** (a *Případ*, liší-li se),
+nadpisy „Anamnéza:“, „Klinické vyšetření:“ a tabulkami laboratorních výsledků). Pak **Diagnóza** (a *Případ*, liší-li se),
 **Provedené výkony a podané léky** z účtu té návštěvy ve WinVetu – název a množství, bez cen;
 převody peněz („Převod nedoplatku…“) se vynechají – a Další termíny. Ošetřující lékař/ka se
 uvede, jen když je uživatel WinVetu, který návštěvu zapsal, propojený s lékařkou v Odoo
