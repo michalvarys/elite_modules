@@ -4,7 +4,8 @@
 
 - **Part A** is for whoever makes the roster (the Správce rozpisu, Roster manager): **Plánování**
   (Planning), **Personál** (Staff), **Dostupnost a absence** (Availability and absences), **Úseky plánu**
-  (Plan sections), **Požadavky na směny** (Shift requests), the hours balance, export and printing.
+  (Plan sections), **Požadavky na směny** (Shift requests), publishing on the website, the hours
+  balance, the overview by person, export and PDF.
 - **Part B** is for every team member: **Moje směny** (My shifts) and **Moje dostupnost** (My
   availability).
 
@@ -16,7 +17,7 @@ English gloss in brackets the first time it appears in a section.
 
 | Where in the menu | Who sees it | What is there |
 |---|---|---|
-| **Rozpis služeb → Plánování** (Shift roster → Planning) | Správce rozpisu | Monthly plan, Požadavky na směny, **Bilance hodin** (Hours balance), export, print |
+| **Rozpis služeb → Plánování** (Shift roster → Planning) | Správce rozpisu | Monthly plan, Požadavky na směny, **Bilance hodin** (Hours balance), **Přehled po lidech** (Overview by person), export, PDF, publishing on the website |
 | **Rozpis služeb → Personál** (Shift roster → Staff) | Správce rozpisu | Role, abbreviation, contract hours, colour, holiday, account |
 | **Rozpis služeb → Dostupnost a absence** (Shift roster → Availability and absences) | Správce rozpisu | List of all availability and absence records |
 | **Rozpis služeb → Úseky plánu** (Shift roster → Plan sections) | Správce rozpisu | Sections (Recepce, Ordinace 1…), their shifts and times |
@@ -38,9 +39,10 @@ Recommended routine for each month:
 
 1. The team marks in **Moje dostupnost** (My availability) when they can work.
 2. You enter absences in **Požadavky na směny** (Shift requests).
-3. You assign people to shifts in the plan.
-4. You check **Bilance hodin** (Hours balance).
-5. You print or export the plan.
+3. You assign people to shifts in the plan. Clients do not see it on the website yet.
+4. You check **Bilance hodin** (Hours balance) and **Přehled po lidech** (Overview by person).
+5. You **publish** the finished month on the website (chapter 8).
+6. You download the **PDF** for the notice board or export a CSV.
 
 Everything is saved immediately. At the top you see **Ukládání…** (Saving…) and then **Všechny změny
 uloženy** (All changes saved); there is no Save button here.
@@ -94,9 +96,12 @@ Below are the section's **shifts**, each one row of the plan:
 
 ## 4. The Plánování screen (Planning)
 
-At the top, the arrows **‹ ›** change the month. On the right are the buttons **Personál** (Staff),
-**Export CSV** and **Tisk** (Print). Under the bar is the **Požadavky na směny** (Shift requests) panel
-(chapter 6), below it the plan, and at the bottom **Bilance hodin** (Hours balance; chapter 9).
+At the top, the arrows **‹ ›** change the month. Next to the month is the label **Zatím není na webu**
+(Not on the website yet) / **Na webu** (On the website) and the button **Zveřejnit na webu** (Publish on
+the website) / **Stáhnout z webu** (Hide from the website; chapter 8). On the right are the buttons
+**Personál** (Staff), **Export CSV** and **PDF**. Under the bar is the **Požadavky na směny** (Shift
+requests) panel (chapter 6), below it the plan, then **Bilance hodin** (Hours balance; chapter 9) and at
+the bottom **Přehled po lidech** (Overview by person; chapter 10).
 
 **The plan** has the sections and their shifts in the rows and the days of the month in the columns. The
 days of the two tables sit exactly above each other and scroll sideways together.
@@ -107,7 +112,8 @@ days of the two tables sit exactly above each other and scroll sideways together
 | Yellow column | Public holiday (the bubble over the day shows its name). Holidays are calculated automatically. |
 | Red text under the day | A full-day note from **Rozpis služeb** (Shift roster), for example **Zavřeno** (Closed). |
 | Hatched cell | This shift does not apply on that day. |
-| Coloured label | A person in the shift. If the time differs from the default, it is shown too. |
+| Coloured label | A person in the shift. If the time differs from the default, it is shown too. Doctors are on the first line of the cell, nurses and others below them. |
+| Crossed-out eye on the label | The doctor's service is **hidden on the website** (chapter 8). |
 | Red frame on a label | Watch out: the person has an absence or cannot work that day, or the doctor is not carried over to reservations. The bubble gives the reason. |
 | Dashed frame | A duty entered directly in **Rezervace → Rozpis lékařů** (Reservations → Doctors' roster). |
 | **Absence** (Absences) row | Who has D, NV, L, PN or Š that day. |
@@ -144,7 +150,8 @@ they entered, an absence and other shifts. Someone with an absence or **Nemůžu
 still be added; the plan does not forbid it, it only warns you with a red frame.
 
 A person already in the cell has a row at the top of the window. There you change their time or remove them
-with **Smazat** (Delete), or with the cross **×** right on the label in the plan. A shift from **Rozpis
+with **Smazat** (Delete), or with the cross **×** right on the label in the plan. A doctor's row also
+has an eye button **Na webu** (On the website) / **Skryto na webu** (Hidden on the website; chapter 8). A shift from **Rozpis
 služeb** (Shift roster) and a manually entered duty from **Rozpis lékařů** (Doctors' roster) can be changed
 and deleted this way too.
 
@@ -215,9 +222,32 @@ calendar: …), or in red the reason she is not there:
 | "… směna nemá ordinaci." (the shift has no room) | Delete the shift and add it again. |
 | "V kalendáři rezervací chybí. Uložte směnu znovu (změňte a vraťte čas)." (Missing from the reservation calendar. Save the shift again: change the time and change it back.) | Change the time and change it back. |
 
+**The shift type in Rozpis služeb follows the time.** A shift is written to the roster with the type
+whose time is closest to its own: 8–16 as Ranní (Morning), 12–20 as Odpolední (Afternoon), 8–20 as
+Celodenní (Full day). When you change the time in the plan, the type changes with it. On a tie, the type
+set for the shift in **Úseky plánu** (Plan sections) wins.
+
 **The website /rozpis-lekaru.** From the plan it shows only doctors' duties in sections, not reception, nurses
 or helpers. Manually entered shifts and full-day notes keep showing. On the website a shift has the time of its
 type (**Typy směn**, Shift types), not the time from the plan.
+
+**Publishing the month.** Until you publish a month, nothing from the plan goes to the website, so you can
+plan in peace. When the plan is finished, click **Zveřejnit na webu** (Publish on the website) at the top;
+the label changes to **Na webu** (On the website). **Stáhnout z webu** (Hide from the website) hides it
+again, for example while you rework the plan. The reservation calendar and online booking do not depend on
+publishing: a doctor's service is there as soon as you add it to the plan.
+
+**Hiding a doctor on the website.** When clients should not see that a doctor is on duty that day (for
+example a second doctor strengthening a weekend), click the cell and the eye button by the doctor. It
+changes to **Skryto na webu** (Hidden on the website) and her label in the plan gets a crossed-out eye.
+Such a service:
+
+- is not listed on /rozpis-lekaru,
+- is not offered in online booking (the doctor is not in the list of doctors and adds no free slots),
+- stays in Rozpis služeb and in the reservation calendar, and **reception books her as usual**.
+
+A morning and an afternoon merged into one service are both hidden when you hide either of them. The
+same **Skryto na webu** tick box is on the shift in **Rozpis služeb → Rozpis** (Shift roster → Roster).
 
 ## 9. Bilance hodin (Hours balance)
 
@@ -227,7 +257,7 @@ The table under the plan, one row per person:
 |---|---|
 | **Úvazek** (Contract) | Hours per week from **Personál** (Staff). |
 | **Fond** (Hours fund) | Working days of the month (Mon–Fri without public holidays) × contract / 5. |
-| **Odpracováno** (Worked) | Shift hours + D, L and Š on a working day (each day contract / 5). Overlapping shifts on one day count once: 8–16 and 12–20 is 12 hours. The bubble shows the breakdown. |
+| **Odpracováno** (Worked) | Shift hours + D and L on a working day (each day contract / 5). Overlapping shifts on one day count once: 8–16 and 12–20 is 12 hours. The bubble shows the breakdown. |
 | **Ranní** (Mornings) | Weekdays under 12 hours starting before noon. |
 | **Odpolední** (Afternoons) | Weekdays under 12 hours starting from noon on. |
 | **Celodenní (12 h)** (Full days) | Weekdays with 12 hours or more. |
@@ -235,24 +265,38 @@ The table under the plan, one row per person:
 | **Absence** (Absences) | Counts of D, NV, L, PN and Š. |
 | **Saldo** (Balance) | Worked − fund. Plus is in green, minus in red. |
 
-NV and PN do not count towards hours worked. Duties entered manually in **Rozpis lékařů** (Doctors' roster)
+NV, PN and Š do not count towards hours worked (Š since 16 Nov). Duties entered manually in **Rozpis lékařů** (Doctors' roster)
 are counted too. A night shift counts up to midnight.
 
-## 10. Export and printing
+## 10. Přehled po lidech (Overview by person)
+
+The table under the balance: people (by role) in the rows, days of the month in the columns. Each day
+shows the person's service:
+
+| In the cell | Meaning |
+|---|---|
+| `R-Ord1` | Morning in Ordinace 1 (section short name: Ord1, Ord2, Rec = Recepce…). |
+| `O-Rec` | Afternoon at reception. |
+| `C · 12h` | Morning and afternoon on one weekday, 12 hours or more in total. |
+| `Ord1 10–18` | Other shifts (weekend, Sál, a non-default time): section and time. |
+| D, NV, L, PN, Š | Absences, in their own colours. |
+
+Handy when someone asks "when are my shifts": find their row.
+
+## 11. Export and PDF
 
 **Export CSV** downloads a file `rozpis-sluzeb-YYYY-MM.csv` for Excel. It contains the plan, the **Absence**
 (Absences) row, the balance and the requests.
 
-**Tisk** (Print) opens the browser's print dialog, landscape on A4. It prints the plan with the Absence row
-and **also Bilance hodin** (Hours balance). **Požadavky na směny** (Shift requests) and the buttons are not
-printed. The balance cannot be left out of the printout; if you do not want it on the notice board, choose
-only the pages with the plan in the print dialog.
+**PDF** downloads an A4 landscape file that opens, can be sent and printed: the plan by section, the hours
+balance and the overview by person. For an unpublished month the header says "zatím není na webu" (not on
+the website yet). **Požadavky na směny** (Shift requests) and the buttons are not in the PDF.
 
 ---
 
 # Part B – for every team member
 
-## 11. Moje dostupnost (My availability)
+## 12. Moje dostupnost (My availability)
 
 Open **Moje směny → Moje dostupnost** (My shifts → My availability). Next month opens, because planning is done
 ahead; use the arrows **‹ ›** to switch to another month.
@@ -283,4 +327,4 @@ you only need to correct the exceptions.
 
 **My shifts.** You see your planned shifts in a blue label on the day, with the section and time. Only management
 changes them. **Naplánováno** (Planned) also includes duties entered in **Rozpis lékařů** (Doctors' roster) and days
-of D, L and Š, so the number can be higher than the total of the labels.
+of D and L, so the number can be higher than the total of the labels.

@@ -41,7 +41,7 @@ a přepínačem **Vše | Web | Klinika**:
 | Štítek vlevo na kartě | Význam |
 |---|---|
 | Modrý **WEB** | Rezervace z webu (i z chatu na webu) – objednal(a) se klient sám. |
-| Bílý štítek s iniciálami, např. **JN** | Rezervaci založil(a) někdo z kliniky (průvodce Nová rezervace, pokladna). Po najetí myší: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
+| Bez štítku | Rezervaci založil(a) někdo z kliniky (průvodce Nová rezervace, pokladna). Kdo a kdy, ukáže najetí myší na kartu: „Založil(a): Jana Nováková, 26. 10. 2026 9:12“. |
 | Šedý **WinVet** | Záznam z kalendáře WinVetu (viz níže). |
 
 Přepínač **Vše | Web | Klinika** ukáže jen rezervace z webu, nebo jen ty z kliniky.
@@ -62,11 +62,11 @@ v obou sloupcích).
 | Bílá karta s proužky | Rezervace. Proužek na pravém okraji má barvu úkonu (např. vakcinace zelená, problém modrý). Proužek na levém okraji má barvu lékařky, ke které je klient objednaný – stejnou jako její služba a štítek. Rezervace bez lékařky levý proužek nemá. |
 | Písmeno vpravo na kartě | Zkratka úkonu (V = vakcinace, P = zdravotní problém, S = stomatologie…). |
 | Čas · jméno | Např. „9:00–9:15 · Rex (Jana Nováková)“ = mazlíček (majitel). Má-li rezervace **Popis**, stojí před jménem. Rezervace bez klienta má jen Popis. |
-| Druhý řádek | Název úkonu (jen u delších karet). |
-| **WEB** / iniciály vlevo | Odkud rezervace je – viz legenda výše. Hned za nimi jsou iniciály lékařky. |
+| Druhý řádek | Název úkonu (jen u delších karet). Pod ním je **interní poznámka** rezervace; u krátké karty (15 minut) se ukáže po najetí myší. |
+| **WEB** vlevo | Rezervace z webu – viz legenda výše. Hned za ním jsou iniciály lékařky. |
 | 🔗 | Společný zákrok dvou lékařek – rezervace je i v jiné ordinaci (najeďte myší, ukáže se kde). |
-| Zkratka na průsvitném podkladu (např. **GC**) | Iniciály lékařky – vlevo u jejího barevného proužku, za štítkem WEB / iniciálami toho, kdo rezervaci založil. Po najetí myší uvidíte celé jméno. |
-| Bledší karta | Proběhla nebo Nedorazil. |
+| Zkratka na průsvitném podkladu (např. **GC**) | Iniciály lékařky – vlevo u jejího barevného proužku, za případným štítkem WEB. Po najetí myší uvidíte celé jméno. |
+| Bledší karta | Proběhla. Rezervace se stavem **Nedorazil** v kalendáři není (stejně jako zrušená), aby bylo vidět, že je čas volný. Zůstává v Historii rezervací. |
 | Červený obrys a štítek **ZRUŠIT?** | Klient žádá o zrušení, rozhoduje recepce (viz „Žádosti o zrušení od klienta“). |
 | Karty vedle sebe | Rezervace, které se v ordinaci překrývají (viz „Rezervace přes obsazený termín“). |
 | Štítky v hlavičce sloupce | Kdo v ordinaci slouží a od kdy do kdy, např. „MVDr. Georgiana Chihaia 8:15–14:00“, v barvě lékařky. |
@@ -75,6 +75,7 @@ v obou sloupcích).
 | Žlutý štítek u nadpisu dne | „Víkend – web neobjednává“. Web ten den nic nenabízí, recepce objednává normálně. |
 | „interní“ u názvu | Ordinace, kam se klienti z webu objednat nemohou (např. Sál). |
 | Červená čára | Aktuální čas (jen u dneška). Čas je i na ose. |
+| Tenké vodorovné čáry | Jedna čára na každý krok rezervací (obvykle 15 minut), osa je na krok zarovnaná. |
 | Světle šedá karta se štítkem **WinVet** (bez šrafování) | Záznam z kalendáře WinVetu (objednáno ve WinVetu). Proužek vlevo má barvu činnosti z WinVetu, název je zvíře (majitel) z kartotéky, jinak text z WinVetu. Jen pro čtení: nejde přetáhnout ani zrušit, klik ukáže podrobnosti. **Termín je obsazený** – web ho nenabídne a recepce i pokladna přes něj objednají jen po potvrzení upozornění (viz „Rezervace přes obsazený termín“). Změny dělejte ve WinVetu, v kalendáři se ukážou do pár minut. |
 | Štítek **WinVet · …** v hlavičce sloupce | Celodenní záznam z WinVetu (např. služba lékařky nebo dovolená). Jen poznámka, termíny neblokuje. |
 
@@ -168,6 +169,12 @@ se nabídne i bez ní). Do interní ordinace, např. Sálu, žádost přetáhně
    neslouží lékařka, hláška se ukáže přímo v okně a okno zůstane otevřené – opravte čas nebo
    ordinaci a zkuste to znovu. Když se v okně ukáže **Přesto potvrdit**, můžete potvrdit i tak
    a v historii rezervace zůstane poznámka. Přes úplnou blokaci to nejde. **Zrušit** nic nezmění.
+
+**Potvrdit do obsazeného.** Když v požadovaném čase není nikde volno, ale ordinace je otevřená
+a v obsazeném čase by žádost jinak šla (slouží lékařka, která úkon dělá), jsou pod kartou oranžová
+tlačítka **Potvrdit do obsazeného → Ordinace**. Otevřou stejné okno s upozorněním, co tam je,
+a s už odsouhlaseným **Přesto potvrdit**. Karty pak stojí v kalendáři vedle sebe. Pod úplnou
+blokaci to nenabídne nikdy.
 
 Když se objeví text **„Požadovaný čas už není volný – otevřete a přeplánujte.“**,
 termín mezitím někdo obsadil. Text **„Požadovaný čas už uplynul – otevřete
@@ -399,7 +406,9 @@ Když zákrok potřebuje dvě lékařky nebo dvě ordinace, rezervaci zduplikujt
 4. Klikněte **Přidat**.
 
 V druhé ordinaci vznikne kopie ve stejném čase, obě karty mají ikonku 🔗.
-Je-li druhá ordinace v tu dobu obsazená, kopie nevznikne a objeví se hláška, čím.
+Je-li druhá ordinace v tu dobu obsazená jinou rezervací, okno napíše čím a nabídne zaškrtávátko
+**Přesto uložit**; po zaškrtnutí kopie vznikne i tak (karty stojí vedle sebe). Přes úplnou blokaci
+to nejde.
 
 Obě rezervace jsou propojené:
 
@@ -436,7 +445,7 @@ Ve formuláři rezervace jsou nahoře tlačítka:
 | **Potvrdit** | Čekající z webu | Potvrdí (musí být vyplněná ordinace), pošle potvrzení. |
 | **Poslat potvrzení** | Potvrzená s e-mailem | Pošle potvrzovací e-mail znovu. |
 | **Proběhla** | Potvrzená | Označí návštěvu jako proběhlou (karta zbledne). |
-| **Nedorazil** | Potvrzená, nejdřív v její den | Označí, že klient nepřišel (karta zbledne), čas se uvolní. E-mail neodchází. Klient i zvíře to pak mají v počtu „Nedorazil“ (kapitola 7). |
+| **Nedorazil** | Potvrzená, nejdřív v její den | Označí, že klient nepřišel: karta z kalendáře zmizí a čas se uvolní. E-mail neodchází. Klient i zvíře to pak mají v počtu „Nedorazil“ (kapitola 7). |
 | **Zrušit** | Čekající nebo potvrzená | Zruší rezervaci a uvolní termín. Má-li rezervace e-mail, otevře se okno „Zrušit rezervaci“: klient dostane e-mail o zrušení a můžete do něj připsat zprávu (nepovinné, např. důvod nebo nabídku jiného termínu). Potvrďte **Zrušit rezervaci**, **Zpět** nic nezmění. Bez e-mailu se jen zeptá. |
 | **Potvrdit zrušení**, **Ponechat rezervaci** | Klient žádá o zrušení | Viz „Žádosti o zrušení od klienta“ (kapitola 2). |
 | **Přidat druhou ordinaci** | Potvrzená bez druhé ordinace | Viz „Zákrok pro dvě lékařky“ (kapitola 4). |
@@ -478,9 +487,9 @@ i zrušené, „nedorazil“ a proběhlé – od nejnovější. Na začátku je 
 - Kliknutím otevřete rezervaci; dole je **historie změn**: kdo a kdy změnil stav, čas, ordinaci,
   lékařku, úkon, klienta, mazlíčka nebo důvod zrušení.
 
-**Obnovit** zrušenou rezervaci:
+**Obnovit** zrušenou rezervaci nebo rezervaci se stavem **Nedorazil**:
 
-1. Otevřete zrušenou rezervaci a klikněte **Obnovit** (tlačítko vidí jen správce rezervací).
+1. Otevřete rezervaci a klikněte **Obnovit** (tlačítko vidí jen správce rezervací).
 2. V okně je původní **Začátek** a **Ordinace**. Klikněte **Obnovit**.
 3. Je-li termín pořád volný, rezervace je znovu **Potvrzená** a v historii zpráv je „Rezervaci
    obnovil(a) …“. Klientovi se nic nepošle, pokud nezaškrtnete **Poslat klientovi potvrzení**
@@ -489,8 +498,10 @@ i zrušené, „nedorazil“ a proběhlé – od nejnovější. Na začátku je 
    obnovit, termín už není volný …“ a zůstane otevřené – změňte začátek nebo ordinaci a klikněte
    znovu Obnovit (nebo okno zavřete, rezervace zůstane zrušená).
 
-Rezervaci v minulosti obnovit nejde (nastavte nový začátek), stejně jako kopii ve druhé ordinaci
-(obnovte hlavní rezervaci; kopie zůstane zrušená, druhou ordinaci případně přidejte znovu).
+Zrušenou rezervaci v minulosti obnovit nejde (nastavte nový začátek). Rezervaci **Nedorazil** obnovit
+jde i v minulosti, protože se označuje až po termínu. Kopii ve druhé ordinaci obnovíte s hlavní
+rezervací: u zrušené kopie zůstane zrušená (druhou ordinaci případně přidejte znovu), u Nedorazil se
+vrátí s ní.
 
 ---
 
@@ -509,8 +520,9 @@ Blokace zabere čas v ordinaci. Jsou dva druhy:
 | **Úplná** (výchozí) | nenabízí | nesmí – nikdo tam nic nevytvoří | tmavé šrafování | oběd, porada, úklid, ordinace mimo provoz |
 | **Jen web** | nenabízí | smí | světlé čárkované, štítek „jen web“ | čas, který chcete obsazovat jen po telefonu (akutní případy, kontroly) |
 
-Úplnou blokaci nejde založit přes potvrzenou rezervaci. Blokaci jen pro web založíte
-kdykoli, i přes existující rezervace – ty zůstanou, jak jsou.
+Obě blokace jde založit i přes existující rezervace (úplnou od 16. 11.). Rezervace zůstanou, jak
+jsou, úplná blokace leží v kalendáři pod nimi a v celém jejím čase už nikdo nic nového neobjedná,
+ani klient z webu, ani recepce. Úplnou blokaci nejde založit jen přes jinou úplnou blokaci.
 
 Blokace zakládá, přesouvá, upravuje a ruší **recepce, sestry, lékařky i vedení**.
 Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodce novou rezervací.
@@ -527,7 +539,8 @@ Klik do volného místa sloupce (i do blokace jen pro web) dál otevře průvodc
 6. **Opakování** – viz níže. Skupina je jen při zakládání.
 7. Uložte.
 
-Úplnou blokaci nejde založit přes již potvrzenou rezervaci – nejdřív rezervaci přesuňte.
+Rezervace, které už v čase blokace jsou, nevadí: zůstanou a blokace se uloží pod ně. Klienty
+nikdo neruší ani nepřesouvá, to udělejte sami, pokud je potřeba.
 
 Když je úplná blokace pro **všechny ordinace** a některá ordinace už v tu dobu úplnou
 blokaci má, nic se neodmítne. Blokace se rozdělí po ordinacích a doplní se jen tam,

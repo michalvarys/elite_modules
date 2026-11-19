@@ -499,14 +499,17 @@ do not change, and nothing switches to another page.
 
 - **Columns** are the consulting rooms (each with the doctors on duty and their times), with a time axis on
   the left; the red line is now. Hatching means outside opening hours, grey hatched bars are blocks ("jen
-  web", web only, are light: reception may book there).
+  web", web only, are light: reception may book there). Reservations that were in the time of a full
+  block before it lie over it and stay valid; nothing new can be booked there.
+- Yellow lines above the shifts are **room notes for the day** (written in the Rezervace app, read-only
+  at the till).
 - A vertical coloured bar at the left edge of a column is a **doctor's shift** (initials and time).
 - **Web or clinic:** under the top bar is the **Vše | Web | Klinika** (All | Web | Clinic) switch and a
   one-line legend:
 
   | Label on the left of the card | Meaning |
   |---|---|
-  | Blue **WEB** + blue dashed outline | Reservation from the web: the client booked themselves. |
+  | Blue **WEB** | Reservation from the web: the client booked themselves. |
   | White label with initials, e.g. **JN** | Created by someone at the clinic. On hover: "Založil(a): Jana Nováková, 26. 10. 2026 9:12" (Created by). |
   | Grey **WinVet** | Entry from the WinVet calendar, read-only. |
 
@@ -518,7 +521,7 @@ do not change, and nothing switches to another page.
   left in the doctor's colour, the WEB label or the initials of whoever created it, the doctor's initials,
   the time, pet (owner), the procedure's short code and the label **k pokladně** (to pay) / **zaplaceno**
   (paid). If a reservation has a **Popis** (Description), it comes before the pet's name. Past reservations
-  and no-shows are faded. A red outline means the client asks to cancel (chapter 2). Reservations that
+  are faded; reservations marked Nedorazil (No-show) are not in the calendar (the time is free). A red outline means the client asks to cancel (chapter 2). Reservations that
   overlap stand side by side.
 - **WinVet entries** are light grey cards with a **WinVet** label (a stripe in the WinVet colour; the pet
   and owner from the client file, otherwise the WinVet text). They are read-only: they cannot be dragged and

@@ -47,8 +47,8 @@ one row with a legend and the switch **Vše | Web | Klinika** (All | Website | C
 
 | Tag on the left of the card | Meaning |
 |---|---|
-| Blue **WEB** + blue dashed card outline | A reservation from the website (including the website chat) – the client booked it. |
-| White tag with initials, e.g. **JN** | Someone at the clinic created the reservation (the Nová rezervace wizard, the till). On hover: "Založil(a): Jana Nováková, 26. 10. 2026 9:12" (created by, date and time). |
+| Blue **WEB** | A reservation from the website (including the website chat) – the client booked it. |
+| No tag | Someone at the clinic created the reservation (the Nová rezervace wizard, the till). Hover over the card to see who and when: "Založil(a): Jana Nováková, 26. 10. 2026 9:12" (created by, date and time). |
 | Grey **WinVet** | An entry from the WinVet calendar (see below). |
 
 The **Vše | Web | Klinika** switch shows only reservations from the website, or only those from the
@@ -63,18 +63,18 @@ stays WEB in both columns).
 | What | Meaning |
 |---|---|
 | Fine light grey hatching | The room is closed (outside opening hours or an exception). |
-| Dark grey hatched band | A full block (e.g. "Oběd", lunch). A block for all rooms runs across all columns. |
+| Dark grey hatched band | A full block (e.g. "Oběd", lunch). A block for all rooms runs across all columns. Reservations that were there before the block lie over it; nothing new can be booked there. |
 | Light dashed hatching with the tag "jen web" (website only) | A website-only block: the website offers nothing there, you may still book there. A click in it opens the wizard, a click on the tag opens the block. |
 | Coloured vertical stripe on the left of the column | A doctor's service: initials and time (e.g. "GC 8:15–14:00"). Each doctor has her own colour, the same as her tag in the header. |
 | Two stripes side by side | Two doctors are on duty in the room at the same time (see below). |
 | White card with stripes | A reservation. The stripe on the right edge has the procedure's colour (e.g. vaccination green, health problem blue). The stripe on the left edge has the colour of the doctor the client is booked with – the same as her service and tag. A reservation without a doctor has no left stripe. |
 | Letter on the right of the card | The procedure's abbreviation (V = vaccination, P = health problem, S = dentistry…). |
 | Time · name | E.g. "9:00–9:15 · Rex (Jana Nováková)" = pet (owner). If the reservation has a **Popis** (Description), it comes before the name. A reservation without a client shows only the Popis. |
-| Second line | The procedure name (on longer cards only). |
-| **WEB** / initials on the left | Where the reservation comes from – see the legend above. Right after them come the doctor's initials. |
+| Second line | The procedure name (on longer cards only). Under it is the reservation's **internal note**; on a short card (15 minutes) it shows on hover. |
+| **WEB** on the left | A reservation from the website – see the legend above. Right after it come the doctor's initials. |
 | 🔗 | A joint procedure of two doctors – the reservation is also in another room (hover to see where). |
-| Abbreviation on a see-through background (e.g. **GC**) | The doctor's initials – on the left by her coloured stripe, after the WEB tag or the initials of whoever created the reservation. Hover to see the full name. |
-| Paler card | **Proběhla** (Completed) or **Nedorazil** (No-show). |
+| Abbreviation on a see-through background (e.g. **GC**) | The doctor's initials – on the left by her coloured stripe, after the WEB tag, if any. Hover to see the full name. |
+| Paler card | **Proběhla** (Completed). A reservation marked **Nedorazil** (No-show) is not in the calendar (just like a cancelled one), so that the time shows as free. It stays in Historie rezervací. |
 | Red outline and the tag **ZRUŠIT?** (Cancel?) | The client asks to cancel, reception decides (see "Cancellation requests from the client"). |
 | Cards side by side | Reservations that overlap in the room (see "A reservation over a taken time"). |
 | Tags in the column header | Who is on duty in the room and from when to when, e.g. "MVDr. Georgiana Chihaia 8:15–14:00", in the doctor's colour. |
@@ -83,6 +83,7 @@ stays WEB in both columns).
 | Yellow tag by the day heading | "Víkend – web neobjednává" (weekend, website not booking). The website offers nothing that day, reception books as usual. |
 | "interní" (internal) by the name | A room clients cannot book from the website (e.g. Sál, the operating room). |
 | Red line | The current time (today only). The time is also on the axis. |
+| Thin horizontal lines | One line per booking step (usually 15 minutes); the axis is aligned to the step. |
 | Light grey card with the **WinVet** tag (not hatched) | An entry from the WinVet calendar (booked in WinVet). The left stripe has the WinVet activity colour, the name is animal (owner) from the card index, otherwise the WinVet text. Read-only: it cannot be dragged or cancelled, a click shows the details. **The time is taken** – the website will not offer it, and reception and the till can book over it only after confirming a warning (see "A reservation over a taken time"). Make changes in WinVet, they appear in the calendar within a few minutes. |
 | Tag **WinVet · …** in the column header | An all-day WinVet entry (e.g. a doctor's service or leave). A note only, it does not block any time. |
 
@@ -185,6 +186,12 @@ request there.
    stays open – correct the time or room and try again. If **Přesto potvrdit** (Confirm anyway)
    appears in the window, you can confirm regardless and a note stays in the reservation history.
    This is not possible over a full block. **Zrušit** (Cancel) changes nothing.
+
+**Potvrdit do obsazeného** (Confirm into a taken time). When nothing is free at the requested time, but
+a room is open and the request would otherwise fit there (a doctor who does the procedure is on duty),
+there are orange buttons **Potvrdit do obsazeného → room** under the card. They open the same window
+with a warning about what is there and **Přesto potvrdit** (Confirm anyway) already accepted. The
+cards then stand side by side in the calendar. It is never offered under a full block.
 
 If you see the text **"Požadovaný čas už není volný – otevřete a přeplánujte."** (The requested time
 is no longer free – open and reschedule.), someone has taken the time in the meantime. The text
@@ -339,7 +346,12 @@ and click **Použít ruční čas**.
 *Older screenshot: today there is also the Bez klienta option and the Jazyk rezervace field, and Popis problému is now called Důvod návštěvy.*
 
 1. Choose **Existující klient** (Existing client), **Nový klient** (New client), or **Bez klienta**
-   (Without a client).
+   (Without a client). If you have just created the client in WinVet and they are not in the card
+   file yet, choose **Je ve WinVetu** (Is in WinVet): a name is enough, ideally with the pet's name; no
+   contact is needed. The same option is in the card file at the till when creating a client. The
+   sync pairs the client by name and pet and fills in the contact. If the same name appears more
+   than once, the client stays unpaired; you find them in Klienti under the filter **Čeká na
+   spárování s WinVetem** (Waiting to be paired with WinVet) and merge them by hand.
 2. Existing: in **Vyhledat klienta** (Find a client) type a name, phone or e-mail (part of the phone
    number is enough, spaces do not matter). If the client has just one pet, it fills in by itself;
    otherwise choose it in the **Mazlíček** (Pet) field.
@@ -433,7 +445,9 @@ When a procedure needs two doctors or two rooms, duplicate the reservation:
 4. Click **Přidat** (Add).
 
 A copy appears in the second room at the same time, and both cards have the 🔗 icon. If the second
-room is taken at that time, no copy is created and a message says what is there.
+room is taken by another reservation at that time, the window says what is there and offers the
+tick box **Přesto uložit** (Save anyway); with it ticked, the copy is created anyway (the cards stand
+side by side). This is not possible over a full block.
 
 The two reservations are linked:
 
@@ -471,7 +485,7 @@ The reservation form has these buttons at the top:
 | **Potvrdit** (Confirm) | Waiting from the website | Confirms (a room must be filled in) and sends the confirmation. |
 | **Poslat potvrzení** (Send confirmation) | Confirmed, with an e-mail | Sends the confirmation e-mail again. |
 | **Proběhla** (Completed) | Confirmed | Marks the visit as completed (the card turns pale). |
-| **Nedorazil** (No-show) | Confirmed | Marks that the client did not come (the card turns pale). No e-mail goes out. The client and the animal then have it in their "Nedorazil" count (chapter 7). |
+| **Nedorazil** (No-show) | Confirmed, from its day on | Marks that the client did not come: the card leaves the calendar and the time is free. No e-mail goes out. The client and the animal then have it in their "Nedorazil" count (chapter 7). |
 | **Zrušit** (Cancel) | Waiting or confirmed | Cancels the reservation and frees the time. If the reservation has an e-mail, a window "Zrušit rezervaci" (Cancel the reservation) opens: the client gets a cancellation e-mail and you can add a message to it (optional, e.g. a reason or the offer of another time). Confirm with **Zrušit rezervaci**, **Zpět** (Back) changes nothing. Without an e-mail it only asks. |
 | **Potvrdit zrušení** (Confirm the cancellation), **Ponechat rezervaci** (Keep the reservation) | The client asks to cancel | See "Cancellation requests from the client" (chapter 2). |
 | **Přidat druhou ordinaci** (Add a second room) | Confirmed, with no second room | See "A procedure for two doctors" (chapter 4). |
@@ -522,9 +536,9 @@ all reservations – including cancelled, no-show and completed ones – newest 
 - Click to open a reservation; at the bottom is the **history of changes**: who changed the status,
   time, room, doctor, procedure, client, pet or cancellation reason, and when.
 
-**Obnovit** (Restore) a cancelled reservation:
+**Obnovit** (Restore) a cancelled reservation or one marked **Nedorazil** (No-show):
 
-1. Open the cancelled reservation and click **Obnovit** (only reservation managers see this button).
+1. Open the reservation and click **Obnovit** (only reservation managers see this button).
 2. The window shows the original **Začátek** (Start) and **Ordinace** (Room). Click **Obnovit**.
 3. If the time is still free, the reservation is **Potvrzená** (Confirmed) again and the message
    history says "Rezervaci obnovil(a) …" (Restored by …). Nothing is sent to the client unless you
@@ -535,8 +549,20 @@ all reservations – including cancelled, no-show and completed ones – newest 
    free) and stays open – change the start or room and click Obnovit again (or close the window and
    the reservation stays cancelled).
 
-A reservation in the past cannot be restored (set a new start), nor can a copy in a second room
-(restore the main reservation; the copy stays cancelled, add the second room again if needed).
+A cancelled reservation in the past cannot be restored (set a new start). A **Nedorazil** reservation
+can be restored in the past too, because it is marked after the appointment. A copy in a second room is
+restored with the main reservation: a cancelled copy stays cancelled (add the second room again if
+needed), a Nedorazil copy comes back with it.
+
+### A room note for the day
+
+The **+ poznámka** (+ note) button in a room's header writes a note for the selected day. It shows in
+yellow above the shifts, in the Kalendář and at the till. Clients do not see it, nor does the website.
+
+A note can repeat like a block (daily, weekly, monthly, yearly). Click a note to edit or delete it. For a
+repeated note an edit applies to that day only; **Smazat i další opakování** (Delete further
+repetitions too) removes this day and all later ones. Reception and higher roles add and change notes;
+at the till they are read-only.
 
 ---
 
@@ -549,8 +575,10 @@ A block takes up time in a room. There are two kinds:
 | **Úplná** (Full, the default) | offers nothing | may not – nobody can create anything there | dark hatching | lunch, meeting, cleaning, room out of service |
 | **Jen web** (Website only) | offers nothing | may | light dashed, tag "jen web" | time you want to fill only by phone (urgent cases, check-ups) |
 
-A full block cannot be created over a confirmed reservation. A website-only block can be created at
-any time, even over existing reservations – those stay as they are.
+Both kinds of block can be created over existing reservations (a full block since 16 Nov). The
+reservations stay as they are, a full block lies under them in the calendar, and during the whole block
+nobody books anything new, neither a client on the website nor reception. A full block cannot be
+created only over another full block.
 
 Blocks are created, moved, edited and cancelled by **reception, nurses, doctors and management**. A
 click in a free place in a column (also in a website-only block) still opens the new reservation
@@ -569,7 +597,8 @@ wizard.
 6. **Opakování** (Repeat) – see below. This group is there only when creating a block.
 7. Save.
 
-A full block cannot be created over an already confirmed reservation – move the reservation first.
+Reservations already in the time of the block do not matter: they stay and the block is saved under
+them. Nobody cancels or moves the clients; do that yourself if needed.
 
 When a full block is for **all rooms** and some room already has a full block at that time, nothing
 is refused. The block is split by room and filled in only where there is none yet. In the calendar
@@ -630,7 +659,8 @@ warning. This is not possible over a full block.
   the room, click **Vybrat** (Select) and then Objednat. The till asks **Přesto objednat** (Book
   anyway).
 
-The reservation form does not have this option: changing the time to a taken one ends with a message.
+In the **reservation form**, when you change the time or room to a taken time, a warning appears at
+the top. Tick **Přesto uložit přes tuto rezervaci** (Save over this reservation anyway) and save.
 
 Overlapping cards sit side by side in the calendar. The website still does not offer the taken time.
 A note stays in the reservation history.

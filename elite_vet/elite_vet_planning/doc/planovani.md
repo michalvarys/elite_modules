@@ -3,7 +3,8 @@
 **K čemu je tento návod.** Popisuje měsíční plán směn celého týmu. Má dvě části:
 
 - **Část A** je pro toho, kdo rozpis dělá (Správce rozpisu): Plánování, Personál, Dostupnost
-  a absence, Úseky plánu, Požadavky na směny, bilance hodin, export a tisk.
+  a absence, Úseky plánu, Požadavky na směny, zveřejnění na webu, bilance hodin, přehled po lidech,
+  export a PDF.
 - **Část B** je pro každého člena týmu: Moje směny a Moje dostupnost.
 
 Nastavení lékařek, ordinací a rezervací popisuje
@@ -11,7 +12,7 @@ Nastavení lékařek, ordinací a rezervací popisuje
 
 | Kde v menu | Kdo to vidí | Co tam je |
 |---|---|---|
-| **Rozpis služeb → Plánování** | Správce rozpisu | Měsíční plán, Požadavky na směny, Bilance hodin, export, tisk |
+| **Rozpis služeb → Plánování** | Správce rozpisu | Měsíční plán, Požadavky na směny, Bilance hodin, Přehled po lidech, export, PDF, zveřejnění na webu |
 | **Rozpis služeb → Personál** | Správce rozpisu | Role, zkratka, úvazek, barva, dovolená, účet |
 | **Rozpis služeb → Dostupnost a absence** | Správce rozpisu | Seznam všech záznamů o dostupnosti a absencích |
 | **Rozpis služeb → Úseky plánu** | Správce rozpisu | Úseky (Recepce, Ordinace 1…), jejich směny a časy |
@@ -32,9 +33,10 @@ Doporučený postup na každý měsíc:
 
 1. Tým si v **Moje dostupnost** zaklikne, kdy může.
 2. Vy zapíšete absence do **Požadavků na směny**.
-3. V plánu přiřadíte lidi do směn.
-4. Podíváte se na **Bilanci hodin**.
-5. Plán vytisknete nebo vyexportujete.
+3. V plánu přiřadíte lidi do směn. Klienti to na webu zatím nevidí.
+4. Podíváte se na **Bilanci hodin** a **Přehled po lidech**.
+5. Hotový měsíc **zveřejníte na webu** (kapitola 8).
+6. Stáhnete **PDF** na nástěnku nebo vyexportujete CSV.
 
 Všechno se ukládá hned. Nahoře je vidět **Ukládání…** a pak **Všechny změny uloženy**,
 žádné tlačítko Uložit tu není.
@@ -86,9 +88,10 @@ Dole jsou **směny** úseku, každá je jeden řádek plánu:
 
 ## 4. Obrazovka Plánování
 
-Nahoře šipkami **‹ ›** přepínáte měsíc. Vpravo jsou tlačítka **Personál**, **Export CSV**
-a **Tisk**. Pod lištou je panel **Požadavky na směny** (kapitola 6), pod ním plán a dole
-**Bilance hodin** (kapitola 9).
+Nahoře šipkami **‹ ›** přepínáte měsíc. Vedle měsíce je štítek **Zatím není na webu** / **Na webu**
+a tlačítko **Zveřejnit na webu** / **Stáhnout z webu** (kapitola 8). Vpravo jsou tlačítka
+**Personál**, **Export CSV** a **PDF**. Pod lištou je panel **Požadavky na směny** (kapitola 6),
+pod ním plán, pak **Bilance hodin** (kapitola 9) a dole **Přehled po lidech** (kapitola 10).
 
 **Plán** má v řádcích úseky a jejich směny, ve sloupcích dny měsíce. Dny obou tabulek jsou
 přesně nad sebou a posouvají se do stran spolu.
@@ -99,7 +102,8 @@ přesně nad sebou a posouvají se do stran spolu.
 | Žlutý sloupec | Státní svátek (název ukáže bublina nad dnem). Svátky se počítají samy. |
 | Červený text pod dnem | Celodenní poznámka z Rozpisu služeb, např. Zavřeno. |
 | Šrafované políčko | Tato směna v ten den neplatí. |
-| Barevný štítek | Člověk ve směně. U jiného než výchozího času je i čas. |
+| Barevný štítek | Člověk ve směně. U jiného než výchozího času je i čas. Lékařky jsou v políčku na prvním řádku, sestry a ostatní pod nimi. |
+| Přeškrtnuté oko u štítku | Služba lékařky je **skrytá na webu** (kapitola 8). |
 | Červený rámeček štítku | Pozor: člověk má ten den absenci nebo nemůže, nebo se lékařka nepropisuje do rezervací. Důvod ukáže bublina. |
 | Čárkovaný rámeček | Služba zadaná přímo v Rezervace → Rozpis lékařů. |
 | Řádek **Absence** | Kdo má ten den D, NV, L, PN nebo Š. |
@@ -134,7 +138,8 @@ absenci a další směny. Kdo má absenci nebo **Nemůžu**, je bledší, ale p�
 člověka nezakáže, jen upozorní červeným rámečkem.
 
 Člověk, který už v políčku je, má nahoře v okně řádek. Tam mu změníte čas nebo ho odeberete
-tlačítkem **Smazat** (nebo křížkem **×** přímo na štítku v plánu). Takhle jde změnit a smazat
+tlačítkem **Smazat** (nebo křížkem **×** přímo na štítku v plánu). U lékařky je v řádku i tlačítko
+s okem **Na webu** / **Skryto na webu** (kapitola 8). Takhle jde změnit a smazat
 i směna z Rozpisu služeb a ručně zadaná služba z Rozpisu lékařů.
 
 V úseku **Stáž / výpomoc** je navíc políčko na jméno praktikanta nebo brigádníka, který není
@@ -201,9 +206,29 @@ proč tam není:
 | „… směna nemá ordinaci.“ | Smažte směnu a přidejte ji znovu. |
 | „V kalendáři rezervací chybí. Uložte směnu znovu (změňte a vraťte čas).“ | Změňte čas a vraťte ho zpět. |
 
+**Typ směny v Rozpisu služeb se bere podle času.** Směna se do rozpisu zapíše s typem, jehož čas
+je jejímu času nejblíž: 8–16 jako Ranní, 12–20 jako Odpolední, 8–20 jako Celodenní. Když změníte
+čas v plánu, typ se změní s ním. Při shodě rozhodne typ nastavený u směny v Úsecích plánu.
+
 **Web /rozpis-lekaru.** Z plánu se tam ukazují jen služby lékařek v úsecích, ne recepce, sestry
 ani výpomoc. Ručně zadané směny a celodenní poznámky se ukazují dál. U směny je na webu čas
 jejího typu (Typy směn), ne čas z plánu.
+
+**Zveřejnění měsíce.** Dokud měsíc nezveřejníte, z plánu na web nic nejde a můžete v klidu
+plánovat. Až je plán hotový, klikněte nahoře **Zveřejnit na webu**; štítek se změní na **Na webu**.
+**Stáhnout z webu** ho zase schová (třeba když plán ještě předěláváte). Kalendář rezervací
+a online objednávání se zveřejněním neřídí: služba lékařky v nich je hned, jak ji v plánu přidáte.
+
+**Skrýt lékařku na webu.** Když nechcete, aby klienti viděli, že v daný den slouží (třeba druhá
+lékařka na posílení víkendu), klikněte do políčka a u lékařky na tlačítko s okem. Změní se na
+**Skryto na webu** a štítek v plánu dostane přeškrtnuté oko. Taková služba:
+
+- se nevypíše na /rozpis-lekaru,
+- v online objednávání se lékařka nenabízí (není v seznamu lékařů a nepřidá žádný volný termín),
+- zůstane v Rozpisu služeb i v kalendáři rezervací a **recepce k ní objednává normálně**.
+
+Ranní a odpolední sloučené do jedné služby jsou skryté obě, když skryjete kteroukoli z nich.
+Stejné zaškrtávátko **Skryto na webu** je u směny v **Rozpis služeb → Rozpis**.
 
 ## 9. Bilance hodin
 
@@ -213,7 +238,7 @@ Tabulka pod plánem, jeden řádek na člověka:
 |---|---|
 | **Úvazek** | Hodiny za týden z Personálu. |
 | **Fond** | Pracovní dny měsíce (po–pá bez státních svátků) × úvazek / 5. |
-| **Odpracováno** | Hodiny směn + D, L a Š v pracovní den (každý den úvazek / 5). Překryv směn v jeden den se počítá jednou: 8–16 a 12–20 je 12 hodin. Bublina ukáže rozpad. |
+| **Odpracováno** | Hodiny směn + D a L v pracovní den (každý den úvazek / 5). Překryv směn v jeden den se počítá jednou: 8–16 a 12–20 je 12 hodin. Bublina ukáže rozpad. |
 | **Ranní** | Všední dny pod 12 hodin se začátkem před polednem. |
 | **Odpolední** | Všední dny pod 12 hodin se začátkem od poledne. |
 | **Celodenní (12 h)** | Všední dny s 12 a více hodinami. |
@@ -221,23 +246,38 @@ Tabulka pod plánem, jeden řádek na člověka:
 | **Absence** | Počty D, NV, L, PN a Š. |
 | **Saldo** | Odpracováno − fond. Plus je zeleně, minus červeně. |
 
-NV a PN se do odpracovaných hodin nepočítají. Započítávají se i služby zadané ručně v Rozpisu
+NV, PN a Š se do odpracovaných hodin nepočítají (Š od 16. 11.). Započítávají se i služby zadané ručně v Rozpisu
 lékařů. Noční směna se počítá do půlnoci.
 
-## 10. Export a tisk
+## 10. Přehled po lidech
+
+Tabulka pod bilancí: v řádcích lidé (podle role), ve sloupcích dny měsíce. U každého dne je, jakou
+má člověk službu:
+
+| V políčku | Význam |
+|---|---|
+| `R-Ord1` | Ranní v Ordinaci 1 (zkratka úseku: Ord1, Ord2, Rec = Recepce…). |
+| `O-Rec` | Odpolední na recepci. |
+| `C · 12h` | Ranní i odpolední v jeden všední den, celkem 12 hodin a víc. |
+| `Ord1 10–18` | Ostatní směny (víkend, Sál, jiný než výchozí čas): úsek a čas. |
+| D, NV, L, PN, Š | Absence, barevně odlišené. |
+
+Hodí se, když se někdo ptá „kdy mám služby“: stačí najít jeho řádek.
+
+## 11. Export a PDF
 
 **Export CSV** stáhne soubor `rozpis-sluzeb-RRRR-MM.csv` pro Excel. Obsahuje plán, řádek Absence,
 bilanci a požadavky.
 
-**Tisk** otevře tisk prohlížeče, na šířku na A4. Vytiskne se plán s řádkem Absence a **také Bilance
-hodin**. Požadavky na směny a tlačítka se netisknou. Bilanci z tisku vynechat nejde; když ji na
-nástěnce nechcete, vyberte v dialogu tisku jen stránky s plánem.
+**PDF** stáhne soubor A4 na šířku, který jde otevřít, poslat i vytisknout: plán po úsecích,
+bilanci hodin a přehled po lidech. U nezveřejněného měsíce je v hlavičce „zatím není na webu“.
+Požadavky na směny a tlačítka v PDF nejsou.
 
 ---
 
 # Část B – pro každého člena týmu
 
-## 11. Moje dostupnost
+## 12. Moje dostupnost
 
 Otevřete **Moje směny → Moje dostupnost**. Otevře se příští měsíc, protože se plánuje dopředu;
 šipkami **‹ ›** přepnete jiný.
@@ -264,5 +304,5 @@ opravit výjimky.
   a nejdou změnit. Přání napište do poznámky ke dni, nebo se domluvte s vedením.
 
 **Moje směny.** Naplánované směny vidíte v modrém štítku u dne, s úsekem a časem. Mění je jen
-vedení. Do **Naplánováno** se počítají i služby zadané v Rozpisu lékařů a dny D, L a Š, takže
+vedení. Do **Naplánováno** se počítají i služby zadané v Rozpisu lékařů a dny D a L, takže
 číslo může být vyšší než součet štítků.

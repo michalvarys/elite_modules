@@ -88,9 +88,10 @@ The bridge also reads the WinVet calendar (`KALENDAR_NEW`, calendars `KALENDAR_N
 `calendar_events`. It only reads; it never writes anything to WinVet, and bookings are made where they
 have always been made.
 
-- **Window:** every run reads a window from yesterday to 60 days ahead (`[bridge] calendar_days_back`,
+- **Window:** every run reads a window from 90 days back to 60 days ahead (`[bridge] calendar_days_back`,
   `calendar_days_ahead`). The calendar is not in the change journal, so the whole window is always read;
-  Odoo deletes the records of the window that are no longer in WinVet. Older records stay in Odoo.
+  Odoo deletes the records of the window that are no longer in WinVet. Records older than the start of
+  the window stay in Odoo, even if someone deletes them in WinVet.
 - **Recurring records** are expanded by the bridge into single occurrences (it respects WinVet's changed
   and deleted occurrences). The format of the binary columns (`OPAKOVANI_INFO`, `ZDROJ_INFO`) is
   described in `winvet_bridge/scheduler.py`.
@@ -117,7 +118,7 @@ have always been made.
 | `py -m winvet_bridge sync` | one run: the first run is full, later ones only changes from the WinVet journal |
 | `py -m winvet_bridge sync --full` | full synchronisation of everything |
 | `py -m winvet_bridge sync --dry-run` | only read and count, send nothing |
-| `py -m winvet_bridge sync --only calendar` | only the WinVet calendar (window yesterday … +60 days), no journal; suitable every 5 minutes. `--only` also takes names of entities that are always sent in full (e.g. `stock_moves`); it cannot be combined with `--full` |
+| `py -m winvet_bridge sync --only calendar` | only the WinVet calendar (window −90 … +60 days), no journal; suitable every 5 minutes. `--only` also takes names of entities that are always sent in full (e.g. `stock_moves`); it cannot be combined with `--full` |
 | `py -m winvet_bridge run` | service: changes every `interval_minutes` (15 min), the calendar every `calendar_interval_minutes` (5 min) in between, a full synchronisation once a day at `full_sync_time` (03:00) |
 | `py -m winvet_bridge schema-diff` | lists all structure differences against the approved snapshot (`--json` for machine-readable output) |
 | `py -m winvet_bridge approve --yes` | approves the current WinVet version (see below) |

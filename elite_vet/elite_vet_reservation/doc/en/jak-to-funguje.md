@@ -28,6 +28,11 @@ procedure is done, as follows:
 
    Otherwise the opening hours are enough (a procedure without a specialization is offered even if
    the roster is missing).
+
+   A service marked **Skryto na webu** (Hidden on the website; on the shift in Rozpis služeb / the eye
+   in Plánování, on a manual service directly in Rozpis lékařů) does not count on the website: the
+   doctor is not in the list of doctors and her service adds no free slots. Reception sees her and
+   books her as usual.
 3. **− taken time** – confirmed and completed reservations, blocks and WinVet calendar entries are
    subtracted (on the website both kinds of block, for reception only full ones – see "What blocks
    a time").
@@ -152,10 +157,10 @@ Every reservation has a **Zdroj** (Source): **Web** (the booking form and the we
 **Klinika** (Clinic: the Nová rezervace wizard, the till, a second room). The source is set on
 creation and does not change – not even when a website request is confirmed.
 
-- **Kalendář** (Calendar, in Odoo and at the till): a blue **WEB** tag and a blue dashed outline on
-  website reservations, a white tag with the **initials** of whoever created the reservation at the
-  clinic (the user who created it; hover for the name and time of creation), a grey **WinVet** on
-  WinVet entries. The browser remembers the **Vše | Web | Klinika** (All | Website | Clinic) switch;
+- **Kalendář** (Calendar, in Odoo and at the till): a blue **WEB** tag on website reservations (no
+  dashed outline since 16 Nov), a grey **WinVet** on WinVet entries. A reservation created at the
+  clinic has no tag; hovering over the card shows who created it and when (the calendar at the till
+  still shows a white tag with the **initials** of whoever created it). The browser remembers the **Vše | Web | Klinika** (All | Website | Clinic) switch;
   WinVet entries appear only under "Vše". The second room of a two-doctor procedure takes the source
   and author of the main reservation.
 - **Lists** Rezervace (Reservations) and Historie rezervací (Reservation history): the columns
@@ -171,7 +176,7 @@ creation and does not change – not even when a website request is confirmed.
 | **Čekající z webu** (Waiting from the website) | Came from the website, nobody has confirmed it | no | only in the left panel |
 | **Potvrzená** (Confirmed) | Reception confirmed it or created it | **yes** | white card with coloured stripes |
 | **Proběhla** (Completed) | Reception marked it after the visit | **yes** | paler card |
-| **Nedorazil** (No-show) | The client did not come | no | paler card |
+| **Nedorazil** (No-show) | The client did not come | no | not visible (stays in Historie rezervací) |
 | **Zrušená** (Cancelled) | Cancelled by the clinic or the client, or rejected | no | not visible |
 
 ---
@@ -181,7 +186,8 @@ creation and does not change – not even when a website request is confirmed.
 **Blocks:** confirmed reservations, completed reservations, blocks (until they are cancelled) and
 WinVet calendar entries with a time (all-day entries do not). A block without a room blocks **all
 rooms**. When a full block for all rooms is created over a time where some room already has a full
-block, it is split by room and only the free periods are filled in.
+block, it is split by room and only the free periods are filled in. Reservations already in that
+time do not stop it (see below).
 
 But it depends on the kind of block and on who is booking:
 
@@ -195,9 +201,11 @@ But it depends on the kind of block and on who is booking:
 | Weekend / public holiday (per settings) | blocks the whole day | does not block |
 | Outside opening hours / no doctor's service | not offered | not offered, but possible with a manual time |
 
-The rule for "what is taken" is shared by the website and reception, so they cannot drift apart. A
-full block cannot be created over a confirmed reservation; a website-only block can be created at any
-time.
+The rule for "what is taken" is shared by the website and reception, so they cannot drift apart.
+**A full block can be created over confirmed reservations too** (since 16 Nov): the reservations stay,
+the block lies under them in the calendar, and nothing new can be booked during the whole block,
+neither from the website nor at reception. Only another full block stops it. A website-only block can
+be created at any time.
 
 **An unconfirmed website request holds a place.** A request has no room yet, so it "mentally" holds
 the one it could be confirmed in (the first online room for the procedure that is free and has a
@@ -216,8 +224,8 @@ suggestions disappear from the second and reception reschedules it.
 ## 5. Protection against double booking
 
 The free slot calculation only **advises** what to offer. The check on **saving** has the last word:
-before it is written, every confirmed reservation and full block is compared with the others in the
-same room (with reservations and full blocks, and for reservations also with WinVet entries; a
+before it is written, every confirmed reservation is compared with the others in the same room (with
+reservations, full blocks and WinVet entries), a full block only with other full blocks (a
 website-only block does not count and is not checked itself). If it overlaps, saving is refused with
 the message "Termín … v ordinaci … je obsazený: …" (The time … in room … is taken: …).
 

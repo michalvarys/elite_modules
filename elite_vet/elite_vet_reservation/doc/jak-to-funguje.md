@@ -142,8 +142,9 @@ Každá rezervace má **Zdroj**: **Web** (rezervační formulář i chat na webu
 žádosti z webu.
 
 - **Kalendář** (Odoo i pokladna): modrý štítek **WEB** u webových rezervací (čárkovaný obrys
-  od 16. 11. není), bílý štítek s **iniciálami** toho, kdo rezervaci na klinice založil (uživatel, který
-  ji vytvořil; najetím myší jméno a čas založení), šedý **WinVet** u záznamů z WinVetu. Přepínač
+  od 16. 11. není), šedý **WinVet** u záznamů z WinVetu. Rezervace založená na klinice štítek nemá,
+  kdo a kdy ji založil, ukáže najetí myší na kartu (kalendář u pokladny má u ní ještě bílý štítek
+  s **iniciálami** toho, kdo ji založil). Přepínač
   **Vše | Web | Klinika** si pamatuje prohlížeč; záznamy z WinVetu jsou jen ve „Vše“.
   Druhá ordinace dvoulékařského zákroku přebírá zdroj a autora hlavní rezervace.
 - **Seznamy** Rezervace a Historie rezervací: sloupce **Zdroj** a **Založil(a)**, filtry
@@ -158,7 +159,7 @@ Každá rezervace má **Zdroj**: **Web** (rezervační formulář i chat na webu
 | **Čekající z webu** | Přišla z webu, nikdo ji nepotvrdil | ne | jen v levém panelu |
 | **Potvrzená** | Potvrdila recepce nebo ji recepce založila | **ano** | bílá karta s barevnými proužky |
 | **Proběhla** | Recepce označila po návštěvě | **ano** | bledší karta |
-| **Nedorazil** | Klient nepřišel | ne | bledší karta |
+| **Nedorazil** | Klient nepřišel | ne | není vidět (zůstává v Historii rezervací) |
 | **Zrušená** | Zrušila klinika, klient nebo odmítnuto | ne | není vidět |
 
 ---

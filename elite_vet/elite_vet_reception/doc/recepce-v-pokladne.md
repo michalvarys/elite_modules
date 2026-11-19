@@ -449,7 +449,10 @@ nepřepíná do jiné stránky.
 
 - **Sloupce** jsou ordinace (u každé lékařky ve službě s časem), vlevo časová osa, červená čára
   je teď. Šrafované je mimo ordinační dobu, šedé šrafované pruhy jsou blokace („jen web“ jsou
-  světlé – recepce tam objednat smí).
+  světlé – recepce tam objednat smí). Rezervace, které byly v čase úplné blokace dřív než ona,
+  leží nad ní a platí; nové tam objednat nejde.
+- Žluté řádky nad službami jsou **poznámky k ordinaci na den** (zapisují se v aplikaci Rezervace,
+  v pokladně jsou jen ke čtení).
 - Svislý barevný pruh u levého okraje sloupce je **služba lékařky** (iniciály a čas).
 - **Web, nebo klinika** – pod horní lištou je přepínač **Vše | Web | Klinika** a jednořádková
   legenda:
@@ -467,7 +470,8 @@ nepřepíná do jiné stránky.
 - **Rezervace** jsou bílé karty s proužkem vpravo v barvě úkonu, proužek vlevo v barvě lékařky, štítek WEB / iniciály toho, kdo
   ji založil, iniciály lékařky, čas,
   zvíře (majitel), zkratku úkonu a štítek **k pokladně** / **zaplaceno**. Má-li rezervace **Popis**,
-  je před jménem zvířete. Proběhlé a nedorazivší jsou bledé. Červený obrys znamená, že klient žádá
+  je před jménem zvířete. Proběhlé jsou bledé; rezervace se stavem Nedorazil v kalendáři nejsou
+  (čas je volný). Červený obrys znamená, že klient žádá
   o zrušení (kapitola 2). Rezervace, které se překrývají, stojí vedle sebe.
 - **Záznamy z WinVetu** jsou světle šedé karty se štítkem **WinVet** (proužek v barvě
   WinVetu, zvíře a majitel z kartotéky, jinak text z WinVetu). Jen pro čtení: nejdou přetáhnout,

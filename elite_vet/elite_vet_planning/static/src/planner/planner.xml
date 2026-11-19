@@ -25,7 +25,7 @@
                     </button>
                     <button class="btn btn-secondary" t-on-click="openStaff">Staff</button>
                     <button class="btn btn-secondary" t-on-click="exportCsv" title="Download for Excel">Export CSV</button>
-                    <button class="btn btn-secondary" t-on-click="downloadPdf" title="A4 landscape: plan, overview by person and hours">PDF</button>
+                    <button class="btn btn-secondary" t-on-click="downloadPdf" title="A4 landscape: plan, hours and overview by person">PDF</button>
                 </div>
             </div>
 
