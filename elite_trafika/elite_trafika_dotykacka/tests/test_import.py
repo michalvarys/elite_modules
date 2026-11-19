@@ -1,3 +1,5 @@
+from datetime import date
+
 from odoo.tests import TransactionCase, tagged
 
 
@@ -8,8 +10,10 @@ class TestDotykackaImport(TransactionCase):
     def setUp(self):
         super().setUp()
         self.config = self.env.ref("elite_trafika_pos.pos_config_trafika")
+        # receipts of the archive of 3. 11. 2026; elite_trafika_dotykacka_update adds the later ones
         self.orders = self.env["pos.order"].search([("config_id", "=", self.config.id),
-                                                    ("name", "=like", "Dotykačka %")])
+                                                    ("name", "=like", "Dotykačka %"),
+                                                    ("pos_reference", "<=", "20260006141")])
         self.importer = self.env["elite.trafika.dotykacka.import"]
 
     def test_all_receipts_imported(self):
@@ -35,7 +39,7 @@ class TestDotykackaImport(TransactionCase):
 
     def test_outside_accounting_and_stock(self):
         """The history posts no journal entry and moves no stock."""
-        sessions = self.orders.session_id
+        sessions = self.orders.filtered(lambda o: o.date_order.date() < date(2026, 11, 3)).session_id
         self.assertEqual(len(sessions), 251)  # 253 shifts, 2 of them without a receipt
         self.assertEqual(set(sessions.mapped("state")), {"closed"})
         self.assertFalse(sessions.move_id)
@@ -45,7 +49,8 @@ class TestDotykackaImport(TransactionCase):
 
     def test_report(self):
         """The sales are in the Point of Sale analysis."""
-        data = self.env["report.pos.order"].read_group([("config_id", "=", self.config.id)],
+        data = self.env["report.pos.order"].read_group([("config_id", "=", self.config.id),
+                                                          ("date", "<=", "2026-11-03 18:07:02")],
                                                          ["price_total:sum"], [])
         self.assertAlmostEqual(data[0]["price_total"], 2104511.0, places=0)
 

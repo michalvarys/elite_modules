@@ -40,6 +40,12 @@ Prodeje produktů, které už v Dotykačce nejsou (9 smazaných) nebo se prodáv
 
 První nová směna v Odoo začne s hotovostí z poslední uzávěrky Dotykačky (5 000 Kč).
 
+## Novější prodeje
+
+Prodeje po 3. 11. 2026 doplňuje modul [`elite_trafika_dotykacka_update`](../elite_trafika_dotykacka_update/README.md)
+(teď do 19. 11. 2026). Import tohoto modulu umí číst data i z něj (`import_history(source)`) a doklady
+nové směny přidá do už nahrané směny se stejným začátkem.
+
 ## Kdy instalovat
 
 Sklad a prodeje jsou ke **3. 11. 2026**. Dokud se prodává v Dotykačce, rozchází se to s Odoo.
