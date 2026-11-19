@@ -1,0 +1,14 @@
+# Lokalni vyvoj (docker-compose.yml): oficialni odoo:18 + Python balicky navic.
+# Moduly se do kontejneru mountuji, nic se nekopiruje.
+#
+# Na odoo:18 zustavame, protoze Odoo core ve varyshop/website:release-1.1.0 je
+# starsi snapshot rady 18.0 a mcp_server na nem nenabehne (chybi
+# odoo.tools.misc.limited_field_access_token). Image pro nasazeni stavi
+# Dockerfile + GitHub Actions.
+FROM odoo:18
+
+USER root
+COPY requirements.txt /tmp/elite-requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /tmp/elite-requirements.txt \
+    && rm /tmp/elite-requirements.txt
+USER odoo

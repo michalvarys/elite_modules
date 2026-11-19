@@ -1,0 +1,5 @@
+# Python balicky navic k zakladnimu image (instaluje je Dockerfile).
+# mcp_server: authlib zamerne pod 1.7.0, viz jeho README, sekce Requirements.
+authlib>=1.6.12,<1.7.0
+defusedxml
+packaging
