@@ -21,7 +21,8 @@ elite_modules/
 │   └── elite_arena_ggleap/   Data z ggLeapu a přehled herny
 └── elite_trafika/         trafika Elite Trafika
     ├── elite_trafika_pos/    Pokladna: zboží z Dotykačky, sklad, DPH
-    └── elite_trafika_dotykacka/  Prodeje a sklad z Dotykačky
+    ├── elite_trafika_dotykacka/  Prodeje a sklad z Dotykačky
+    └── elite_trafika_dotykacka_update/  Novější prodeje z Dotykačky
 ```
 
 Celý repozitář je v kontejneru namountovaný do `/mnt/modules`.
@@ -169,3 +170,9 @@ Detaily v [elite_trafika/elite_trafika_dotykacka/README.md](elite_trafika/elite_
 
 dokumentace: 
 https://claude.ai/artifact/Pc5MFy27S6h7AZC1Hgx9Ex
+
+### `elite_trafika_dotykacka_update` — Novější prodeje z Dotykačky
+
+Doplní prodeje z novějšího exportu Dotykačky (teď do 19. 11. 2026), jen doklady, které v Odoo ještě
+nejsou; sklad nemění. Detaily v
+[elite_trafika/elite_trafika_dotykacka_update/README.md](elite_trafika/elite_trafika_dotykacka_update/README.md).

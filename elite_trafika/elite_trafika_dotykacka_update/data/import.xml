@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Při instalaci i při každé aktualizaci modulu: nahraje jen doklady, které v Odoo ještě nejsou.
+         Data jsou v data/dotykacka/*.csv, kód v elite_trafika_dotykacka/models/dotykacka_import.py.
+         Sklad se nemění. -->
+    <function model="elite.trafika.dotykacka.import" name="import_history">
+        <value>elite_trafika_dotykacka_update</value>
+    </function>
+</odoo>

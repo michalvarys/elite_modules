@@ -25,12 +25,15 @@ class EliteTrafikaDotykackaImport(models.AbstractModel):
     # ------------------------------------------------------------------ public API (data/import.xml)
 
     @api.model
-    def import_history(self):
+    def import_history(self, source=MODULE):
         """Shifts and receipts of Dotykačka as closed sessions and posted orders of the Trafika till.
 
         The orders stay outside accounting and stock: the sessions are closed directly, without the
         session closing that would post journal entries and create the stock pickings (the sales
-        were booked from Dotykačka already). Safe to call again: shifts already imported are skipped."""
+        were booked from Dotykačka already). Safe to call again: receipts already in Odoo are skipped,
+        new receipts of a shift imported before go to the session of that shift.
+
+        `source` is the module whose data/dotykacka/*.csv are read (a later export ships its own)."""
         config = self.env.ref(POS_CONFIG).sudo()
         company = config.company_id
         Session = self.env["pos.session"].sudo().with_company(company)
@@ -43,18 +46,18 @@ class EliteTrafikaDotykackaImport(models.AbstractModel):
         user = self.env.ref("base.user_admin")
 
         receipts = defaultdict(list)
-        for row in self._read("uctenky.csv"):
+        for row in self._read("uctenky.csv", source):
             receipts[row["smena"]].append(row)
         lines, payments = defaultdict(list), defaultdict(list)
-        for row in self._read("polozky.csv"):
+        for row in self._read("polozky.csv", source):
             lines[row["doklad"]].append(row)
-        for row in self._read("platby.csv"):
+        for row in self._read("platby.csv", source):
             payments[row["doklad"]].append(row)
         products = {}
 
         def product(xmlid):
             if xmlid not in products:
-                ref = xmlid if "." in xmlid else "%s.%s" % (MODULE, xmlid)
+                ref = xmlid if "." in xmlid else "%s.%s" % (source, xmlid)
                 template = self.env.ref(ref).sudo().with_context(active_test=False)
                 products[xmlid] = template.product_variant_ids[:1]
             return products[xmlid]
@@ -62,16 +65,22 @@ class EliteTrafikaDotykackaImport(models.AbstractModel):
         done = set(Order.search([("config_id", "=", config.id), ("name", "=like", ORDER_PREFIX + "%")]).mapped(
             "pos_reference"))
         balance, created = 0.0, 0
-        for count, shift in enumerate(self._read("smeny.csv"), 1):
+        for count, shift in enumerate(self._read("smeny.csv", source), 1):
             shift_receipts = [r for r in receipts[shift["smena"]] if r["doklad"] not in done]
             closing_cash = float(shift["hotovost_pri_uzavreni"])
             if not shift_receipts:
                 balance = closing_cash
                 continue
-            session = Session.create({"config_id": config.id, "user_id": user.id})
-            session.write({"state": "closed", "start_at": shift["otevreno"], "stop_at": shift["uzavreno"],
-                           "cash_register_balance_start": balance,
-                           "cash_register_balance_end_real": closing_cash})
+            session = Session.search([("config_id", "=", config.id), ("state", "=", "closed"),
+                                      ("start_at", "=", shift["otevreno"])], limit=1)
+            if session:
+                session.write({"stop_at": max(str(session.stop_at), shift["uzavreno"]),
+                               "cash_register_balance_end_real": closing_cash})
+            else:
+                session = Session.create({"config_id": config.id, "user_id": user.id})
+                session.write({"state": "closed", "start_at": shift["otevreno"], "stop_at": shift["uzavreno"],
+                               "cash_register_balance_start": balance,
+                               "cash_register_balance_end_real": closing_cash})
             balance = closing_cash
             vals_list = []
             for receipt in shift_receipts:
@@ -139,6 +148,6 @@ class EliteTrafikaDotykackaImport(models.AbstractModel):
     # ------------------------------------------------------------------ helpers
 
     @api.model
-    def _read(self, name):
-        with open(file_path("%s/data/dotykacka/%s" % (MODULE, name)), encoding="utf-8") as f:
+    def _read(self, name, source=MODULE):
+        with open(file_path("%s/data/dotykacka/%s" % (source, name)), encoding="utf-8") as f:
             return list(csv.DictReader(f))

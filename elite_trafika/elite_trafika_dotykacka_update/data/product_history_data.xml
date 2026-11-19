@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Zboží z tohoto exportu, které v Dotykačce dnes není a modul elite_trafika_dotykacka ho
+             ještě nezaložil (smazané produkty a produkty prodávané pod jiným názvem). Je archivované:
+             v pokladně se nenabízí, jen drží historické prodeje. -->
+        <record id="product_hist_rolling_papers_filtr_smart" model="product.template">
+            <field name="name">Rolling papers filtr smart</field>
+            <field name="type">consu</field>
+            <field name="list_price">65.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="elite_trafika_dotykacka.product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_poprs" model="product.template">
+            <field name="name">POPRS 💦</field>
+            <field name="type">consu</field>
+            <field name="list_price">199.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="elite_trafika_dotykacka.product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_orbit_spearmint" model="product.template">
+            <field name="name">Orbit spearmint</field>
+            <field name="type">consu</field>
+            <field name="list_price">25.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="elite_trafika_dotykacka.product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="product_hist_bong_shisha" model="product.template">
+            <field name="name">BONG shisha</field>
+            <field name="type">consu</field>
+            <field name="list_price">149.00</field>
+            <field name="available_in_pos" eval="True"/>
+            <field name="categ_id" ref="elite_trafika_dotykacka.product_category_historie"/>
+            <field name="active" eval="False"/>
+        </record>
+    </data>
+</odoo>
