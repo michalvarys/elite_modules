@@ -7,3 +7,4 @@ docker-compose.override.yml
 
 # Odoo Proprietary License, nesmi do verejneho repa. Lokalne se jen mountuje.
 elite_common/mcp_server/
+.env

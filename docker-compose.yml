@@ -26,11 +26,17 @@ services:
       PASSWORD: odoo
     restart: unless-stopped
 
-  # MCP endpoint pro AI agenty: http://localhost:8070/mcp, napevno databaze ev_test
-  # (viz config/odoo-mcp.conf). Sdili databazi i filestore s hlavni instanci.
+  # JEN LOKALNI VYVOJ: MCP endpoint pro AI agenty na http://localhost:8070/mcp.
+  # MCP klient neposila session cookie, takze Odoo s vice databazemi nevi, kterou
+  # pouzit; tahle instance vidi jen ev_test. Na serveru s jedinou databazi neni
+  # potreba, /mcp bezi primo v hlavni instanci.
+  # Spousti se jen s profilem mcp (COMPOSE_PROFILES=mcp v neverzovanem .env).
+  # Konfigurace i hesla jsou stejne jako u hlavni instance (config/odoo.conf).
   odoo-mcp:
+    profiles: ["mcp"]
     image: odoo-elite:18
     container_name: odoo-mcp
+    command: ["odoo", "--database=ev_test", "--db-filter=^ev_test$$", "--no-database-list", "--max-cron-threads=0"]
     depends_on:
       - db
       - odoo
@@ -39,7 +45,7 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
       - ./:/mnt/modules:ro
-      - ./config/odoo-mcp.conf:/etc/odoo/odoo.conf:ro
+      - ./config:/etc/odoo:ro
     environment:
       HOST: db
       USER: odoo
