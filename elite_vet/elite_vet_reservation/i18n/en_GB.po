@@ -3741,3 +3741,24 @@ msgstr ""
 "The service stays in the roster and in the reservation calendar, only the "
 "website does not show it: neither /rozpis-lekaru nor online booking (the "
 "doctor is not offered there). E.g. a second doctor on a weekend."
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid ""
+"%(doctor)s má v tu dobu jinou rezervaci v ordinaci %(room)s: %(other)s "
+"(%(time)s)."
+msgstr ""
+"%(doctor)s has another reservation at that time in %(room)s: %(other)s "
+"(%(time)s)."
+
+#. module: elite_vet_reservation
+#. odoo-python
+#: code:addons/elite_vet_reservation/models/reservation.py:0
+msgid "Uloženo i přes upozornění: %s"
+msgstr "Saved despite the warning: %s"
+
+#. module: elite_vet_reservation
+#: model_terms:ir.ui.view,arch_db:elite_vet_reservation.view_reservation_wizard_form
+msgid "Rezervaci jde i tak uložit."
+msgstr "The reservation can be saved anyway."

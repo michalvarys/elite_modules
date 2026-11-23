@@ -112,6 +112,7 @@ class TestFeedback1611(ReservationCase):
         self.assertEqual(people[self.nurse.id][str(self.day)], [{"label": "O-Rec", "sub": "", "kind": "afternoon"}])
 
     def test_pdf_template(self):
+        self.dr_a.staff_role = "doctor"
         self.P.add_shift(self.month, self.morning.id, self.day, self.dr_a.id)
         self.P.add_shift(self.month, self.morning.id, self.day, self.nurse.id)
         Report = self.env["ir.actions.report"]
@@ -122,5 +123,10 @@ class TestFeedback1611(ReservationCase):
         self.assertIn(self.dr_a.initials, html)
         # doctors on the first line of the cell, the nurse on the second
         self.assertLess(html.index(">%s<" % self.dr_a.initials), html.index(">%s<" % self.nurse.initials))
+        self.assertNotIn('<span class="evr-muted">–</span>', html)
+        # request 23. 11.: a nurse alone in a doctors' section stays on the second line
+        self.P.add_shift(self.month, self.afternoon.id, self.day, self.nurse.id)
+        html = Report._render_qweb_html("elite_vet_planning.report_roster", [], data={"month": str(self.month)})[0]
+        self.assertIn('<span class="evr-muted">–</span>', html.decode())
         # The PDF itself is made by wkhtmltopdf, which loads the report assets from the server:
         # inside a test that server is blocked, so the conversion is checked by hand (README).

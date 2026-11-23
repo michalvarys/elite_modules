@@ -58,9 +58,12 @@
                                     <t t-foreach="plan['days']" t-as="day">
                                         <td t-attf-class="evr-cell #{day['weekend'] and 'evr-we' or ''} #{day['holiday'] and 'evr-hol' or ''}">
                                             <t t-set="items" t-value="chips(slot, day)"/>
-                                            <!-- doctors on the first line, the others under them -->
+                                            <!-- doctors on the first line, the others under them; in a section for
+                                                 doctors both lines once anybody is there (request 23. 11.) -->
+                                            <t t-set="two" t-value="items and 'doctor' in row['preferred_roles']"/>
                                             <div t-foreach="[[c for c in items if c['doctor']], [c for c in items if not c['doctor']]]" t-as="line"
-                                                 t-if="line" class="evr-line">
+                                                 t-if="line or two" class="evr-line">
+                                                <span t-if="not line and line_index == 0" class="evr-muted">–</span>
                                                 <span t-foreach="line" t-as="c" class="evr-chip"
                                                       t-attf-style="background:#{c['color']};color:#{text_on(c['color'])}"><t t-esc="c['label']"/><small t-if="c['time']"> <t t-esc="c['time']"/></small></span>
                                             </div>

@@ -29,13 +29,19 @@ class SecondRoomWizard(models.TransientModel):
     overlap_can_override = fields.Boolean(compute="_compute_overlap_warning")
     allow_overlap = fields.Boolean(string="Přesto uložit")
 
-    @api.depends("room_id", "reservation_id")
+    @api.depends("room_id", "reservation_id", "doctor_id")
     def _compute_overlap_warning(self):
         for w in self:
             r = w.reservation_id
             clash = r._overlap_clash([w.room_id.id]) if w.room_id and r.start and r.stop else False
             w.overlap_warning = _("Termín je obsazený: %s.") % clash.name if clash else False
             w.overlap_can_override = bool(clash) and r._overlap_overridable(clash)
+            if not clash and w.room_id and w.doctor_id:
+                # request 23. 11.: the second doctor has another reservation elsewhere at that time
+                busy = r._doctor_busy(w.doctor_id, r.start, r.stop, w.room_id, [r.id])
+                if busy:
+                    w.overlap_warning = r._doctor_clash_text(w.doctor_id, busy)
+                    w.overlap_can_override = True
 
     @api.depends("room_id", "reservation_id")
     def _compute_serving_doctors(self):

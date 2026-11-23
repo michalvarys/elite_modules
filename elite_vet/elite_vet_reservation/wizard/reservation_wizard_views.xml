@@ -42,6 +42,13 @@
                      class="alert alert-warning o_ev_no_show_warning" role="status">
                     <i class="fa fa-user-times me-1" title="Nedorazil" aria-hidden="true"/><field name="no_show_warning" readonly="1" nolabel="1"/>
                 </div>
+                <!-- Request 23. 11.: the doctor has another reservation elsewhere at that time - a warning only,
+                     "Uložit rezervaci" saves anyway. -->
+                <div invisible="not doctor_warning or step not in ('client', 'summary')"
+                     class="alert alert-warning o_ev_doctor_warning" role="status">
+                    <i class="fa fa-user-md me-1" title="Lékařka" aria-hidden="true"/><field name="doctor_warning" readonly="1" nolabel="1"/>
+                    <span invisible="step != 'summary'"> Rezervaci jde i tak uložit.</span>
+                </div>
 
                 <!-- 1. What and when -->
                 <group invisible="step != 'what'">

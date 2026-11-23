@@ -602,6 +602,22 @@ upozornění. Zaškrtněte **Přesto uložit přes tuto rezervaci** a uložte.
 Překrývající se karty stojí v kalendáři vedle sebe. Na web se obsazený termín dál nenabízí.
 V historii rezervace zůstane poznámka.
 
+### Lékařka má v tu dobu rezervaci jinde
+
+Když rezervaci zapíšete k lékařce, která má ve stejný čas jinou potvrzenou rezervaci v **jiné
+ordinaci**, systém upozorní, např. „MVDr. Alena Malá má v tu dobu jinou rezervaci v ordinaci
+Ordinace 1: Rex (Jana Nováková) (9:00–9:30).“ Rezervaci jde i tak uložit (od 23. 11.):
+
+- **Nová rezervace:** upozornění je žlutě v kroku Klient a ve Shrnutí; **Uložit rezervaci** ji uloží.
+- **Formulář rezervace** (změna lékařky, času nebo ordinace): upozornění nahoře, zaškrtněte
+  **Přesto uložit přes tuto rezervaci** a uložte.
+- **Přetažení v kalendáři, potvrzení žádosti, druhá ordinace:** stejné okno jako u obsazeného času,
+  **Přesto přesunout** / **Přesto potvrdit** / **Přesto uložit**.
+- **Objednat u pokladny:** okno **Upozornění** s tlačítkem **Přesto objednat**.
+
+Obě ordinace jednoho zákroku pro dvě lékařky se za kolizi nepovažují. V historii rezervace zůstane
+poznámka „Uloženo i přes upozornění: …“.
+
 ### Víkendy a státní svátky
 
 O víkendech a ve státní svátky web sám **nic nenabízí** (pokud to správce v nastavení
