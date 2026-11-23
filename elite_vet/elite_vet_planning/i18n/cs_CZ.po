@@ -1394,3 +1394,9 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:elite_vet_planning.report_roster
 msgid "Úvazek"
 msgstr ""
+
+#. module: elite_vet_planning
+#. odoo-javascript
+#: code:addons/elite_vet_planning/static/src/planner/planner.xml:0
+msgid "No doctor"
+msgstr "Bez lékaře"

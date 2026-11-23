@@ -143,7 +143,8 @@ class TestBoard(ReceptionCase):
     def test_move_with_a_new_end(self):
         """Task 28: the till's dialog sends the end time too (longer / shorter, still checked)."""
         res = self.board_res(9, 0, pet=self.new_pet("Prodloužený"))
-        self.board_res(9, 0, pet=self.new_pet("Soused"), room_id=self.room2.id)
+        # without a doctor: the same doctor in two rooms at once would warn (request 23. 11.)
+        self.board_res(9, 0, pet=self.new_pet("Soused"), room_id=self.room2.id, doctor_id=False)
         api = self.api(self.reception)
         api.move_reservation(res.id, str(clinic_today()), 8 * 60 + 30, self.room.id, True, 9 * 60 + 30)
         self.assertEqual((local_time(res.start), local_time(res.stop)), ("08:30", "09:30"))

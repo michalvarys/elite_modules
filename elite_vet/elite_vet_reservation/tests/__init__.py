@@ -31,3 +31,4 @@ from . import test_block_recurrence
 from . import test_overlap
 from . import test_room_note
 from . import test_hidden_on_web
+from . import test_doctor_clash

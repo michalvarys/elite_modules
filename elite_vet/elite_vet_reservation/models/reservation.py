@@ -427,9 +427,40 @@ class VetReservation(models.Model):
     def _overlap_overridable(self, clash):
         return self.kind == "reservation" and getattr(clash, "kind", False) != "block"
 
-    @api.depends("kind", "state", "block_scope", "room_id", "start", "stop")
+    # ---------- the doctor elsewhere at the same time (request 23. 11., Lucie) ----------
+    @api.model
+    def _doctor_busy(self, doctor, start, stop, room=None, exclude_ids=()):
+        """The doctor's confirmed reservation in another room overlapping start–stop (empty if none).
+
+        Only a warning: the reservation can still be saved after a yes (Recepce and up, like a taken
+        time). The same room is the room overlap rule's job."""
+        if not (doctor and start and stop):
+            return self.browse()
+        domain = [("kind", "=", "reservation"), ("state", "in", BUSY_STATES), ("doctor_id", "=", doctor.id),
+                  ("start", "<", stop), ("stop", ">", start), ("id", "not in", [i for i in exclude_ids if i])]
+        if room:
+            domain.append(("room_id", "!=", room.id))
+        return self.search(domain, order="start, id", limit=1)
+
+    def _doctor_clash(self):
+        self.ensure_one()
+        if self.kind != "reservation" or self.state in INACTIVE_STATES or not self.room_id:
+            return self.browse()
+        own = self._origin.id
+        # the two rooms of a two-doctor procedure are one visit
+        linked = self.linked_reservation_id | (self.search([("linked_reservation_id", "=", own)]) if own else self.browse())
+        return self._doctor_busy(self.doctor_id, self.start, self.stop, self.room_id, [own] + linked.ids)
+
+    @api.model
+    def _doctor_clash_text(self, doctor, clash):
+        return _("%(doctor)s má v tu dobu jinou rezervaci v ordinaci %(room)s: %(other)s (%(time)s).",
+                 doctor=doctor.name, room=clash.room_id.name or "", other=clash.name,
+                 time="%s–%s" % (fields.Datetime.context_timestamp(clash, clash.start).strftime("%H:%M"),
+                                 fields.Datetime.context_timestamp(clash, clash.stop).strftime("%H:%M")))
+
+    @api.depends("kind", "state", "block_scope", "room_id", "start", "stop", "doctor_id")
     def _compute_overlap_warning(self):
-        """Live warning in the form, only while the time or the room is being changed."""
+        """Live warning in the form, only while the time, the room or the doctor is being changed."""
         for rec in self:
             rec.overlap_warning, rec.overlap_can_override = False, False
             origin = rec._origin
@@ -439,27 +470,41 @@ class VetReservation(models.Model):
             if clash:
                 rec.overlap_can_override = rec._overlap_overridable(clash)
                 rec.overlap_warning = _("Termín je obsazený: %s.") % clash.name
+                continue
+            if rec.kind == "reservation" and (moved or rec.doctor_id != origin.doctor_id):
+                doctor_clash = rec._doctor_clash()
+                if doctor_clash:
+                    rec.overlap_can_override = True
+                    rec.overlap_warning = rec._doctor_clash_text(rec.doctor_id, doctor_clash)
 
     def _check_overlap(self):
-        allowed = self.env.context.get("ev_allow_overlap") and self.env.user.has_group(RECEPTION_GROUP)
+        reception = self.env.user.has_group(RECEPTION_GROUP)
+        allowed = self.env.context.get("ev_allow_overlap") and reception
+        # The yes to a taken time also covers the doctor; the wizard's summary shows only the doctor.
+        doctor_allowed = (allowed or self.env.context.get("ev_allow_doctor_clash")) and reception
         for rec in self:
             rooms = rec._overlap_rooms()
             if not rooms:
                 continue
             self._lock_rooms(rooms)
             clash = rec._overlap_clash(rooms)
-            if not clash:
-                continue
-            overridable = rec._overlap_overridable(clash)
-            if overridable and allowed:
+            if clash:
+                overridable = rec._overlap_overridable(clash)
+                if not (overridable and allowed):
+                    error = OverlapRuleError if overridable else ValidationError
+                    raise error(_(
+                        "Termín %s–%s v ordinaci %s je obsazený: %s."
+                    ) % (fields.Datetime.context_timestamp(rec, rec.start).strftime("%d.%m. %H:%M"),
+                         fields.Datetime.context_timestamp(rec, rec.stop).strftime("%H:%M"),
+                         rec.room_id.name or _("všechny"), clash.name))
                 rec._message_log(body=_("Uloženo přes obsazený termín: %s") % clash.name)
+            doctor_clash = rec._doctor_clash()
+            if not doctor_clash:
                 continue
-            error = OverlapRuleError if overridable else ValidationError
-            raise error(_(
-                "Termín %s–%s v ordinaci %s je obsazený: %s."
-            ) % (fields.Datetime.context_timestamp(rec, rec.start).strftime("%d.%m. %H:%M"),
-                 fields.Datetime.context_timestamp(rec, rec.stop).strftime("%H:%M"),
-                 rec.room_id.name or _("všechny"), clash.name))
+            text = rec._doctor_clash_text(rec.doctor_id, doctor_clash)
+            if not doctor_allowed:
+                raise OverlapRuleError(text)
+            rec._message_log(body=_("Uloženo i přes upozornění: %s") % text)
 
     # ---------- block rights ----------
     @api.model
@@ -613,7 +658,7 @@ class VetReservation(models.Model):
             other = self.env["elite.vet.procedure"]._other()
             if missing and other:
                 missing.write({"procedure_id": other.id})
-        if {"start", "stop", "room_id", "kind", "block_scope"} & set(vals):
+        if {"start", "stop", "room_id", "kind", "block_scope", "doctor_id"} & set(vals):
             self._check_overlap()
         elif "state" in vals:
             arriving._check_overlap()
@@ -723,12 +768,16 @@ class VetReservation(models.Model):
         self.ensure_one()
         rooms = self._overlap_rooms() if self.kind == "reservation" and self.state == "web_new" else []
         clash = self._overlap_clash(rooms) if rooms else False
-        if clash and self._overlap_overridable(clash):
+        warning = clash and self._overlap_overridable(clash) and _("Termín je obsazený: %s.") % clash.name
+        if rooms and not clash:
+            doctor_clash = self._doctor_clash()
+            warning = doctor_clash and self._doctor_clash_text(self.doctor_id, doctor_clash)
+        if warning:
             return {
                 "type": "ir.actions.act_window", "res_model": "elite.vet.reservation.confirm.wizard",
                 "name": _("Potvrdit do obsazeného termínu"), "view_mode": "form", "views": [[False, "form"]],
                 "target": "new", "context": {"default_reservation_id": self.id,
-                                             "default_overlap_warning": _("Termín je obsazený: %s.") % clash.name},
+                                             "default_overlap_warning": warning},
             }
         return self.action_confirm()
 

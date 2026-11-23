@@ -112,7 +112,7 @@ days of the two tables sit exactly above each other and scroll sideways together
 | Yellow column | Public holiday (the bubble over the day shows its name). Holidays are calculated automatically. |
 | Red text under the day | A full-day note from **Rozpis služeb** (Shift roster), for example **Zavřeno** (Closed). |
 | Hatched cell | This shift does not apply on that day. |
-| Coloured label | A person in the shift. If the time differs from the default, it is shown too. Doctors are on the first line of the cell, nurses and others below them. |
+| Coloured label | A person in the shift. If the time differs from the default, it is shown too. Doctors are on the first line of the cell, nurses and others on the second. In sections for doctors (Ordinace, Sál) both lines are always there: with a nurse alone the first line is empty with a red dash, so it is plain that no doctor is there. |
 | Crossed-out eye on the label | The doctor's service is **hidden on the website** (chapter 8). |
 | Red frame on a label | Watch out: the person has an absence or cannot work that day, or the doctor is not carried over to reservations. The bubble gives the reason. |
 | Dashed frame | A duty entered directly in **Rezervace → Rozpis lékařů** (Reservations → Doctors' roster). |

@@ -56,6 +56,8 @@
     // a cell: doctors on the first line, nurses and the rest on the second (request 16. 11.)
     .evp-line { display: flex; flex-wrap: wrap; }
     .evp-line + .evp-line { border-top: 1px dotted #cbd5e1; }
+    .evp-line-empty { min-height: 18px; align-items: center; }
+    .evp-no-doctor { color: #b91c1c; font-size: 11px; padding-left: 4px; }
     .evp-cell .evp-chip { overflow: hidden; }
     .evp-chip-hidden { opacity: .7; }
     .evp-hidden-ico { font-size: 9px; }

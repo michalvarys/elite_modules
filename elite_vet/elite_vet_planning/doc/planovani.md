@@ -102,7 +102,7 @@ přesně nad sebou a posouvají se do stran spolu.
 | Žlutý sloupec | Státní svátek (název ukáže bublina nad dnem). Svátky se počítají samy. |
 | Červený text pod dnem | Celodenní poznámka z Rozpisu služeb, např. Zavřeno. |
 | Šrafované políčko | Tato směna v ten den neplatí. |
-| Barevný štítek | Člověk ve směně. U jiného než výchozího času je i čas. Lékařky jsou v políčku na prvním řádku, sestry a ostatní pod nimi. |
+| Barevný štítek | Člověk ve směně. U jiného než výchozího času je i čas. Lékařky jsou v políčku na prvním řádku, sestry a ostatní na druhém. V úsecích pro lékaře (Ordinace, Sál) jsou oba řádky vždy: je-li tam jen sestra, je první řádek prázdný s červenou pomlčkou – na první pohled je vidět, že tam není lékař. |
 | Přeškrtnuté oko u štítku | Služba lékařky je **skrytá na webu** (kapitola 8). |
 | Červený rámeček štítku | Pozor: člověk má ten den absenci nebo nemůže, nebo se lékařka nepropisuje do rezervací. Důvod ukáže bublina. |
 | Čárkovaný rámeček | Služba zadaná přímo v Rezervace → Rozpis lékařů. |

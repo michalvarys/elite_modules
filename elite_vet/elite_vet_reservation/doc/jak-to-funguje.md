@@ -217,6 +217,11 @@ tlačítkem **Přesto vytvořit**, **Přesto přesunout**, **Přesto potvrdit** 
 **Přesto objednat**. V historii rezervace zůstane poznámka a karty stojí v kalendáři vedle sebe.
 Přes úplnou blokaci to nejde a web obsazený čas nikdy nenabídne.
 
+Stejně se kontroluje i **lékařka** (od 23. 11.): má-li rezervace lékařku, která má ve stejný čas jinou
+potvrzenou rezervaci v jiné ordinaci, uložení upozorní a projde až po stejném „Přesto …“ (v průvodci
+Nová rezervace je upozornění ve Shrnutí a Uložit rezervaci je souhlas). Obě ordinace zákroku pro dvě
+lékařky se nepočítají.
+
 Když dvě recepční (nebo recepční a web) ukládají stejný čas ve stejnou chvíli,
 systém ordinaci na okamžik „zamkne“. Druhý zápis počká, uvidí první rezervaci
 a skončí hláškou o obsazeném termínu. Nechtěné dvojí obsazení tak nevznikne ani při souběhu.

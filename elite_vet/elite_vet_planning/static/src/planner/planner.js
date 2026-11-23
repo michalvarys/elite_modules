@@ -150,11 +150,17 @@ export class Planner extends Component {
         return this.state.data.shifts.filter((s) => s.slot_id === slot.id && s.date === day.date)
             .sort((a, b) => (order[a.role] ?? 9) - (order[b.role] ?? 9) || a.hour_from - b.hour_from);
     }
-    /** The cell's chips in lines: doctors on the first one, everybody else on the second. */
-    cellLines(slot, day) {
+    /** The cell's chips in lines: doctors on the first one, everybody else on the second.
+     * In a section for doctors (Ordinace, Sál) both lines are always there once the cell has anybody
+     * (request 23. 11., Lucie): a nurse alone stays on the second line under an empty doctors' line,
+     * so it is plain that no doctor is there. Other sections (Recepce, Stáž) keep one line. */
+    cellLines(row, slot, day) {
         const items = this.cellShifts(slot, day);
-        return [items.filter((s) => s.role === "doctor"), items.filter((s) => s.role !== "doctor")]
-            .filter((line) => line.length);
+        const lines = [items.filter((s) => s.role === "doctor"), items.filter((s) => s.role !== "doctor")];
+        if (items.length && row.preferred_roles.includes("doctor")) {
+            return lines;
+        }
+        return lines.filter((line) => line.length);
     }
     chipLabel(shift) {
         if (!shift.member_id) return shift.helper_name;

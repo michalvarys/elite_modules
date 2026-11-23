@@ -246,6 +246,8 @@ class ReceptionBooking(models.AbstractModel):
             wizard.slot_doctor_id = room_doctor[1] or wizard.doctor_id.id
         else:
             self._book_over_reservation(wizard, room, minute, force)
+        # Request 23. 11.: the doctor busy in another room only warns; "Přesto objednat" is the yes.
+        wizard.doctor_clash_ok = bool(force)
         try:
             with self.env.cr.savepoint():
                 wizard.action_save()

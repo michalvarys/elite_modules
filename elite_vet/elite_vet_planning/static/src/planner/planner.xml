@@ -78,7 +78,8 @@
                                             <t t-set="items" t-value="cellShifts(slot, day)"/>
                                             <td t-att-class="dayClass(day, 'evp-cell' + (applies ? '' : ' evp-off'))"
                                                 t-on-click="() => this.openCell(row, slot, day)">
-                                                <div t-foreach="cellLines(slot, day)" t-as="line" t-key="line_index" class="evp-line">
+                                                <div t-foreach="cellLines(row, slot, day)" t-as="line" t-key="line_index" t-attf-class="evp-line #{line.length ? '' : 'evp-line-empty'}">
+                                                    <span t-if="!line.length and line_index === 0" class="evp-no-doctor" title="No doctor">–</span>
                                                     <t t-foreach="line" t-as="shift" t-key="shift.id">
                                                         <t t-set="conflict" t-value="chipConflict(shift)"/>
                                                         <span t-attf-class="evp-chip #{conflict or notBooked(shift) ? 'evp-chip-warn' : ''} #{shift.assignment ? 'evp-chip-assign' : ''} #{shift.hide_on_web ? 'evp-chip-hidden' : ''}" t-att-style="chipStyle(shift)"

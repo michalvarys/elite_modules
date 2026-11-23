@@ -665,6 +665,23 @@ the top. Tick **Přesto uložit přes tuto rezervaci** (Save over this reservati
 Overlapping cards sit side by side in the calendar. The website still does not offer the taken time.
 A note stays in the reservation history.
 
+### The doctor has a reservation elsewhere at that time
+
+When you book a doctor who has another confirmed reservation at the same time in **another room**,
+the system warns, e.g. "MVDr. Alena Malá má v tu dobu jinou rezervaci v ordinaci Ordinace 1: …"
+(has another reservation at that time in Ordinace 1). The reservation can still be saved (since 23 Nov):
+
+- **Nová rezervace** (New reservation): the warning is yellow in the Klient step and in the summary;
+  **Uložit rezervaci** saves it.
+- **Reservation form** (a change of doctor, time or room): the warning at the top; tick **Přesto uložit
+  přes tuto rezervaci** and save.
+- **Dragging in the calendar, confirming a request, a second room:** the same window as for a taken
+  time, **Přesto přesunout** / **Přesto potvrdit** / **Přesto uložit**.
+- **Objednat at the till:** the **Upozornění** (Warning) window with **Přesto objednat**.
+
+The two rooms of one two-doctor procedure do not count as a clash. A note "Uloženo i přes upozornění: …"
+(Saved despite the warning) stays in the reservation history.
+
 ### Weekends and public holidays
 
 On weekends and public holidays the website itself **offers nothing** (unless the manager has switched

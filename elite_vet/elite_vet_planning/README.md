@@ -36,7 +36,8 @@ Nic nového vedle rozpisu nevzniká: každé přiřazení v plánu je směna v R
   jdou na /rozpis-lekaru, až když je měsíc zveřejněný. Do té doby se dá plánovat, aniž by to klienti
   viděli. Ručně zadané směny v Rozpisu služeb a celodenní poznámky se zobrazují jako dřív. Při
   aktualizaci na 18.0.1.1.0 se zveřejní měsíce, které už směny z plánu mají, aby z webu nic nezmizelo.
-* V buňce plánu jsou lékařky na prvním řádku, sestry a ostatní pod nimi.
+* V buňce plánu jsou lékařky na prvním řádku, sestry a ostatní na druhém. V úsecích pro lékaře (Role nahoře
+  v nabídce obsahuje `doctor`) jsou oba řádky vždy, i když tam lékař není (prázdný řádek s pomlčkou, i v PDF).
 
 ## Přehled po lidech a PDF
 

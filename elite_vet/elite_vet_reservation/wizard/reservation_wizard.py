@@ -86,6 +86,10 @@ class ReservationWizard(models.TransientModel):
     # Request 4. 11.: the taken time offered with "Přesto vytvořit", and the user's yes to it.
     overlap_room_id = fields.Many2one("elite.vet.room")
     overlap_ok = fields.Boolean(help="Recepce potvrdila rezervaci přes obsazený termín.")
+    # Request 23. 11. (Lucie): the doctor has another reservation at that time in another room.
+    # A warning in the summary; saving from the summary is the yes (doctor_clash_ok).
+    doctor_warning = fields.Char(compute="_compute_doctor_warning")
+    doctor_clash_ok = fields.Boolean()
 
     # 3. Client
     partner_mode = fields.Selection([("existing", "Existující klient"), ("new", "Nový klient"),
@@ -257,6 +261,8 @@ class ReservationWizard(models.TransientModel):
             rows = [("Popis", w.title)] if w.title else []
             if w.overlap_ok:
                 rows.append(("Překryv", "Termín se překrývá s jinou rezervací"))
+            if w.doctor_warning:
+                rows.append(("Pozor", w.doctor_warning))
             rows += [
                 ("Úkon", w.procedure_id.name or ""),
                 ("Termín", "%s %s–%s (%d min)%s" % (w.day_label, minutes_label(w.minute), minutes_label(w.minute + w._effective_duration()),
@@ -271,6 +277,18 @@ class ReservationWizard(models.TransientModel):
             ]
             w.summary = Markup("<table class='table table-sm mb-0'>%s</table>") % Markup("").join(
                 Markup("<tr><th class='w-25'>%s</th><td>%s</td></tr>") % (escape(k), escape(v)) for k, v in rows)
+
+    @api.depends("room_id", "date", "minute", "slot_doctor_id", "doctor_id", "duration", "procedure_id")
+    def _compute_doctor_warning(self):
+        Res = self.env["elite.vet.reservation"]
+        A = self.env["elite.vet.availability"]
+        for w in self:
+            doctor = w.slot_doctor_id or w.doctor_id
+            clash = False
+            if doctor and w.room_id and w.date and w.procedure_id:
+                start = A.local_to_utc(w.date, w.minute)
+                clash = Res._doctor_busy(doctor, start, start + timedelta(minutes=w._effective_duration()), w.room_id)
+            w.doctor_warning = Res._doctor_clash_text(doctor, clash) if clash else False
 
     @api.depends("room_id", "date", "minute", "procedure_id")
     def _compute_serving_doctors(self):
@@ -573,7 +591,7 @@ class ReservationWizard(models.TransientModel):
             raise UserError(_("Vyplňte jméno a příjmení klienta."))
         if self.partner_mode == "new" and not (self.contact_phone or self.contact_email):
             raise UserError(_("Vyplňte telefon nebo e-mail klienta."))
-        self.step = "summary"
+        self.write({"step": "summary", "doctor_clash_ok": bool(self.doctor_warning)})
         return self._reopen()
 
     def action_back_to_client(self):
@@ -597,7 +615,8 @@ class ReservationWizard(models.TransientModel):
         if not pet and partner and (self.pet_name or "").strip():
             pet = env["elite.vet.pet"].find_or_create(partner, self.pet_name, self.pet_species)
         start = env["elite.vet.availability"].local_to_utc(self.date, self.minute)
-        Res = env["elite.vet.reservation"].with_context(ev_allow_overlap=self.overlap_ok)
+        Res = env["elite.vet.reservation"].with_context(ev_allow_overlap=self.overlap_ok,
+                                                        ev_allow_doctor_clash=self.doctor_clash_ok)
         if not self.send_email or no_client:
             Res = Res.with_context(ev_no_mail=True)
         rec = Res.create({

@@ -235,6 +235,11 @@ with **Přesto vytvořit** (Create anyway), **Přesto přesunout** (Move anyway)
 history and the cards sit side by side in the calendar. This is not possible over a full block, and
 the website never offers a taken time.
 
+The **doctor** is checked the same way (since 23 Nov): if the reservation's doctor has another confirmed
+reservation at the same time in another room, saving warns and goes through only after the same "Přesto …"
+(in the Nová rezervace wizard the warning is in the summary and Uložit rezervaci is the yes). The two rooms of
+a two-doctor procedure do not count.
+
 When two receptionists (or a receptionist and the website) save the same time at the same moment, the
 system briefly "locks" the room. The second write waits, sees the first reservation and ends with the
 message about the taken time. So an unintended double booking does not happen even then.

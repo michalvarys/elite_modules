@@ -706,10 +706,11 @@ export class ReceptionBookingScreen extends Component {
         await this.reloadAll();
     }
 
-    /** The server refused only because of another reservation: "Přesto objednat" repeats it with force. */
+    /** The server refused only because of another reservation, or the doctor has one elsewhere at that
+     * time (request 23. 11.): "Přesto objednat" repeats it with force. */
     askBookOver(error) {
         this.dialog.add(ConfirmationDialog, {
-            title: "Termín je obsazený",
+            title: "Upozornění",
             body: error.data?.message || "",
             confirmLabel: "Přesto objednat",
             cancelLabel: "Zpět",
