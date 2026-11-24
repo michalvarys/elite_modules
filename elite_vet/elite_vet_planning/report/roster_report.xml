@@ -49,6 +49,8 @@
                     </thead>
                     <tbody>
                         <t t-foreach="plan['rows']" t-as="row">
+                            <!-- a section for doctors: Role nahoře v nabídce has doctor, or a doctor works there this month -->
+                            <t t-set="doctor_row" t-value="'doctor' in row['preferred_roles'] or bool([s for s in plan['shifts'] if s['row_id'] == row['id'] and s['role'] == 'doctor'])"/>
                             <t t-foreach="row['slots']" t-as="slot">
                                 <tr t-attf-class="#{slot_first and 'evr-first' or ''}">
                                     <th class="evr-label">
@@ -60,7 +62,7 @@
                                             <t t-set="items" t-value="chips(slot, day)"/>
                                             <!-- doctors on the first line, the others under them; in a section for
                                                  doctors both lines once anybody is there (request 23. 11.) -->
-                                            <t t-set="two" t-value="items and 'doctor' in row['preferred_roles']"/>
+                                            <t t-set="two" t-value="items and doctor_row"/>
                                             <div t-foreach="[[c for c in items if c['doctor']], [c for c in items if not c['doctor']]]" t-as="line"
                                                  t-if="line or two" class="evr-line">
                                                 <span t-if="not line and line_index == 0" class="evr-muted">–</span>
