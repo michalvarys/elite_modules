@@ -128,5 +128,25 @@ class TestFeedback1611(ReservationCase):
         self.P.add_shift(self.month, self.afternoon.id, self.day, self.nurse.id)
         html = Report._render_qweb_html("elite_vet_planning.report_roster", [], data={"month": str(self.month)})[0]
         self.assertIn('<span class="evr-muted">–</span>', html.decode())
+
+    def test_pdf_nurse_alone_without_role_setting(self):
+        """Request 23. 11. (follow-up 24. 11.): the two lines must not depend on Role nahoře v nabídce.
+        A section where a doctor works this month is a doctors' one; Recepce keeps one line."""
+        self.dr_a.staff_role = "doctor"
+        self.ord1.preferred_roles = "nurse"
+        Report = self.env["ir.actions.report"]
+
+        def render():
+            return Report._render_qweb_html("elite_vet_planning.report_roster", [], data={"month": str(self.month)})[0].decode()
+
+        rec = self.env["elite.vet.planning.row"].create({"name": "Recepce", "preferred_roles": "reception,nurse", "slot_ids": [
+            (0, 0, {"name": "Ranní", "type_id": self.t_am.id, "hour_from": 8, "hour_to": 14, "days": "all"})]})
+        self.P.add_shift(self.month, rec.slot_ids.id, self.day, self.nurse.id)
+        self.assertNotIn('<span class="evr-muted">–</span>', render())
+        self.P.add_shift(self.month, self.afternoon.id, self.day, self.nurse.id, False, 14, 20)
+        self.assertNotIn('<span class="evr-muted">–</span>', render())   # no doctor in Ord 1 yet
+        self.P.add_shift(self.month, self.morning.id, self.day, self.dr_a.id)
+        self.assertIn('<span class="evr-muted">–</span>', render())
+
         # The PDF itself is made by wkhtmltopdf, which loads the report assets from the server:
         # inside a test that server is blocked, so the conversion is checked by hand (README).

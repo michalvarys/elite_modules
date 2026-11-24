@@ -153,14 +153,20 @@ export class Planner extends Component {
     /** The cell's chips in lines: doctors on the first one, everybody else on the second.
      * In a section for doctors (Ordinace, Sál) both lines are always there once the cell has anybody
      * (request 23. 11., Lucie): a nurse alone stays on the second line under an empty doctors' line,
-     * so it is plain that no doctor is there. Other sections (Recepce, Stáž) keep one line. */
+     * so it is plain that no doctor is there. A section is for doctors when its Role nahoře v nabídce
+     * has doctor, or when a doctor has a shift in it this month (the setting is often left empty).
+     * Other sections (Recepce, Stáž) keep one line. */
     cellLines(row, slot, day) {
         const items = this.cellShifts(slot, day);
         const lines = [items.filter((s) => s.role === "doctor"), items.filter((s) => s.role !== "doctor")];
-        if (items.length && row.preferred_roles.includes("doctor")) {
+        if (items.length && this.isDoctorRow(row)) {
             return lines;
         }
         return lines.filter((line) => line.length);
+    }
+    isDoctorRow(row) {
+        return row.preferred_roles.includes("doctor")
+            || this.state.data.shifts.some((s) => s.row_id === row.id && s.role === "doctor");
     }
     chipLabel(shift) {
         if (!shift.member_id) return shift.helper_name;
