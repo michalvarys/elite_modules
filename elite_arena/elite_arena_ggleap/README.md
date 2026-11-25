@@ -190,9 +190,14 @@ Dny se počítají v časovém pásmu uživatele, výchozí je Europe/Prague.
   Každá karta ukazuje změnu oproti srovnávanému období. Kliknutí otevře záznamy.
 - **Tržby a návštěvy v čase:** sloupce jsou tržby podle druhu, čára je počet návštěv. Delší období se zobrazí po měsících.
 - **Kdo k nám chodí a kdo odchází:** počty ve skupinách ke dnešku. Kliknutí otevře seznam hráčů.
-- **Jak se mění počet hráčů:** počty ve skupinách týden po týdnu, vždy ke konci týdne.
+- **Jak se mění počet hráčů:** počty ve skupinách ke konci každého týdne, nebo přepínačem ke konci každého měsíce (u běžícího měsíce stav ke dnešku, popisek „zatím“).
   - Nezávisí na zvoleném období. Počítá se zpětně ze stažených návštěv se stejnými hranicemi dní jako skupiny. Poslední bod proto odpovídá dnešním skupinám, rozdíl je jen pár hráčů, protože skupiny navíc berou `LastSeen` z detailu hráče.
-  - Věta a čísla nad grafem ukazují změnu za poslední 4 týdny. U pravidelných a nových je růst zelený, u odcházejících a ztracených červený.
+  - Věta a čísla nad grafem ukazují změnu za poslední 4 týdny, nebo za poslední 3 měsíce. U pravidelných a nových je růst zelený, u odcházejících a ztracených červený. V bublině nad bodem je změna proti minulému týdnu nebo měsíci.
+  - **Kampaně:** fialová svislá čára je den, kdy začala kampaň. Věta pod grafem porovná počet pravidelných hráčů před poslední kampaní a dnes. Jako kampaň se počítá:
+    - spuštěná série automatických e‑mailů (`elite_arena_mail_sequence`, pole *Spuštěno*),
+    - den, kdy z jednoho dotazníku vzniklo aspoň 10 odpovědí či pozvánek (`survey.user_input`), tedy hromadné rozeslání.
+
+    Oba moduly jsou nepovinné: když nejsou nainstalované, čáry se jen nezobrazí.
   - Graf začíná 30 dní po první stažené návštěvě. Ztracené (90 dní bez návštěvy) jde poznat až 90 dní od začátku historie, panel to napíše.
   - Čára *Přišel jen jednou* je skrytá, jen roste a přebila by ostatní. Zapne se kliknutím v legendě.
 - **Kdy se chodí:** mapa den × hodina příchodu.

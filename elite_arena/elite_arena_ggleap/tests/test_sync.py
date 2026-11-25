@@ -422,14 +422,32 @@ class TestGgleapSync(TransactionCase):
         self.assertEqual({m["name"] for m in data["machines"]}, {"PC1", "PC2", "Konzole L"})
         self.assertTrue(data["payment_methods"])
         trend = data["segment_trend"]
-        points = trend["points"]
-        self.assertTrue(points)
+        weeks, months = trend["weeks"], trend["months"]
+        self.assertTrue(weeks and months)
         visits = self.env["elite.arena.ggleap.visit"].search([("player_id", "!=", False)])
         last = max(visits.mapped("start")).date()
-        self.assertEqual(points[-1]["date"], last.isoformat())
-        self.assertEqual(sum(v for k, v in points[-1].items() if k != "date"), len(visits.mapped("player_id")))
-        for a, b in zip(points, points[1:]):
+        players = len(visits.mapped("player_id"))
+        # both series end today's state (the last visit day) and count every player with a visit
+        for series in (weeks, months):
+            self.assertEqual(series[-1]["date"], last.isoformat())
+            self.assertEqual(sum(v for k, v in series[-1].items() if k != "date"), players)
+        for a, b in zip(weeks, weeks[1:]):
             self.assertEqual((date.fromisoformat(b["date"]) - date.fromisoformat(a["date"])).days, 7)
+        for p in months[:-1]:   # full months end on their last day
+            self.assertEqual((date.fromisoformat(p["date"]) + timedelta(days=1)).day, 1)
+        self.assertIsInstance(trend["campaigns"], list)
+
+    def test_dashboard_campaign_marks(self):
+        """A started e-mail series shows up as a campaign mark (only when that optional module is installed)."""
+        if "elite.arena.mail.sequence" not in self.env:
+            self.skipTest("elite_arena_mail_sequence is not installed")
+        self.run_sync(dataset())
+        seq = self.env["elite.arena.mail.sequence"].create({"name": "Vrať se"})
+        started = NOW - timedelta(days=5)
+        self.env.cr.execute("update elite_arena_mail_sequence set activated_at = %s where id = %s", (started, seq.id))
+        dash = self.env["elite.arena.ggleap.dashboard"].with_context(tz="Europe/Prague")
+        marks = dash._segment_trend()["campaigns"]
+        self.assertIn({"date": started.date().isoformat(), "label": "E‑maily: Vrať se"}, marks)
 
     # ------------------------------------------------------------------ game passes
     def test_gamepasses(self):
