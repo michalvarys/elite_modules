@@ -190,6 +190,11 @@ Dny se počítají v časovém pásmu uživatele, výchozí je Europe/Prague.
   Každá karta ukazuje změnu oproti srovnávanému období. Kliknutí otevře záznamy.
 - **Tržby a návštěvy v čase:** sloupce jsou tržby podle druhu, čára je počet návštěv. Delší období se zobrazí po měsících.
 - **Kdo k nám chodí a kdo odchází:** počty ve skupinách ke dnešku. Kliknutí otevře seznam hráčů.
+- **Jak se mění počet hráčů:** počty ve skupinách týden po týdnu, vždy ke konci týdne.
+  - Nezávisí na zvoleném období. Počítá se zpětně ze stažených návštěv se stejnými hranicemi dní jako skupiny. Poslední bod proto odpovídá dnešním skupinám, rozdíl je jen pár hráčů, protože skupiny navíc berou `LastSeen` z detailu hráče.
+  - Věta a čísla nad grafem ukazují změnu za poslední 4 týdny. U pravidelných a nových je růst zelený, u odcházejících a ztracených červený.
+  - Graf začíná 30 dní po první stažené návštěvě. Ztracené (90 dní bez návštěvy) jde poznat až 90 dní od začátku historie, panel to napíše.
+  - Čára *Přišel jen jednou* je skrytá, jen roste a přebila by ostatní. Zapne se kliknutím v legendě.
 - **Kdy se chodí:** mapa den × hodina příchodu.
 - **Co se u nás hraje:** viz [Hry](#hry).
 - **Další panely:** co se prodává, nejlepší hráči období, jak platí (hotově, kartou, z kreditu) a vytížení počítačů.

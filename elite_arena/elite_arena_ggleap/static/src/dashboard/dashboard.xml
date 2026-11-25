@@ -77,6 +77,23 @@
                         </div>
                     </section>
 
+                    <section class="egd-panel egd-wide" t-if="state.data.segment_trend">
+                        <h5>Jak se mění počet hráčů</h5>
+                        <p class="egd-explain">
+                            <t t-esc="trend.sentence"/>
+                            Každý bod je stav ke konci týdne, počítaný ze záznamů o návštěvách stejně jako skupiny výše.
+                            <t t-esc="trend.note"/>
+                        </p>
+                        <div class="egd-trend-changes">
+                            <span t-foreach="trend.changes" t-as="c" t-key="c.key" class="egd-trend-change">
+                                <span class="egd-dot" t-att-style="'background:' + c.color"/>
+                                <t t-esc="c.label"/>: <strong t-esc="whole(c.now)"/>
+                                <span t-att-class="c.cls" t-esc="c.text"/>
+                            </span>
+                        </div>
+                        <div class="egd-chart"><canvas t-ref="trend"/></div>
+                    </section>
+
                     <section class="egd-panel egd-wide">
                         <h5>Kdy se chodí</h5>
                         <t t-set="hm" t-value="heat"/>
