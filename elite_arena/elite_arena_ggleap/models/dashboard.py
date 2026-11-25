@@ -10,6 +10,7 @@ import pytz
 from odoo import api, fields, models
 from odoo.exceptions import AccessError
 
+from .config import get_settings
 from .player import SEGMENT_HELP, SEGMENTS
 from .product import KINDS
 
@@ -82,6 +83,7 @@ class GgleapDashboard(models.AbstractModel):
             "top_players": self._top_players(start, end),
             "games": self._games(start, end, p_start, p_end, compare),
             "segments": self._segments(),
+            "segment_trend": self._segment_trend(),
             "sync": {
                 "last_success_at": fields.Datetime.to_string(status.last_success_at) if status.last_success_at else False,
                 "alert": status.alert or False,
@@ -276,3 +278,51 @@ class GgleapDashboard(models.AbstractModel):
             out.append({"key": key, "label": label, "help": SEGMENT_HELP[key], "count": count,
                         "share": round(100.0 * count / total), "avg_spent": float(avg), "with_email": emails})
         return out
+
+    def _segment_trend(self):
+        """Players in each group week by week, recomputed from the visit history with the same
+        rules as the segment field (so the last point matches today's groups). Not period-dependent.
+        History starts with the first synced visit, so e.g. "ztracení" can only appear lost_days later."""
+        settings = get_settings(self.env)
+        risk, lost = settings["risk_days"], settings["lost_days"]
+        tz = self._tz().zone
+        self.env.cr.execute("""select min((start at time zone 'UTC' at time zone %s)::date),
+                                      max((start at time zone 'UTC' at time zone %s)::date)
+                                 from elite_arena_ggleap_visit where player_id is not null""", (tz, tz))
+        first, last = self.env.cr.fetchone()
+        if not first:
+            return False
+        end = min(last, self._today())
+        points = []
+        day = end
+        # in the first risk_days of history nobody can be a regular yet, every player looks new
+        while day >= first + timedelta(days=risk):
+            points.append(day)
+            day -= timedelta(days=7)
+        if not points:
+            return False
+        points.reverse()
+        # one visit = one local day with sessions (as in the stats step of the sync)
+        self.env.cr.execute("""
+            with days as (select distinct player_id, (start at time zone 'UTC' at time zone %s)::date as d
+                            from elite_arena_ggleap_visit where player_id is not null),
+                 pts as (select unnest(%s::date[]) as p),
+                 st as (select p, count(*) as n, p - max(d) as idle
+                          from pts join days on d <= p group by p, player_id)
+            select p,
+                   count(*) filter (where n > 1 and idle < %s),
+                   count(*) filter (where n = 1 and idle < %s),
+                   count(*) filter (where n > 1 and idle >= %s and idle < %s),
+                   count(*) filter (where n > 1 and idle >= %s),
+                   count(*) filter (where n = 1 and idle >= %s)
+              from st group by p order by p""", (tz, points, risk, risk, risk, lost, lost, risk))
+        keys = ["aktivni_stali", "jednou_nedavno", "ohrozeni", "ztraceni", "jednou_davno"]
+        rows = [dict(zip(keys, r[1:]), date=fields.Date.to_string(r[0])) for r in self.env.cr.fetchall()]
+        return {
+            "points": rows,
+            "labels": {k: v for k, v in SEGMENTS if k in keys},
+            "first": fields.Date.to_string(first),
+            "risk_days": risk, "lost_days": lost,
+            "risk_from": fields.Date.to_string(first + timedelta(days=risk)),
+            "lost_from": fields.Date.to_string(first + timedelta(days=lost)),
+        }

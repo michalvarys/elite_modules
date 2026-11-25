@@ -55,3 +55,8 @@
 @media (max-width: 900px) {
     .egd-grid { grid-template-columns: 1fr; }
 }
+
+.egd-trend-changes {
+    display: flex; flex-wrap: wrap; gap: 4px 18px; margin-bottom: 8px; font-size: 0.9rem;
+    .egd-trend-change { display: inline-flex; align-items: center; gap: 4px; }
+}

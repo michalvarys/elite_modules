@@ -67,7 +67,7 @@ export class GgleapDashboard extends Component {
         this.today = new Date(); this.today.setHours(12, 0, 0, 0);
         this.presets = presets(this.today);
         this.state = useState({ preset: "month", from: "", to: "", data: null, loading: true });
-        this.refs = { daily: useRef("daily"), payments: useRef("payments"), machines: useRef("machines") };
+        this.refs = { daily: useRef("daily"), trend: useRef("trend"), payments: useRef("payments"), machines: useRef("machines") };
         this.charts = [];
         this.chartsDirty = true;
         const drawIfDirty = () => { if (this.chartsDirty && !this.state.loading) { this.chartsDirty = false; this.renderCharts(); } };
@@ -337,6 +337,40 @@ export class GgleapDashboard extends Component {
     }
     openProduct(row) { this.openLines([["name", "=", row.name]], row.name); }
 
+    // ---------- segment trend ----------
+    /** Change over the last 4 weeks per group; for regulars more is good, for leaving/lost more is bad. */
+    get trend() {
+        const t = this.state.data.segment_trend;
+        const pts = t.points, last = pts[pts.length - 1], base = pts[Math.max(0, pts.length - 5)];
+        const weeks = pts.length - 1 - pts.indexOf(base);
+        const good = { aktivni_stali: 1, jednou_nedavno: 1, ohrozeni: -1, ztraceni: -1 };
+        const changes = Object.keys(good).map((key) => {
+            const diff = last[key] - base[key];
+            const better = diff * good[key] > 0;
+            return { key, label: t.labels[key], color: SEGMENT_COLORS[key], now: last[key],
+                     text: !weeks ? "" : diff ? " (" + (diff > 0 ? "+" : "−") + this.whole(Math.abs(diff)) + ")" : " (beze změny)",
+                     cls: !diff || !weeks ? "text-muted" : better ? "text-success" : "text-danger" };
+        });
+        let sentence = "";
+        if (weeks) {
+            const act = last.aktivni_stali - base.aktivni_stali;
+            const leaving = last.ohrozeni + last.ztraceni - base.ohrozeni - base.ztraceni;
+            // weeks is 1–4: "za poslední týden", "za poslední 3 týdny"
+            sentence = (weeks === 1 ? "Za poslední týden" : "Za poslední " + weeks + " týdny") + " (do " + czDate(last.date) + ") ";
+            sentence += act > 0 ? "pravidelných hráčů přibylo " + this.whole(act)
+                : act < 0 ? "pravidelných hráčů ubylo " + this.whole(-act) : "počet pravidelných hráčů se nezměnil";
+            sentence += leaving > 0 ? " a odcházejících (přestává chodit + ztracení) přibylo " + this.whole(leaving) + "."
+                : leaving < 0 ? " a odcházejících (přestává chodit + ztracení) ubylo " + this.whole(-leaving) + "."
+                : " a odcházejících je stejně.";
+        }
+        let note = "";
+        if (t.lost_from > pts[0].date) {
+            note = "Návštěvy máme od " + czDate(t.first) + ", proto ztracené (" + t.lost_days + " dní bez návštěvy) umíme poznat až od " +
+                czDate(t.lost_from) + " a jejich počet do té doby roste i proto, že se historie teprve plní.";
+        }
+        return { sentence, note, changes };
+    }
+
     // ---------- charts ----------
     destroyCharts() { this.charts.forEach((c) => c.destroy()); this.charts = []; }
     renderCharts() {
@@ -382,6 +416,27 @@ export class GgleapDashboard extends Component {
                         y2: { position: "right", grid: { drawOnChartArea: false }, beginAtZero: true,
                               title: { display: true, text: "Návštěvy" } },
                     },
+                },
+            }));
+        }
+        if (this.refs.trend.el && d.segment_trend) {
+            const t = d.segment_trend;
+            const keys = ["aktivni_stali", "jednou_nedavno", "ohrozeni", "ztraceni", "jednou_davno"];
+            this.charts.push(new Chart(this.refs.trend.el, {
+                type: "line",
+                data: {
+                    labels: t.points.map((p) => { const x = parseIso(p.date); return x.getDate() + ". " + (x.getMonth() + 1) + "."; }),
+                    datasets: keys.map((k) => ({
+                        label: t.labels[k], data: t.points.map((p) => p[k]), borderColor: SEGMENT_COLORS[k],
+                        backgroundColor: SEGMENT_COLORS[k], borderWidth: 2, pointRadius: 2, tension: 0.25,
+                        hidden: k === "jednou_davno" })),
+                },
+                options: {
+                    maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+                    plugins: { legend: { position: "bottom" }, tooltip: { callbacks: {
+                        title: (items) => "Týden do " + czDate(t.points[items[0].dataIndex].date),
+                        label: (ctx) => ctx.dataset.label + ": " + whole.format(ctx.parsed.y) } } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: "Hráčů" } } },
                 },
             }));
         }

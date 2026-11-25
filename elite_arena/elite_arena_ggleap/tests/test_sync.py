@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import patch
 
+from odoo import fields
 from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 
@@ -420,6 +421,15 @@ class TestGgleapSync(TransactionCase):
         self.assertEqual(data["top_players"][0]["amount"], 300.0)
         self.assertEqual({m["name"] for m in data["machines"]}, {"PC1", "PC2", "Konzole L"})
         self.assertTrue(data["payment_methods"])
+        trend = data["segment_trend"]
+        points = trend["points"]
+        self.assertTrue(points)
+        visits = self.env["elite.arena.ggleap.visit"].search([("player_id", "!=", False)])
+        last = max(visits.mapped("start")).date()
+        self.assertEqual(points[-1]["date"], last.isoformat())
+        self.assertEqual(sum(v for k, v in points[-1].items() if k != "date"), len(visits.mapped("player_id")))
+        for a, b in zip(points, points[1:]):
+            self.assertEqual((date.fromisoformat(b["date"]) - date.fromisoformat(a["date"])).days, 7)
 
     # ------------------------------------------------------------------ game passes
     def test_gamepasses(self):
@@ -499,7 +509,9 @@ class TestGgleapSync(TransactionCase):
         # restrictions of the product go with the pass
         with patch.object(type(self.sync), "_make_client", return_value=client):
             ps5 = self.env["elite.arena.ggleap.product"].search([("uuid", "=", PS5)])
-            self.sync.grant_gamepass(u1, ps5, 1800, "PS5 dárek", NOW + timedelta(days=14), "StartOnFirstUse")
+            # expiry from the real clock: the refresh below judges "expired" against now, not NOW
+            self.sync.grant_gamepass(u1, ps5, 1800, "PS5 dárek", fields.Datetime.now() + timedelta(days=14),
+                                     "StartOnFirstUse")
         body = client.posts[-1][1]
         self.assertEqual(body["EligibleDays"], ["Sunday", "Saturday"])
         self.assertEqual(body["EligiblePcGroups"], ["grp-ps5"])
