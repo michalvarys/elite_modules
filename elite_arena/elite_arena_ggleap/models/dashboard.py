@@ -15,6 +15,8 @@ from .player import SEGMENT_HELP, SEGMENTS
 from .product import KINDS
 
 TOP_LIMIT = 10
+# survey answers created on one day from this many on = a bulk invitation (campaign), not a single share
+BULK_INVITES = 10
 KIND_LABELS = dict(KINDS)
 
 # Arrivals: the first session of a player on a (local) day; every guest session counts.
@@ -280,9 +282,10 @@ class GgleapDashboard(models.AbstractModel):
         return out
 
     def _segment_trend(self):
-        """Players in each group week by week, recomputed from the visit history with the same
-        rules as the segment field (so the last point matches today's groups). Not period-dependent.
-        History starts with the first synced visit, so e.g. "ztracení" can only appear lost_days later."""
+        """Players in each group at the end of every week and every month, recomputed from the visit
+        history with the same rules as the segment field (so the last point matches today's groups).
+        Not period-dependent. History starts with the first synced visit, so the series start risk_days
+        later (before that everybody looks new) and "ztracení" can only appear lost_days later."""
         settings = get_settings(self.env)
         risk, lost = settings["risk_days"], settings["lost_days"]
         tz = self._tz().zone
@@ -292,16 +295,34 @@ class GgleapDashboard(models.AbstractModel):
         first, last = self.env.cr.fetchone()
         if not first:
             return False
-        end = min(last, self._today())
-        points = []
-        day = end
-        # in the first risk_days of history nobody can be a regular yet, every player looks new
-        while day >= first + timedelta(days=risk):
-            points.append(day)
-            day -= timedelta(days=7)
-        if not points:
+        end, begin = min(last, self._today()), first + timedelta(days=risk)
+        if end < begin:
             return False
-        points.reverse()
+        weeks, day = [], end
+        while day >= begin:
+            weeks.append(day)
+            day -= timedelta(days=7)
+        weeks.reverse()
+        months, month = [], begin.replace(day=1)
+        while month <= end:
+            following = (month + timedelta(days=32)).replace(day=1)
+            months.append(min(following - timedelta(days=1), end))
+            month = following
+        counts = self._segment_counts(sorted(set(weeks) | set(months)), risk, lost)
+        keys = ["aktivni_stali", "jednou_nedavno", "ohrozeni", "ztraceni", "jednou_davno"]
+        labels = dict(SEGMENTS)
+        return {
+            "weeks": [counts[d] for d in weeks],
+            "months": [counts[d] for d in months],
+            "labels": {k: labels[k] for k in keys},
+            "first": fields.Date.to_string(first),
+            "risk_days": risk, "lost_days": lost,
+            "lost_from": fields.Date.to_string(first + timedelta(days=lost)),
+            "campaigns": self._campaign_starts(first, end),
+        }
+
+    def _segment_counts(self, points, risk, lost):
+        """{date: {date, segment key: players}} as of the end of each given local day."""
         # one visit = one local day with sessions (as in the stats step of the sync)
         self.env.cr.execute("""
             with days as (select distinct player_id, (start at time zone 'UTC' at time zone %s)::date as d
@@ -315,14 +336,31 @@ class GgleapDashboard(models.AbstractModel):
                    count(*) filter (where n > 1 and idle >= %s and idle < %s),
                    count(*) filter (where n > 1 and idle >= %s),
                    count(*) filter (where n = 1 and idle >= %s)
-              from st group by p order by p""", (tz, points, risk, risk, risk, lost, lost, risk))
+              from st group by p""", (self._tz().zone, points, risk, risk, risk, lost, lost, risk))
         keys = ["aktivni_stali", "jednou_nedavno", "ohrozeni", "ztraceni", "jednou_davno"]
-        rows = [dict(zip(keys, r[1:]), date=fields.Date.to_string(r[0])) for r in self.env.cr.fetchall()]
-        return {
-            "points": rows,
-            "labels": {k: v for k, v in SEGMENTS if k in keys},
-            "first": fields.Date.to_string(first),
-            "risk_days": risk, "lost_days": lost,
-            "risk_from": fields.Date.to_string(first + timedelta(days=risk)),
-            "lost_from": fields.Date.to_string(first + timedelta(days=lost)),
-        }
+        out = {p: dict(dict.fromkeys(keys, 0), date=fields.Date.to_string(p)) for p in points}
+        for row in self.env.cr.fetchall():
+            out[row[0]].update(zip(keys, row[1:]))
+        return out
+
+    def _campaign_starts(self, first, end):
+        """Days when a campaign started, to mark them in the chart: start of an automatic e-mail series
+        and the first day a survey went out to many people (bulk invitation). The modules are optional,
+        so their tables are looked up instead of depending on them."""
+        cr, tz = self.env.cr, self._tz().zone
+        out = []
+        cr.execute("select to_regclass('elite_arena_mail_sequence'), to_regclass('survey_user_input')")
+        sequences, surveys = cr.fetchone()
+        if sequences:
+            cr.execute("""select (activated_at at time zone 'UTC' at time zone %s)::date, name
+                            from elite_arena_mail_sequence where activated_at is not null""", (tz,))
+            out += [(d, "E‑maily: %s" % name) for d, name in cr.fetchall()]
+        if surveys:
+            cr.execute("""
+                select min(d), coalesce(s.title->>'cs_CZ', s.title->>'en_US')
+                  from (select survey_id, (create_date at time zone 'UTC' at time zone %s)::date as d
+                          from survey_user_input group by 1, 2 having count(*) >= %s) x
+                  join survey_survey s on s.id = x.survey_id group by s.id, s.title""", (tz, BULK_INVITES))
+            out += [(d, "Dotazník: %s" % title) for d, title in cr.fetchall()]
+        return [{"date": fields.Date.to_string(d), "label": label}
+                for d, label in sorted(out) if d and first <= d <= end]

@@ -78,10 +78,22 @@
                     </section>
 
                     <section class="egd-panel egd-wide" t-if="state.data.segment_trend">
-                        <h5>Jak se mění počet hráčů</h5>
-                        <p class="egd-explain">
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="mb-0">Jak se mění počet hráčů</h5>
+                            <div class="btn-group ms-auto" role="group" aria-label="Krok grafu">
+                                <button type="button" class="btn btn-sm" t-on-click="() => this.setTrendStep('weeks')"
+                                        t-att-class="state.trendStep === 'weeks' ? 'btn-primary' : 'btn-light'">Po týdnech</button>
+                                <button type="button" class="btn btn-sm" t-on-click="() => this.setTrendStep('months')"
+                                        t-att-class="state.trendStep === 'months' ? 'btn-primary' : 'btn-light'">Po měsících</button>
+                            </div>
+                        </div>
+                        <p class="egd-explain mt-2">
                             <t t-esc="trend.sentence"/>
-                            Každý bod je stav ke konci týdne, počítaný ze záznamů o návštěvách stejně jako skupiny výše.
+                            <strong t-if="trend.campaign" t-esc="trend.campaign"/>
+                        </p>
+                        <p class="egd-explain small">
+                            Každý bod je stav ke konci týdne nebo měsíce, počítaný ze záznamů o návštěvách stejně jako skupiny výše.
+                            Fialová čára je den, kdy začala kampaň (série e‑mailů nebo hromadně rozeslaný dotazník).
                             <t t-esc="trend.note"/>
                         </p>
                         <div class="egd-trend-changes">

@@ -13,6 +13,7 @@ import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, us
 const COLORS = { time: "#4f46e5", food: "#ea580c", other: "#94a3b8", visits: "#0f172a" };
 const PALETTE = ["#4f46e5", "#ea580c", "#0891b2", "#db2777", "#4d7c0f", "#64748b"];
 const KIND_LABELS = { time: "Hraní", food: "Občerstvení", other: "Ostatní", free: "Hraní zdarma" };
+const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"];
 const DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const DAY_NAMES = ["v pondělí", "v úterý", "ve středu", "ve čtvrtek", "v pátek", "v sobotu", "v neděli"];
 const SEGMENT_COLORS = {
@@ -66,7 +67,7 @@ export class GgleapDashboard extends Component {
         this.action = useService("action");
         this.today = new Date(); this.today.setHours(12, 0, 0, 0);
         this.presets = presets(this.today);
-        this.state = useState({ preset: "month", from: "", to: "", data: null, loading: true });
+        this.state = useState({ preset: "month", from: "", to: "", data: null, loading: true, trendStep: "weeks" });
         this.refs = { daily: useRef("daily"), trend: useRef("trend"), payments: useRef("payments"), machines: useRef("machines") };
         this.charts = [];
         this.chartsDirty = true;
@@ -102,6 +103,7 @@ export class GgleapDashboard extends Component {
         this.state.loading = false;
     }
     async setPreset(key) { this.state.preset = key; await this.load(); }
+    setTrendStep(step) { this.chartsDirty = true; this.state.trendStep = step; }
     async onDateChange(field, ev) {
         this.state[field] = ev.target.value;
         this.state.preset = "custom";
@@ -338,37 +340,58 @@ export class GgleapDashboard extends Component {
     openProduct(row) { this.openLines([["name", "=", row.name]], row.name); }
 
     // ---------- segment trend ----------
-    /** Change over the last 4 weeks per group; for regulars more is good, for leaving/lost more is bad. */
+    /** Points of the chosen step: end of every week, or end of every month (the current one so far). */
+    get trendPoints() { return this.state.data.segment_trend[this.state.trendStep]; }
+    trendLabel(p, i, pts) {
+        const x = parseIso(p.date);
+        if (this.state.trendStep === "weeks") return x.getDate() + ". " + (x.getMonth() + 1) + ".";
+        const partial = i === pts.length - 1 && addDays(x, 1).getDate() !== 1;
+        return MONTHS[x.getMonth()] + " " + x.getFullYear() + (partial ? " (zatím)" : "");
+    }
+    /** Change over the last 4 weeks / 3 months per group (regulars up = good, leaving/lost up = bad),
+     *  and the regulars since the last campaign started. */
     get trend() {
-        const t = this.state.data.segment_trend;
-        const pts = t.points, last = pts[pts.length - 1], base = pts[Math.max(0, pts.length - 5)];
-        const weeks = pts.length - 1 - pts.indexOf(base);
+        const t = this.state.data.segment_trend, monthly = this.state.trendStep === "months";
+        const pts = this.trendPoints, last = pts[pts.length - 1], base = pts[Math.max(0, pts.length - (monthly ? 4 : 5))];
+        const steps = pts.length - 1 - pts.indexOf(base);
         const good = { aktivni_stali: 1, jednou_nedavno: 1, ohrozeni: -1, ztraceni: -1 };
         const changes = Object.keys(good).map((key) => {
             const diff = last[key] - base[key];
             const better = diff * good[key] > 0;
             return { key, label: t.labels[key], color: SEGMENT_COLORS[key], now: last[key],
-                     text: !weeks ? "" : diff ? " (" + (diff > 0 ? "+" : "−") + this.whole(Math.abs(diff)) + ")" : " (beze změny)",
-                     cls: !diff || !weeks ? "text-muted" : better ? "text-success" : "text-danger" };
+                     text: !steps ? "" : diff ? " (" + (diff > 0 ? "+" : "−") + this.whole(Math.abs(diff)) + ")" : " (beze změny)",
+                     cls: !diff || !steps ? "text-muted" : better ? "text-success" : "text-danger" };
         });
+        const regulars = (diff) => diff > 0 ? "pravidelných hráčů přibylo " + this.whole(diff)
+            : diff < 0 ? "pravidelných hráčů ubylo " + this.whole(-diff) : "počet pravidelných hráčů se nezměnil";
         let sentence = "";
-        if (weeks) {
-            const act = last.aktivni_stali - base.aktivni_stali;
+        if (steps) {
             const leaving = last.ohrozeni + last.ztraceni - base.ohrozeni - base.ztraceni;
-            // weeks is 1–4: "za poslední týden", "za poslední 3 týdny"
-            sentence = (weeks === 1 ? "Za poslední týden" : "Za poslední " + weeks + " týdny") + " (do " + czDate(last.date) + ") ";
-            sentence += act > 0 ? "pravidelných hráčů přibylo " + this.whole(act)
-                : act < 0 ? "pravidelných hráčů ubylo " + this.whole(-act) : "počet pravidelných hráčů se nezměnil";
-            sentence += leaving > 0 ? " a odcházejících (přestává chodit + ztracení) přibylo " + this.whole(leaving) + "."
-                : leaving < 0 ? " a odcházejících (přestává chodit + ztracení) ubylo " + this.whole(-leaving) + "."
-                : " a odcházejících je stejně.";
+            // steps is 1–4 weeks or 1–3 months
+            const span = monthly ? (steps === 1 ? "Za poslední měsíc" : "Za poslední " + steps + " měsíce")
+                : (steps === 1 ? "Za poslední týden" : "Za poslední " + steps + " týdny");
+            sentence = span + " (do " + czDate(last.date) + ") " + regulars(last.aktivni_stali - base.aktivni_stali);
+            sentence += leaving > 0 ? " a odcházejících (přestává chodit + ztracení) přibylo " + this.whole(leaving) + ". "
+                : leaving < 0 ? " a odcházejících (přestává chodit + ztracení) ubylo " + this.whole(-leaving) + ". "
+                : " a odcházejících je stejně. ";
+        }
+        // the last campaign: compare the regulars at its start (last point before it) with now
+        let campaign = "";
+        const camp = t.campaigns[t.campaigns.length - 1];
+        if (camp) {
+            const before = [...t.weeks].reverse().find((p) => p.date < camp.date) || t.weeks[0];
+            const now = t.weeks[t.weeks.length - 1];
+            const diff = now.aktivni_stali - before.aktivni_stali;
+            campaign = "Od spuštění kampaně „" + camp.label + "“ (" + czDate(camp.date) + ") " + regulars(diff) +
+                " (z " + this.whole(before.aktivni_stali) + " na " + this.whole(now.aktivni_stali) + "). " +
+                "Počty ovlivňují i prázdniny nebo počasí, proto porovnejte i průběh před kampaní.";
         }
         let note = "";
         if (t.lost_from > pts[0].date) {
             note = "Návštěvy máme od " + czDate(t.first) + ", proto ztracené (" + t.lost_days + " dní bez návštěvy) umíme poznat až od " +
                 czDate(t.lost_from) + " a jejich počet do té doby roste i proto, že se historie teprve plní.";
         }
-        return { sentence, note, changes };
+        return { sentence, campaign, note, changes };
     }
 
     // ---------- charts ----------
@@ -420,22 +443,48 @@ export class GgleapDashboard extends Component {
             }));
         }
         if (this.refs.trend.el && d.segment_trend) {
-            const t = d.segment_trend;
+            const t = d.segment_trend, pts = this.trendPoints, monthly = this.state.trendStep === "months";
             const keys = ["aktivni_stali", "jednou_nedavno", "ohrozeni", "ztraceni", "jednou_davno"];
+            // a campaign is drawn at the first point after it started (the first one that can show its effect)
+            const marks = t.campaigns.map((c) => ({ ...c, index: pts.findIndex((p) => p.date >= c.date) }))
+                .filter((c) => c.index >= 0);
+            const campaignLines = {
+                id: "egdCampaigns",
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea, scales } = chart;
+                    ctx.save();
+                    ctx.strokeStyle = "#7c3aed"; ctx.fillStyle = "#7c3aed"; ctx.setLineDash([4, 4]);
+                    ctx.font = "11px sans-serif"; ctx.textAlign = "left";
+                    marks.forEach((m, n) => {
+                        const x = scales.x.getPixelForValue(m.index);
+                        ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+                        ctx.fillText(m.label, x + 4, chartArea.top + 10 + 13 * (n % 3));
+                    });
+                    ctx.restore();
+                },
+            };
             this.charts.push(new Chart(this.refs.trend.el, {
                 type: "line",
+                plugins: [campaignLines],
                 data: {
-                    labels: t.points.map((p) => { const x = parseIso(p.date); return x.getDate() + ". " + (x.getMonth() + 1) + "."; }),
+                    labels: pts.map((p, i) => this.trendLabel(p, i, pts)),
                     datasets: keys.map((k) => ({
-                        label: t.labels[k], data: t.points.map((p) => p[k]), borderColor: SEGMENT_COLORS[k],
-                        backgroundColor: SEGMENT_COLORS[k], borderWidth: 2, pointRadius: 2, tension: 0.25,
+                        label: t.labels[k], data: pts.map((p) => p[k]), borderColor: SEGMENT_COLORS[k],
+                        backgroundColor: SEGMENT_COLORS[k], borderWidth: 2, pointRadius: monthly ? 3 : 2, tension: 0.25,
                         hidden: k === "jednou_davno" })),
                 },
                 options: {
                     maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
                     plugins: { legend: { position: "bottom" }, tooltip: { callbacks: {
-                        title: (items) => "Týden do " + czDate(t.points[items[0].dataIndex].date),
-                        label: (ctx) => ctx.dataset.label + ": " + whole.format(ctx.parsed.y) } } },
+                        title: (items) => (monthly ? "Konec měsíce, " : "Konec týdne, ") + czDate(pts[items[0].dataIndex].date),
+                        label: (ctx) => {
+                            const i = ctx.dataIndex, k = keys[ctx.datasetIndex];
+                            const diff = i ? pts[i][k] - pts[i - 1][k] : 0;
+                            return ctx.dataset.label + ": " + whole.format(ctx.parsed.y) + (i && diff
+                                ? " (" + (diff > 0 ? "+" : "−") + whole.format(Math.abs(diff)) + (monthly ? " za měsíc)" : " za týden)") : "");
+                        },
+                        afterBody: (items) => marks.filter((m) => m.index === items[0].dataIndex)
+                            .map((m) => "Kampaň " + czDate(m.date) + ": " + m.label) } } },
                     scales: { y: { beginAtZero: true, title: { display: true, text: "Hráčů" } } },
                 },
             }));
