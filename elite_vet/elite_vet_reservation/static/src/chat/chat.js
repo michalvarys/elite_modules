@@ -55,7 +55,7 @@
   const raw=booking.options.settings.consent_html||'';const consentText=new DOMParser().parseFromString(raw,'text/html').body.textContent;if(consentText.trim())note(consentText);
   const label=make('label','evchat-consent'),consent=make('input');consent.type='checkbox';label.append(consent,document.createTextNode(t('consent')));body.appendChild(label);
   const send=button(body,t('send'),async()=>{if(!consent.checked){consent.focus();return;}send.disabled=true;back.disabled=true;edit.disabled=true;consent.disabled=true;
-   try{const res=await booking.submit(true);if(res.ok){clear(t('done'));button(body,t('restart'),()=>{booking=new window.EliteVetChatBooking(rpc);start();});return;}
+   try{const res=await booking.submit(true);if(res.ok){if(window.EliteVetTrackLead)window.EliteVetTrackLead(res.lead);clear(t('done'));button(body,t('restart'),()=>{booking=new window.EliteVetChatBooking(rpc);start();});return;}
     if(res.error==='slot_taken'){times(t('taken'));return;}
     if(res.error==='web_booking_off'){off(res);return;}
     clear(res.error==='rate_limit'?t('error'):Object.values(res.fields||{}).join(' ')||t('error'));button(body,t('next'),()=>details(0));

@@ -200,9 +200,14 @@ class BookingController(http.Controller):
             "start": A.local_to_utc(day, minute), "lang": request.env.lang or "cs_CZ",
             "deposit_state": "pending" if (s.booking_deposits_enabled and proc.deposit_required) else "none",
         })
+        # Request 26. 11.: where the client came from (UTM, ad click ids - cookies of this browser).
+        vals.update(request.env["elite.vet.reservation"].sudo()._web_tracking_values())
         rec = request.env["elite.vet.reservation"].sudo().create(vals)
         rec._after_web_submit()
-        return {"ok": True, "token": rec.cancel_token, "deposit": rec.deposit_state == "pending"}
+        # lead: what the browser reports to GA4 / Meta as the "Lead" event (static/src/tracking/lead.js).
+        # No personal data - the event id and the procedure only.
+        return {"ok": True, "token": rec.cancel_token, "deposit": rec.deposit_state == "pending",
+                "lead": {"event_id": rec.lead_event_id, "procedure": proc.with_context(lang="cs_CZ").name}}
 
     # csrf=False: the action is authorized by the random token in the URL (link from the e-mail); the client has no session with a CSRF token.
     @http.route("/rezervace/zruseni/<string:token>", type="http", auth="public", website=True,

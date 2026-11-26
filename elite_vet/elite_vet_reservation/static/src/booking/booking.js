@@ -387,6 +387,7 @@
 
     // ---------- step 4 ----------
     function gotoDone(res) {
+        if (window.EliteVetTrackLead) window.EliteVetTrackLead(res.lead);   // GA4 + Meta "Lead" (tracking/lead.js)
         q('[data-summary="final"]').textContent = summaryText();
         var note = q('[data-done="note"]'); note.hidden = !state.procedure.client_note; note.textContent = state.procedure.client_note || "";
         q('[data-done="deposit"]').hidden = !res.deposit;

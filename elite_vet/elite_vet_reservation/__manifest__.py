@@ -15,7 +15,7 @@ bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
     "author": "Michal Varys",
     "website": "https://www.michalvarys.eu",
     "license": "LGPL-3",
-    "depends": ["website", "mail", "bus", "payment", "elite_vet_theme", "elite_vet_team",
+    "depends": ["website", "utm", "mail", "bus", "payment", "elite_vet_theme", "elite_vet_team",
                 "elite_vet_calendar", "elite_vet_web"],
     "data": [
         "security/groups.xml",
@@ -57,6 +57,7 @@ bezi vlastni rezervacni pruvodce misto iframu WinVet, podle nastaveni
         "web.assets_frontend": [
             "elite_vet_reservation/static/src/booking/booking.css",
             "elite_vet_reservation/static/src/booking/booking.js",
+            "elite_vet_reservation/static/src/tracking/lead.js",
         ],
     },
     "post_init_hook": "_post_init",
