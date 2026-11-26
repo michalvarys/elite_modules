@@ -9,6 +9,9 @@ class TestControllers(HttpCase):
 
     def setUp(self):
         super().setUp()
+        self._setup_booking()
+
+    def _setup_booking(self):
         from odoo.addons.elite_vet_reservation.controllers import booking
         booking._SUBMITS.clear()
         # reservations from manual testing would occupy the tested slots (restored by rollback)
@@ -146,3 +149,66 @@ class TestControllers(HttpCase):
         self.assertNotIn("10:00", [s["time"] for s in slots])
         second = self.rpc("/rezervace/api/submit", self.good_submit(procedure_id=proc.id, contact_name="Petr Druhý"))
         self.assertEqual(second["error"], "slot_taken")
+
+
+@tagged("post_install", "-at_install")
+class TestLeadTracking(HttpCase):
+    """Request 26. 11.: a web reservation keeps its UTM source and ad click ids; the answer carries
+    the "Lead" event for GA4 / Meta without personal data."""
+
+    LANDING = ("/?utm_source=google&utm_medium=cpc&utm_campaign=Podzim%20ockovani"
+               "&utm_content=banner1&utm_term=veterina%20karlovy%20vary&gclid=GCLID123&fbclid=FBCLID456")
+
+    # the same room, procedure and helpers, without running the tests of TestControllers again
+    rpc, good_submit = TestControllers.rpc, TestControllers.good_submit
+    _setup_booking = TestControllers._setup_booking
+
+    def setUp(self):
+        super().setUp()
+        self._setup_booking()
+        self.env["website"].get_current_website().cookies_bar = True
+
+    def booked(self, res):
+        self.assertTrue(res["ok"], res)
+        return self.env["elite.vet.reservation"].search([("cancel_token", "=", res["token"])])
+
+    def test_landing_with_consent_tags_the_reservation(self):
+        self.opener.cookies.set("website_cookies_bar", json.dumps({"required": True, "optional": True}))
+        self.assertEqual(self.url_open(self.LANDING).status_code, 200)
+        rec = self.booked(self.rpc("/rezervace/api/submit", self.good_submit(time="11:00")))
+        self.assertEqual((rec.source_id.name, rec.medium_id.name, rec.campaign_id.name),
+                         ("google", "cpc", "Podzim ockovani"))
+        self.assertEqual((rec.utm_content, rec.utm_term, rec.gclid, rec.fbclid),
+                         ("banner1", "veterina karlovy vary", "GCLID123", "FBCLID456"))
+        self.assertTrue(rec.has_tracking)
+
+    def test_without_consent_no_source_but_still_a_lead(self):
+        self.assertEqual(self.url_open(self.LANDING).status_code, 200)
+        res = self.rpc("/rezervace/api/submit", self.good_submit(time="11:15"))
+        rec = self.booked(res)
+        self.assertFalse(rec.has_tracking, "optional cookies are not set before consent")
+        self.assertEqual(res["lead"], {"event_id": rec.lead_event_id, "procedure": self.proc.name})
+        self.assertTrue(rec.lead_event_id)
+        self.assertNotEqual(rec.lead_event_id, rec.cancel_token, "the cancel token is secret")
+
+    def test_lead_event_has_no_personal_data(self):
+        res = self.rpc("/rezervace/api/submit", self.good_submit(time="11:30"))
+        sent = json.dumps(res["lead"])
+        for private in ("Jana", "jana@example.cz", "777111222", "Rex", "Očkování"):
+            self.assertNotIn(private, sent)
+
+    def test_reception_reservation_does_not_read_utm_cookies(self):
+        rec = self.env["elite.vet.reservation"].create({
+            "kind": "reservation", "state": "confirmed", "procedure_id": self.proc.id, "room_id": self.room.id,
+            "start": "%s 09:00:00" % self.day, "contact_name": "Z recepce"})
+        self.assertFalse(rec.has_tracking)
+        self.assertFalse(rec.lead_event_id)
+
+    def test_assets_send_the_lead_event(self):
+        from odoo.tools import file_open
+        with file_open("elite_vet_reservation/static/src/tracking/lead.js") as f:
+            js = f.read()
+        self.assertIn('"generate_lead"', js)
+        self.assertIn('"Lead"', js)
+        with file_open("elite_vet_reservation/static/src/booking/booking.js") as f:
+            self.assertIn("EliteVetTrackLead(res.lead)", f.read())

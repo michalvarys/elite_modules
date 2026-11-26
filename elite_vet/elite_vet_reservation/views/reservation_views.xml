@@ -13,6 +13,9 @@
                 <field name="procedure_id" optional="hide"/>
                 <field name="contact_phone" optional="show"/>
                 <field name="source" optional="show" widget="badge" decoration-info="source == 'web'"/>
+                <field name="source_id" optional="hide"/>
+                <field name="medium_id" optional="hide"/>
+                <field name="campaign_id" optional="hide"/>
                 <field name="created_by_id" optional="show" widget="many2one_avatar_user"/>
                 <field name="state" widget="badge"/>
                 <field name="kind" column_invisible="1"/>
@@ -146,6 +149,20 @@
                         <field name="deposit_state"/>
                         <field name="transaction_id"/>
                     </group>
+                    <!-- Request 26. 11.: where a web reservation came from (lead_tracking.py) -->
+                    <group string="Odkud přišel (web)" invisible="not has_tracking">
+                        <group>
+                            <field name="source_id" invisible="not source_id"/>
+                            <field name="medium_id" invisible="not medium_id"/>
+                            <field name="campaign_id" invisible="not campaign_id"/>
+                        </group>
+                        <group>
+                            <field name="utm_content" invisible="not utm_content"/>
+                            <field name="utm_term" invisible="not utm_term"/>
+                            <field name="gclid" invisible="not gclid"/>
+                            <field name="fbclid" invisible="not fbclid"/>
+                        </group>
+                    </group>
                     <field name="cancel_token" invisible="1"/>
                     <field name="cancel_reason" invisible="state != 'cancelled'"/>
                 </sheet>
@@ -233,20 +250,48 @@
                 <separator/>
                 <filter name="from_web" string="Z webu" domain="[('source', '=', 'web')]"/>
                 <filter name="from_clinic" string="Z kliniky" domain="[('kind', '=', 'reservation'), ('source', '=', 'internal')]"/>
+                <filter name="with_utm" string="Se zdrojem / kampaní"
+                        domain="['|', '|', '|', '|', ('source_id', '!=', False), ('medium_id', '!=', False), ('campaign_id', '!=', False), ('gclid', '!=', False), ('fbclid', '!=', False)]"/>
                 <group expand="0" string="Seskupit podle">
                     <filter name="group_room" string="Ordinace" context="{'group_by': 'room_id'}"/>
                     <filter name="group_state" string="Stav" context="{'group_by': 'state'}"/>
                     <filter name="group_source" string="Zdroj" context="{'group_by': 'source'}"/>
                     <filter name="group_day" string="Den" context="{'group_by': 'start:day'}"/>
+                    <filter name="group_utm_source" string="Zdroj (UTM)" context="{'group_by': 'source_id'}"/>
+                    <filter name="group_utm_medium" string="Médium" context="{'group_by': 'medium_id'}"/>
+                    <filter name="group_utm_campaign" string="Kampaň" context="{'group_by': 'campaign_id'}"/>
                 </group>
             </search>
+        </field>
+    </record>
+
+    <!-- Request 26. 11.: how many web requests each source / campaign brings and how many get confirmed -->
+    <record id="view_reservation_pivot" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.pivot</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="arch" type="xml">
+            <pivot string="Rezervace podle zdroje" sample="1">
+                <field name="source_id" type="row"/>
+                <field name="state" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_reservation_graph" model="ir.ui.view">
+        <field name="name">elite.vet.reservation.graph</field>
+        <field name="model">elite.vet.reservation</field>
+        <field name="arch" type="xml">
+            <graph string="Rezervace podle zdroje" type="bar" sample="1">
+                <field name="source_id"/>
+                <field name="state"/>
+            </graph>
         </field>
     </record>
 
     <record id="action_reservation" model="ir.actions.act_window">
         <field name="name">Rezervace</field>
         <field name="res_model">elite.vet.reservation</field>
-        <field name="view_mode">list,calendar,form</field>
+        <field name="view_mode">list,calendar,form,pivot,graph</field>
         <field name="context">{'search_default_from_today': 1, 'search_default_reservations': 1}</field>
     </record>
 
