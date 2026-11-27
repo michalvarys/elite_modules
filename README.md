@@ -150,6 +150,14 @@ Kategorie se dají posouvat a na telefonu nezakryjí produkty. Detaily v
 [elite_common/elite_pos_mobile/README.md](elite_common/elite_pos_mobile/README.md).
 
 
+## elite_restaurace — restaurace IMI, Jack Grill Bar a Staroslovanská kuchyně Loket
+
+Pokladny v režimu restaurace (sál, stoly), zboží z jídelních lístků, každá restaurace svůj sklad.
+`elite_imi_pos` (IMI, pobočka Elite), `elite_jack_pos` (Jackgrillbar s.r.o.) a `elite_loket_pos`
+(Přírodní Pivní Lázně s.r.o.) jsou datové moduly nad
+společným `elite_common/elite_restaurant_pos`. Na serveru přidat `/mnt/modules/elite_restaurace`
+do `addons_path`. Detaily v [elite_restaurace/README.md](elite_restaurace/README.md).
+
 ## elite_trafika — trafika Elite Trafika
 
 ### `elite_trafika_pos` — Pokladna trafiky

@@ -1,0 +1,34 @@
+kod,nazev,nadrazena,poradi
+kuchyne,Kuchyně,,10
+sushi,Sushi,,20
+nealko,Nealko a káva,,30
+alkohol,Alkohol,,40
+salaty,Saláty,kuchyne,1
+polevky,Polévky,kuchyne,2
+predkrmy,Předkrmy,kuchyne,3
+poke,Poke bowl,kuchyne,4
+wok,Wok,kuchyne,5
+hlavni,Hlavní jídla,kuchyne,6
+prilohy,Přílohy,kuchyne,7
+dezerty,Dezerty,kuchyne,8
+teppanyaki,Teppanyaki,kuchyne,9
+nigiri,Nigiri (2 ks),sushi,1
+maki,Maki (6 ks),sushi,2
+sashimi,Sashimi (4 ks),sushi,3
+futomaki,Futomaki (6 ks),sushi,4
+crunch,Crunch rolls,sushi,5
+kalifornie,Kalifornie a I-O-S,sushi,6
+special,IMI special rolls,sushi,7
+sety,Sushi sety,sushi,8
+nealko_napoje,Nealko nápoje,nealko,1
+limonady,Domácí limonády,nealko,2
+kava,Teplé nápoje,nealko,3
+caje,Čaje a matcha,nealko,4
+nealko_koktejly,Nealko koktejly,nealko,5
+pivo,Pivo,alkohol,1
+aperitivy,Aperitivy,alkohol,2
+destilaty,Destiláty a likéry,alkohol,3
+koktejly,Koktejly,alkohol,4
+prosecco,Prosecco a champagne,alkohol,5
+vino,Víno,alkohol,6
+sake,Saké,alkohol,7

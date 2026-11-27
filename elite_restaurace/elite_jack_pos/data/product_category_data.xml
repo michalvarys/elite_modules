@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Vygenerováno z skupiny.csv (elite_restaurant_pos/scripts/gen_data.py). -->
+        <record id="product_category_root" model="product.category">
+            <field name="name">Jack Grill Bar</field>
+        </record>
+        <record id="product_category_kuchyne" model="product.category">
+            <field name="name">Kuchyně</field>
+            <field name="parent_id" ref="product_category_root"/>
+        </record>
+        <record id="product_category_nealko" model="product.category">
+            <field name="name">Nealko a káva</field>
+            <field name="parent_id" ref="product_category_root"/>
+        </record>
+        <record id="product_category_alkohol" model="product.category">
+            <field name="name">Alkohol</field>
+            <field name="parent_id" ref="product_category_root"/>
+        </record>
+        <record id="product_category_jack_daniels" model="product.category">
+            <field name="name">Jack Daniel's</field>
+            <field name="parent_id" ref="product_category_root"/>
+        </record>
+        <record id="pos_category_kuchyne" model="pos.category">
+            <field name="name">Kuchyně</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="pos_category_nealko" model="pos.category">
+            <field name="name">Nealko a káva</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="pos_category_alkohol" model="pos.category">
+            <field name="name">Alkohol</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="pos_category_jack_daniels" model="pos.category">
+            <field name="name">Jack Daniel's</field>
+            <field name="sequence">40</field>
+        </record>
+        <record id="pos_category_predkrmy" model="pos.category">
+            <field name="name">Předkrmy</field>
+            <field name="sequence">1</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_salaty" model="pos.category">
+            <field name="name">Saláty</field>
+            <field name="sequence">2</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_steaky" model="pos.category">
+            <field name="name">Steaky</field>
+            <field name="sequence">3</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_omacky" model="pos.category">
+            <field name="name">Omáčky ke steakům</field>
+            <field name="sequence">4</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_speciality" model="pos.category">
+            <field name="name">Speciality</field>
+            <field name="sequence">5</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_burgery" model="pos.category">
+            <field name="name">Burgery</field>
+            <field name="sequence">6</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_kureci" model="pos.category">
+            <field name="name">Kuřecí maso</field>
+            <field name="sequence">7</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_veprove" model="pos.category">
+            <field name="name">Vepřové maso</field>
+            <field name="sequence">8</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_ryby" model="pos.category">
+            <field name="name">Ryby</field>
+            <field name="sequence">9</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_prilohy" model="pos.category">
+            <field name="name">Přílohy</field>
+            <field name="sequence">10</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_dezerty" model="pos.category">
+            <field name="name">Dezerty</field>
+            <field name="sequence">11</field>
+            <field name="parent_id" ref="pos_category_kuchyne"/>
+        </record>
+        <record id="pos_category_nealko_napoje" model="pos.category">
+            <field name="name">Nealko nápoje</field>
+            <field name="sequence">1</field>
+            <field name="parent_id" ref="pos_category_nealko"/>
+        </record>
+        <record id="pos_category_limonady" model="pos.category">
+            <field name="name">Domácí limonády</field>
+            <field name="sequence">2</field>
+            <field name="parent_id" ref="pos_category_nealko"/>
+        </record>
+        <record id="pos_category_kava" model="pos.category">
+            <field name="name">Teplé nápoje</field>
+            <field name="sequence">3</field>
+            <field name="parent_id" ref="pos_category_nealko"/>
+        </record>
+        <record id="pos_category_nealko_koktejly" model="pos.category">
+            <field name="name">Nealko koktejly</field>
+            <field name="sequence">4</field>
+            <field name="parent_id" ref="pos_category_nealko"/>
+        </record>
+        <record id="pos_category_pivo" model="pos.category">
+            <field name="name">Pivo</field>
+            <field name="sequence">1</field>
+            <field name="parent_id" ref="pos_category_alkohol"/>
+        </record>
+        <record id="pos_category_aperitivy" model="pos.category">
+            <field name="name">Aperitivy</field>
+            <field name="sequence">2</field>
+            <field name="parent_id" ref="pos_category_alkohol"/>
+        </record>
+        <record id="pos_category_destilaty" model="pos.category">
+            <field name="name">Destiláty a likéry</field>
+            <field name="sequence">3</field>
+            <field name="parent_id" ref="pos_category_alkohol"/>
+        </record>
+        <record id="pos_category_jd_koktejly" model="pos.category">
+            <field name="name">Jack Daniel's koktejly</field>
+            <field name="sequence">4</field>
+            <field name="parent_id" ref="pos_category_alkohol"/>
+        </record>
+        <record id="pos_category_koktejly" model="pos.category">
+            <field name="name">Koktejly</field>
+            <field name="sequence">5</field>
+            <field name="parent_id" ref="pos_category_alkohol"/>
+        </record>
+        <record id="pos_category_vino" model="pos.category">
+            <field name="name">Víno a prosecco</field>
+            <field name="sequence">6</field>
+            <field name="parent_id" ref="pos_category_alkohol"/>
+        </record>
+    </data>
+</odoo>

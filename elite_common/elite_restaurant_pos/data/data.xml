@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Nealko nápoje podávané na místě: od 1. 1. 2027 snížená sazba 12 % (zákon č. 180/2026 Sb.).
+             Štítek dává modul restaurace zboží s dph = nealko ve zbozi.csv. -->
+        <record id="tag_soft_drink" model="product.tag">
+            <field name="name">Nealko na místě (DPH 12 % od 2027)</field>
+        </record>
+        <!-- Poprvé 1. 1. 2027 v 0:01, pak denně; přepne štítkované nealko na 12 % a sám se vypne. -->
+        <record id="cron_soft_drink_vat" model="ir.cron">
+            <field name="name">Restaurace: DPH nealko 12 % od 1. 1. 2027</field>
+            <field name="model_id" ref="model_elite_restaurant_pos_setup"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_soft_drink_vat()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <!-- UTC: 0:01 v Praze --><field name="nextcall" eval="'2026-12-31 23:01:00'"/>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>
