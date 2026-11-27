@@ -19,10 +19,12 @@ elite_modules/
 │   └── elite_vet_team/       Stránka Náš tým
 ├── elite_arena/           herna Elite Arena
 │   └── elite_arena_ggleap/   Data z ggLeapu a přehled herny
-└── elite_trafika/         trafika Elite Trafika
-    ├── elite_trafika_pos/    Pokladna: zboží z Dotykačky, sklad, DPH
-    ├── elite_trafika_dotykacka/  Prodeje a sklad z Dotykačky
-    └── elite_trafika_dotykacka_update/  Novější prodeje z Dotykačky
+├── elite_trafika/         trafika Elite Trafika
+│   ├── elite_trafika_pos/    Pokladna: zboží z Dotykačky, sklad, DPH
+│   ├── elite_trafika_dotykacka/  Prodeje a sklad z Dotykačky
+│   └── elite_trafika_dotykacka_update/  Novější prodeje z Dotykačky
+└── varyshop/              značka Varyshop místo Odoo (pro oficiální odoo:18)
+    └── varyshop_brand/       Logo Varyshop všude, doplňky pro pokladnu, web a portál
 ```
 
 Celý repozitář je v kontejneru namountovaný do `/mnt/modules`.
@@ -176,3 +178,13 @@ https://claude.ai/artifact/Pc5MFy27S6h7AZC1Hgx9Ex
 Doplní prodeje z novějšího exportu Dotykačky (teď do 19. 11. 2026), jen doklady, které v Odoo ještě
 nejsou; sklad nemění. Detaily v
 [elite_trafika/elite_trafika_dotykacka_update/README.md](elite_trafika/elite_trafika_dotykacka_update/README.md).
+
+## varyshop — značka Varyshop
+
+### `varyshop_brand` — Logo Varyshop místo Odoo
+
+V oficiálním Odoo 18 ukáže místo loga a názvu Odoo značku Varyshop: přihlášení, titulek okna,
+favicona, ikona aplikace na mobilu, e-maily, pokladna, zákaznický displej, patička webu a portál.
+Instaluje se jen tenhle modul, doplňky pro pokladnu, web a portál se přidají samy. Podrobnosti
+v [varyshop/README.md](varyshop/README.md).
+

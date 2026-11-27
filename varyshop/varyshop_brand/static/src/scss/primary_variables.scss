@@ -1,0 +1,35 @@
+// Varyshop blue instead of the Odoo purple: top bar, buttons, links, selections, loading bar, POS.
+// Loaded before web/static/src/scss/primary_variables.scss, whose values are !default.
+//
+// Colours of www.varyshop.eu: --vs-blue #6EA8FE (logo), --vs-blue-dark #3D7BD9. White text and icons
+// (top bar, primary buttons) are not readable on #6EA8FE, so the UI uses the darker blue.
+$o-community-color: #3D7BD9;
+$o-enterprise-color: #3D7BD9;
+
+// The default website palette "base-1" takes its first colour from $o-enterprise-color: kept as in
+// Odoo, so that existing websites keep their colours (web_editor/static/src/scss/web_editor.variables.scss).
+$o-color-palettes: (
+    'base-1': (
+        'o-color-1': #714B67,
+        'o-color-2': #2D3142,
+        'o-color-3': #F3F2F2,
+        'o-color-4': #FFFFFF,
+        'o-color-5': #111827,
+    ),
+    'base-2': (
+        'o-color-1': #337ab7,
+        'o-color-2': #e9ecef,
+        'o-color-3': #F8F9FA,
+        'o-color-4': #FFFFFF,
+        'o-color-5': #343a40,
+    ),
+);
+$o-theme-color-palettes: (
+    'base-1': (
+        'alpha': #017e84,
+        'beta': #714B67,
+        'gamma': #5C5B80,
+        'delta': #5B899E,
+        'epsilon': #E46F78,
+    ),
+);

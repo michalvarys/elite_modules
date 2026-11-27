@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="web.Dialog.header" t-inherit-mode="extension">
+        <xpath expr="//h4[hasclass('modal-title')]/t[@t-esc='props.title']" position="attributes">
+            <attribute name="t-esc">brandedTitle</attribute>
+        </xpath>
+    </t>
+</templates>

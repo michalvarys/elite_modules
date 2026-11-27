@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- Logo in the middle of the top bar -->
+    <t t-inherit="point_of_sale.Navbar" t-inherit-mode="extension">
+        <xpath expr="//img[hasclass('pos-logo')]" position="attributes">
+            <attribute name="src">/varyshop_brand/static/img/logo.svg</attribute>
+            <attribute name="alt">Varyshop</attribute>
+        </xpath>
+    </t>
+    <!-- Screen saver / lock screen -->
+    <t t-inherit="point_of_sale.SaverScreen" t-inherit-mode="extension">
+        <xpath expr="//img[@alt='Logo']" position="attributes">
+            <attribute name="src">/varyshop_brand/static/img/logo.svg</attribute>
+            <attribute name="alt">Varyshop</attribute>
+            <attribute name="t-att-height">env.isSmall ? 40 : 120</attribute>
+        </xpath>
+    </t>
+    <!-- Receipt footer -->
+    <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('pos-receipt-order-data')]/p" position="replace">
+            <p>Powered by Varyshop</p>
+        </xpath>
+    </t>
+</templates>

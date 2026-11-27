@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="index" inherit_id="point_of_sale.index" name="Varyshop: POS page">
+        <xpath expr="//head/title" position="replace">
+            <title>Varyshop POS</title>
+        </xpath>
+        <xpath expr="//head/link[@rel='icon']" position="attributes">
+            <attribute name="href">/varyshop_brand/static/img/favicon.ico</attribute>
+        </xpath>
+    </template>
+    <template id="customer_display_index" inherit_id="point_of_sale.customer_display_index" name="Varyshop: customer display page">
+        <xpath expr="//link[@rel='icon']" position="attributes">
+            <attribute name="href">/varyshop_brand/static/img/favicon.ico</attribute>
+        </xpath>
+    </template>
+</odoo>

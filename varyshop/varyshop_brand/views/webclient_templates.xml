@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tab title and favicon of every page (backend, login, portal, website without its own favicon) -->
+    <template id="layout" inherit_id="web.layout" name="Varyshop: layout">
+        <xpath expr="//head/title" position="attributes">
+            <attribute name="t-esc">title or 'Varyshop'</attribute>
+        </xpath>
+        <xpath expr="//head/link[@rel='shortcut icon']" position="attributes">
+            <attribute name="t-att-href">x_icon or '/varyshop_brand/static/img/favicon.ico'</attribute>
+        </xpath>
+    </template>
+
+    <!-- Backend: home screen icon on phones, browser bar colour -->
+    <template id="webclient_bootstrap" inherit_id="web.webclient_bootstrap" name="Varyshop: web client">
+        <xpath expr="//link[@rel='apple-touch-icon']" position="attributes">
+            <attribute name="href">/varyshop_brand/static/img/icon-ios.png</attribute>
+        </xpath>
+        <xpath expr="//meta[@name='theme-color']" position="attributes">
+            <attribute name="content">#6ea8fe</attribute>
+        </xpath>
+    </template>
+
+    <!-- "Powered by <logo>" in the portal and website footer -->
+    <template id="brand_promotion_message" inherit_id="web.brand_promotion_message" name="Varyshop: brand promotion">
+        <xpath expr="//t[@t-set='odoo_logo']/a" position="attributes">
+            <attribute name="t-attf-href">https://www.varyshop.eu?utm_source=db&amp;utm_medium=#{_utm_medium}</attribute>
+        </xpath>
+        <xpath expr="//t[@t-set='odoo_logo']/a/img" position="attributes">
+            <attribute name="alt">Varyshop</attribute>
+            <attribute name="src">/varyshop_brand/static/img/logo.svg</attribute>
+            <attribute name="width">80</attribute>
+            <attribute name="height">20</attribute>
+        </xpath>
+    </template>
+
+    <!-- Login page: "Powered by Varyshop" -->
+    <template id="login_layout" inherit_id="web.login_layout" name="Varyshop: login">
+        <xpath expr="//a[contains(@href, 'utm_medium=auth')]" position="attributes">
+            <attribute name="href">https://www.varyshop.eu?utm_source=db&amp;utm_medium=auth</attribute>
+        </xpath>
+        <xpath expr="//a[contains(@href, 'utm_medium=auth')]/span" position="replace">
+            <span>Varyshop</span>
+        </xpath>
+    </template>
+
+    <!-- Page shown by the installed app when the device is offline -->
+    <template id="webclient_offline" inherit_id="web.webclient_offline" name="Varyshop: offline">
+        <xpath expr="//div[hasclass('card')]/img" position="attributes">
+            <attribute name="alt">Varyshop</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('card')]/p" position="replace">
+            <p>Check your network connection and come back here. Varyshop will load as soon as you're back online.</p>
+        </xpath>
+        <xpath expr="//style" position="after">
+            <style>.card button { background-color: #6ea8fe; border-color: #6ea8fe; }</style>
+        </xpath>
+    </template>
+</odoo>

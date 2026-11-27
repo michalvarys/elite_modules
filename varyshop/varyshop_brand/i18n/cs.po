@@ -1,0 +1,24 @@
+# Czech translation of varyshop_brand
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\\n"
+"Language: cs\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: \\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n"
+
+#. module: varyshop_brand
+#: model_terms:ir.ui.view,arch_db:varyshop_brand.webclient_offline
+msgid ""
+"Check your network connection and come back here. Varyshop will load as soon "
+"as you're back online."
+msgstr ""
+"Zkontrolujte připojení k síti a vraťte se sem. Varyshop se načte, jakmile "
+"budete znovu online."
+
+#. module: varyshop_brand
+#. odoo-javascript
+#: code:addons/varyshop_brand/static/src/webclient/settings.xml:0
+msgid "– built on Odoo Community Edition."
+msgstr "– postaveno na Odoo Community Edition."
