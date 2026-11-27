@@ -1,0 +1,16 @@
+kod,nazev,nadrazena,poradi
+kuchyne,Kuchyně,,10
+nealko,Nealko a káva,,20
+alkohol,Alkohol,,30
+polevky,Polévky,kuchyne,1
+predkrmy,Předkrmy,kuchyne,2
+hlavni,Hlavní jídla,kuchyne,3
+rytirske,Rytířské talíře,kuchyne,4
+prilohy,Přílohy,kuchyne,5
+omacky,Omáčky,kuchyne,6
+dezerty,Dezerty,kuchyne,7
+nealko_napoje,Studené nápoje,nealko,1
+kava_caj,Káva a čaj,nealko,2
+pivo,Pivo,alkohol,1
+destilaty,Destiláty a likéry,alkohol,2
+vino,Víno,alkohol,3

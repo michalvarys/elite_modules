@@ -1,0 +1,83 @@
+kod,skupina,nazev,cena,dph,sklad,alergeny
+polevka_zeleninova,polevky,Vegetariánská zeleninová polévka,119,jidlo,,"1, 3, 7"
+polevka_rybi,polevky,Rybí polévka,139,jidlo,,
+polevka_gulasova,polevky,Hovězí gulášová polévka v chlebu,199,jidlo,,"1, 3, 7"
+pirogi,predkrmy,Rytířské pirogi s vepřovým masem (2 ks),219,jidlo,,"1, 3, 7"
+losos_talir,predkrmy,"Talíř s uzeným lososem, bílou omáčkou a toastem",279,jidlo,,"1, 3, 4, 7"
+pelmene,predkrmy,Smažené černé pelmeně s jelením masem,299,jidlo,,
+susene_hovezi,predkrmy,Sušené hovězí maso,199,jidlo,,
+nakladana_zelenina,predkrmy,Nakládaná zelenina,299,jidlo,,
+gulas_jelen,hlavni,Guláš z jelena s knedlíkem,299,jidlo,,"1, 3"
+zarkoje,hlavni,Žarkoje s jehněčím masem,429,jidlo,,
+jehneci_koleno,hlavni,Jehněčí koleno s ječmennou kaší a houbami,599,jidlo,,"1, 7"
+kridla_omacka,hlavni,Pečená kuřecí křídla v cibulovo-jablečné omáčce,299,jidlo,,"3, 7"
+lyulya_kebab,hlavni,Hovězí lyulya kebab,399,jidlo,,"1, 3"
+kachna,hlavni,Kachna po Loketsku (1/2 kachny),519,jidlo,,"1, 3"
+masova_misa,hlavni,Masová mísa z tandoru v chlebu (3–4 osoby),1390,jidlo,,"1, 3"
+kuraci_stripsy,hlavni,Domácí kuřecí stripsy s hranolky,229,jidlo,,
+vegetarian_talir,hlavni,Vegetariánský talíř,199,jidlo,,"3, 7"
+rytir_kure,rytirske,Talíř rytířů s kuřecím masem,399,jidlo,,"1, 3, 7, 10"
+rytir_kridla,rytirske,Talíř rytířů s kuřecími křidélky,299,jidlo,,"3, 7"
+rytir_veprove,rytirske,Talíř rytířů s vepřovým masem,399,jidlo,,"1, 3"
+rytir_losos,rytirske,Rytířský talíř s lososovým steakem,549,jidlo,,"1, 3, 4, 7"
+rytir_pstruh,rytirske,Rytířský talíř s pstruhem,399,jidlo,,"1, 3, 4, 7"
+rytir_teleci,rytirske,Talíř rytířů s telecím masem,449,jidlo,,"1, 3"
+jecna_kase,prilohy,Ječná kaše s houbami,129,jidlo,,
+grilovana_zelenina,prilohy,Grilovaná zelenina s bílou omáčkou,149,jidlo,,"3, 7"
+brambory,prilohy,Brambory – domácí recept,69,jidlo,,
+bramborova_kase,prilohy,Bramborová kaše,79,jidlo,,
+hranolky,prilohy,Hranolky s kečupem,79,jidlo,,
+knedliky,prilohy,Houskové knedlíky,69,jidlo,,
+michany_salat,prilohy,Míchaný salát,139,jidlo,,
+chleb,prilohy,Staroslovanské pečivo z ječmene,59,jidlo,,"1, 3, 7"
+omacka_cervena,omacky,Domácí červená omáčka z rajčat a papriky,39,jidlo,,
+omacka_cesnekova,omacky,Domácí česneková omáčka s nakládanou okurkou,39,jidlo,,"3, 7"
+omacka_horcicna,omacky,Hořčičná omáčka se smetanou,39,jidlo,,"7, 10"
+palacinky,dezerty,Palačinky s tvarohem a broskví,129,jidlo,,"1, 3, 7"
+zmrzlina,dezerty,"Zmrzlina se sušenkami, karamelem a šlehačkou",99,jidlo,,"1, 3, 7"
+napoleon,dezerty,Domácí dort Napoleon,109,jidlo,,"1, 3, 7, 8"
+strudl,dezerty,Domácí štrůdl se zmrzlinou a šlehačkou,149,jidlo,,"1, 3, 7, 8"
+fondan,dezerty,Čokoládový fondán,129,jidlo,,"1, 3, 7"
+pepsi,nealko_napoje,Pepsi 250 ml,45,nealko,ano,
+mirinda,nealko_napoje,Mirinda 250 ml,45,nealko,ano,
+seven_up,nealko_napoje,Seven Up 250 ml,45,nealko,ano,
+schweppes,nealko_napoje,Schweppes 250 ml,45,nealko,ano,
+mattoni,nealko_napoje,Mattoni 330 ml,39,nealko,ano,
+dzus,nealko_napoje,Džus 200 ml,42,nealko,ano,
+limonada,nealko_napoje,Domácí limonáda z lesních plodů,79,nealko,,
+caj_zeleny,kava_caj,Sypaný čaj zelený s medem a citronem 600 ml,99,nealko,,
+caj_cerny,kava_caj,Sypaný čaj černý s medem a citronem 600 ml,99,nealko,,
+caj_ovocny,kava_caj,Sypaný čaj ovocný s medem a citronem 600 ml,99,nealko,,
+cappuccino,kava_caj,Cappuccino 200 ml,75,nealko,,7
+latte,kava_caj,Latte 200 ml,75,nealko,,7
+horka_cokolada,kava_caj,Horká čokoláda 200 ml,75,nealko,,
+espresso,kava_caj,Espresso 100 ml,60,nealko,,
+stary_hrad_svetle_0_3,pivo,"Starý Hrad světlé 0,3 l",69,alkohol,,
+stary_hrad_svetle_0_5,pivo,"Starý Hrad světlé 0,5 l",99,alkohol,,
+stary_hrad_svetle_1_5,pivo,"Starý Hrad světlé 1,5 l",300,alkohol,,
+stary_hrad_tmave_0_3,pivo,"Starý Hrad tmavé 0,3 l",69,alkohol,,
+stary_hrad_tmave_0_5,pivo,"Starý Hrad tmavé 0,5 l",99,alkohol,,
+stary_hrad_tmave_1_5,pivo,"Starý Hrad tmavé 1,5 l",300,alkohol,,
+stary_hrad_rezane_0_3,pivo,"Starý Hrad řezané 0,3 l",69,alkohol,,
+stary_hrad_rezane_0_5,pivo,"Starý Hrad řezané 0,5 l",99,alkohol,,
+stary_hrad_rezane_1_5,pivo,"Starý Hrad řezané 1,5 l",300,alkohol,,
+radler_0_3,pivo,"Radler (pivo se Spritem) 0,3 l",65,alkohol,,
+radler_0_5,pivo,"Radler (pivo se Spritem) 0,5 l",89,alkohol,,
+birell,pivo,"Birell nealkoholické 0,5 l",59,nealko,ano,
+bir_go,pivo,"Bir-go nealkoholické 0,5 l",59,nealko,ano,
+becherovka,destilaty,"Becherovka 0,04 l",79,alkohol,,
+becherovka_lemond,destilaty,"Becherovka Lemond 0,04 l",79,alkohol,,
+jagermeister,destilaty,"Jägermeister 0,04 l",79,alkohol,,
+bozkov,destilaty,"Božkov 0,04 l",49,alkohol,,
+slivovice,destilaty,"Slivovice 0,04 l",79,alkohol,,
+hruskovice,destilaty,"Hruškovice 0,04 l",79,alkohol,,
+finlandia,destilaty,"Vodka Finlandia 0,04 l",79,alkohol,,
+hennessy,destilaty,"Hennessy 0,04 l",119,alkohol,,
+ararat,destilaty,"Ararat***** 0,04 l",119,alkohol,,
+tullamore,destilaty,"Tullamore Dew 0,04 l",89,alkohol,,
+jack_daniels,destilaty,"Jack Daniel's 0,04 l",99,alkohol,,
+jameson,destilaty,"Jameson 0,04 l",99,alkohol,,
+vino_lahev,vino,"Víno z nabídky 0,75 l",499,alkohol,ano,
+vino_rozlevane,vino,"Rozlévané víno 0,2 l",79,alkohol,,
+svarene_vino,vino,Svařené víno 200 ml,79,alkohol,,
+grog,vino,Grog 200 ml,79,alkohol,,

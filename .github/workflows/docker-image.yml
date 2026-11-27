@@ -63,7 +63,7 @@ jobs:
             set -e
             python3 -c "import authlib, defusedxml, packaging; print(\"authlib\", authlib.__version__)"
             odoo --version
-            for m in elite_common/elite_eet elite_vet/elite_vet_web elite_arena/elite_arena_pos elite_trafika/elite_trafika_pos; do
+            for m in elite_common/elite_eet elite_vet/elite_vet_web elite_arena/elite_arena_pos elite_trafika/elite_trafika_pos elite_restaurace/elite_imi_pos; do
               test -f /mnt/modules/$m/__manifest__.py || { echo "missing $m"; exit 1; }
             done
             test ! -e /mnt/modules/elite_common/mcp_server || { echo "mcp_server must not be in the image"; exit 1; }

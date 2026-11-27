@@ -1,0 +1,26 @@
+kod,nazev,nadrazena,poradi
+kuchyne,Kuchyně,,10
+nealko,Nealko a káva,,20
+alkohol,Alkohol,,30
+jack_daniels,Jack Daniel's,,40
+predkrmy,Předkrmy,kuchyne,1
+salaty,Saláty,kuchyne,2
+steaky,Steaky,kuchyne,3
+omacky,Omáčky ke steakům,kuchyne,4
+speciality,Speciality,kuchyne,5
+burgery,Burgery,kuchyne,6
+kureci,Kuřecí maso,kuchyne,7
+veprove,Vepřové maso,kuchyne,8
+ryby,Ryby,kuchyne,9
+prilohy,Přílohy,kuchyne,10
+dezerty,Dezerty,kuchyne,11
+nealko_napoje,Nealko nápoje,nealko,1
+limonady,Domácí limonády,nealko,2
+kava,Teplé nápoje,nealko,3
+nealko_koktejly,Nealko koktejly,nealko,4
+pivo,Pivo,alkohol,1
+aperitivy,Aperitivy,alkohol,2
+destilaty,Destiláty a likéry,alkohol,3
+jd_koktejly,Jack Daniel's koktejly,alkohol,4
+koktejly,Koktejly,alkohol,5
+vino,Víno a prosecco,alkohol,6

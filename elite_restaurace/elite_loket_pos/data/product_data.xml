@@ -1,0 +1,1019 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Vygenerováno z zbozi.csv (elite_restaurant_pos/scripts/gen_data.py). Ceny jsou včetně DPH;
+             firmu a sazbu DPH doplní elite.restaurant.pos.setup podle zbozi.csv. -->
+        <record id="product_polevka_zeleninova" model="product.template">
+            <field name="name">Vegetariánská zeleninová polévka</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">119.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">1</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_polevky')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_polevka_rybi" model="product.template">
+            <field name="name">Rybí polévka</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">139.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">2</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_polevky')])]"/>
+        </record>
+        <record id="product_polevka_gulasova" model="product.template">
+            <field name="name">Hovězí gulášová polévka v chlebu</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">199.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">3</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_polevky')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_pirogi" model="product.template">
+            <field name="name">Rytířské pirogi s vepřovým masem (2 ks)</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">219.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">4</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_predkrmy')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_losos_talir" model="product.template">
+            <field name="name">Talíř s uzeným lososem, bílou omáčkou a toastem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">279.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">5</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_predkrmy')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 4, 7</field>
+        </record>
+        <record id="product_pelmene" model="product.template">
+            <field name="name">Smažené černé pelmeně s jelením masem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">299.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">6</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_predkrmy')])]"/>
+        </record>
+        <record id="product_susene_hovezi" model="product.template">
+            <field name="name">Sušené hovězí maso</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">199.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">7</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_predkrmy')])]"/>
+        </record>
+        <record id="product_nakladana_zelenina" model="product.template">
+            <field name="name">Nakládaná zelenina</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">299.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">8</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_predkrmy')])]"/>
+        </record>
+        <record id="product_gulas_jelen" model="product.template">
+            <field name="name">Guláš z jelena s knedlíkem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">299.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">9</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 1, 3</field>
+        </record>
+        <record id="product_zarkoje" model="product.template">
+            <field name="name">Žarkoje s jehněčím masem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">429.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">10</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+        </record>
+        <record id="product_jehneci_koleno" model="product.template">
+            <field name="name">Jehněčí koleno s ječmennou kaší a houbami</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">599.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">11</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 1, 7</field>
+        </record>
+        <record id="product_kridla_omacka" model="product.template">
+            <field name="name">Pečená kuřecí křídla v cibulovo-jablečné omáčce</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">299.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">12</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 3, 7</field>
+        </record>
+        <record id="product_lyulya_kebab" model="product.template">
+            <field name="name">Hovězí lyulya kebab</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">399.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">13</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 1, 3</field>
+        </record>
+        <record id="product_kachna" model="product.template">
+            <field name="name">Kachna po Loketsku (1/2 kachny)</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">519.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">14</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 1, 3</field>
+        </record>
+        <record id="product_masova_misa" model="product.template">
+            <field name="name">Masová mísa z tandoru v chlebu (3–4 osoby)</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">1390.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">15</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 1, 3</field>
+        </record>
+        <record id="product_kuraci_stripsy" model="product.template">
+            <field name="name">Domácí kuřecí stripsy s hranolky</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">229.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">16</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+        </record>
+        <record id="product_vegetarian_talir" model="product.template">
+            <field name="name">Vegetariánský talíř</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">199.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">17</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_hlavni')])]"/>
+            <field name="description_sale">Alergeny: 3, 7</field>
+        </record>
+        <record id="product_rytir_kure" model="product.template">
+            <field name="name">Talíř rytířů s kuřecím masem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">399.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">18</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_rytirske')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7, 10</field>
+        </record>
+        <record id="product_rytir_kridla" model="product.template">
+            <field name="name">Talíř rytířů s kuřecími křidélky</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">299.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">19</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_rytirske')])]"/>
+            <field name="description_sale">Alergeny: 3, 7</field>
+        </record>
+        <record id="product_rytir_veprove" model="product.template">
+            <field name="name">Talíř rytířů s vepřovým masem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">399.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">20</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_rytirske')])]"/>
+            <field name="description_sale">Alergeny: 1, 3</field>
+        </record>
+        <record id="product_rytir_losos" model="product.template">
+            <field name="name">Rytířský talíř s lososovým steakem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">549.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">21</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_rytirske')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 4, 7</field>
+        </record>
+        <record id="product_rytir_pstruh" model="product.template">
+            <field name="name">Rytířský talíř s pstruhem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">399.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">22</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_rytirske')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 4, 7</field>
+        </record>
+        <record id="product_rytir_teleci" model="product.template">
+            <field name="name">Talíř rytířů s telecím masem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">449.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">23</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_rytirske')])]"/>
+            <field name="description_sale">Alergeny: 1, 3</field>
+        </record>
+        <record id="product_jecna_kase" model="product.template">
+            <field name="name">Ječná kaše s houbami</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">129.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">24</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+        </record>
+        <record id="product_grilovana_zelenina" model="product.template">
+            <field name="name">Grilovaná zelenina s bílou omáčkou</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">149.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">25</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+            <field name="description_sale">Alergeny: 3, 7</field>
+        </record>
+        <record id="product_brambory" model="product.template">
+            <field name="name">Brambory – domácí recept</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">69.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">26</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+        </record>
+        <record id="product_bramborova_kase" model="product.template">
+            <field name="name">Bramborová kaše</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">27</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+        </record>
+        <record id="product_hranolky" model="product.template">
+            <field name="name">Hranolky s kečupem</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">28</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+        </record>
+        <record id="product_knedliky" model="product.template">
+            <field name="name">Houskové knedlíky</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">69.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">29</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+        </record>
+        <record id="product_michany_salat" model="product.template">
+            <field name="name">Míchaný salát</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">139.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">30</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+        </record>
+        <record id="product_chleb" model="product.template">
+            <field name="name">Staroslovanské pečivo z ječmene</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">59.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">31</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_prilohy')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_omacka_cervena" model="product.template">
+            <field name="name">Domácí červená omáčka z rajčat a papriky</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">39.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">32</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_omacky')])]"/>
+        </record>
+        <record id="product_omacka_cesnekova" model="product.template">
+            <field name="name">Domácí česneková omáčka s nakládanou okurkou</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">39.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">33</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_omacky')])]"/>
+            <field name="description_sale">Alergeny: 3, 7</field>
+        </record>
+        <record id="product_omacka_horcicna" model="product.template">
+            <field name="name">Hořčičná omáčka se smetanou</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">39.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">34</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_omacky')])]"/>
+            <field name="description_sale">Alergeny: 7, 10</field>
+        </record>
+        <record id="product_palacinky" model="product.template">
+            <field name="name">Palačinky s tvarohem a broskví</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">129.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">35</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_dezerty')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_zmrzlina" model="product.template">
+            <field name="name">Zmrzlina se sušenkami, karamelem a šlehačkou</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">36</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_dezerty')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_napoleon" model="product.template">
+            <field name="name">Domácí dort Napoleon</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">109.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">37</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_dezerty')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7, 8</field>
+        </record>
+        <record id="product_strudl" model="product.template">
+            <field name="name">Domácí štrůdl se zmrzlinou a šlehačkou</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">149.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">38</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_dezerty')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7, 8</field>
+        </record>
+        <record id="product_fondan" model="product.template">
+            <field name="name">Čokoládový fondán</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">129.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">39</field>
+            <field name="categ_id" ref="product_category_kuchyne"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_dezerty')])]"/>
+            <field name="description_sale">Alergeny: 1, 3, 7</field>
+        </record>
+        <record id="product_pepsi" model="product.template">
+            <field name="name">Pepsi 250 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">45.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">40</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_mirinda" model="product.template">
+            <field name="name">Mirinda 250 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">45.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">41</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_seven_up" model="product.template">
+            <field name="name">Seven Up 250 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">45.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">42</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_schweppes" model="product.template">
+            <field name="name">Schweppes 250 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">45.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">43</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_mattoni" model="product.template">
+            <field name="name">Mattoni 330 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">39.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">44</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_dzus" model="product.template">
+            <field name="name">Džus 200 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">42.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">45</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_limonada" model="product.template">
+            <field name="name">Domácí limonáda z lesních plodů</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">46</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_nealko_napoje')])]"/>
+        </record>
+        <record id="product_caj_zeleny" model="product.template">
+            <field name="name">Sypaný čaj zelený s medem a citronem 600 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">47</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+        </record>
+        <record id="product_caj_cerny" model="product.template">
+            <field name="name">Sypaný čaj černý s medem a citronem 600 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">48</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+        </record>
+        <record id="product_caj_ovocny" model="product.template">
+            <field name="name">Sypaný čaj ovocný s medem a citronem 600 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">49</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+        </record>
+        <record id="product_cappuccino" model="product.template">
+            <field name="name">Cappuccino 200 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">75.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">50</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+            <field name="description_sale">Alergeny: 7</field>
+        </record>
+        <record id="product_latte" model="product.template">
+            <field name="name">Latte 200 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">75.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">51</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+            <field name="description_sale">Alergeny: 7</field>
+        </record>
+        <record id="product_horka_cokolada" model="product.template">
+            <field name="name">Horká čokoláda 200 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">75.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">52</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+        </record>
+        <record id="product_espresso" model="product.template">
+            <field name="name">Espresso 100 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">60.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">53</field>
+            <field name="categ_id" ref="product_category_nealko"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_kava_caj')])]"/>
+        </record>
+        <record id="product_stary_hrad_svetle_0_3" model="product.template">
+            <field name="name">Starý Hrad světlé 0,3 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">69.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">54</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_svetle_0_5" model="product.template">
+            <field name="name">Starý Hrad světlé 0,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">55</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_svetle_1_5" model="product.template">
+            <field name="name">Starý Hrad světlé 1,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">300.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">56</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_tmave_0_3" model="product.template">
+            <field name="name">Starý Hrad tmavé 0,3 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">69.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">57</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_tmave_0_5" model="product.template">
+            <field name="name">Starý Hrad tmavé 0,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">58</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_tmave_1_5" model="product.template">
+            <field name="name">Starý Hrad tmavé 1,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">300.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">59</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_rezane_0_3" model="product.template">
+            <field name="name">Starý Hrad řezané 0,3 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">69.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">60</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_rezane_0_5" model="product.template">
+            <field name="name">Starý Hrad řezané 0,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">61</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_stary_hrad_rezane_1_5" model="product.template">
+            <field name="name">Starý Hrad řezané 1,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">300.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">62</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_radler_0_3" model="product.template">
+            <field name="name">Radler (pivo se Spritem) 0,3 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">65.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">63</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_radler_0_5" model="product.template">
+            <field name="name">Radler (pivo se Spritem) 0,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">89.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">64</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_birell" model="product.template">
+            <field name="name">Birell nealkoholické 0,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">59.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">65</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_bir_go" model="product.template">
+            <field name="name">Bir-go nealkoholické 0,5 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">59.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">66</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_pivo')])]"/>
+        </record>
+        <record id="product_becherovka" model="product.template">
+            <field name="name">Becherovka 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">67</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_becherovka_lemond" model="product.template">
+            <field name="name">Becherovka Lemond 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">68</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_jagermeister" model="product.template">
+            <field name="name">Jägermeister 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">69</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_bozkov" model="product.template">
+            <field name="name">Božkov 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">49.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">70</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_slivovice" model="product.template">
+            <field name="name">Slivovice 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">71</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_hruskovice" model="product.template">
+            <field name="name">Hruškovice 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">72</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_finlandia" model="product.template">
+            <field name="name">Vodka Finlandia 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">73</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_hennessy" model="product.template">
+            <field name="name">Hennessy 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">119.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">74</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_ararat" model="product.template">
+            <field name="name">Ararat***** 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">119.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">75</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_tullamore" model="product.template">
+            <field name="name">Tullamore Dew 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">89.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">76</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_jack_daniels" model="product.template">
+            <field name="name">Jack Daniel's 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">77</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_jameson" model="product.template">
+            <field name="name">Jameson 0,04 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">99.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">78</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_destilaty')])]"/>
+        </record>
+        <record id="product_vino_lahev" model="product.template">
+            <field name="name">Víno z nabídky 0,75 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="True"/>
+            <field name="list_price">499.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">79</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_vino')])]"/>
+        </record>
+        <record id="product_vino_rozlevane" model="product.template">
+            <field name="name">Rozlévané víno 0,2 l</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">80</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_vino')])]"/>
+        </record>
+        <record id="product_svarene_vino" model="product.template">
+            <field name="name">Svařené víno 200 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">81</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_vino')])]"/>
+        </record>
+        <record id="product_grog" model="product.template">
+            <field name="name">Grog 200 ml</field>
+            <field name="type">consu</field>
+            <field name="is_storable" eval="False"/>
+            <field name="list_price">79.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="available_in_pos" eval="True"/>
+            <field name="sequence">82</field>
+            <field name="categ_id" ref="product_category_alkohol"/>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_category_vino')])]"/>
+        </record>
+    </data>
+</odoo>

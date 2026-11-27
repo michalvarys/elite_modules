@@ -1,4 +1,4 @@
-# Odoo image s moduly Elite (elite_common, elite_vet, elite_arena, elite_trafika).
+# Odoo image s moduly Elite (elite_common, elite_vet, elite_arena, elite_trafika, elite_restaurace).
 #
 # Zaklad je Varyshop Odoo 18: zdrojaky Odoo lezi v /app a bezi pod rootem.
 # Image stavi GitHub Actions (.github/workflows/docker-image.yml) a pushuje
@@ -21,6 +21,7 @@ COPY elite_common /mnt/modules/elite_common
 COPY elite_vet /mnt/modules/elite_vet
 COPY elite_arena /mnt/modules/elite_arena
 COPY elite_trafika /mnt/modules/elite_trafika
+COPY elite_restaurace /mnt/modules/elite_restaurace
 
 # Vychozi konfigurace, na serveru se obvykle prekryje vlastnim /etc/odoo.
 COPY config/odoo-image.conf /etc/odoo/odoo.conf

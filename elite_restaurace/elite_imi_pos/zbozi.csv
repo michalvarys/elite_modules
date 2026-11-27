@@ -1,0 +1,248 @@
+kod,skupina,nazev,cena,dph,sklad,alergeny
+salat_kachna,salaty,MIX salát s grilovaným kachním masem,349,jidlo,,
+salat_krevety,salaty,MIX salát s krevetami,279,jidlo,,
+salat_kruti,salaty,MIX salát s grilovaným krůtím masem,239,jidlo,,
+salat_okurky,salaty,"Salát z mačkaných okurek, koriandr a ořechy",89,jidlo,,"6, 8"
+salat_wakame,salaty,Wakame salát,130,jidlo,,"2, 11"
+salat_kimchi,salaty,Kimchi salát,119,jidlo,,"4, 11"
+salat_lilek,salaty,Salát s křupavým lilkem,180,jidlo,,"1, 10, 11"
+polevka_tom_yum,polevky,"Tom Yum – krevety, kuřecí kousky, kokosové mléko",200,jidlo,,"2, 4, 6, 7, 8"
+polevka_pho_ga,polevky,Pho Ga (kuřecí),210,jidlo,,
+polevka_pho_bo,polevky,Pho Bo (hovězí),300,jidlo,,
+ramen_kureci,polevky,Ramen kuřecí,245,jidlo,,"1, 3, 6"
+ramen_veprovy,polevky,Ramen vepřový,245,jidlo,,"1, 3, 6"
+ramen_hovezi,polevky,Ramen hovězí,300,jidlo,,"1, 3, 6"
+tycinky_3,predkrmy,Lososové tyčinky (3 ks),90,jidlo,,
+tycinky_6,predkrmy,Lososové tyčinky (6 ks),159,jidlo,,
+jarni_zavitky,predkrmy,Jarní závitky se zeleninou (6 ks),110,jidlo,,"1, 3"
+edamame,predkrmy,Edamame fazolky,99,jidlo,,"1, 5, 6, 11"
+gyoza,predkrmy,Gyoza hovězí se zeleninou (4 ks),170,jidlo,,
+musle,predkrmy,Zapečené mušle MIDI se sýrem (4 ks),250,jidlo,,
+tempura_3,predkrmy,Krevety v tempuře (3 ks),199,jidlo,,"1, 2, 3, 6, 10"
+tempura_6,predkrmy,Krevety v tempuře (6 ks),279,jidlo,,"1, 2, 3, 6, 10"
+poke_salmon,poke,Salmon poke bowl,330,jidlo,,"4, 11"
+poke_maguro,poke,Maguro poke bowl,380,jidlo,,"4, 11"
+poke_kureci,poke,Kuřecí poke bowl,290,jidlo,,"4, 11"
+poke_wakame,poke,Wakame poke bowl,260,jidlo,,"4, 11"
+chow_mein_kureci,wok,Chow mein kuřecí,299,jidlo,,
+chow_mein_kruti,wok,Chow mein krůtí,310,jidlo,,
+chow_mein_hovezi,wok,Chow mein hovězí,359,jidlo,,
+chow_mein_krevety,wok,Chow mein s krevetami,339,jidlo,,
+pad_thai,wok,Nudle Pad Thai s krevetami a kuřecím masem,360,jidlo,,"2, 3, 6, 7"
+udon_kureci,wok,Bushi udon kuřecí,299,jidlo,,"1, 3, 6, 11, 14"
+udon_kruti,wok,Bushi udon krůtí,310,jidlo,,"1, 3, 6, 11, 14"
+udon_hovezi,wok,Bushi udon hovězí,350,jidlo,,"1, 3, 6, 11, 14"
+udon_krevety,wok,Bushi udon s krevetami,329,jidlo,,"1, 3, 6, 11, 14"
+wok_ryze_kureci,wok,Wok rýže s kuřecím,260,jidlo,,"2, 3, 4, 11"
+wok_ryze_kruti,wok,Wok rýže s krůtím,275,jidlo,,"2, 3, 4, 11"
+thajska_ryze,wok,Thajská rýže s krevetami,290,jidlo,,"2, 3, 4, 7, 14"
+wok_ryze_hovezi,wok,Wok rýže s hovězím masem,299,jidlo,,
+kung_pao,hlavni,Kuřecí Kung-Pao,300,jidlo,,
+kruti_steak,hlavni,Grilovaný krůtí steak s restovanou zeleninou,359,jidlo,,
+losos_singapur,hlavni,Grilovaný losos Singapur,390,jidlo,,"1, 4, 6, 7, 11"
+kachni_prsa,hlavni,Kachní prsa s mrkvovým pyré a ovocnou omáčkou,420,jidlo,,
+kridla_6,hlavni,BBQ kuřecí křídla (6 ks),149,jidlo,,
+kridla_12,hlavni,BBQ kuřecí křídla (12 ks),259,jidlo,,
+kari_kureci,hlavni,Kari kuřecí,219,jidlo,,"2, 4"
+kari_kruti,hlavni,Kari krůtí,239,jidlo,,"2, 4"
+kari_krevety,hlavni,Kari s krevetami,259,jidlo,,"2, 4"
+kari_hovezi,hlavni,Kari hovězí,329,jidlo,,"2, 4"
+chick_n_bap,hlavni,Kuřecí Chick-n-bap,275,jidlo,,"1, 3, 6"
+ryze,prilohy,Rýže,70,jidlo,,1
+udon_nudle,prilohy,Udon nudle,90,jidlo,,1
+ryzove_nudle,prilohy,Rýžové nudle,70,jidlo,,
+zmrzlina,dezerty,Vanilková zmrzlina s karamelovou sušenkou a šlehačkou,160,jidlo,,"1, 3, 7"
+vafle,dezerty,Čokoládové vafle s mangem,160,jidlo,,"1, 3, 5, 7, 8"
+mochi,dezerty,Japonské zmrzlinové mochi,120,jidlo,,
+teppanyaki,teppanyaki,Teppanyaki menu (na osobu),2550,jidlo,,
+nigiri_sake,nigiri,Nigiri sake (losos),110,jidlo,,4
+nigiri_ebi,nigiri,Nigiri ebi (kreveta),125,jidlo,,4
+nigiri_maguro,nigiri,Nigiri maguro (tuňák),130,jidlo,,4
+nigiri_avocado,nigiri,Nigiri avocado,85,jidlo,,
+nigiri_unagi,nigiri,Nigiri unagi (úhoř),180,jidlo,,2
+maki_sake,maki,Maki sake (losos),150,jidlo,,4
+maki_sake_avocado,maki,Maki sake avocado,180,jidlo,,4
+maki_tekka,maki,Maki tekka (tuňák),160,jidlo,,
+maki_tekka_avocado,maki,Maki tekka avocado,190,jidlo,,4
+maki_nordsea,maki,Maki Nordsea,180,jidlo,,"2, 4"
+maki_kampyo,maki,Maki kampyo veget.,160,jidlo,,
+maki_ebi_avocado,maki,Maki ebi avocado,180,jidlo,,2
+maki_unagi,maki,Maki unagi,225,jidlo,,2
+maki_unagi_kappa,maki,Maki unagi kappa,210,jidlo,,2
+maki_avocado,maki,Maki avocado veget.,140,jidlo,,
+maki_kappa,maki,Maki kappa veget.,130,jidlo,,
+sashimi_sake,sashimi,Sashimi sake (losos),210,jidlo,,4
+sashimi_maguro,sashimi,Sashimi maguro (tuňák),240,jidlo,,4
+sashimi_unagi,sashimi,Sashimi unagi (úhoř),275,jidlo,,2
+futomaki_clasik,futomaki,Futomaki Clasik,210,jidlo,,"4, 10"
+futomaki_ebi,futomaki,Futomaki Ebi,210,jidlo,,"2, 4, 10"
+futomaki_vega,futomaki,Futomaki Vega,170,jidlo,,
+futomaki_mix,futomaki,Futomaki Mix,260,jidlo,,"4, 10"
+crunch_salmon,crunch,Crunch roll Salmon (6 ks),280,jidlo,,"1, 4, 10"
+crunch_crab,crunch,Crunch roll Crab (6 ks),190,jidlo,,"1, 2, 4, 6, 10"
+crunch_unagi,crunch,Crunch roll Unagi tempura (6 ks),400,jidlo,,
+crunch_mix,crunch,Crunch roll Mix (6 ks),280,jidlo,,
+crunch_chicken,crunch,Crunch roll Chicken tempura (6 ks),200,jidlo,,"1, 3, 11"
+crunch_vega,crunch,Crunch roll Vega tempura (6 ks),170,jidlo,,"1, 3, 11"
+crunch_ogon_tora,crunch,Ogon Tora – Zlatý tiger (8 ks),410,jidlo,,
+crunch_philadelphia,crunch,Philadelphia New (8 ks),350,jidlo,,
+crunch_samura,crunch,Samura (8 ks),360,jidlo,,
+crunch_maguro,crunch,Maguro tempura maki (8 ks),360,jidlo,,
+kal_sezam_losos,kalifornie,Kalifornie v sezamu s lososem (8 ks),220,jidlo,,
+kal_sezam_tunak,kalifornie,Kalifornie v sezamu s tuňákem (8 ks),290,jidlo,,
+kal_sezam_uhor,kalifornie,Kalifornie v sezamu s úhořem (8 ks),340,jidlo,,
+kal_sezam_krab,kalifornie,Kalifornie v sezamu s krabem (8 ks),190,jidlo,,
+kal_masago_losos,kalifornie,Kalifornie v masagu s lososem (8 ks),300,jidlo,,
+kal_masago_tunak,kalifornie,Kalifornie v masagu s tuňákem (8 ks),390,jidlo,,
+kal_masago_uhor,kalifornie,Kalifornie v masagu s úhořem (8 ks),420,jidlo,,
+kal_masago_krab,kalifornie,Kalifornie v masagu s krabem (8 ks),250,jidlo,,
+dragon,kalifornie,Dragon I-O-S (4 ks),380,jidlo,,"1, 2, 4, 6"
+rainbow,kalifornie,Rainbow (8 ks),340,jidlo,,"1, 4, 6"
+canada,special,Canada rolls (8 ks),490,jidlo,,
+aburi_mexiko,special,Salmon aburi Mexiko (8 ks),410,jidlo,,
+tartar_maki,special,Tar-tar maki salmon (5 ks),320,jidlo,,
+tuna_crunch_fusion,special,Tuna crunch fusion roll,250,jidlo,,"1, 3, 4, 6, 7, 10, 11"
+avocado_fusion,special,Avocado fusion (8 ks),435,jidlo,,
+crispy_tuna,special,Crispy tuna rolls (5 ks),350,jidlo,,
+baked_losos,special,Baked rolls s lososem (6 ks),280,jidlo,,
+baked_krevety,special,Baked rolls s krevetami (6 ks),280,jidlo,,
+black_chuka,special,Black chuka roll,280,jidlo,,"1, 6, 11"
+vega_avocado_rolls,special,Vega avocado rolls (8 ks),310,jidlo,,
+philadelphia_losos,special,Philadelphia s lososem (8 ks),340,jidlo,,
+philadelphia_krevety,special,Philadelphia s krevetami (8 ks),340,jidlo,,
+philadelphia_uhor,special,Philadelphia s úhořem (8 ks),390,jidlo,,
+ebi_mango,special,Ebi mango (8 ks),340,jidlo,,
+tuna_spicy,special,Tuna spicy (8 ks),480,jidlo,,
+set_nigiri,sety,Nigiri set – 1 osoba (6 ks),280,jidlo,,
+set_hoso,sety,Hoso set – 1–2 osoby (30 ks),550,jidlo,,
+set_chicken,sety,Chicken set – 1 osoba (14 ks),380,jidlo,,
+set_vegan,sety,Vegan set – 1–2 osoby (24 ks),380,jidlo,,
+set_vega_crunch,sety,Vega crunch set,390,jidlo,,"1, 3, 6, 11"
+set_klasik,sety,Klasik set – 1–2 osoby (16 ks),490,jidlo,,
+set_grill,sety,Grill set – 1–2 osoby (18 ks),500,jidlo,,
+set_california,sety,California set – 1–2 osoby (16 ks),630,jidlo,,
+set_gold,sety,Gold set – 1–2 osoby (22 ks),860,jidlo,,
+set_black_samurai,sety,Black samurai set – 2–3 osoby (20 ks),660,jidlo,,
+set_crunch_roll,sety,Crunch roll set – 2–3 osoby (26 ks),670,jidlo,,
+set_mix_maki,sety,Mix maki set – 2–3 osoby (26 ks),710,jidlo,,
+set_mix_maki_plus,sety,Mix maki set plus – 3–4 osoby (40 ks),1110,jidlo,,
+set_family,sety,Family set – 4–5 osob (58 ks),1640,jidlo,,
+set_imi,sety,IMI set – 7–9 osob (84 ks),2900,jidlo,,
+budvar_0_3,pivo,"Budvar 33 světlý ležák 0,3 l (točené)",55,alkohol,,
+budvar_nealko,pivo,"Budvar nealkoholický 0,33 l",59,nealko,ano,
+budvar_tmavy,pivo,"Budvar tmavý ležák 0,33 l",59,alkohol,ano,
+corona,pivo,"Corona 0,33 l",89,alkohol,ano,
+asahi,pivo,"Asahi 0,33 l",119,alkohol,ano,
+coca_cola,nealko_napoje,"Coca-Cola 0,33 l",79,nealko,ano,
+coca_cola_zero,nealko_napoje,"Coca-Cola Zero 0,33 l",79,nealko,ano,
+fanta,nealko_napoje,"Fanta 0,33 l",79,nealko,ano,
+sprite,nealko_napoje,"Sprite 0,33 l",79,nealko,ano,
+ice_tea,nealko_napoje,"Ice Tea 0,25 l",69,nealko,ano,
+cappy,nealko_napoje,"Cappy džus 0,2 l",69,nealko,ano,
+kinley_tonic,nealko_napoje,"Kinley Tonic 0,25 l",69,nealko,ano,
+kinley_ginger,nealko_napoje,"Kinley Ginger 0,25 l",69,nealko,ano,
+kinley_rose,nealko_napoje,"Kinley Rose 0,25 l",69,nealko,ano,
+red_bull,nealko_napoje,"Red Bull 0,25 l",89,nealko,ano,
+roemerquelle_0_33,nealko_napoje,"Römerquelle 0,33 l",50,nealko,ano,
+roemerquelle_0_75,nealko_napoje,"Römerquelle 0,75 l",99,nealko,ano,
+roemerquelle_trava,nealko_napoje,"Römerquelle citronová tráva 0,33 l",60,nealko,ano,
+limonada_draci,limonady,"Domácí limonáda dračí ovoce 0,4 l",99,nealko,,
+limonada_mango,limonady,"Domácí limonáda mango-meruňka 0,4 l",99,nealko,,
+limonada_kiwi,limonady,"Domácí limonáda kiwi-ananas 0,4 l",99,nealko,,
+limonada_malina,limonady,"Domácí limonáda malina-limetka 0,4 l",99,nealko,,
+espresso,kava,Espresso,49,nealko,,
+lungo,kava,Caffé lungo,49,nealko,,
+cappuccino,kava,Cappuccino,59,nealko,,
+latte,kava,Caffé latté,79,nealko,,
+grog,kava,Domácí grog,90,alkohol,,
+svarak,kava,Domácí svařák,90,alkohol,,
+caj_earl_grey,caje,Čaj Earl Grey,79,nealko,,
+caj_green,caje,Čaj Green,79,nealko,,
+caj_summer_fruits,caje,Čaj Summer Fruits,79,nealko,,
+caj_white_peach,caje,Čaj White Peach,79,nealko,,
+caj_peppermint,caje,Čaj Peppermint,79,nealko,,
+caj_jasmine,caje,Čaj Jasmine,79,nealko,,
+caj_herbs_honey,caje,Čaj Herbs & Honey,79,nealko,,
+caj_mata,caje,Čaj z čerstvé máty,95,nealko,,
+caj_zazvor,caje,Čaj z čerstvého zázvoru,95,nealko,,
+matcha,caje,Matcha classic,65,nealko,,
+matcha_sirup,caje,Matcha se sirupem,79,nealko,,
+martini_bianco,aperitivy,"Martini Bianco 0,05 l",89,alkohol,,
+martini_extra_dry,aperitivy,"Martini Extra Dry 0,05 l",89,alkohol,,
+martini_rosso,aperitivy,"Martini Rosso 0,05 l",89,alkohol,,
+martini_fiero,aperitivy,"Martini Fiero 0,05 l",89,alkohol,,
+limoncello,aperitivy,"Limoncello 0,04 l",89,alkohol,,
+johnnie_walker,destilaty,"Johnnie Walker Red Label 0,04 l",89,alkohol,,
+tullamore,destilaty,"Tullamore Dew 12yo 0,04 l",109,alkohol,,
+jameson,destilaty,"Jameson 0,04 l",89,alkohol,,
+chivas,destilaty,"Chivas Regal 12yo 0,04 l",109,alkohol,,
+jack_daniels,destilaty,"Jack Daniel's 0,04 l",99,alkohol,,
+macallan,destilaty,"Macallan 12yo 0,04 l",689,alkohol,,
+bacardi_blanca,destilaty,"Bacardi Blanca 0,04 l",89,alkohol,,
+bacardi_oro,destilaty,"Bacardi Oro 0,04 l",89,alkohol,,
+bacardi_negra,destilaty,"Bacardi Negra 0,04 l",89,alkohol,,
+don_papa,destilaty,"Rum Don Papa 0,04 l",149,alkohol,,
+bumbu,destilaty,"Rum Bumbu 0,04 l",149,alkohol,,
+pyrat,destilaty,"Rum Pyrat 0,04 l",149,alkohol,,
+bombay,destilaty,"Bombay Sapphire 0,04 l",89,alkohol,,
+beefeater_rose,destilaty,"Beefeater Rose 0,04 l",89,alkohol,,
+finlandia,destilaty,"Vodka Finlandia 0,04 l",89,alkohol,,
+grey_goose,destilaty,"Vodka Grey Goose 0,04 l",129,alkohol,,
+el_jimador,destilaty,"Tequila El Jimador 0,04 l",99,alkohol,,
+becherovka_lemond,destilaty,"Becherovka Lemond 0,04 l",89,alkohol,,
+becherovka_cordial,destilaty,"Becherovka Cordial 0,04 l",89,alkohol,,
+becherovka_kv14,destilaty,"Becherovka KV-14 0,04 l",89,alkohol,,
+jagermeister,destilaty,"Jägermeister 0,04 l",89,alkohol,,
+slivovice,destilaty,"Slivovice 0,04 l",89,alkohol,,
+hruskovice,destilaty,"Hruškovice 0,04 l",89,alkohol,,
+grappa,destilaty,"Grappa 0,04 l",89,alkohol,,
+baileys,destilaty,"Baileys 0,04 l",89,alkohol,,
+hennessy_vsop,destilaty,"Hennessy VSOP 0,04 l",339,alkohol,,
+hennessy_xo,destilaty,"Hennessy XO 0,04 l",889,alkohol,,
+mimosa,koktejly,Mimosa,129,alkohol,,
+long_island,koktejly,Long Island Ice Tea,239,alkohol,,
+purple_people,koktejly,Purple People,169,alkohol,,
+mojito,koktejly,Bacardi Mojito,169,alkohol,,
+cuba_libre,koktejly,Bacardi Cuba Libre,169,alkohol,,
+pina_colada,koktejly,Bacardi Piña Colada,169,alkohol,,
+cosmopolitan,koktejly,Cosmopolitan,169,alkohol,,
+fiero_spritz,koktejly,Martini Fiero Spritz,169,alkohol,,
+aperol_spritz,koktejly,Aperol Spritz,169,alkohol,,
+hugo_spritz,koktejly,Hugo Spritz,169,alkohol,,
+mai_tai,koktejly,Mai Tai,169,alkohol,,
+maracas,nealko_koktejly,Maracas,109,nealko,,
+coconut_kiss,nealko_koktejly,Coconut Kiss,109,nealko,,
+virgin_mojito,nealko_koktejly,Virgin Mojito,109,nealko,,
+sempre_0_1,prosecco,"Sempre Prosecco DOC 0,1 l",85,alkohol,,
+sempre_0_75,prosecco,"Sempre Prosecco DOC 0,75 l",490,alkohol,ano,
+andreola,prosecco,"Andreola Akelum Brut 0,75 l",690,alkohol,ano,
+corvezzo,prosecco,"Corvezzo Family Collection Brut 0,75 l",690,alkohol,ano,
+rebuli,prosecco,"Rebuli Zerogrammi Extra Brut 0,75 l",790,alkohol,ano,
+la_tordera,prosecco,"La Tordera Tor Sé Brut Rosé 0,75 l",740,alkohol,ano,
+sorelle_bronca,prosecco,"Sorelle Bronca Particella 232 Brut Nature 0,75 l",1530,alkohol,ano,
+opia,prosecco,"Chardonnay sekt Bio 0% Opia 0,75 l (nealko)",590,nealko,ano,
+moet,prosecco,"Moët & Chandon Brut Imperial 0,75 l",2300,alkohol,ano,
+roederer,prosecco,"Louis Roederer 0,75 l",2690,alkohol,ano,
+sauvignon_colombard,vino,"Sauvignon + Colombard IGP d'Oc 0,15 l",89,alkohol,,
+chardonnay,vino,"Chardonnay (Francie) 0,75 l",410,alkohol,ano,
+latentia_pinot,vino,"Latentia 90 Pinot Grigio DOC 0,75 l",540,alkohol,ano,
+sauvignon_igt,vino,"Sauvignon IGT 0,75 l",560,alkohol,ano,
+lugana,vino,"Tenuta La Presa Lugana DOC 0,75 l",690,alkohol,ano,
+grillo,vino,"Grillo Doppio Passo 0,75 l",540,alkohol,ano,
+palava,vino,"Pálava PS 0,75 l",790,alkohol,ano,
+mount_riley,vino,"Sauvignon Mount Riley Marlborough 0,75 l",890,alkohol,ano,
+golden_turtle_0_15,vino,"Golden Turtle švestkové víno 0,15 l",89,alkohol,,
+golden_turtle_0_75,vino,"Golden Turtle švestkové víno 0,75 l",590,alkohol,ano,
+grace_koshu,vino,"Grace Koshu Private Reserve 0,75 l",1680,alkohol,ano,
+giacondi_rosato,vino,"Giacondi Nero d'Avola Rosato 0,15 l",89,alkohol,,
+perlage_rosato,vino,"Perlage É Bio Rosato IGT 0,75 l",540,alkohol,ano,
+primitivo_0_15,vino,"Primitivo Nero di Troia IGT 0,15 l",89,alkohol,,
+nero_davola,vino,"Nero d'Avola Canapi 0,75 l",490,alkohol,ano,
+latentia_primitivo,vino,"Latentia 90 Primitivo IGP 0,75 l",540,alkohol,ano,
+capoforte,vino,"Capoforte Primitivo IGP 0,75 l",890,alkohol,ano,
+barbanera,vino,"Barbanera Montepulciano 0,75 l",760,alkohol,ano,
+zinfandel,vino,"Zinfandel Bourbon Barrel Redwood 0,75 l",840,alkohol,ano,
+portske_tawny,vino,"Quinta da Romaneira Tawny 0,04 l",70,alkohol,,
+portske_white,vino,"Quinta da Romaneira White 0,04 l",70,alkohol,,
+ozeki_dry,sake,"Ozeki saké Dry 0,75 l",1250,alkohol,ano,
+ozeki,sake,"Ozeki saké 0,1 l",140,alkohol,,

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Nastavení pokladny Staroslovanská kuchyně Loket (kód v elite_restaurant_pos/models/setup.py). Ostatních firem se
+         modul nedotkne a u existující firmy nic nepřepisuje.
+
+         company   firma restaurace; když v databázi není, modul ji založí
+         parent    mateřská firma, jejíž pobočkou restaurace je (False = samostatná firma)
+         pos_name  název pokladny a skladu
+         code      zkratka skladu a deníků
+         floor     název sálu, tables počet stolů založených s pokladnou (rozmístění se upraví v Odoo)
+         DPH zboží je ve zbozi.csv (sloupec dph). -->
+    <function model="elite.restaurant.pos.setup" name="ensure_setup">
+        <value eval="{
+            'module': 'elite_loket_pos',
+            'company': 'Přírodní Pivní Lázně s.r.o.',
+            'parent': False,
+            'pos_name': 'Staroslovanská kuchyně',
+            'code': 'LOKET',
+            'floor': 'Restaurace',
+            'tables': 12,
+        }"/>
+    </function>
+</odoo>
