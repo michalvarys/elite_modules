@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Website footer: "Powered by Varyshop - Business management and process automation" -->
+    <template id="brand_promotion" inherit_id="website.brand_promotion" name="Varyshop: website brand promotion">
+        <xpath expr="//t[@t-set='_message']" position="replace">
+            <t t-set="_message">
+                <a target="_blank" href="https://www.varyshop.eu?utm_source=db&amp;utm_medium=website">Business management and process automation</a>
+            </t>
+        </xpath>
+    </template>
+</odoo>

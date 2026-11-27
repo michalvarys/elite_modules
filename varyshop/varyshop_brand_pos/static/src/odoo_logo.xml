@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- "Powered by <logo>" on the customer display (the svg has its own namespace, so the whole
+         wrapper is replaced) -->
+    <t t-inherit="point_of_sale.OdooLogo" t-inherit-mode="extension">
+        <xpath expr="//div" position="replace">
+            <div t-attf-class="{{ props.class }}" t-attf-style="{{ props.style }}">
+                <img t-att-src="props.monochrome ? '/varyshop_brand/static/img/logo_white.svg' : '/varyshop_brand/static/img/logo.svg'"
+                     alt="Varyshop" class="w-100"/>
+            </div>
+        </xpath>
+    </t>
+</templates>

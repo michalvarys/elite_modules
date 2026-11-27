@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_record_sidebar" inherit_id="portal.portal_record_sidebar" name="Varyshop: portal sidebar">
+        <xpath expr="//a[contains(@href, 'utm_medium=portal')]" position="replace">
+            <a target="_blank" href="https://www.varyshop.eu?utm_source=db&amp;utm_medium=portal" title="Varyshop"><img src="/varyshop_brand/static/img/logo.svg" alt="Varyshop" height="15"/></a>
+        </xpath>
+    </template>
+</odoo>

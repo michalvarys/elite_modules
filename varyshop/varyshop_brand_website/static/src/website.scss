@@ -1,0 +1,6 @@
+// Website editor: loading screen and configurator show the Varyshop logo.
+.o_website_loader_odoo_logo,
+.o_configurator_odoo_logo {
+    background-image: url('/varyshop_brand/static/img/logo.svg') !important;
+    background-position: left center;
+}

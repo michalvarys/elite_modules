@@ -1,0 +1,4 @@
+// Places where Odoo writes its purple directly instead of using $o-brand-odoo.
+.o-we-tablepicker .o-we-cell.active {
+    background-color: $o-brand-odoo;
+}
