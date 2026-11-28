@@ -13,6 +13,7 @@ class RestaurantPosCase(TransactionCase):
     allow_inherited_tests_method = True  # Odoo runs only methods defined on the subclass otherwise
     MODULE = COMPANY = PARENT = None
     PRODUCTS = 0
+    TABLES = 12  # tables created with the till
     FOOD = ALCOHOL = SOFT = None
 
     def setUp(self):
@@ -69,7 +70,7 @@ class RestaurantPosCase(TransactionCase):
         config = self.config
         self.assertEqual(config.company_id, self.company)
         self.assertTrue(config.module_pos_restaurant)
-        self.assertEqual(len(config.floor_ids.table_ids), 12)
+        self.assertEqual(len(config.floor_ids.table_ids), self.TABLES)
         self.assertEqual(set(config.payment_method_ids.mapped("name")), {"Hotově", "Kartou"})
         warehouse = config.picking_type_id.warehouse_id
         self.assertEqual(warehouse.company_id, self.company)
