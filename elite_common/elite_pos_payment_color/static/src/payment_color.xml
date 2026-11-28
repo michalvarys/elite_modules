@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="point_of_sale.PaymentScreenMethods" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('paymentmethods')]" position="attributes">
+            <attribute name="t-att-data-elite-spread">pos.config.payment_buttons_spread ? '1' : undefined</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('paymentmethod')]" position="attributes">
+            <attribute name="t-att-style">paymentMethodButtonStyle(paymentMethod)</attribute>
+        </xpath>
+    </t>
+</templates>
