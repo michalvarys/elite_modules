@@ -9,7 +9,10 @@ Staroslovanská kuchyně je v Lokti.
 | `elite_jack_pos` | Jack Grill Bar, přízemí | „Jackgrillbar s.r.o.“, samostatná firma | lístek z 5. 7. 2026 (= web): 143 položek |
 | `elite_loket_pos` | Staroslovanská kuchyně, Loket | „Přírodní Pivní Lázně s.r.o.“, samostatná firma | `Menu_Staroslovanska_Kuchyne_Loket_2026_web.pdf`: 82 položek |
 
-Každá restaurace má vlastní pokladnu, sklad, řadu účtenek a sál s 12 stoly. Kód je ve společném
+Každá restaurace má vlastní pokladnu, sklad a řadu účtenek. IMI a Jack Grill Bar mají sál s 12 stoly,
+Staroslovanská kuchyně dvě patra podle dosavadní pokladny rKeeper (`elite_loket_pos/floors.json`):
+**1. patro** rozdělené na sekce Terasa 2 (stoly 31–35), 1. patro (1–8) a Terasa 1 (21–26), **2. patro**
+se stoly 11–16 (14 a 16 po 10 místech, 15 pro 8). Počet míst u stolů v 1. patře je odhad (4). Kód je ve společném
 modulu [`elite_common/elite_restaurant_pos`](../elite_common/elite_restaurant_pos/README.md).
 
 ## Nasazení

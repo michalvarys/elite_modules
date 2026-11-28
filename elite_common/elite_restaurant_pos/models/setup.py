@@ -1,5 +1,7 @@
+import base64
 import csv
 import datetime
+import json
 import logging
 import zoneinfo
 
@@ -38,7 +40,8 @@ class EliteRestaurantPosSetup(models.AbstractModel):
 
         config: module (the restaurant module, holds zbozi.csv), company, parent (name of the company the
         restaurant is a branch of, or False), pos_name, code (short code for the warehouse and journals),
-        floor (name of the dining room), tables (number of tables created with the till).
+        floor (name of the dining room), tables (number of tables created with the till); or floors = True
+        for the floors, tables and floor plans of floors.json in the restaurant module.
 
         Only adds what is missing: values the companies already have (chart of accounts, price settings,
         warehouse, journals, an existing till) are left as they are; other companies are not touched."""
@@ -178,10 +181,15 @@ class EliteRestaurantPosSetup(models.AbstractModel):
             template.taxes_id = [(3, t.id) for t in stale - tax] + [(4, tax.id)]
 
     def _ensure_pos(self, module, company, config):
-        if self.env.ref("%s.pos_config" % module, raise_if_not_found=False):
-            return  # the till exists; its settings belong to the staff now
-        code = config["code"]
         pos_name = config.get("pos_name") or company.name
+        floors, new_floors = self._floors(module, config, pos_name)
+        till = self.env.ref("%s.pos_config" % module, raise_if_not_found=False)
+        if till:
+            # the till's settings belong to the staff now; only floors added to floors.json are added to it
+            if new_floors:
+                till.sudo().floor_ids = [(4, floor.id) for floor in new_floors]
+            return
+        code = config["code"]
         warehouse = self._warehouse(company, code, pos_name)
         if not warehouse.pos_type_id:
             self.env["stock.warehouse"].sudo()._create_missing_pos_picking_types()
@@ -201,12 +209,11 @@ class EliteRestaurantPosSetup(models.AbstractModel):
                                                  "use_payment_terminal": False})
         invoice_journal = Journal.search([("company_id", "parent_of", company.id), ("type", "=", "sale")],
                                          order="sequence, id", limit=1)
-        floor = self._floor(module, config.get("floor") or pos_name, int(config.get("tables") or 0))
         categories = self._module_records(module, "pos.category").filtered(lambda c: not c.parent_id)
         self._find_or_create(module, "pos_config", "pos.config", company, pos_name, lambda: {
             "name": pos_name, "company_id": company.id, "picking_type_id": warehouse.pos_type_id.id,
             "payment_method_ids": [(6, 0, methods.ids)], "invoice_journal_id": invoice_journal.id,
-            "module_pos_restaurant": True, "floor_ids": [(6, 0, floor.ids)],
+            "module_pos_restaurant": True, "floor_ids": [(6, 0, floors.ids)],
             "iface_printbill": True, "iface_splitbill": True,
             "limit_categories": True, "iface_available_categ_ids": [(6, 0, categories.ids)]})
 
@@ -220,20 +227,54 @@ class EliteRestaurantPosSetup(models.AbstractModel):
         return Warehouse.create({"name": name, "code": code[:5], "company_id": company.id,
                                  "partner_id": company.partner_id.id})
 
-    def _floor(self, module, name, tables):
-        floor = self.env.ref("%s.restaurant_floor" % module, raise_if_not_found=False)
-        if floor:
-            return floor
-        floor = self.env["restaurant.floor"].sudo().create({"name": name})
-        self.env["restaurant.table"].sudo().create([{
-            "floor_id": floor.id, "table_number": number, "seats": 4, "shape": "square",
-            "position_h": 50 + ((number - 1) % TABLES_PER_ROW) * 180,
-            "position_v": 50 + ((number - 1) // TABLES_PER_ROW) * 180,
-            "width": 120, "height": 120,
-        } for number in range(1, tables + 1)])
+    def _floors(self, module, config, pos_name):
+        """Floors of the till and those of them created now. Each floor is created once (known by its
+        xml id); tables moved or added in Odoo stay as they are."""
+        if not config.get("floors"):
+            floor = self.env.ref("%s.restaurant_floor" % module, raise_if_not_found=False)
+            if floor:
+                return floor, floor.browse()
+            floor = self._create_floor(module, "restaurant_floor", {"name": config.get("floor") or pos_name}, [{
+                "table_number": number, "seats": 4, "shape": "square",
+                "position_h": 50 + ((number - 1) % TABLES_PER_ROW) * 180,
+                "position_v": 50 + ((number - 1) // TABLES_PER_ROW) * 180,
+                "width": 120, "height": 120,
+            } for number in range(1, int(config.get("tables") or 0) + 1)])
+            return floor, floor
+        with open(file_path("%s/floors.json" % module), encoding="utf-8") as f:
+            layout = json.load(f)
+        Floor = self.env["restaurant.floor"].sudo()
+        floors = new_floors = Floor.browse()
+        for sequence, plan in enumerate(layout["floors"], start=1):
+            xmlid = "restaurant_floor_%s" % plan["key"]
+            floor = self.env.ref("%s.%s" % (module, xmlid), raise_if_not_found=False)
+            if not floor:
+                floor = self._create_floor(module, xmlid, {
+                    "name": plan["name"], "sequence": sequence, "background_color": plan.get("background"),
+                    "floor_background_image": self._module_file(module, "static/img/floor_%s.png" % plan["key"]),
+                }, [{
+                    "table_number": table["number"], "seats": table.get("seats", 4),
+                    "shape": table.get("shape", "square"), "color": layout.get("table_color", "#35D374"),
+                    "position_h": table["box"][0], "position_v": table["box"][1],
+                    "width": table["box"][2], "height": table["box"][3],
+                } for table in plan["tables"]])
+                new_floors |= floor
+            floors |= floor
+        return floors, new_floors
+
+    def _create_floor(self, module, xmlid, vals, tables):
+        floor = self.env["restaurant.floor"].sudo().create(vals)
+        self.env["restaurant.table"].sudo().create([dict(table, floor_id=floor.id) for table in tables])
         self.env["ir.model.data"].sudo()._update_xmlids(
-            [{"xml_id": "%s.restaurant_floor" % module, "record": floor, "noupdate": True}])
+            [{"xml_id": "%s.%s" % (module, xmlid), "record": floor, "noupdate": True}])
         return floor
+
+    def _module_file(self, module, path):
+        try:
+            with open(file_path("%s/%s" % (module, path)), "rb") as f:
+                return base64.b64encode(f.read())
+        except FileNotFoundError:
+            return False
 
     def _free_cash_journal(self, company, code, pos_name):
         """A cash journal no other POS payment method uses (Odoo allows one cash method per journal)."""

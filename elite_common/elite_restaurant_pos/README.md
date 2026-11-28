@@ -5,7 +5,12 @@ Společný kód restauračních pokladen. Restaurace jsou datové moduly ve slo�
 
 - `skupiny.csv` – skupiny pokladny (hlavní skupina a podskupiny),
 - `zbozi.csv` – lístek: `kod`, `skupina`, `nazev`, `cena` (s DPH), `dph`, `sklad`, `alergeny`,
-- `data/setup.xml` – firma, mateřská firma, název pokladny, zkratka skladu, sál a počet stolů.
+- `data/setup.xml` – firma, mateřská firma, název pokladny, zkratka skladu, sál a počet stolů,
+  nebo `'floors': True` pro patra podle `floors.json`.
+- `floors.json` (volitelně) – patra, sekce s barvou a názvem, popisky a stoly (číslo, poloha
+  a velikost v pixelech, počet míst). Pozadí pater `static/img/floor_<key>.png` nakreslí
+  `scripts/gen_floors.py <složka modulu>` (Pillow). Patro se založí jednou; patro přidané do
+  `floors.json` později se při `-u` založí a přidá k pokladně.
 
 `data/*_data.xml` se generuje ze CSV:
 
