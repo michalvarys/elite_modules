@@ -12,7 +12,8 @@ elite_modules/
 ├── config/odoo.conf       addons_path, připojení k databázi
 ├── elite_common/          společné moduly všech poboček
 │   ├── elite_pos_l10n_cs/    Úplný český překlad pokladny
-│   └── elite_pos_mobile/     Kategorie pokladny na mobilu
+│   ├── elite_pos_mobile/     Kategorie pokladny na mobilu
+│   └── elite_pos_payment_color/  Barvy a rozložení tlačítek plateb v pokladně
 ├── elite_vet/             klinika Elite Vet
 │   ├── elite_vet_calendar/   Rozpis služeb lékařů
 │   ├── elite_vet_reservation/   Rezervační kalendář (nahrazuje WinVet)
@@ -149,6 +150,13 @@ Detaily v [elite_common/elite_pos_l10n_cs/README.md](elite_common/elite_pos_l10n
 Kategorie se dají posouvat a na telefonu nezakryjí produkty. Detaily v
 [elite_common/elite_pos_mobile/README.md](elite_common/elite_pos_mobile/README.md).
 
+
+### `elite_pos_payment_color` — Barvy a rozložení plateb v pokladně
+
+Platební metodě jde nastavit barvu tlačítka na obrazovce platby (písmo bílé nebo tmavé podle
+čitelnosti) a v nastavení pokladny zvolit, zda se tlačítka plateb rozloží po celé výšce panelu,
+nebo jsou seřazená za sebou. Instaluje se ručně. Detaily v
+[elite_common/elite_pos_payment_color/README.md](elite_common/elite_pos_payment_color/README.md).
 
 ## elite_restaurace — restaurace IMI, Jack Grill Bar a Staroslovanská kuchyně Loket
 

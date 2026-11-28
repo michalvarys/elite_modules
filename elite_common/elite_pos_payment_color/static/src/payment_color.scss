@@ -1,0 +1,25 @@
+// Payment method buttons with their own colour: slightly darker on hover and press.
+.paymentmethod[style*="--btn-bg"] {
+    &:hover {
+        filter: brightness(92%);
+    }
+    &:active {
+        filter: brightness(85%);
+    }
+}
+
+// "Rozložit tlačítka plateb": buttons spread over the whole height of the panel (tablet and
+// desktop, where the list is a column; on a phone it is a two-column grid).
+.paymentmethods-container:has(> .paymentmethods.flex-column[data-elite-spread]) {
+    display: flex;
+    flex-direction: column;
+}
+.paymentmethods.flex-column[data-elite-spread] {
+    flex-grow: 1;
+    justify-content: space-between;
+
+    // the buttons carry Bootstrap .flex-fill (flex: 1 1 auto !important)
+    > .paymentmethod {
+        flex: 0 0 auto !important;
+    }
+}
